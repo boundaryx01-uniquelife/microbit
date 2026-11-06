@@ -8,8 +8,7 @@
   :root {
     --bg: #f6f7fb; --card: #ffffff; --text: #1d2433; --muted: #5d6680;
     --line: #dde1ec; --accent: #2f6fe4; --accent-text: #ffffff;
-    --ok: #1f9d55; --warn: #c27c0e; --bad: #d43c3c;
-    --c1: #e5484d; --c2: #e9a23b; --c3: #30a46c; --c4: #8e8e9f;
+    --ok: #1f9d55; --bad: #d43c3c; --stop: #d43c3c; --stop-text: #ffffff;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -20,43 +19,56 @@
   * { box-sizing: border-box; }
   body { margin: 0; background: var(--bg); color: var(--text);
     font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
-  header { padding: 16px; border-bottom: 1px solid var(--line); background: var(--card);
-    display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
-  h1 { margin: 0; font-size: 22px; }
+  header { padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--card);
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 5; }
+  h1 { margin: 0; font-size: 20px; }
   h2 { margin: 0 0 10px; font-size: 18px; }
   main { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 16px;
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
   @media (max-width: 820px) { main { grid-template-columns: minmax(0, 1fr); } }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; }
+  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
+  .full { grid-column: 1 / -1; }
   .step { display: inline-block; background: var(--accent); color: var(--accent-text);
     border-radius: 999px; padding: 2px 10px; font-size: 13px; margin-right: 6px; }
-  video { width: 100%; border-radius: 10px; background: #000; aspect-ratio: 4/3; object-fit: cover; transform: scaleX(-1); }
+  video { width: 100%; border-radius: 10px; background: #000; aspect-ratio: 4/3; object-fit: cover; }
+  video.mirror { transform: scaleX(-1); }
   button { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text);
     border-radius: 10px; padding: 10px 14px; cursor: pointer; }
   button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
   button:disabled { opacity: .45; cursor: not-allowed; }
+  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  #btnStop { background: var(--stop); color: var(--stop-text); border-color: var(--stop); font-weight: 800; }
+  #btnStop.latched { animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .6; } }
+  select { font: inherit; padding: 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); max-width: 100%; }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
   .cls { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center;
     padding: 10px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; }
-  .num { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center;
-    color: #fff; font-weight: 700; }
-  .cls input { width: 100%; font: inherit; padding: 6px 8px; border: 1px solid var(--line);
+  .num { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; }
+  .cls input[type=text] { width: 100%; font: inherit; padding: 6px 8px; border: 1px solid var(--line);
     border-radius: 8px; background: var(--bg); color: var(--text); }
   .hold { user-select: none; touch-action: none; white-space: nowrap; }
   .hold.active { outline: 3px solid var(--accent); }
   .bar { height: 10px; border-radius: 6px; background: var(--line); overflow: hidden; grid-column: 2 / 4; }
   .bar > i { display: block; height: 100%; width: 0%; transition: width .15s; }
   .count { font-size: 13px; color: var(--muted); }
-  .big { font-size: 28px; font-weight: 800; text-align: center; padding: 14px; border-radius: 12px;
-    background: var(--bg); border: 1px dashed var(--line); margin: 10px 0; min-height: 70px; }
-  .status { font-size: 14px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); }
+  .big { font-size: 26px; font-weight: 800; text-align: center; padding: 14px; border-radius: 12px;
+    background: var(--bg); border: 1px dashed var(--line); margin: 10px 0; min-height: 70px; overflow-wrap: anywhere; }
+  .sending { text-align: center; font-size: 15px; color: var(--muted); }
+  .sending b { font-size: 22px; color: var(--text); }
+  .status { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); }
   .status.on { color: var(--ok); border-color: var(--ok); }
   .status.off { color: var(--bad); border-color: var(--bad); }
   .note { font-size: 13px; color: var(--muted); line-height: 1.6; }
+  .warn { font-size: 13px; color: var(--bad); line-height: 1.5; min-height: 1em; }
   label.slider { display: flex; gap: 8px; align-items: center; font-size: 14px; flex-wrap: wrap; }
-  #log { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--muted);
-    max-height: 120px; overflow: auto; white-space: pre-wrap; background: var(--bg); border-radius: 8px; padding: 8px; margin-top: 8px; }
-  .full { grid-column: 1 / -1; }
+  #log { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--muted); white-space: pre-wrap;
+    max-height: 120px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 8px; margin-top: 8px; }
+  details > summary { cursor: pointer; font-weight: 700; font-size: 16px; }
+  table { border-collapse: collapse; font-size: 14px; margin-top: 8px; }
+  th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: center; }
+  .scroll { overflow-x: auto; }
 </style>
 </head>
 <body>
@@ -65,27 +77,30 @@
   <div class="row">
     <span id="modelStatus" class="status off">AI 준비 중…</span>
     <span id="serialStatus" class="status off">마이크로비트 연결 안 됨</span>
+    <button id="btnStop" title="키보드 Esc 키로도 멈출 수 있어요">■ 멈춤</button>
   </div>
 </header>
 
 <main>
   <section>
     <h2><span class="step">1</span>카메라 켜기</h2>
-    <video id="cam" autoplay playsinline muted></video>
+    <video id="cam" class="mirror" autoplay playsinline muted></video>
     <div class="row" style="margin-top:10px">
       <button id="btnCam" class="primary">카메라 켜기</button>
       <select id="camSelect" aria-label="카메라 선택"></select>
+      <label class="row" style="gap:6px;font-size:14px"><input id="mirror" type="checkbox" checked> 거울처럼 보기</label>
     </div>
-    <p class="note">영상은 이 컴퓨터 안에서만 처리되고 어디에도 저장·전송되지 않습니다.
-      AI 모델 파일만 처음 한 번 인터넷에서 받아옵니다.<br>
-      초등 수업에서는 <b>얼굴 대신 색 카드, 그림 카드, 손 모양</b>을 학습시키는 것을 권장합니다.</p>
+    <p class="note">영상은 이 컴퓨터 안에서만 처리되고 저장·전송하지 않습니다.<br>
+      <b>카메라는 책상과 카드 쪽을 향하게</b> 하고, 사람 얼굴 대신 <b>색 카드·그림 카드·물건·손 모양</b>을 가르쳐 주세요.</p>
   </section>
 
   <section>
     <h2><span class="step">2</span>AI 가르치기</h2>
-    <p class="note" style="margin-top:0">카드를 카메라에 보여 주면서 <b>[꾹 눌러 모으기]</b>를 누르고 있으면 사진이 모입니다.
-      한 종류에 <b>30장 이상</b>, 각도·거리를 바꿔 가며 모으세요. 마지막 칸은 <b>아무것도 없는 배경</b>으로 두면 오작동이 줄어요.</p>
+    <p class="note" style="margin-top:0">카드를 카메라에 보여 주며 버튼을 <b>한 번 누르면 1장</b>, <b>꾹 누르고 있으면 1초에 4장</b>씩 모여요.
+      카드를 조금씩 움직이고 기울여 가며 종류마다 <b>20장 이상</b> 비슷한 수로 모으세요.
+      마지막 칸은 <b>아무것도 없는 배경</b>으로 두면 오작동이 줄어요.</p>
     <div id="classes"></div>
+    <div id="balanceWarn" class="warn"></div>
     <div class="row">
       <button id="btnAdd">＋ 종류 추가</button>
       <button id="btnClear">모두 지우기</button>
@@ -94,51 +109,93 @@
 
   <section>
     <h2><span class="step">3</span>AI가 보고 있는 것</h2>
-    <div id="result" class="big">아직 배운 것이 없어요</div>
-    <label class="slider">확신도 기준 <input id="thr" type="range" min="50" max="95" value="75"> <b id="thrVal">75%</b></label>
-    <p class="note">AI의 확신도가 기준보다 낮으면 로보독에 보내지 않아요. 기준을 바꿔 가며 결과를 비교해 보세요.</p>
+    <div id="result" class="big">AI를 준비하고 있어요…</div>
+    <label class="slider">확신 기준 <input id="thr" type="range" min="50" max="100" step="10" value="70"> <b id="thrVal">70%</b></label>
+    <p class="note">AI는 지금 화면과 <b>가장 비슷한 사진 <span id="kShow">10</span>장</b>을 찾아, 그중 몇 장이 같은 종류인지로 답해요(이것이 확신 %).
+      확신이 기준보다 낮으면 로보독에게 <b>0(멈춤)</b>을 보내요.</p>
   </section>
 
   <section>
     <h2><span class="step">4</span>로보독에게 보내기</h2>
     <div class="row">
-      <button id="btnSerial" class="primary">마이크로비트 연결 (USB)</button>
+      <button id="btnSerial" class="primary">USB 마이크로비트 연결</button>
       <label class="row" style="gap:6px"><input id="autoSend" type="checkbox" checked> AI 결과 자동 보내기</label>
     </div>
-    <p class="note">USB에 꽂은 <b>"다리 마이크로비트"</b>(bridge-receiver 코드)를 연결하세요. 크롬·엣지에서만 됩니다.<br>
-      AI 없이 시험하려면 아래 번호를 직접 눌러 보내 보세요.</p>
+    <div class="sending">지금 보내는 번호: <b id="sendingNow">-</b></div>
+    <p class="note">USB로 컴퓨터에 꽂은 마이크로비트(화면에 <b>B1, B2…</b> 표시)를 연결하세요. 크롬·엣지 PC에서만 됩니다.<br>
+      연결 창이 영어로 뜨면 <b>"BBC micro:bit"</b> 항목을 고르고 <b>Connect(연결)</b>를 누르세요.<br>
+      ⚠ 이 창을 내리거나 다른 탭으로 바꾸면 안전을 위해 0(멈춤)을 보내요. MakeCode는 <b>다른 창</b>으로 띄우세요.</p>
+    <p class="note" style="margin-bottom:4px">AI 없이 시험하기(자동 보내기를 끄면 누른 번호를 계속 보내요):</p>
     <div class="row" id="manual"></div>
-    <div id="log"></div>
+    <div id="log" aria-live="polite"></div>
+  </section>
+
+  <section class="full">
+    <details id="adv">
+      <summary>선생님·심화(중·고) 설정과 정확도 실험</summary>
+      <div class="row" style="margin-top:12px">
+        <label class="slider"><input id="kAuto" type="checkbox" checked> k 자동</label>
+        <label class="slider">k(비교할 이웃 사진 수) <input id="kVal" type="range" min="1" max="15" value="10" disabled> <b id="kValShow">10</b></label>
+        <label class="slider">꾹 누를 때 1초에 <input id="rate" type="range" min="1" max="10" value="4"> <b id="rateShow">4</b>장</label>
+      </div>
+      <p class="note">k 자동: k = min(10, 가장 적게 모은 종류의 사진 수). 종류별 사진 수가 다르면 많이 모은 쪽으로 답이 쏠릴 수 있어요.</p>
+      <h3 style="margin:14px 0 6px;font-size:16px">정확도 실험 (학습용과 다른 시험 사진으로 평가)</h3>
+      <p class="note">학습에 쓰지 않은 <b>시험 사진</b>을 따로 모은 뒤 [정확도 계산]을 누르면 정확도와 혼동행렬이 나와요.
+        학습 사진을 찍은 직후 같은 자세로 시험 사진을 찍으면 거의 같은 사진이라 정확도가 부풀려집니다(데이터 누출). 위치·조명을 바꿔서 모으세요.</p>
+      <div id="testClasses" class="row"></div>
+      <div class="row" style="margin-top:8px">
+        <button id="btnEval" class="primary">정확도 계산</button>
+        <button id="btnTestClear">시험 사진 지우기</button>
+        <button id="btnCsv" disabled>결과 CSV 저장</button>
+      </div>
+      <div id="evalOut" class="scroll"></div>
+      <h3 style="margin:14px 0 6px;font-size:16px">학습 데이터 저장·불러오기</h3>
+      <p class="note">사진 자체가 아니라 AI가 뽑은 숫자 특징(특징 벡터)만 저장됩니다. 같은 조건으로 실험을 반복할 때 쓰세요.</p>
+      <div class="row">
+        <button id="btnSave">학습 데이터 저장(.json)</button>
+        <label class="row" style="gap:6px"><span>불러오기</span><input id="fileLoad" type="file" accept=".json,application/json"></label>
+      </div>
+    </details>
   </section>
 </main>
 
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@4.22.0/dist/tf.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/mobilenet@2.1.1/dist/mobilenet.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@tensorflow-models/knn-classifier@1.2.6/dist/knn-classifier.min.js"></script>
+<script src="lib/tf.min.js"></script>
+<script src="lib/mobilenet.min.js"></script>
+<script src="lib/knn-classifier.min.js"></script>
 <script>
 (() => {
-  const COLORS = ['var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', '#6e56cf', '#0091ff', '#d6409f', '#12a594', '#978365'];
+  'use strict';
+  const COLORS = ['#e5484d', '#e9a23b', '#30a46c', '#8e8e9f', '#6e56cf', '#0091ff', '#d6409f', '#12a594', '#978365'];
   const DEFAULT_NAMES = ['빨강 카드', '노랑 카드', '초록 카드', '배경(아무것도 없음)'];
-  const MAX_CLASSES = 9;            // 마이크로비트로 1~9 숫자를 보냄
-  const STABLE_FRAMES = 5;          // 같은 결과가 연속 몇 번 나와야 보낼지
-  const HEARTBEAT_MS = 1000;        // 같은 결과도 1초마다 다시 보냄(로보독 안전 정지용)
+  const MAX_CLASSES = 9;        // 마이크로비트로 1~9를 보냄 (0 = 멈춤)
+  const STABLE_FRAMES = 4;      // 같은 답이 연속 이만큼 나와야 보냄
+  const UNSURE_FRAMES = 8;      // 확신 낮은 상태가 이만큼 이어지면 0
+  const FRESH_MS = 700;         // 이 시간 안에 나온 확실한 답만 유효
+  const HEARTBEAT_MS = 500;     // 같은 번호도 주기적으로 다시 보냄(로보독 2초 감시와 짝)
+  const LOOP_MS = 80;
 
   const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
   const video = $('cam');
-  const logEl = $('log');
-  let net = null, knn = null, stream = null;
-  let classes = [];                 // {name, count}
-  let holding = -1;
-  let port = null, writer = null;
-  let lastTop = -1, stableCount = 0, lastSent = -1, lastSentAt = 0, unsureCount = 0;
-  const UNSURE_FRAMES = 12;         // 확신 낮은 상태가 이만큼 이어지면 0(멈춤) 전송
+  let net = null, knn = null, stream = null, modelReady = false;
+  let classes = [];             // {name, count}
+  let holding = -1, holdTimer = null;
+  let port = null, writer = null, writeChain = Promise.resolve();
+  let estop = false;            // 멈춤 잠금
+  let lastTop = -1, stableCount = 0, unsureCount = 0;
+  let aiTarget = 0, aiValidAt = 0;
+  let manualValue = 0;
+  let lastSent = -1, lastSentAt = 0;
+  let testSet = [];             // {label, emb: Float32Array}
+  let lastEval = null;
 
   function log(msg) {
     const t = new Date().toLocaleTimeString('ko-KR', { hour12: false });
-    logEl.textContent = `[${t}] ${msg}\n` + logEl.textContent.slice(0, 3000);
+    const el = $('log');
+    el.textContent = (`[${t}] ${msg}\n` + el.textContent).slice(0, 4000);
   }
 
-  // ---------- 클래스 UI ----------
+  // ---------------- 클래스 UI ----------------
   function renderClasses() {
     const wrap = $('classes');
     wrap.innerHTML = '';
@@ -147,151 +204,260 @@
       row.className = 'cls';
       row.innerHTML = `
         <div class="num" style="background:${COLORS[i]}">${i + 1}</div>
-        <div><input value="${c.name.replace(/"/g, '&quot;')}" aria-label="${i + 1}번 이름">
+        <div><input type="text" value="${esc(c.name)}" aria-label="${i + 1}번 이름" maxlength="20">
           <div class="count">사진 <b>${c.count}</b>장</div></div>
-        <button class="hold">꾹 눌러 모으기</button>
+        <button class="hold" aria-label="${i + 1}번 사진 모으기">사진 모으기</button>
         <div class="bar"><i style="background:${COLORS[i]}"></i></div>`;
-      row.querySelector('input').addEventListener('input', (e) => { c.name = e.target.value; });
+      row.querySelector('input').addEventListener('input', (e) => { c.name = e.target.value; renderTestButtons(); });
       const hb = row.querySelector('.hold');
-      const start = (e) => { e.preventDefault(); if (!net || !stream) { alert('카메라를 먼저 켜 주세요.'); return; } holding = i; hb.classList.add('active'); };
-      const stop = () => { if (holding === i) holding = -1; hb.classList.remove('active'); };
-      hb.addEventListener('pointerdown', start);
-      hb.addEventListener('pointerup', stop);
-      hb.addEventListener('pointerleave', stop);
-      hb.addEventListener('pointercancel', stop);
+      hb.addEventListener('pointerdown', (e) => { e.preventDefault(); startHold(i, hb); });
+      ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => hb.addEventListener(ev, () => stopHold(i, hb)));
+      hb.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addSample(i); } });
       wrap.appendChild(row);
     });
     $('btnAdd').disabled = classes.length >= MAX_CLASSES;
     renderManual();
+    renderTestButtons();
+    updateBalance();
+  }
+
+  function canCapture() {
+    if (!modelReady) { alert('AI가 아직 준비 중이에요. 위쪽에 "AI 준비 완료"가 뜰 때까지 기다려 주세요.'); return false; }
+    if (!stream) { alert('카메라를 먼저 켜 주세요.'); return false; }
+    return true;
+  }
+  function startHold(i, hb) {
+    if (!canCapture()) return;
+    holding = i; hb.classList.add('active');
+    addSample(i);
+    clearInterval(holdTimer);
+    holdTimer = setInterval(() => addSample(i), 1000 / Number($('rate').value));
+  }
+  function stopHold(i, hb) {
+    if (holding === i) { holding = -1; clearInterval(holdTimer); holdTimer = null; }
+    hb.classList.remove('active');
+  }
+  function addSample(i) {
+    if (!modelReady || !stream || video.readyState < 2) return;
+    const emb = tf.tidy(() => net.infer(video, true));
+    knn.addExample(emb, i);       // knn이 내부 보관(복사)함
+    emb.dispose();
+    classes[i].count++;
+    const cnt = document.querySelectorAll('.cls .count b')[i];
+    if (cnt) cnt.textContent = classes[i].count;
+    updateBalance();
+  }
+  function updateBalance() {
+    const counts = classes.map(c => c.count).filter(n => n > 0);
+    let msg = '';
+    if (counts.length >= 2) {
+      const mn = Math.min(...counts), mx = Math.max(...counts);
+      if (mn < 10) msg = '사진이 10장보다 적은 종류가 있어요. 더 모아 주세요.';
+      else if (mx > mn * 2) msg = '종류마다 사진 수 차이가 커요. 비슷하게 맞추면 더 공평하게 판단해요.';
+    }
+    $('balanceWarn').textContent = msg;
+    $('kShow').textContent = currentK();
+  }
+  function currentK() {
+    if (!$('kAuto').checked) return Number($('kVal').value);
+    const counts = classes.map(c => c.count).filter(n => n > 0);
+    return counts.length ? Math.max(1, Math.min(10, Math.min(...counts))) : 10;
   }
 
   function renderManual() {
     const m = $('manual');
     m.innerHTML = '';
-    classes.forEach((c, i) => {
+    const mk = (n, label, color) => {
       const b = document.createElement('button');
-      b.textContent = `${i + 1} 보내기`;
-      b.style.borderColor = COLORS[i];
-      b.onclick = () => send(i + 1, true);
+      b.textContent = label;
+      if (color) b.style.borderColor = color;
+      b.onclick = () => { manualValue = n; $('autoSend').checked = false; log(`직접 보내기: ${n}`); };
       m.appendChild(b);
-    });
-    const s = document.createElement('button');
-    s.textContent = '0 (멈춤) 보내기';
-    s.onclick = () => send(0, true);
-    m.appendChild(s);
+    };
+    classes.forEach((c, i) => mk(i + 1, `${i + 1}`, COLORS[i]));
+    mk(0, '0 (멈춤)');
   }
 
   $('btnAdd').onclick = () => {
     if (classes.length < MAX_CLASSES) { classes.push({ name: `${classes.length + 1}번`, count: 0 }); renderClasses(); }
   };
   $('btnClear').onclick = () => {
-    if (!confirm('모은 사진(학습 데이터)을 모두 지울까요?')) return;
+    if (!confirm('모은 학습 사진(데이터)을 모두 지울까요?')) return;
     if (knn) knn.clearAllClasses();
     classes.forEach(c => c.count = 0);
-    lastTop = -1; stableCount = 0;
+    resetDecision();
     renderClasses();
-    $('result').textContent = '아직 배운 것이 없어요';
+    log('학습 데이터 모두 지움 → 0(멈춤)');
   };
   $('thr').oninput = (e) => { $('thrVal').textContent = e.target.value + '%'; };
+  $('kAuto').onchange = (e) => { $('kVal').disabled = e.target.checked; updateBalance(); };
+  $('kVal').oninput = (e) => { $('kValShow').textContent = e.target.value; updateBalance(); };
+  $('rate').oninput = (e) => { $('rateShow').textContent = e.target.value; };
+  $('mirror').onchange = (e) => video.classList.toggle('mirror', e.target.checked);
 
-  // ---------- 카메라 ----------
+  function resetDecision() { lastTop = -1; stableCount = 0; unsureCount = 0; aiTarget = 0; aiValidAt = 0; }
+
+  // ---------------- 멈춤(비상 정지) ----------------
+  function setStop(on) {
+    estop = on;
+    $('btnStop').textContent = on ? '▶ 멈춤 풀기' : '■ 멈춤';
+    $('btnStop').classList.toggle('latched', on);
+    if (on) { resetDecision(); manualValue = 0; }
+    log(on ? '멈춤! (0을 계속 보냄)' : '멈춤 풀림');
+    tick(true);
+  }
+  $('btnStop').onclick = () => setStop(!estop);
+  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setStop(true); });
+
+  // ---------------- 카메라 ----------------
   async function listCams() {
     try {
-      const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
       const sel = $('camSelect');
-      sel.innerHTML = devs.map((d, i) => `<option value="${d.deviceId}">${d.label || '카메라 ' + (i + 1)}</option>`).join('');
+      const prev = sel.value;
+      const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
+      sel.innerHTML = devs.map((d, i) => `<option value="${esc(d.deviceId)}">${esc(d.label || '카메라 ' + (i + 1))}</option>`).join('');
+      const active = stream && stream.getVideoTracks()[0] && stream.getVideoTracks()[0].getSettings().deviceId;
+      if (active && devs.some(d => d.deviceId === active)) sel.value = active;
+      else if (prev && devs.some(d => d.deviceId === prev)) sel.value = prev;
       sel.style.display = devs.length > 1 ? '' : 'none';
-    } catch (e) { /* ignore */ }
+    } catch (e) { /* 권한 전에는 목록이 비어 있을 수 있음 */ }
   }
   async function startCam(deviceId) {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+      throw new Error('이 주소에서는 카메라를 쓸 수 없어요(https 주소로 열어 주세요)');
+    }
     if (stream) stream.getTracks().forEach(t => t.stop());
+    stream = null;
     stream = await navigator.mediaDevices.getUserMedia({
       video: deviceId ? { deviceId: { exact: deviceId }, width: 640, height: 480 } : { width: 640, height: 480 },
       audio: false
     });
     video.srcObject = stream;
     await video.play();
+    stream.getVideoTracks()[0].addEventListener('ended', () => { stream = null; log('카메라가 꺼졌어요 → 0(멈춤)'); });
     $('btnCam').textContent = '카메라 다시 켜기';
-    listCams();
+    await listCams();
     log('카메라 켜짐');
   }
   $('btnCam').onclick = () => startCam($('camSelect').value).catch(e => { alert('카메라를 켤 수 없어요: ' + e.message); log('카메라 오류: ' + e.message); });
   $('camSelect').onchange = (e) => startCam(e.target.value).catch(err => log('카메라 오류: ' + err.message));
 
-  // ---------- 마이크로비트(Web Serial) ----------
+  // ---------------- 마이크로비트(Web Serial) ----------------
+  function setSerialUI(on) {
+    $('serialStatus').textContent = on ? '마이크로비트 연결됨' : '마이크로비트 연결 안 됨';
+    $('serialStatus').className = 'status ' + (on ? 'on' : 'off');
+    $('btnSerial').textContent = on ? '연결 끊기' : 'USB 마이크로비트 연결';
+  }
   async function connectSerial() {
-    if (!('serial' in navigator)) { alert('이 브라우저는 USB 연결을 지원하지 않아요. 크롬이나 엣지를 사용하세요.'); return; }
+    if (!('serial' in navigator)) {
+      alert('이 브라우저는 USB 연결을 지원하지 않아요.\n윈도우·맥 PC의 크롬이나 엣지에서 https 주소로 열어 주세요.');
+      return;
+    }
+    let p = null;
     try {
-      port = await navigator.serial.requestPort({ filters: [{ usbVendorId: 0x0d28 }] });
-      await port.open({ baudRate: 115200 });
+      p = await navigator.serial.requestPort({ filters: [{ usbVendorId: 0x0d28 }] });
+      await p.open({ baudRate: 115200 });
+      port = p;
       writer = port.writable.getWriter();
-      $('serialStatus').textContent = '마이크로비트 연결됨';
-      $('serialStatus').className = 'status on';
-      $('btnSerial').textContent = '연결 끊기';
+      setSerialUI(true);
       log('마이크로비트 연결됨');
-      port.addEventListener('disconnect', onDisconnect);
+      lastSent = -1;
+      tick(true);
     } catch (e) {
-      log('연결 실패: ' + e.message);
+      try { if (p && p.readable) await p.close(); } catch (_) {}
+      port = null; writer = null; setSerialUI(false);
+      if (e.name !== 'NotFoundError') {
+        log('연결 실패: ' + e.message);
+        alert('연결하지 못했어요. MakeCode 등 다른 탭이 마이크로비트를 쓰고 있으면 그 탭의 연결을 끊거나 닫은 뒤 다시 해 보세요.');
+      }
     }
   }
   async function disconnectSerial() {
-    try { await send(0, true); } catch (e) {}
-    try { writer && writer.releaseLock(); await port.close(); } catch (e) {}
-    onDisconnect();
+    const w = writer, p = port;
+    try { await writeLine(0); await writeChain; } catch (e) {}
+    writer = null; port = null;
+    try { w && w.releaseLock(); } catch (e) {}
+    try { p && await p.close(); } catch (e) {}
+    setSerialUI(false);
+    log('연결 끊음');
   }
-  function onDisconnect() {
-    port = null; writer = null;
-    $('serialStatus').textContent = '마이크로비트 연결 안 됨';
-    $('serialStatus').className = 'status off';
-    $('btnSerial').textContent = '마이크로비트 연결 (USB)';
-    log('연결 끊김');
+  if ('serial' in navigator) {
+    navigator.serial.addEventListener('disconnect', (e) => {
+      if (port && e.target === port) { port = null; writer = null; setSerialUI(false); log('USB가 빠졌어요'); }
+    });
   }
   $('btnSerial').onclick = () => (port ? disconnectSerial() : connectSerial());
 
-  async function send(n, manual) {
-    lastSent = n; lastSentAt = performance.now();
-    if (!writer) { if (manual) log(`(연결 안 됨) ${n} 보내기 시도`); return; }
-    try {
-      await writer.write(new TextEncoder().encode(n + '\n'));
-      if (manual) log(`보냄: ${n}`);
-    } catch (e) { log('보내기 오류: ' + e.message); }
+  function writeLine(n) {
+    const w = writer;
+    if (!w) return Promise.resolve();
+    writeChain = writeChain.then(() => w.write(new TextEncoder().encode(n + '\n'))).catch(e => log('보내기 오류: ' + e.message));
+    return writeChain;
   }
 
-  // ---------- AI ----------
+  // 무엇을 보낼지 결정해서 보냄
+  function decideTarget() {
+    if (estop) return 0;
+    if (document.hidden) return 0;
+    if (!$('autoSend').checked) return manualValue;
+    if (!modelReady || !stream || holding >= 0) return 0;
+    if (performance.now() - aiValidAt > FRESH_MS) return 0;
+    return aiTarget;
+  }
+  function tick(force) {
+    const n = decideTarget();
+    const now = performance.now();
+    if (force || n !== lastSent || now - lastSentAt >= HEARTBEAT_MS) {
+      if (n !== lastSent) log(`보냄: ${n}${n ? ' (' + (classes[n - 1] ? classes[n - 1].name : '') + ')' : ' (멈춤)'}`);
+      lastSent = n; lastSentAt = now;
+      $('sendingNow').textContent = n;
+      writeLine(n);
+    }
+  }
+  setInterval(() => tick(false), 100);
+  document.addEventListener('visibilitychange', () => tick(true));
+
+  // ---------------- AI ----------------
   async function loadModel() {
     try {
-      net = await mobilenet.load({ version: 2, alpha: 0.5 });
+      try {
+        net = await mobilenet.load({ version: 2, alpha: 0.5, modelUrl: 'model/model.json', inputRange: [0, 1] });
+      } catch (localErr) {
+        log('내장 모델을 못 열어 인터넷에서 받는 중…');
+        net = await mobilenet.load({ version: 2, alpha: 0.5 });
+      }
       knn = knnClassifier.create();
+      modelReady = true;
       $('modelStatus').textContent = 'AI 준비 완료';
       $('modelStatus').className = 'status on';
+      $('result').textContent = '카메라를 켜고 두 종류 이상 가르쳐 주세요';
       log('AI 모델 준비 완료');
       loop();
     } catch (e) {
       $('modelStatus').textContent = 'AI 불러오기 실패';
-      log('AI 모델 오류(인터넷 연결 확인): ' + e.message);
+      $('result').textContent = 'AI를 불러오지 못했어요';
+      log('AI 모델 오류: ' + e.message);
+      alert('AI를 불러오지 못했어요.\n① 인터넷 연결 확인 ② 파일을 더블클릭해 연 경우 선생님이 안내한 웹 주소로 열기 ③ 새로고침(F5)');
     }
   }
 
   async function loop() {
-    if (stream && video.readyState >= 2) {
-      const emb = tf.tidy(() => net.infer(video, true));
-      if (holding >= 0) {
-        knn.addExample(emb, holding);
-        classes[holding].count++;
-        const cnt = document.querySelectorAll('.cls .count b')[holding];
-        if (cnt) cnt.textContent = classes[holding].count;
-      }
+    let emb = null;
+    try {
       const trained = classes.filter(c => c.count > 0).length;
-      if (trained >= 2 && holding < 0) {
-        const res = await knn.predictClass(emb, 10);
+      if (stream && video.readyState >= 2 && holding < 0 && trained >= 2 && !document.hidden) {
+        emb = tf.tidy(() => net.infer(video, true));
+        const res = await knn.predictClass(emb, currentK());
         showResult(res);
-      } else if (trained < 2 && holding < 0) {
+      } else if (stream && trained < 2 && holding < 0) {
         $('result').textContent = '두 종류 이상 가르쳐 주세요';
       }
-      emb.dispose();
+    } catch (e) {
+      log('인식 오류: ' + e.message);
+    } finally {
+      if (emb) emb.dispose();
+      setTimeout(loop, LOOP_MS);
     }
-    if (performance.now() - lastSentAt > HEARTBEAT_MS && lastSent >= 0 && $('autoSend').checked) send(lastSent);
-    setTimeout(() => requestAnimationFrame(loop), 80);
   }
 
   function showResult(res) {
@@ -303,28 +469,115 @@
     const top = Number(res.label);
     const conf = (res.confidences[top] || 0) * 100;
     const thr = Number($('thr').value);
-    if (conf < thr) {
+    if (conf + 1e-6 < thr) {
       $('result').textContent = `잘 모르겠어요… (${conf.toFixed(0)}%)`;
       stableCount = 0;
-      unsureCount++;
-      // 오래 헷갈리면 안전하게 0(멈춤)을 보냄
-      if (unsureCount >= UNSURE_FRAMES && $('autoSend').checked && lastSent !== 0) {
-        send(0); lastTop = -1;
-        log('확신이 낮아 0(멈춤) 보냄');
-      }
+      if (++unsureCount >= UNSURE_FRAMES) { aiTarget = 0; aiValidAt = performance.now(); }
       return;
     }
     unsureCount = 0;
-    $('result').innerHTML = `<span style="color:${COLORS[top]}">${top + 1}. ${escapeHtml(classes[top].name)}</span> <small>(${conf.toFixed(0)}%)</small>`;
+    $('result').innerHTML = `<span style="color:${COLORS[top]}">${top + 1}. ${esc(classes[top].name)}</span> <small>(${conf.toFixed(0)}%)</small>`;
     if (top === lastTop) stableCount++; else { lastTop = top; stableCount = 1; }
-    if (stableCount >= STABLE_FRAMES && $('autoSend').checked && lastSent !== top + 1) {
-      send(top + 1);
-      log(`AI 결과 보냄: ${top + 1} (${classes[top].name})`);
-    }
+    if (stableCount >= STABLE_FRAMES) { aiTarget = top + 1; aiValidAt = performance.now(); }
   }
-  function escapeHtml(s) { return s.replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch])); }
 
-  // ---------- 시작 ----------
+  // ---------------- 정확도 실험 ----------------
+  function renderTestButtons() {
+    const w = $('testClasses');
+    if (!w) return;
+    w.innerHTML = '';
+    classes.forEach((c, i) => {
+      const n = testSet.filter(t => t.label === i).length;
+      const b = document.createElement('button');
+      b.innerHTML = `시험용 ${i + 1}. ${esc(c.name)} <b>${n}</b>장`;
+      b.style.borderColor = COLORS[i];
+      b.onclick = () => {
+        if (!canCapture()) return;
+        const emb = tf.tidy(() => net.infer(video, true));
+        testSet.push({ label: i, emb: emb.dataSync().slice() });
+        emb.dispose();
+        renderTestButtons();
+      };
+      w.appendChild(b);
+    });
+  }
+  $('btnTestClear').onclick = () => { testSet = []; renderTestButtons(); $('evalOut').innerHTML = ''; $('btnCsv').disabled = true; };
+  $('btnEval').onclick = async () => {
+    const trained = classes.filter(c => c.count > 0).length;
+    if (trained < 2 || !testSet.length) { alert('학습 사진(2종류 이상)과 시험 사진이 필요해요.'); return; }
+    const n = classes.length;
+    const mat = Array.from({ length: n }, () => new Array(n).fill(0));
+    let correct = 0;
+    for (const t of testSet) {
+      const x = tf.tensor(t.emb, [1, t.emb.length]);
+      const r = await knn.predictClass(x, currentK());
+      x.dispose();
+      const pred = Number(r.label);
+      mat[t.label][pred]++;
+      if (pred === t.label) correct++;
+    }
+    const acc = (correct / testSet.length * 100).toFixed(1);
+    lastEval = { mat, acc, k: currentK() };
+    let html = `<p><b>정확도 ${acc}%</b> (${correct}/${testSet.length}, k=${currentK()})</p><table><tr><th>실제 \\ AI 답</th>`;
+    classes.forEach((c, j) => html += `<th>${j + 1}. ${esc(c.name)}</th>`);
+    html += '<th>재현율</th></tr>';
+    mat.forEach((row, i) => {
+      const tot = row.reduce((a, b) => a + b, 0);
+      html += `<tr><th>${i + 1}. ${esc(classes[i].name)}</th>` + row.map((v, j) => `<td style="${i === j ? 'font-weight:700' : ''}">${v}</td>`).join('') +
+        `<td>${tot ? (row[i] / tot * 100).toFixed(0) + '%' : '-'}</td></tr>`;
+    });
+    html += '</table>';
+    $('evalOut').innerHTML = html;
+    $('btnCsv').disabled = false;
+  };
+  $('btnCsv').onclick = () => {
+    if (!lastEval) return;
+    const head = ['실제\\AI', ...classes.map((c, j) => `${j + 1}.${c.name}`)];
+    const rows = [head, ...lastEval.mat.map((r, i) => [`${i + 1}.${classes[i].name}`, ...r])];
+    rows.push([], ['정확도(%)', lastEval.acc], ['k', lastEval.k]);
+    const csv = '﻿' + rows.map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(',')).join('\n');
+    download(new Blob([csv], { type: 'text/csv' }), '로보독AI_혼동행렬.csv');
+  };
+
+  // ---------------- 저장/불러오기 ----------------
+  function download(blob, name) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+  }
+  $('btnSave').onclick = () => {
+    if (!knn || !knn.getNumClasses()) { alert('저장할 학습 데이터가 없어요.'); return; }
+    const ds = knn.getClassifierDataset();
+    const data = {};
+    Object.keys(ds).forEach(k => { data[k] = { shape: ds[k].shape, values: Array.from(ds[k].dataSync()) }; });
+    const json = JSON.stringify({ app: 'robodog-ai-bridge', v: 1, names: classes.map(c => c.name), data });
+    download(new Blob([json], { type: 'application/json' }), '로보독AI_학습데이터.json');
+  };
+  $('fileLoad').onchange = async (e) => {
+    const f = e.target.files[0];
+    e.target.value = '';
+    if (!f) return;
+    if (!modelReady) { alert('AI가 준비된 뒤에 불러와 주세요.'); return; }
+    try {
+      const obj = JSON.parse(await f.text());
+      if (obj.app !== 'robodog-ai-bridge') throw new Error('로보독 AI 브리지 파일이 아니에요');
+      const ds = {};
+      Object.keys(obj.data).forEach(k => {
+        const d = obj.data[k];
+        if (!Array.isArray(d.shape) || d.shape.length !== 2 || d.values.length !== d.shape[0] * d.shape[1]) throw new Error('파일 형식 오류');
+        ds[k] = tf.tensor2d(d.values, d.shape);
+      });
+      knn.clearAllClasses();
+      knn.setClassifierDataset(ds);
+      classes = obj.names.slice(0, MAX_CLASSES).map((n, i) => ({ name: String(n).slice(0, 20), count: ds[i] ? ds[i].shape[0] : 0 }));
+      resetDecision();
+      renderClasses();
+      log('학습 데이터 불러옴');
+    } catch (err) { alert('불러오기 실패: ' + err.message); }
+  };
+
+  // ---------------- 시작 ----------------
   classes = DEFAULT_NAMES.map(n => ({ name: n, count: 0 }));
   renderClasses();
   listCams();

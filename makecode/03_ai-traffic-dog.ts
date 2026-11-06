@@ -3,14 +3,18 @@
 // 원 교안: 스크래치 인공지능 교안 CH10을 마이크로비트용으로 재구성
 //
 // 준비: AI 브리지에서 1=빨강, 2=노랑, 3=초록, 4=배경 카드를 학습
-//       다리 마이크로비트(00_bridge-receiver)와 같은 모둠번호 사용
+//       USB 마이크로비트(00_bridge-receiver)와 같은 모둠번호 사용
 // 받는 숫자: 0=멈춤, 1=빨강, 2=노랑, 3=초록, 4=배경
-// 안전장치: 2초 동안 신호가 안 오면 자동으로 멈춥니다.
+// 안전장치: ① 2초 동안 신호가 안 오면 어떤 상태든 멈춤
+//           ② A 버튼 = 멈춤 잠금(라디오를 무시), B 버튼 = 잠금 풀기
+// ※ 로보독 마이크로비트에서는 '음악' 블록을 쓰지 마세요(로봇 통신 핀과 겹칠 수 있음).
 // =============================================================
 
 let 모둠번호 = 1
+let 받은신호 = 0
 let 현재신호 = -1
 let 마지막수신 = 0
+let 멈춤잠금 = false
 radio.setGroup(모둠번호)
 robodog.gesture(deflib.Posture.Ready)
 basic.showString("R" + 모둠번호)
@@ -46,25 +50,34 @@ function 신호에반응하기 (신호: number) {
     }
 }
 
+// 라디오는 받은 값만 기록하고, 실제 동작은 아래 무한 반복에서 한 곳에서만 처리
 radio.onReceivedNumber(function (받은수) {
+    받은신호 = 받은수
     마지막수신 = input.runningTime()
-    if (받은수 != 현재신호) {
-        현재신호 = 받은수
-        신호에반응하기(현재신호)
-    }
 })
 
-// 안전장치: 신호가 끊기면 멈춤
-basic.forever(function () {
-    if (현재신호 == 3 && input.runningTime() - 마지막수신 > 2000) {
-        현재신호 = 0
-        신호에반응하기(0)
-    }
-    basic.pause(200)
-})
-
-// 비상 정지: 로보독 마이크로비트의 A 버튼
 input.onButtonPressed(Button.A, function () {
-    현재신호 = 0
-    신호에반응하기(0)
+    멈춤잠금 = true
+})
+
+input.onButtonPressed(Button.B, function () {
+    멈춤잠금 = false
+})
+
+basic.forever(function () {
+    let 할일 = 받은신호
+    if (멈춤잠금) {
+        할일 = 0
+    } else if (input.runningTime() - 마지막수신 > 2000) {
+        // 신호가 끊김 → 안전하게 멈춤
+        할일 = 0
+    }
+    if (할일 != 현재신호) {
+        현재신호 = 할일
+        신호에반응하기(현재신호)
+        if (멈춤잠금) {
+            basic.showIcon(IconNames.No)
+        }
+    }
+    basic.pause(50)
 })
