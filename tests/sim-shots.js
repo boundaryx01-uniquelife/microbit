@@ -11,7 +11,7 @@ const OUT = path.join(__dirname, 'mc');
   await p.selectOption('#examples', '05_motion-tour'); await p.click('#btnRun');
   await p.click('#tab3d'); await p.waitForTimeout(2000);
   const view = await p.$('#view3d');
-  const press = async (btn) => { const el = await p.$(`.mbbtn[data-btn="${btn}"]`); const bx = await el.boundingBox(); await p.mouse.move(bx.x + 10, bx.y + 10); await p.mouse.down(); await p.waitForTimeout(60); await p.mouse.up(); };
+  const press = async (btn) => { const el = await p.$(`.mbbtn[data-btn="${btn}"]`); await el.scrollIntoViewIfNeeded(); const bx = await el.boundingBox(); await p.mouse.move(bx.x + 10, bx.y + 10); await p.mouse.down(); await p.waitForTimeout(60); await p.mouse.up(); };
   await view.screenshot({ path: path.join(OUT, '3d_ready.png') });
   await press('A');
   for (const [name, t] of [['sit', 1200], ['handstand', 2000], ['stretch', 2000], ['hello', 2200]]) {

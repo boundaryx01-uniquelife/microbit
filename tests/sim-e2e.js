@@ -16,14 +16,34 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   p.on('pageerror', e => errs.push(e.message));
   p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   p.on('dialog', d => d.accept());
+  // 0. 처음 열면 자동 시연이 시작되는지
   await p.goto(BASE + 'sim/');
+  await p.waitForFunction(() => window.__sim && window.Babel, null, { timeout: 30000 });
+  await p.waitForTimeout(4000);
+  const cap0 = await p.textContent('#caption');
+  const st0 = await p.evaluate(() => ({ mode: window.__sim.robot.mode, posture: window.__sim.robot.posture, code: document.getElementById('code').value.includes('동작 둘러보기') }));
+  check('처음 열면 "동작 둘러보기" 자동 시연', st0.code && /A 버튼/.test(cap0) && st0.mode === 4, `${cap0.slice(0, 30)} mode=${st0.mode}`);
+  await p.screenshot({ path: path.join(OUT, 'sim_demo_auto.png') });
+  // 신호등 카드 → 라디오 자동 → 출발
+  await p.click('#demoCards button[data-id="03_ai-traffic-dog"]');
+  let walked = false;
+  for (let i = 0; i < 40 && !walked; i++) { await p.waitForTimeout(150); walked = (await p.evaluate(() => window.__sim.robot.vel)) === 25; }
+  check('신호등 카드 → 라디오 3 자동 전송 → 출발', walked, await p.textContent('#caption'));
+  await p.waitForTimeout(3500);
+  const led1 = await p.evaluate(() => window.__sim.robot.bodyLed.join(','));
+  check('… → 노랑(2) 받으면 주황 불·정지', led1 === '255,160,0' && (await p.evaluate(() => window.__sim.robot.vel)) === 0, led1);
+  await p.screenshot({ path: path.join(OUT, 'sim_demo_traffic.png') });
+  await p.click('#btnDemoStop');
+  check('시연 멈추기', (await p.textContent('#caption')).includes('직접'));
+  // 이후 시험은 자동 시연 없이
+  await p.goto(BASE + 'sim/?demo=0');
   await p.waitForFunction(() => window.__sim && window.Babel, null, { timeout: 30000 });
   const S = (fn, arg) => p.evaluate(fn, arg);
   const errorLogs = () => p.$$eval('#log .error', els => els.map(e => e.textContent));
   const loadExample = async (id) => { await p.selectOption('#examples', id); await p.waitForTimeout(100); };
   const run = async () => { await p.click('#btnRun'); await p.waitForTimeout(300); };
   const state = () => S(() => { const r = window.__sim.robot; return { x: r.x, y: r.y, h: r.heading, vel: r.vel, mode: r.mode, posture: r.posture, led: r.bodyLed.slice(), fallen: r.fallen, expr: r.expr, headMode: r.headMode }; });
-  const pressMb = async (btn) => { const el = await p.$(`.mbbtn[data-btn="${btn}"]`); const bx = await el.boundingBox(); await p.mouse.move(bx.x + 10, bx.y + 10); await p.mouse.down(); await p.waitForTimeout(60); await p.mouse.up(); };
+  const pressMb = async (btn) => { const el = await p.$(`.mbbtn[data-btn="${btn}"]`); await el.scrollIntoViewIfNeeded(); const bx = await el.boundingBox(); await p.mouse.move(bx.x + 10, bx.y + 10); await p.mouse.down(); await p.waitForTimeout(60); await p.mouse.up(); };
 
   // 1. 예제 5개 실행 오류 없음
   for (const id of ['01_hello-robodog', '02_distance-rule', '03_ai-traffic-dog', '04_ai-team-template', '05_motion-tour']) {

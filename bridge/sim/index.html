@@ -43,11 +43,11 @@
   #log .warn { color: #c27c0e; } #log .error { color: #d43c3c; font-weight: 700; }
   .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
   .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-  #top2d { width: 100%; aspect-ratio: 3 / 2; display: block; border-radius: 10px; background: var(--bg); }
+  #top2d { width: 100%; aspect-ratio: 3 / 2; max-height: 42vh; display: block; border-radius: 10px; background: var(--bg); }
   .sub { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 8px; margin-top: 8px; }
-  #side2d { width: 100%; height: 150px; display: block; border-radius: 10px; background: var(--bg); }
-  #eyes { width: 100%; height: 150px; display: block; border-radius: 10px; }
-  #view3d { width: 100%; aspect-ratio: 3 / 2; border-radius: 10px; overflow: hidden; background: #dfe6f0; }
+  #side2d { width: 100%; height: 130px; display: block; border-radius: 10px; background: var(--bg); }
+  #eyes { width: 100%; height: 130px; display: block; border-radius: 10px; }
+  #view3d { width: 100%; aspect-ratio: 3 / 2; max-height: 52vh; border-radius: 10px; overflow: hidden; background: #dfe6f0; }
   .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px; }
   .panel { border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
   .panel h3 { margin: 0 0 6px; font-size: 14px; }
@@ -60,6 +60,16 @@
   label { font-size: 13px; }
   input[type=range] { width: 120px; }
   .hidden { display: none !important; }
+  .demo { border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
+  .demo-head { margin-bottom: 8px; }
+  .demo-head #btnDemoStop { margin-left: auto; padding: 6px 10px; }
+  .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
+  .cards button { text-align: left; padding: 8px 10px; line-height: 1.35; }
+  .cards button small { display: block; color: var(--muted); font-size: 12px; }
+  .cards button.playing { border-color: var(--accent); outline: 3px solid var(--accent); }
+  .caption { margin-top: 8px; padding: 8px 12px; border-radius: 10px; background: var(--bg); font-size: 15px; font-weight: 700; min-height: 40px; }
+  .caption .step { display: inline-block; background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; font-size: 12px; margin-right: 8px; vertical-align: 2px; }
+  .mbbtn.auto, .radio button.auto { background: var(--accent); color: var(--accent-text); }
 </style>
 <script src="lib/babel.min.js"></script>
 <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
@@ -88,6 +98,15 @@
   </section>
 
   <section>
+    <div class="demo">
+      <div class="row demo-head">
+        <b>예제 자동 시연</b>
+        <span class="note" style="margin:0">카드를 누르면 예제 코드가 실행되고 버튼·라디오도 저절로 눌러 줘요</span>
+        <button id="btnDemoStop" class="hidden">시연 멈추기</button>
+      </div>
+      <div class="cards" id="demoCards"></div>
+      <div id="caption" class="caption" aria-live="polite">카드를 골라 보세요</div>
+    </div>
     <div class="tabs" role="tablist">
       <button id="tab2d" role="tab" aria-selected="true">2D 보기</button>
       <button id="tab3d" role="tab" aria-selected="false">3D 보기</button>
@@ -285,7 +304,103 @@ function frame(now) {
 }
 window.addEventListener('resize', () => { ledDirty = true; });
 requestAnimationFrame(frame);
-window.__sim = { runner, robot, world, showTab };   // 자동 시험용
+
+// ---------- 예제 자동 시연 ----------
+// 각 예제: 준비(환경) → 코드 실행 → 버튼·라디오를 차례로 눌러 줌. 한 바퀴 끝나면 처음부터 반복.
+const DEMOS = [
+  { id: '05_motion-tour', title: '동작 둘러보기', sub: '자세 4가지 · 사각형 걷기 · 다리', steps: [
+    ['wait', 1500, '로보독이 준비 자세로 서 있어요'],
+    ['press', 'A', 'A 버튼 → 앉기 · 물구나무 · 기지개 · 인사'], ['wait', 10000],
+    ['press', 'B', 'B 버튼 → 앞으로 1초 걷고 90° 돌기를 4번 (사각형)'], ['wait', 11000],
+    ['press', 'AB', 'A+B 버튼 → 다리 높이 · 다리 하나 · 모터 각도 · 눈에 글자'], ['wait', 9000],
+  ] },
+  { id: '01_hello-robodog', title: '1. 안녕, 로보독', sub: '순차 구조', steps: [
+    ['wait', 1200, '전원을 켜면 준비 자세 + 웃는 얼굴'],
+    ['press', 'A', 'A 버튼 → 표정 · 파란 불 · "안녕" · 인사 자세 (순서대로!)'], ['wait', 5000],
+    ['press', 'B', 'B 버튼 → 앞으로 1초 걷고 멈추기'], ['wait', 2500],
+    ['press', 'AB', 'A+B 버튼 → 앉기'], ['wait', 3000],
+  ] },
+  { id: '02_distance-rule', title: '2. 규칙으로 반응하기', sub: '거리센서 + 만약', setup: 'obstacle', steps: [
+    ['wait', 1000, '앞에 빨간 장애물이 있어요. 켜자마자 걷지는 않아요'],
+    ['press', 'A', 'A 버튼 → 지금 거리센서 값 보기(마이크로비트 화면)'], ['wait', 2500],
+    ['press', 'B', 'B 버튼 → 걷기 시작! 가까워지면(20 미만) 멈추고 "비켜!"'], ['wait', 10000],
+    ['press', 'B', 'B 버튼 → 멈춤'], ['wait', 2000],
+  ] },
+  { id: '03_ai-traffic-dog', title: '3. AI 신호등 안내견', sub: '라디오로 AI 결과 받기', steps: [
+    ['wait', 2200, 'AI 브리지 대신 라디오 숫자를 보내 볼게요'],
+    ['radio', 3, 3000, 'AI가 "초록" 인식 → 3 → 출발!'],
+    ['radio', 2, 2500, 'AI가 "노랑" 인식 → 2 → 기다려'],
+    ['radio', 3, 2500, '다시 "초록" → 3 → 출발'],
+    ['radio', 1, 2500, 'AI가 "빨강" 인식 → 1 → 멈추고 "비켜!"'],
+    ['radio', 3, 2000, '"초록" → 출발…'],
+    ['wait', 3000, '신호가 끊기면 2초 뒤 스스로 멈춰요 (안전장치)'],
+  ] },
+  { id: '04_ai-team-template', title: '4. 우리 모둠 AI 로보독', sub: '번호마다 다른 행동', steps: [
+    ['wait', 2200, '모둠이 정한 카드 번호에 따라 다르게 행동해요'],
+    ['radio', 1, 2500, '1번 카드 → 빨간 불 + 으르렁'],
+    ['radio', 2, 3500, '2번 카드 → 파란 불 + 인사'],
+    ['radio', 3, 2500, '3번 카드 → 초록 불 + ILOVEYOU 눈'],
+    ['radio', 4, 2000, '4번(배경) → 기본 자세'],
+  ] },
+];
+let demoGen = 0, demoActive = null;
+const demoSleep = (ms, g) => new Promise((res, rej) => setTimeout(() => (g === demoGen ? res() : rej(new Error('demo-stop'))), ms));
+function setCaption(text, step) {
+  $('caption').innerHTML = (step ? `<span class="step">${step}</span>` : '') + text.replace(/[&<>]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+}
+function flash(el) { if (!el) return; el.classList.add('auto'); setTimeout(() => el.classList.remove('auto'), 350); }
+function stopDemo(msg) {
+  if (!demoActive) return;
+  demoGen++; demoActive = null;
+  document.querySelectorAll('#demoCards button').forEach(b => b.classList.remove('playing'));
+  $('btnDemoStop').classList.add('hidden');
+  setCaption(msg || '시연을 멈췄어요. 이제 직접 버튼을 눌러 보세요');
+}
+async function playDemo(demo) {
+  stopDemo(); const g = ++demoGen; demoActive = demo;
+  document.querySelectorAll('#demoCards button').forEach(b => b.classList.toggle('playing', b.dataset.id === demo.id));
+  $('btnDemoStop').classList.remove('hidden');
+  const ex = EXAMPLES.find(e => e.id === demo.id);
+  $('code').value = ex.code; save();
+  try {
+    for (let round = 0; ; round++) {
+      // 준비
+      runner.stop(); world.obstacles.length = 0; setTable(true);
+      if (demo.setup === 'obstacle') world.obstacles.push({ x: 55, y: 12, w: 10, h: 6 });
+      robot.reset();
+      await runner.start(ex.code);
+      const n = demo.steps.filter(s => s[0] !== 'wait' || s[2]).length;
+      let k = 0;
+      for (const s of demo.steps) {
+        if (s[0] === 'wait') { if (s[2]) setCaption(s[2], `${++k}/${n}`); await demoSleep(s[1], g); }
+        else if (s[0] === 'press') {
+          setCaption(s[2], `${++k}/${n}`);
+          flash(s[1] === 'AB' ? $('btnAB') : document.querySelector(`.mbbtn[data-btn="${s[1]}"]`));
+          runner.press(s[1]); log(`(시연) ${s[1] === 'AB' ? 'A+B' : s[1]} 버튼`);
+        } else if (s[0] === 'radio') {
+          setCaption(s[3], `${++k}/${n}`);
+          const btn = document.querySelector(`#radioBtns button:nth-child(${s[1] + 1})`);
+          log(`(시연) 라디오 ${s[1]} 보냄`);
+          // AI 브리지처럼 0.5초마다 같은 번호를 반복해서 보냄
+          for (let t = 0; t < s[2]; t += 500) { flash(btn); runner.radioReceive(s[1]); await demoSleep(Math.min(500, s[2] - t), g); }
+        }
+      }
+      setCaption('한 바퀴 끝! 처음부터 다시 보여 줄게요 (시연 멈추기를 누르면 직접 해 볼 수 있어요)');
+      await demoSleep(2500, g);
+    }
+  } catch (e) { /* 시연 멈춤 */ }
+}
+$('demoCards').innerHTML = DEMOS.map(d => `<button data-id="${d.id}">${d.title}<small>${d.sub}</small></button>`).join('');
+$('demoCards').querySelectorAll('button').forEach(b => b.onclick = () => playDemo(DEMOS.find(d => d.id === b.dataset.id)));
+$('btnDemoStop').onclick = () => stopDemo();
+// 사용자가 직접 조작하면 시연을 멈춤
+['btnRun', 'btnStop', 'btnReset', 'btnAB', 'btnRobot'].forEach(id => $(id).addEventListener('click', (e) => { if (e.isTrusted) stopDemo(); }, true));
+document.querySelectorAll('.mbbtn').forEach(b => b.addEventListener('pointerdown', (e) => { if (e.isTrusted) stopDemo(); }, true));
+$('radioBtns').addEventListener('click', (e) => { if (e.isTrusted) stopDemo(); }, true);
+$('code').addEventListener('input', () => stopDemo('코드를 고쳤어요. ▶ 실행으로 직접 확인해 보세요'));
+// 처음 열면 '동작 둘러보기' 시연 자동 시작 (주소 끝에 ?demo=0 이면 끔)
+if (new URLSearchParams(location.search).get('demo') !== '0') setTimeout(() => playDemo(DEMOS[0]), 600);
+window.__sim = { runner, robot, world, showTab, playDemo: (i) => playDemo(DEMOS[i]), stopDemo };   // 자동 시험용
 </script>
 </body>
 </html>
