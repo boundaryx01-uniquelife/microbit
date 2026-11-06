@@ -17,6 +17,8 @@
 
 **AI 브리지 주소: https://microbit-bridge.netlify.app** (학교망 허용 목록에는 `microbit-bridge.netlify.app` 하나만 추가하면 됩니다)
 
+**로보독 시뮬레이터: https://microbit-bridge.netlify.app/sim/** — MakeCode JavaScript 코드를 붙여넣으면 로보독 움직임을 2D·3D로 미리 봅니다. AI 브리지와 같은 컴퓨터에서 열면 로보독 없이도 AI 수업 연습이 됩니다. (`docs/08_시뮬레이터_안내.md`)
+
 ## 구성
 
 | 경로 | 내용 |
@@ -29,7 +31,9 @@
 | `docs/05_교사용_운영가이드.md` | AI 개념(교사용), 학교 PC 점검표, 안전장치, 문제 해결 |
 | `docs/06_중고등_확장안.md` | 중학교·고등학교 확장 |
 | `docs/07_검증보고서.md` | 배포 전 검증 결과와 미검증 항목 |
+| `docs/08_시뮬레이터_안내.md` | 로보독 시뮬레이터 쓰는 법·실물과 다른 점 |
 | `bridge/` | AI 브리지 웹 프로그램(라이브러리·모델 동봉, 설치 불필요) |
+| `bridge/sim/` | 로보독 시뮬레이터(2D·3D) |
 | `makecode/*.ts` | MakeCode 예제 (JavaScript 탭에 붙여넣기 → 블록으로 보기) |
 
 ## 빠른 시작 (교사)
@@ -48,4 +52,5 @@
 
 ## 라이선스
 
-`bridge/lib`(TensorFlow.js, MobileNet, KNN Classifier)와 `bridge/model`(MobileNet v2)은 Apache License 2.0 — `bridge/NOTICE.md` 참고.
+`bridge/lib`(TensorFlow.js, MobileNet, KNN Classifier)와 `bridge/model`(MobileNet v2)은 Apache License 2.0,
+`bridge/sim/lib`의 Babel standalone과 three.js는 MIT License — `bridge/NOTICE.md` 참고.

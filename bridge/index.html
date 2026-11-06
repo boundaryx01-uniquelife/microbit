@@ -77,6 +77,7 @@
   <div class="row">
     <span id="modelStatus" class="status off">AI 준비 중…</span>
     <span id="serialStatus" class="status off">마이크로비트 연결 안 됨</span>
+    <a href="sim/" target="_blank" rel="noopener" style="font-size:14px">시뮬레이터 ↗</a>
     <button id="btnStop" title="키보드 Esc 키로도 멈출 수 있어요">■ 멈춤</button>
   </div>
 </header>
@@ -423,6 +424,11 @@
     }
   }
   setInterval(() => tick(false), 100);
+
+  // 같은 컴퓨터에서 열린 로보독 시뮬레이터(sim/)에도 같은 번호를 알려 줌
+  let simChannel = null;
+  try { simChannel = new BroadcastChannel('robodog-ai-bridge'); } catch (e) { /* 지원 안 함 */ }
+  setInterval(() => { if (simChannel && lastSent >= 0) simChannel.postMessage({ n: lastSent }); }, 300);
   document.addEventListener('visibilitychange', () => tick(true));
 
   // ---------------- AI ----------------

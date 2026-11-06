@@ -11,3 +11,12 @@
 | `model/` | MobileNet v2 (alpha 0.5, 224) TF.js 모델 | TF Hub classification/3 | https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v2_050_224/classification/3/default/1 |
 
 Copyright Google LLC. 각 파일의 저작권 표시는 원본 파일 머리말을 따릅니다.
+
+## 시뮬레이터(`sim/lib/`) — MIT License
+
+| 파일 | 구성요소 | 버전 | 저작권 |
+|---|---|---|---|
+| `sim/lib/babel.min.js` | @babel/standalone | 7.24.0 | Copyright (c) 2014-present Sebastian McKenzie and other contributors |
+| `sim/lib/three.module.min.js`, `sim/lib/OrbitControls.js` | three.js | 0.160.0 | Copyright 2010-2023 Three.js Authors |
+
+MIT License 전문: `sim/lib/LICENSE-MIT.txt`
