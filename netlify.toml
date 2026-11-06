@@ -1,0 +1,21 @@
+# Netlify: AI 브리지(bridge/)만 정적 사이트로 배포
+[build]
+  publish = "bridge"
+  command = ""
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    Permissions-Policy = "camera=(self), serial=(self), microphone=()"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "no-referrer"
+
+[[headers]]
+  for = "/model/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
+[[headers]]
+  for = "/lib/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
