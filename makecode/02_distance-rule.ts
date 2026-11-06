@@ -20,18 +20,20 @@ input.onButtonPressed(Button.A, function () {
     basic.showNumber(robodog.getTof())
 })
 
+// B는 '걷는중' 값만 바꾸고, 로봇 명령은 아래 무한 반복 한 곳에서만 내립니다
 input.onButtonPressed(Button.B, function () {
     걷는중 = !(걷는중)
-    if (!(걷는중)) {
-        지금상태 = 0
-        robodog.stop()
-        robodog.gesture(deflib.Posture.Ready)
-        basic.showIcon(IconNames.Asleep)
-    }
 })
 
 basic.forever(function () {
-    if (걷는중) {
+    if (!(걷는중)) {
+        if (지금상태 != 0) {
+            지금상태 = 0
+            robodog.stop()
+            robodog.gesture(deflib.Posture.Ready)
+            basic.showIcon(IconNames.Asleep)
+        }
+    } else {
         let 거리 = robodog.getTof()
         if (거리 == 0) {
             // 센서 값을 아직 못 받았거나 오류 → 안전하게 멈춤

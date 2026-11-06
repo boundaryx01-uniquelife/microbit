@@ -58,6 +58,7 @@ input.onButtonPressed(Button.B, function () {
     멈춤잠금 = false
 })
 
+let 화면잠금표시 = false
 basic.forever(function () {
     let 할일 = 받은신호
     if (멈춤잠금 || input.runningTime() - 마지막수신 > 2000) {
@@ -66,11 +67,16 @@ basic.forever(function () {
     if (할일 != 현재신호) {
         현재신호 = 할일
         번호에맞게행동하기(현재신호)
-        if (멈춤잠금) {
-            basic.showIcon(IconNames.No)
-        } else {
-            basic.showNumber(현재신호)
-        }
+        화면잠금표시 = false
+        basic.showNumber(현재신호)
+    }
+    // 잠금 상태가 바뀌면 화면도 바꿈 (잠금 = X 표시)
+    if (멈춤잠금 && !(화면잠금표시)) {
+        화면잠금표시 = true
+        basic.showIcon(IconNames.No)
+    } else if (!(멈춤잠금) && 화면잠금표시) {
+        화면잠금표시 = false
+        basic.showNumber(현재신호)
     }
     basic.pause(50)
 })

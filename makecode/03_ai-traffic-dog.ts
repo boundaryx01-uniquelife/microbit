@@ -64,6 +64,7 @@ input.onButtonPressed(Button.B, function () {
     멈춤잠금 = false
 })
 
+let 화면잠금표시 = false
 basic.forever(function () {
     let 할일 = 받은신호
     if (멈춤잠금) {
@@ -75,9 +76,15 @@ basic.forever(function () {
     if (할일 != 현재신호) {
         현재신호 = 할일
         신호에반응하기(현재신호)
-        if (멈춤잠금) {
-            basic.showIcon(IconNames.No)
-        }
+        화면잠금표시 = false
+    }
+    // 잠금 상태가 바뀌면 화면도 바꿈 (잠금 = X 표시)
+    if (멈춤잠금 && !(화면잠금표시)) {
+        화면잠금표시 = true
+        basic.showIcon(IconNames.No)
+    } else if (!(멈춤잠금) && 화면잠금표시) {
+        화면잠금표시 = false
+        basic.clearScreen()
     }
     basic.pause(50)
 })
