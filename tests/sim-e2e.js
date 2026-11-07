@@ -205,6 +205,31 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   await p.click('#btnDemoStop'); await p.waitForTimeout(300);
   check('군무 멈추면 1대로 돌아옴', (await p.evaluate(() => window.__sim.world.extra.length)) === 0);
 
+  // 11-4. 블록으로 보기 (MakeCode 공식 렌더링 서비스, 인터넷 필요)
+  const waitBlocks = async () => {
+    for (let i = 0; i < 120; i++) {
+      const st = await p.evaluate(() => ({ w: document.getElementById('blockImg').naturalWidth, msg: document.getElementById('blockStatus').textContent }));
+      if (st.w > 0 && !st.msg) return st;
+      if (/못했어요/.test(st.msg)) return st;
+      await p.waitForTimeout(500);
+    }
+    return { w: 0, msg: 'timeout' };
+  };
+  await p.click('#btnReset'); await loadExample('03_ai-traffic-dog');
+  await p.click('#tabBlocks');
+  let bv = await waitBlocks();
+  const shownW = await p.evaluate(() => document.getElementById('blockImg').getBoundingClientRect().width);
+  check('블록으로 보기: 로보독 예제가 MakeCode 블록 그림으로 바뀜', bv.w > 500 && !bv.msg && shownW < 3000, `그림 ${bv.w}px, 표시 ${Math.round(shownW)}px ${bv.msg}`);
+  await p.screenshot({ path: path.join(OUT, 'sim_blocks_view.png') });
+  await p.evaluate(() => { document.getElementById('blockImg').removeAttribute('src'); });
+  await p.click('#tabJs');
+  await p.fill('#code', 'robodog.rfBand(7)\nrobodog.aiDetection(deflib.AiMode.QrCode)\nbasic.forever(function () {\n    basic.showString(robodog.getQrCode())\n})');
+  await p.click('#tabBlocks');
+  bv = await waitBlocks();
+  check('블록으로 보기: 무선 확장(AI 블록) 코드도 바뀜', bv.w > 200 && !bv.msg, `width=${bv.w} ${bv.msg}`);
+  await p.click('#tabJs');
+  check('JavaScript 탭으로 돌아옴', await p.isVisible('#code'));
+
   // 12. 좁은 화면
   await p.setViewportSize({ width: 390, height: 900 }); await p.waitForTimeout(400);
   const sw = await p.evaluate(() => document.documentElement.scrollWidth);
