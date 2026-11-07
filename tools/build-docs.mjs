@@ -90,7 +90,7 @@ for (const d of docs) {
 if (badLinks) process.exitCode = 1;
 
 const blurb = (md) => { const t = md.replace(/^#.*$/m, '').split('\n').map(l => l.replace(/^[-*>\s]+/, '').replace(/[*`#|]/g, '').trim()).filter(l => l && !/^-+$/.test(l))[0] || ''; return t.length > 90 ? t.slice(0, 88) + '…' : t; };
-let idx = `<h1>수업 자료</h1><p class="note">로보독 + 마이크로비트 피지컬 AI 수업안·활동지·운영 가이드입니다. 각 문서는 [🖨 인쇄]로 종이나 PDF로 저장할 수 있어요.</p>`;
+let idx = `<h1>수업 자료</h1><p class="note">로보독 + 마이크로비트 피지컬 AI 수업안·활동지·운영 가이드입니다. 각 문서는 [🖨 인쇄]로 종이나 PDF로 저장할 수 있어요.</p><div class="cards"><a href="../lessons/"><b>웹 슬라이드로 보기 →</b><span>수업 슬라이드를 브라우저에서 바로 보여 줘요 (교사 모드: 대본 표시)</span></a></div>`;
 for (const [g, ids] of GROUPS) {
   idx += `<h2>${g}</h2><div class="cards">` + ids.map(id => docs.find(d => d.slug === id)).filter(Boolean)
     .map(d => `<a href="${d.slug}.html"><b>${esc(SHORT[d.slug] || d.title)}</b><span>${esc(d.title)}</span><span>${esc(blurb(d.md))}</span></a>`).join('') + '</div>';

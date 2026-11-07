@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>수업 슬라이드 · 로보독 AI 교실</title>
+<link rel="stylesheet" href="../assets/brand.css">
+<link rel="stylesheet" href="viewer.css">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+</head>
+<body>
+<header class="gnb"><div class="gnb-in">
+<a class="brand" href="../"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#2456e5"/><path d="M22.2 5.6a5.6 5.6 0 0 1 4.3 3.4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".85"/><rect x="4.5" y="10.5" width="23" height="13" rx="6.5" fill="#fff"/><rect x="8" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><rect x="17.4" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><circle cx="11.3" cy="17" r="1.6" fill="#8fd8ff"/><circle cx="20.7" cy="17" r="1.6" fill="#8fd8ff"/></svg>
+<span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
+<nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="../docs/" aria-current="page">수업 자료</a></nav>
+</div></header>
+
+<main id="list" hidden>
+  <h1>웹 슬라이드</h1>
+  <p class="lead">수업 슬라이드를 브라우저에서 바로 보여 줘요. 학생은 같은 주소로 따라 볼 수 있어요.</p>
+  <div id="cards" class="lcards"></div>
+  <p id="listmsg" class="lead" role="status"></p>
+  <p class="lead"><a href="../docs/">← 수업 자료로 돌아가기</a></p>
+</main>
+
+<div id="viewer" hidden>
+  <div class="progress" role="progressbar" aria-label="진행" aria-valuemin="1" aria-valuenow="1"><i></i></div>
+  <div class="stagewrap" id="stagewrap">
+    <div class="fit" id="fit"><section class="stage" id="stage" aria-live="polite" aria-atomic="true"></section></div>
+  </div>
+  <aside class="notes" id="notes" hidden aria-label="교사 노트"><h2>교사 노트</h2><div id="notesbody"></div></aside>
+  <div class="bar" id="bar" role="toolbar" aria-label="슬라이드 조작">
+    <button id="prev" type="button" aria-label="이전 슬라이드">◀ 이전</button>
+    <span id="counter" class="counter" aria-label="현재 슬라이드">1 / 1</span>
+    <button id="next" type="button" class="primary" aria-label="다음 슬라이드">다음 ▶</button>
+    <select id="chsel" aria-label="차시 바로가기"></select>
+    <span class="grow"></span>
+    <button id="teacher" type="button" aria-pressed="false" aria-label="교사 모드 (N)">교사 모드</button>
+    <button id="fs" type="button" aria-label="전체 화면 (F)">전체 화면</button>
+  </div>
+</div>
+<p id="err" class="lead" role="alert" hidden></p>
+<script src="viewer.js"></script>
+</body></html>

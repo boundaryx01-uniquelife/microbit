@@ -20,7 +20,10 @@ let 마지막수신 = 0
 let 멈춤잠금 = false
 radio.setGroup(모둠번호)
 robodog.gesture(deflib.Posture.Ready)
-basic.showString("R" + 모둠번호)
+// 켤 때 모둠번호를 로보독 눈에 잠깐 보여 줌(등에 꽂은 마이크로비트 화면은 가려질 수 있어요)
+robodog.headLedPrint(deflib.HeadLedSide.Both, "" + 모둠번호)
+basic.pause(1400)
+robodog.headLedClear()
 
 function 번호에맞게행동하기 (번호: number) {
     if (번호 == 1) {
