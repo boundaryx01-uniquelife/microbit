@@ -170,3 +170,19 @@ body.fluid .progress { position: sticky; top: 0; z-index: 6; }
 .split.tbl.has-img { grid-template-columns: minmax(0, 1.7fr) minmax(0, 1fr); gap: 28px; }
 .split.tbl .rows li { font-size: 1.6em; padding: .55em .9em; }
 .split.tbl .rows b { min-width: 2.2em; }
+
+/* 함께 보기(교사 화면 따라가기) */
+.join { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 16px 20px; margin: 18px 0 0; box-shadow: var(--shadow-sm); }
+.join label { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; } .join label b { font-size: 18px; } .join label span { color: var(--muted); font-size: 14.5px; }
+.joinrow { display: flex; gap: 8px; } .joinrow input { width: 8em; min-height: 46px; font-size: 22px; font-weight: 800; letter-spacing: .15em; text-align: center; border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--surface); color: var(--ink); }
+.joinmsg { margin: 0; min-height: 1.2em; color: var(--bad); font-size: 14.5px; }
+body:not(.teacher):not(.hosting) .syncbtn { display: none; }
+.syncpill { border-radius: 999px; font-weight: 700; background: var(--accent-soft); color: var(--accent); border: 1px solid transparent; }
+.syncpill.paused { background: var(--warn-soft); color: var(--ink); border-color: var(--warn); }
+.syncpill.off { background: var(--surface-2); color: var(--muted); }
+.syncdlg { border: 0; border-radius: var(--r-lg); padding: 24px 28px; max-width: min(560px, calc(100vw - 32px)); background: var(--surface); color: var(--ink); box-shadow: var(--shadow-md); }
+.syncdlg::backdrop { background: rgba(17, 24, 39, .55); }
+.syncdlg h2 { margin: 0 0 8px; font-size: 22px; } .syncdlg p { line-height: 1.6; }
+.bigcode { font-size: clamp(64px, 16vw, 120px); font-weight: 900; letter-spacing: .12em; text-align: center; color: var(--accent); line-height: 1.1; margin: 8px 0; font-variant-numeric: tabular-nums; }
+.syncurl { text-align: center; font-weight: 700; font-size: 18px; word-break: break-all; }
+.dlgbtns { display: flex; justify-content: flex-end; gap: 8px; margin-top: 12px; }

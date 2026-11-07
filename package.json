@@ -2,7 +2,8 @@
   "name": "robodog-microbit-ai",
   "private": true,
   "dependencies": {
-    "@anthropic-ai/sdk": "^1.6.0"
+    "@anthropic-ai/sdk": "^1.6.0",
+    "@netlify/blobs": "^11.1.8"
   },
   "devDependencies": {
     "marked": "^15.0.12",

@@ -13,8 +13,27 @@
   };
 
   /* ---------- 목록 ---------- */
+  var API = '/api/lesson-sync';
+  function api(method, body, q) {
+    return fetch(API + (q || ''), { method: method, cache: 'no-store', headers: body ? { 'content-type': 'application/json' } : {}, body: body ? JSON.stringify(body) : undefined })
+      .then(function (r) { return r.json().catch(function () { return {}; }).then(function (j) { j._status = r.status; return j; }); });
+  }
+  function joinURL(lesson, room) { return '?l=' + encodeURIComponent(lesson) + '&room=' + room; }
+
   function showList() {
     $('list').hidden = false;
+    var pre = params.get('room'); if (pre && /^\d{4}$/.test(pre)) $('joincode').value = pre;
+    $('joinform').onsubmit = function (e) {
+      e.preventDefault();
+      var code = $('joincode').value.replace(/\D/g, ''), msg = $('joinmsg');
+      if (!/^\d{4}$/.test(code)) { msg.textContent = '숫자 4개를 넣어 주세요.'; return; }
+      msg.textContent = '';
+      api('GET', null, '?room=' + code).then(function (j) {
+        if (j._status === 200 && j.lesson) location.href = joinURL(j.lesson, code) + '#' + ((j.slide | 0) + 1);
+        else if (j._status === 404) msg.textContent = '그 코드의 수업이 없어요. 숫자를 다시 확인해 주세요.';
+        else msg.textContent = '지금 연결할 수 없어요. 잠시 뒤 다시 해 보세요.';
+      }, function () { msg.textContent = '지금 연결할 수 없어요. 인터넷 연결을 확인해 주세요.'; });
+    };
     getJSON('data/index.json').then(function (idx) {
       return Promise.all(idx.map(function (it) {
         return getJSON('data/' + encodeURIComponent(it.id) + '.json').then(function (d) { return { it: it, n: d.slides.length }; }, function () { return null; });
@@ -146,6 +165,7 @@
       if (location.hash !== h) history.replaceState(null, '', h);
       fit();
       shrink();
+      if (sync.host) pushSoon();
     }
     // 글이 많은 장: 넘치면 그 장의 글자 크기를 조금씩 줄여 상자 안에 맞춤(최소 62%)
     function shrink() {
@@ -154,7 +174,12 @@
       b.style.fontSize = '';
       for (var f = 0.96; f >= 0.62 && over(); f -= 0.04) b.style.fontSize = f.toFixed(2) + 'em';
     }
-    function go(n) { n = Math.max(0, Math.min(total - 1, n)); if (n !== cur) { cur = n; render(); } }
+    var remote = false;
+    function go(n) {
+      n = Math.max(0, Math.min(total - 1, n));
+      if (!remote && sync.follow && n !== cur) setFollow(false);   // 학생이 직접 넘기면 따라가기 잠시 멈춤
+      if (n !== cur) { cur = n; render(); }
+    }
 
     function fit() {
       var wrap = $('stagewrap'), f = $('fit'), st = $('stage');
@@ -222,10 +247,83 @@
       var b = $('bar'); b.classList.add('show'); clearTimeout(hideT); hideT = setTimeout(function () { b.classList.remove('show'); }, 2500);
     });
 
+    /* ---------- 함께 보기: 교사(host)가 넘기면 학생(follow)이 따라감 ---------- */
+    var sync = { host: null, room: null, follow: false, timer: null, pushT: null, lastT: 0, fails: 0 };
+    var HKEY = 'lessonHost:' + id;
+    var pill = $('syncpill');
+    function setPill(text, cls, label) { pill.hidden = !text; pill.textContent = text || ''; pill.className = 'syncpill ' + (cls || ''); pill.setAttribute('aria-label', label || text || ''); }
+
+    // 교사
+    function hostPill() { setPill('학생 코드 ' + sync.host.room, '', '학생 연결 중, 수업 코드 ' + sync.host.room + ' (눌러서 코드 크게 보기)'); }
+    function pushSoon() { clearTimeout(sync.pushT); sync.pushT = setTimeout(push, 120); }
+    function push() {
+      if (!sync.host) return;
+      var h = sync.host;
+      api('POST', { op: 'set', room: h.room, key: h.key, slide: cur, lesson: id }).then(function (j) {
+        if (j._status === 404 || j._status === 403) { endHost(); setPill('학생 연결이 끝났어요', 'off'); $('syncmsg').textContent = '연결 시간이 지나 끝났어요. 다시 [학생 연결]을 누르세요.'; }
+        else if (j._status !== 200) setPill('학생 연결: 다시 시도 중…', 'paused');
+        else hostPill();
+      }, function () { setPill('학생 연결: 인터넷 확인', 'paused'); });
+    }
+    function showDlg() {
+      var d = $('syncdlg');
+      $('synccode').textContent = sync.host ? sync.host.room : '····';
+      $('syncurl').textContent = location.host + location.pathname.replace(/index\.html$/, '');
+      if (d.showModal && !d.open) d.showModal(); else d.setAttribute('open', '');
+    }
+    function startHost() {
+      if (sync.host) { showDlg(); return; }
+      $('syncmsg').textContent = '코드를 만드는 중…'; showDlg();
+      api('POST', { op: 'create', lesson: id }).then(function (j) {
+        if (j._status !== 200 || !j.room) { $('syncmsg').textContent = j._status === 429 ? '너무 자주 눌렀어요. 1분 뒤 다시 해 보세요.' : '지금 연결을 만들 수 없어요. 잠시 뒤 다시 해 보세요.'; return; }
+        sync.host = { room: j.room, key: j.key }; store.set(HKEY, JSON.stringify(sync.host));
+        document.body.classList.add('hosting');
+        $('synccode').textContent = j.room; $('syncmsg').textContent = '학생 화면은 선생님이 넘기는 장으로 2~3초 안에 따라와요.';
+        hostPill(); push();
+      }, function () { $('syncmsg').textContent = '인터넷 연결을 확인해 주세요.'; });
+    }
+    function endHost() { sync.host = null; try { localStorage.removeItem(HKEY); } catch (e) {} document.body.classList.remove('hosting'); setPill(''); }
+    $('syncbtn').onclick = startHost;
+    $('syncstop').onclick = function () { endHost(); $('syncdlg').close ? $('syncdlg').close() : $('syncdlg').removeAttribute('open'); };
+    $('syncclose').onclick = function () { $('syncdlg').close ? $('syncdlg').close() : $('syncdlg').removeAttribute('open'); };
+
+    // 학생
+    function setFollow(on) {
+      sync.follow = on;
+      if (on) { setPill('선생님 화면 따라가는 중 · ' + sync.room, '', '선생님 화면을 따라가는 중. 누르면 혼자 넘겨 보기'); poll(); }
+      else setPill('↩ 선생님 화면으로', 'paused', '혼자 보는 중. 누르면 선생님 화면으로 돌아가기');
+    }
+    function poll() {
+      clearTimeout(sync.timer);
+      if (!sync.room) return;
+      if (document.hidden) { sync.timer = setTimeout(poll, 3000); return; }
+      api('GET', null, '?room=' + sync.room).then(function (j) {
+        if (j._status === 404) { sync.room = null; sync.follow = false; setPill('수업 연결이 끝났어요', 'off'); return; }
+        if (j._status !== 200) throw new Error(j._status);
+        sync.fails = 0;
+        if (j.lesson && j.lesson !== id) { location.replace(joinURL(j.lesson, sync.room) + '#' + ((j.slide | 0) + 1)); return; }
+        if (sync.follow && j.slide !== cur) { remote = true; go(j.slide); remote = false; }
+        sync.timer = setTimeout(poll, 2500);
+      }).catch(function () {
+        sync.fails++;
+        if (sync.follow) setPill('연결 중…', 'paused', '선생님 화면에 다시 연결하는 중');
+        sync.timer = setTimeout(function () { if (sync.follow) setFollow(true); else poll(); }, Math.min(15000, 2500 * sync.fails));
+      });
+    }
+    document.addEventListener('visibilitychange', function () { if (!document.hidden && sync.room) poll(); });
+    pill.onclick = function () {
+      if (sync.host) showDlg();
+      else if (sync.room) setFollow(!sync.follow);
+    };
+
     cur = fromHash();
     teacher(store.get('lessonTeacher') === '1');
+    var room = params.get('room');
+    if (room && /^\d{4}$/.test(room)) { sync.room = room; }
+    else { try { var hh = JSON.parse(store.get(HKEY) || 'null'); if (hh && hh.room && hh.key) { sync.host = hh; document.body.classList.add('hosting'); hostPill(); } } catch (e) {} }
     render();
-    window.__lesson = { go: go, total: total, cur: function () { return cur; } };
+    if (sync.room) setFollow(true);
+    window.__lesson = { go: go, total: total, cur: function () { return cur; }, sync: sync };
   }
 
   if (!id) showList();

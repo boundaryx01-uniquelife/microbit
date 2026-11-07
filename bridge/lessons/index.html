@@ -16,6 +16,11 @@
 <main id="list" hidden>
   <h1>웹 슬라이드</h1>
   <p class="lead">수업 슬라이드를 브라우저에서 바로 보여 줘요. 학생은 같은 주소로 따라 볼 수 있어요.</p>
+  <form id="joinform" class="join" autocomplete="off" novalidate>
+    <label for="joincode"><b>선생님 화면 따라가기</b><span>선생님이 알려 준 숫자 4개를 넣으세요.</span></label>
+    <div class="joinrow"><input id="joincode" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="1234" aria-describedby="joinmsg"><button class="btn primary" type="submit">들어가기</button></div>
+    <p id="joinmsg" class="joinmsg" role="status"></p>
+  </form>
   <div id="cards" class="lcards"></div>
   <p id="listmsg" class="lead" role="status"></p>
   <p class="lead"><a href="../docs/">← 수업 자료로 돌아가기</a></p>
@@ -33,10 +38,20 @@
     <button id="next" type="button" class="primary" aria-label="다음 슬라이드">다음 ▶</button>
     <select id="chsel" aria-label="차시 바로가기"></select>
     <span class="grow"></span>
+    <button id="syncpill" type="button" class="syncpill" hidden></button>
+    <button id="syncbtn" type="button" class="syncbtn" aria-haspopup="dialog">학생 연결</button>
     <button id="teacher" type="button" aria-pressed="false" aria-label="교사 모드 (N)">교사 모드</button>
     <button id="fs" type="button" aria-label="전체 화면 (F)">전체 화면</button>
   </div>
 </div>
+<dialog id="syncdlg" class="syncdlg" aria-labelledby="syncttl">
+  <h2 id="syncttl">학생 화면 연결</h2>
+  <p>학생 기기에서 아래 주소를 열고 <b>수업 코드</b>를 넣게 하세요. 선생님이 넘기는 장을 학생 화면이 따라와요.</p>
+  <div class="bigcode" id="synccode" aria-label="수업 코드">----</div>
+  <p class="syncurl" id="syncurl"></p>
+  <p class="muted" id="syncmsg" role="status"></p>
+  <div class="dlgbtns"><button type="button" class="btn" id="syncstop">연결 끝내기</button><button type="button" class="btn primary" id="syncclose">닫기</button></div>
+</dialog>
 <p id="err" class="lead" role="alert" hidden></p>
 <script src="viewer.js"></script>
 </body></html>
