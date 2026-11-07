@@ -60,7 +60,8 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 .dl{columns:2 260px;padding-left:20px} .note{color:var(--muted);font-size:14.5px}
 a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 @media print { header,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
-  h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2} }
+  h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2}
+  pre{background:#fff;border:1px solid #999;font-size:12pt;line-height:2.1;white-space:pre-wrap}   /* 활동지: 글씨 쓸 칸 넉넉히 */ }
 `;
 const page = (title, active, body) => `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
@@ -72,7 +73,14 @@ const page = (title, active, body) => `<!doctype html>
 
 // 한국어 문서의 '5~6학년' 같은 물결표가 취소선(~글자~)으로 바뀌지 않게: 코드 밖의 홑 물결표를 문자로
 const tilde = (md) => md.split(/(```[\s\S]*?```|`[^`\n]*`)/).map((part, i) => i % 2 ? part : part.replace(/~~|~/g, t => t === '~' ? '&#126;' : t)).join('');
-for (const d of docs) fs.writeFileSync(path.join(OUT, `${d.slug}.html`), page(d.title, d.slug, linkify(marked.parse(tilde(d.md)))));
+let badLinks = 0;
+for (const d of docs) {
+  const html = page(d.title, d.slug, linkify(marked.parse(tilde(d.md))));
+  // 주소 바로 뒤에 괄호·한글이 붙어 링크가 깨진 곳 찾기(예: (https://...)와) → md에서 <주소>로 감싸기
+  for (const m of html.matchAll(/href="(https?:[^"]*)"/g)) if (/\)|%E[A-F]/i.test(m[1])) { badLinks++; console.warn(`⚠ ${d.f}: 깨진 링크 ${decodeURIComponent(m[1])}`); }
+  fs.writeFileSync(path.join(OUT, `${d.slug}.html`), html);
+}
+if (badLinks) process.exitCode = 1;
 
 const blurb = (md) => { const t = md.replace(/^#.*$/m, '').split('\n').map(l => l.replace(/^[-*>\s]+/, '').replace(/[*`#|]/g, '').trim()).filter(l => l && !/^-+$/.test(l))[0] || ''; return t.length > 90 ? t.slice(0, 88) + '…' : t; };
 let idx = `<h1>수업 자료</h1><p class="note">로보독 + 마이크로비트 피지컬 AI 수업안·활동지·운영 가이드입니다. 각 문서는 [🖨 인쇄]로 종이나 PDF로 저장할 수 있어요.</p>`;
