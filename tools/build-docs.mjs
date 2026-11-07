@@ -32,6 +32,7 @@ function linkify(html) {
   html = html.replace(/<code>makecode\/([\w.-]+\.ts)<\/code>/g, (m, f) => tsFiles.includes(f) ? `<a href="makecode/${f}" download><code>makecode/${f}</code></a>` : m);
   html = html.replace(/href="(?:\.\/)?(?:docs\/)?(\d\d_[^"#]+?\.md)(#[^"]*)?"/g, (m, f, h) => bySrc.has(decodeURIComponent(f)) ? `href="${slug(decodeURIComponent(f))}.html${h || ''}"` : m);
   html = html.replace(/href="(?:\.\.\/)?makecode\/([\w.-]+\.ts)"/g, 'href="makecode/$1"');
+  html = html.replace(/<pre>/g, '<pre tabindex="0">');
   html = html.replace(/<table>/g, '<div class="tbl"><table>').replace(/<\/table>/g, '</table></div>');
   return html;
 }
@@ -72,7 +73,8 @@ const page = (title, active, body) => `<!doctype html>
 <main>${body}</main></body></html>`;
 
 // 한국어 문서의 '5~6학년' 같은 물결표가 취소선(~글자~)으로 바뀌지 않게: 코드 밖의 홑 물결표를 문자로
-const tilde = (md) => md.split(/(```[\s\S]*?```|`[^`\n]*`)/).map((part, i) => i % 2 ? part : part.replace(/~~|~/g, t => t === '~' ? '&#126;' : t)).join('');
+// 또 **굵게** 가 괄호·기호 뒤 한글 앞에서 풀리지 않는 문제(마크다운 규칙)를 피하려고 <strong>으로 바꿈
+const tilde = (md) => md.split(/(```[\s\S]*?```|`[^`\n]*`)/).map((part, i) => i % 2 ? part : part.replace(/~~|~/g, t => t === '~' ? '&#126;' : t).replace(/\*\*([^*\n]+?)\*\*/g, '<strong>$1</strong>')).join('');
 let badLinks = 0;
 for (const d of docs) {
   const html = page(d.title, d.slug, linkify(marked.parse(tilde(d.md))));

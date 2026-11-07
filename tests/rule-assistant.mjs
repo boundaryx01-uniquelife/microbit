@@ -34,6 +34,8 @@ r = R('뒤로 돌아'); check('뒤로 돌아 = 180° 회전(후진 아님)', /18
 r = R('오른쪽으로 걸어'); check('오른쪽으로 걸어 = 돌고 걷기', /Clockwise, 90/.test(r.code) && /Forward/.test(r.code));
 r = R('높게 서서 춤춰 5번'); check('높게 → 춤 순서', r.code.indexOf('AllLegs, 100)') < r.code.indexOf('for (let'));
 r = R('일어서'); check('일어서 = 준비 자세', /Posture\.Ready/.test(r.code.split('\n').slice(2).join('\n')));
+r = R('앞으로 계속 걸어'); check('앞으로 계속 걸어 → 켜자마자 걷지 않음', !r.code.split('input.onButtonPressed')[0].includes('robodog.move('), r.code);
+r = R('속도 80으로 걸어'); check('조사: 30으로, 80은', /속도 30으로/.test(r.explanation) && /80은/.test(r.explanation), r.explanation);
 r = R('하늘을 날아'); check('모르는 말 → 코드 없음 + 할 수 있는 말 안내', !r.code && /할 수 있는 말/.test(r.explanation));
 r = R(''); check('빈 입력 안내', !r.code && /적어/.test(r.explanation));
 r = R('앞으로 가고 '.repeat(60)); check('너무 긴 입력 거절', !r.code && /너무 길어요/.test(r.explanation));

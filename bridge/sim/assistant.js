@@ -2,6 +2,9 @@
 // 규칙 기반: 한국어 문장을 "언제(버튼·라디오·거리·시작)" 와 "무엇을(동작·소리·불빛·표정)" 으로 나눠 MakeCode 코드를 조립
 
 const SPEED = { default: 25, fast: 30, slow: 15, max: 30 };   // 책상 위 안전: 30 이하
+// 숫자 뒤 조사: 30(삼십)으로 / 25(이십오)로, 80(팔십)은 / 25는 — 마지막 숫자 읽기의 받침으로 결정
+const ro = (n) => (/[036]$/.test(String(n)) ? `${n}으로` : `${n}로`);
+const eun = (n) => (/[013678]$/.test(String(n)) ? `${n}은` : `${n}는`);
 const num = (s, re, def) => { const m = s.match(re); return m ? Number(m[1]) : def; };
 const speedOf = (s) => {
   const m = s.match(/속도\s*(\d+)/); if (m) return Math.min(100, Number(m[1]));
@@ -33,7 +36,7 @@ function actionsOf(phrase) {
   if (!p) return { lines: [], desc: [], understood: true };
   const add = (l, d, re) => { const at = re ? p.search(re) : 999; items.push({ at: at < 0 ? 999 : at, n: items.length, lines: [].concat(l), d }); };
   const sec = (def) => secOf(p, def);
-  const walk = (dir, label, re) => { const want = speedOf(p), v = Math.min(SPEED.max, want), ms = sec(1); add([`robodog.move(deflib.MoveDirection.${dir}, ${v})`, `basic.pause(${ms})`, 'robodog.stop()'], `속도 ${v}로 ${ms / 1000}초 ${label} 걷기` + (want > v ? ` (속도 ${want}는 책상 위에서 위험해서 ${v}으로 줄였어요)` : ''), re); };
+  const walk = (dir, label, re) => { const want = speedOf(p), v = Math.min(SPEED.max, want), ms = sec(1); add([`robodog.move(deflib.MoveDirection.${dir}, ${v})`, `basic.pause(${ms})`, 'robodog.stop()'], `속도 ${ro(v)} ${ms / 1000}초 ${label} 걷기` + (want > v ? ` (속도 ${eun(want)} 책상 위에서 위험해서 ${ro(v)} 줄였어요)` : ''), re); };
 
   // 불빛(몸통 LED)
   const LED = /불|LED|빛|색/i;
@@ -145,6 +148,8 @@ export function ruleAssistant(text) {
   }
   const segs = [{ kind: 'start', text: src.slice(0, clean.length ? clean[0].at : src.length) }];
   clean.forEach((m, i) => segs.push({ kind: m.kind, arg: m.arg, always: m.always, text: src.slice(m.end, i + 1 < clean.length ? clean[i + 1].at : src.length) }));
+  // '앞으로 계속 걸어'처럼 '계속' 앞뒤가 한 동작이면 앞부분을 '계속' 쪽으로 합침(켜자마자 1초 걷는 코드가 따로 생기지 않게)
+  if (segs[1] && segs[1].kind === 'forever' && segs[1].text.trim() && segs[0].text.trim() && !/[,.!?\n]\s*$/.test(segs[0].text)) { segs[1].text = segs[0].text + ' ' + segs[1].text; segs[0].text = ''; }
 
   // 2) 구간별 동작 만들기
   const build = (t) => {
@@ -264,7 +269,7 @@ export function ruleAssistant(text) {
       'basic.forever(function () {', '    if (걷는중) {', '        let 거리 = robodog.getTof()', '        if (거리 == 0) {', '            if (상태 != 0) {', '                robodog.stop()', '                상태 = 0', '            }',
       `        } else if (거리 < ${cm}) {`, '            if (상태 != 1) {', '                상태 = 1', ...indent(thenL, 4), '            }',
       '        } else if (상태 != 2) {', '            상태 = 2', ...indent(elseL, 3), '        }', '    }', '    basic.pause(100)', '})');
-    expl.push(`${sb === 'AB' ? 'A+B' : sb} 버튼으로 시작/멈춤. 거리센서 값이 ${cm}보다 작아지면 한 번: ` + (nearPart.desc.join(' → ') || '멈추기') + ' / 멀면: ' + ((elsePart && elsePart.desc.join(' → ').replace(/\d+초 /g, '계속 ')) || '천천히 앞으로') + ' / 값이 0(못 읽음)이면 멈춤');
+    expl.push(`${sb === 'AB' ? 'A+B' : sb} 버튼으로 시작/멈춤. 거리센서 값이 ${cm}보다 작아지면 한 번: ` + (nearPart.desc.join(' → ') || '멈추기') + ' / 멀면: ' + ((elsePart && elsePart.desc.join(' → ').replace(/\d+초 /g, '계속 ')) || '천천히 계속 앞으로') + ' / 값이 0(못 읽음)이면 멈춤');
     warnings.push('거리센서 값의 단위는 실물에서 확인이 필요해요(시뮬레이터는 cm로 가정). 거리센서는 책상 끝(낭떠러지)은 못 봐요 — 바닥에서 시험하세요.');
   }
 

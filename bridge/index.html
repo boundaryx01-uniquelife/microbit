@@ -8,7 +8,7 @@
 <style>
   :root {
     --bg: #f4f6fb; --ink: #141a26; --muted: #556079; --line: #dbe1ee; --card: #ffffff;
-    --accent: #2f6fe4; --accent-ink: #ffffff; --go: #1fa463; --warn: #f2b300; --stop: #e5484d;
+    --accent: #2259d6; --accent-ink: #ffffff; --go: #1fa463; --warn: #f2b300; --stop: #e5484d;
     --dog: #2b333f; --dog-edge: #0e1218; --leg: #3c4655; --eye-off: #1a2029; --eye-on: #e9f3ff; --mb: #1d2330; --mb-led: #ff3b30;
     --wave: #2f6fe4; --stage: #e9eef7; --table: #d9c29b;
   }
@@ -31,7 +31,7 @@
 
   /* ---------- 무대 ---------- */
   .stage { position: relative; background: linear-gradient(to bottom, var(--stage) 83.7%, color-mix(in srgb, var(--table) 55%, var(--stage)) 83.7%); border-radius: 24px; overflow: hidden; margin-top: 6px; }
-  .stage svg { display: block; width: 100%; height: auto; max-height: 40vh; min-height: 200px; margin: 0 auto; }
+  .stage svg { display: block; width: 100%; height: auto; max-height: 35vh; min-height: 190px; margin: 0 auto; }
   .beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
   .beats li { text-align: center; font-weight: 800; font-size: clamp(14px, 2.2vw, 20px); padding: 10px 6px; border-radius: 14px;
     color: var(--muted); background: var(--card); border: 1px solid var(--line); opacity: .45; animation: beat .4s ease forwards; }
@@ -93,6 +93,7 @@
   .cta .ic { font-size: 30px; line-height: 1; }
   .cta b { display: block; font-size: 20px; margin: 10px 0 4px; }
   .cta span { display: block; font-size: 14.5px; line-height: 1.5; opacity: .85; }
+  .cta a.main span { opacity: 1; }
   .sub { margin: 6px 0 0; font-size: 15px; opacity: 0; animation: rise .5s ease 5.35s forwards; }
   .sub a { color: var(--accent); font-weight: 700; }
   .foot { margin-top: auto; padding: 18px 0 22px; font-size: 13px; color: var(--muted); line-height: 1.6; text-align: center;
@@ -112,7 +113,7 @@
 </style>
 </head>
 <body>
-<div class="wrap" id="app">
+<main class="wrap" id="app">
   <div class="top"><span><b>🐶 로보독 피지컬 AI 교실</b></span><button class="skip" id="skip">건너뛰기 ⏭</button></div>
 
   <div class="stage" id="stage">
@@ -205,7 +206,7 @@
     로보독(빅아이 로보독)은 코코아팹의 제품이며, 이 사이트는 교사가 만든 비공식 수업 도구입니다. 시뮬레이터는 실물과 다를 수 있어요.<br>
     <button class="replay" id="replay">↺ 처음 장면 다시 보기</button>
   </p>
-</div>
+</main>
 
 <script>
 // 5×5 LED 점(마이크로비트 숫자 3, 로보독 눈)
