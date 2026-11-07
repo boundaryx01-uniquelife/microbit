@@ -177,7 +177,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   j = await jointAfter('robodog.leg(deflib.LegSelection.FrontLegs, 0, 0)');             // 내부 (20, 0) → 표본 (-90, 70)
   check('앞다리 높이 0·발끝 0 → 공식 표본 어깨 -90°, 무릎 70°', j[0][0] === -90 && j[0][1] === 70 && j[3][0] === -90, JSON.stringify(j));
   j = await jointAfter('robodog.motor(deflib.LegSelection.RightBack, 30, -20)');
-  check('모터 블록 → 오른쪽 뒷다리만 어깨 30°, 무릎 -20°', j[2][0] === 30 && j[2][1] === -20 && j[0][0] === 0, JSON.stringify(j));
+  check('모터 블록 → 오른쪽 뒷다리만 어깨 30°, 무릎 -20° (나머지 다리는 값 없음(-127) → 지금 각도 유지로 가정)', j[2][0] === 30 && j[2][1] === -20 && j[0][0] === -35 && j[3][0] === -35, JSON.stringify(j));
 
   // 11-3. 군무 시연 (8대)
   await p.click('#demoCards button[data-id="dance"]');

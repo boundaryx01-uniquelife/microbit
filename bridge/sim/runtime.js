@@ -177,8 +177,10 @@ export class Robot {
       this.mode = m;
       this.vel = 0; this.rotTarget = null;
       if (m === 1) this.walkH = [69, 69, 69, 69];
-      if (m === 2) this.legHF = [[69, 0], [69, 0], [69, 0], [69, 0]];
-      if (m === 3) this.motorA = [[0, 0], [0, 0], [0, 0], [0, 0]];
+      // 다리·모터 모드로 바뀌면 확장은 지정하지 않은 다리에 -127(값 없음)을 보냄.
+      // 실물이 그 다리를 어떻게 하는지는 미확인 → 시뮬레이터는 '지금 각도 그대로 둠'(null)으로 가정
+      if (m === 2) this.legHF = [null, null, null, null];
+      if (m === 3) this.motorA = [null, null, null, null];
     }
   }
   headFrame() {
@@ -196,8 +198,8 @@ export class Robot {
   // 모드별 목표 관절 각도 (다리 0 왼앞, 1 왼뒤, 2 오른뒤, 3 오른앞)
   targets(dt) {
     this.raised = [false, false, false, false];
-    if (this.mode === 3) return this.motorA.map(([s, k]) => [s, k]);
-    if (this.mode === 2) return this.legHF.map(([h, f]) => lengthToAngles(h, f));
+    if (this.mode === 3) return this.motorA.map((a, i) => a ? [a[0], a[1]] : this.joint[i].slice());
+    if (this.mode === 2) return this.legHF.map((a, i) => a ? lengthToAngles(a[0], a[1]) : this.joint[i].slice());
     if (this.mode === 4) return [0, 1, 2, 3].map(i => this.postureTarget(i));
     // 걷기 모드
     if (this.isWalking()) {
@@ -383,7 +385,7 @@ export function makeRobodogApi(R, h) {
       },
       motor: (leg, deg1, deg2) => {
         R.setMode(3);
-        (LEG_SEL[leg] || []).forEach((on, i) => { if (on) R.motorA[i] = [clamp(deg1, -90, 90), clamp(deg2, -90, 70)]; });
+        (LEG_SEL[leg] || []).forEach((on, i) => { if (on) R.motorA[i] = [clamp(deg1, -90, 90), clamp(deg2, -90, 90)]; });
       },
       move: (dir, velocity) => {
         R.setMode(1);

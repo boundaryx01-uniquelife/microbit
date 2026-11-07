@@ -3,7 +3,7 @@
 // 본체 버튼을 누를 때마다 다른 동작 묶음을 보여 줍니다. (시뮬레이터 확인용, 실물에서도 동작)
 // 1번째 = 자세 둘러보기(앉기·물구나무·기지개·인사)
 // 2번째 = 사각형 걷기(앞으로 1초 → 시계방향 90° 회전, 4번)
-// 3번째 = 다리 높이·모터 각도 바꾸기
+// 3번째 = 다리 높이·다리 하나 바꾸기
 // ※ 꽂은 마이크로비트의 A·B 버튼은 가려지므로 본체 버튼(전원 스위치 옆)을 씁니다.
 // =============================================================
 
@@ -45,18 +45,27 @@ function 사각형걷기 () {
 }
 
 function 다리바꾸기 () {
+    // ※ '다리 하나'·'모터' 블록은 처음 쓸 때 고르지 않은 다리에 값을 보내지 않아요(실물에서 따로 노는 원인).
+    //   그래서 모드마다 먼저 '모든 다리'를 같은 값으로 맞춘 뒤, 다리 하나만 바꿉니다.
+    // 1) 걷기 높이: 모두 70 → 앞다리만 낮게(인사하듯) → 모두 높게
+    robodog.legBend(deflib.LegGroup.AllLegs, 70)
+    basic.pause(800)
     robodog.legBend(deflib.LegGroup.FrontLegs, 20)
     basic.pause(1500)
     robodog.legBend(deflib.LegGroup.AllLegs, 100)
     basic.pause(1500)
+    // 2) 다리 하나: 네 다리를 먼저 같은 자세로 → 오른 앞다리만 앞으로 쭉
+    robodog.leg(deflib.LegSelection.AllLegs, 70, 0)
+    basic.pause(800)
     robodog.leg(deflib.LegSelection.RightFront, 100, 80)
     basic.pause(1500)
-    robodog.motor(deflib.LegSelection.LeftFront, -60, 40)
-    basic.pause(1500)
+    robodog.leg(deflib.LegSelection.AllLegs, 70, 0)
+    basic.pause(800)
     robodog.headLedPrint(deflib.HeadLedSide.Both, "A")
-    basic.pause(1500)
+    basic.pause(1000)
     robodog.gesture(deflib.Posture.Ready)
     robodog.headLedExp(deflib.LedExpression.SparklingEyes)
+    // 모터 각도 블록(robodog.motor)은 어깨·무릎 각도를 직접 정해서, 각도 0이 실물에서 어떤 자세인지 확인한 뒤 쓰세요.
 }
 
 // 본체 버튼: 누르는 순간 한 번만 반응

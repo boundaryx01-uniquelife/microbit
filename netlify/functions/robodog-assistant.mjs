@@ -38,6 +38,7 @@ robodog.gesture(deflib.Posture.Ready|SitDown|Handstand|Stretch|SayHello)    // �
 robodog.legBend(deflib.LegGroup.AllLegs|FrontLegs|BackLegs|LeftLegs|RightLegs, 높이 0~100)   // 보행 높이(기본 70)
 robodog.leg(deflib.LegSelection.LeftFront|LeftBack|RightFront|RightBack|FrontLegs|BackLegs|LeftLegs|RightLegs|AllLegs, 다리높이 0~100, 발끝앞뒤 -100~100)
 robodog.motor(deflib.LegSelection.*, 어깨 -90~90, 무릎 -90~70)
+  ※ leg·motor 블록은 그 모드로 처음 바뀔 때 고르지 않은 다리에 값을 보내지 않아 실물에서 다리가 따로 놀 수 있습니다. 한 다리만 바꿀 때도 먼저 AllLegs로 네 다리를 같은 값으로 정한 뒤 바꿉니다. motor 각도 0이 어떤 자세인지는 미확인이므로 warnings에 실물 확인을 적습니다.
 robodog.move(deflib.MoveDirection.Forward|Backward, 속도 0~100)              // 계속 걸음, stop()으로 멈춤
 robodog.rotation(deflib.RotateDirection.Clockwise|Counterclockwise, 각도 0~360, 빠르기 10~100)   // 시계방향 = 오른쪽
 robodog.stop()
