@@ -45,6 +45,15 @@ r = R('앞으로 가고 '.repeat(60)); check('너무 긴 입력 거절', !r.code
 for (const t of ['A 버튼을 누르면 계속 빨간 불 깜박여', '계속 앞으로 걸어', 'A+B 버튼을 누르면 물구나무']) {
   const c = R(t).code; check('화살표 함수·템플릿 문자열 없음: ' + t, c && !/=>|`/.test(c));
 }
+// "라디오 A 버튼" = 손에 든 리모컨의 A(→숫자 1)·B(→2). 붙여 써도(라디오A) 같다. 오타(짓어)여도 멍멍이면 만든다
+for (const t of ['라디오A 버튼을 누르면 멍멍 짓어', '라디오 A 버튼을 누르면 멍멍 짖어', '리모컨 A 버튼을 누르면 멍멍 짖어']) {
+  r = R(t);
+  check('라디오 A 버튼 → 라디오 1 규칙 + 멍멍: ' + t, /신호 == 1/.test(r.code) && /SoundEffect\.Bark/.test(r.code) && !/input\.onButtonPressed\(Button\.A/.test(r.code), r.explanation);
+  check('리모컨이 보낼 숫자 안내 + "이해하지 못한 말" 없음: ' + t, r.warnings.some(w => /sendNumber\(1\)/.test(w)) && !r.warnings.some(w => /이해하지 못한/.test(w)), JSON.stringify(r.warnings));
+}
+r = R('라디오 B 버튼을 누르면 앉아'); check('라디오 B 버튼 → 라디오 2', /신호 == 2/.test(r.code) && /SitDown/.test(r.code));
+r = R('A 버튼을 누르면 멍멍 짖어'); check('그냥 A 버튼은 그대로 버튼 이벤트', /input\.onButtonPressed\(Button\.A/.test(r.code) && !/radio/.test(r.code));
+r = R('라디오 3을 받으면 인사해'); check('라디오 숫자 규칙은 그대로', /신호 == 3/.test(r.code));
 const fail = results.filter(x => !x).length;
 console.log(`\n${results.length - fail}/${results.length} PASS`);
 process.exit(fail ? 1 : 0);
