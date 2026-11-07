@@ -104,7 +104,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   let okImgs = 0;
   for (const n of imgs) { const r = await p.request.get(L + 'assets/' + encodeURIComponent(n) + '.png'); if (r.ok()) okImgs++; else console.log('  missing', n); }
   check(`참조한 그림 ${imgs.length}개 모두 있음`, okImgs === imgs.length);
-  const shown = await (async () => { let bad = 0, n = 0; for (let i = 1; i <= total; i++) { await pd.evaluate(k => window.__lesson.go(k - 1), i); await pd.waitForTimeout(40); const r = await pd.evaluate(() => [...document.querySelectorAll('.slide img')].map(im => im.complete && im.naturalWidth > 0 && !!im.alt)); n += r.length; bad += r.filter(x => !x).length; } return { n, bad }; })();
+  const shown = await (async () => { let bad = 0, n = 0; for (let i = 1; i <= total; i++) { await pd.evaluate(k => window.__lesson.go(k - 1), i); await pd.waitForFunction(() => [...document.querySelectorAll('.slide img')].every(im => im.complete), null, { timeout: 8000 }).catch(() => {}); const r = await pd.evaluate(() => [...document.querySelectorAll('.slide img')].map(im => im.complete && im.naturalWidth > 0 && !!im.alt)); n += r.length; bad += r.filter(x => !x).length; } return { n, bad }; })();
   check(`화면의 그림 ${shown.n}개 모두 그려짐·alt 있음`, shown.bad === 0 && shown.n > 0, JSON.stringify(shown));
   check('그림 요청 실패 없음', badImg.length === 0, badImg.join(','));
 
