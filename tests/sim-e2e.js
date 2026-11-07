@@ -171,6 +171,40 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   j = await jointAfter('robodog.motor(deflib.LegSelection.RightBack, 30, -20)');
   check('모터 블록 → 오른쪽 뒷다리만 어깨 30°, 무릎 -20°', j[2][0] === 30 && j[2][1] === -20 && j[0][0] === 0, JSON.stringify(j));
 
+  // 11-3. 군무 시연 (8대)
+  await p.click('#demoCards button[data-id="dance"]');
+  await p.waitForTimeout(1000);
+  const n8 = await p.evaluate(() => 1 + window.__sim.world.extra.length);
+  check('군무: 로보독 8대 배치', n8 === 8, `${n8}대`);
+  // 바운스: 모두 같은 보행 높이로 함께 바뀜
+  let sameBounce = true, sawLow = false, sawHigh = false;
+  for (let i = 0; i < 20; i++) {
+    const hs = await p.evaluate(() => [window.__sim.robot, ...window.__sim.world.extra].map(R => R.walkH[0]));
+    if (new Set(hs).size !== 1) sameBounce = false;
+    if (hs[0] <= 30) sawLow = true; if (hs[0] >= 85) sawHigh = true;
+    await p.waitForTimeout(100);
+  }
+  check('군무 바운스: 8대가 동시에 낮게↔높게', sameBounce && sawLow && sawHigh);
+  // 웨이브: 어느 순간 서로 다른 높이(차례로 바뀜)
+  let sawWave = false;
+  for (let i = 0; i < 60 && !sawWave; i++) {
+    const hs = await p.evaluate(() => [window.__sim.robot, ...window.__sim.world.extra].map(R => R.walkH[0]));
+    if (new Set(hs).size > 1) sawWave = true;
+    await p.waitForTimeout(100);
+  }
+  check('군무 웨이브: 차례로 바뀌어 높이가 서로 다른 순간이 있음', sawWave);
+  // 물구나무: 8대 모두 자세 2
+  let allHand = false;
+  for (let i = 0; i < 300 && !allHand; i++) {
+    allHand = await p.evaluate(() => [window.__sim.robot, ...window.__sim.world.extra].every(R => R.mode === 4 && R.posture === 2));
+    await p.waitForTimeout(100);
+  }
+  check('군무 물구나무: 8대가 동시에', allHand);
+  await p.waitForTimeout(1500);
+  await p.screenshot({ path: path.join(OUT, 'sim_dance_2d.png') });
+  await p.click('#btnDemoStop'); await p.waitForTimeout(300);
+  check('군무 멈추면 1대로 돌아옴', (await p.evaluate(() => window.__sim.world.extra.length)) === 0);
+
   // 12. 좁은 화면
   await p.setViewportSize({ width: 390, height: 900 }); await p.waitForTimeout(400);
   const sw = await p.evaluate(() => document.documentElement.scrollWidth);

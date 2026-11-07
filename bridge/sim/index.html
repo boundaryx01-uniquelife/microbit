@@ -174,7 +174,7 @@
 </main>
 
 <script type="module">
-import { Robot, World, Runner, EXPRESSIONS } from './runtime.js';
+import { Robot, World, Runner, EXPRESSIONS, makeRobodogApi } from './runtime.js';
 import { View2D, drawEyes } from './view2d.js';
 import { EXAMPLES } from './examples.js';
 
@@ -221,7 +221,7 @@ $('btnRun').onclick = async () => {
   if (ok) log('실행 시작 — 마이크로비트 A/B 버튼과 라디오 숫자로 시험해 보세요');
 };
 $('btnStop').onclick = () => { runner.stop(); log('정지'); };
-$('btnReset').onclick = () => { runner.stop(); robot.reset(); runner.setDisplay(Array.from({ length: 5 }, () => [0, 0, 0, 0, 0])); log('처음 자리로'); };
+$('btnReset').onclick = () => { stopDemo(); endDance(); runner.stop(); robot.reset(); runner.setDisplay(Array.from({ length: 5 }, () => [0, 0, 0, 0, 0])); log('처음 자리로'); };
 
 // ---------- 마이크로비트 버튼 ----------
 document.querySelectorAll('.mbbtn').forEach(b => {
@@ -275,11 +275,11 @@ async function showTab(is3d) {
       view3d = new View3D($('view3d'), world, robot); view3d.init();
     } catch (e) { log('3D를 켤 수 없어요(그래픽 가속 확인): ' + e.message, 'error'); showTab(false); }
   }
-  if (view3d) { view3d.follow = $('follow').checked; view3d.resize(); }
+  if (view3d) { view3d.follow = $('follow').checked; view3d.resize(); if (danceOn) danceCam(); }
 }
 $('tab2d').onclick = () => showTab(false);
 $('tab3d').onclick = () => showTab(true);
-$('follow').onchange = (e) => { if (view3d) view3d.follow = e.target.checked; };
+$('follow').onchange = (e) => { if (view3d) view3d.follow = e.target.checked && !danceOn; };
 
 // ---------- 그리기 반복 ----------
 const MODES = { 1: '걷기', 2: '다리 설정', 3: '모터 각도', 4: '자세' };
@@ -298,6 +298,7 @@ let last = performance.now(), lastFallen = false;
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now;
   robot.step(dt);
+  for (const R2 of world.extra) R2.step(dt);   // 군무 로봇들
   if (robot.fallen && !lastFallen) { log('⚠ 로보독이 책상에서 떨어졌어요! 속도·시간·방향을 바꿔 보세요.', 'error'); runner.stop(); }
   lastFallen = robot.fallen;
   const eyes = robot.headFrame();
@@ -351,6 +352,7 @@ const DEMOS = [
     ['radio', 3, 2500, '3번 카드 → 초록 불 + ILOVEYOU 눈'],
     ['radio', 4, 2000, '4번(배경) → 기본 자세'],
   ] },
+  { id: 'dance', title: '🐕×8 군무', sub: '바운스 · 웨이브 · 물구나무', dance: true, steps: [] },
 ];
 let demoGen = 0, demoActive = null;
 const demoSleep = (ms, g) => new Promise((res, rej) => setTimeout(() => (g === demoGen ? res() : rej(new Error('demo-stop'))), ms));
@@ -361,6 +363,7 @@ function flash(el) { if (!el) return; el.classList.add('auto'); setTimeout(() =>
 function stopDemo(msg) {
   if (!demoActive) return;
   demoGen++; demoActive = null;
+  endDance();
   document.querySelectorAll('#demoCards button').forEach(b => b.classList.remove('playing'));
   $('btnDemoStop').classList.add('hidden');
   setCaption(msg || '시연을 멈췄어요. 이제 직접 버튼을 눌러 보세요');
@@ -369,6 +372,7 @@ async function playDemo(demo) {
   stopDemo(); const g = ++demoGen; demoActive = demo;
   document.querySelectorAll('#demoCards button').forEach(b => b.classList.toggle('playing', b.dataset.id === demo.id));
   $('btnDemoStop').classList.remove('hidden');
+  if (demo.dance) { try { await runDance(g); } catch (e) { /* 시연 멈춤 */ } return; }
   const ex = EXAMPLES.find(e => e.id === demo.id);
   $('code').value = ex.code; save();
   try {
@@ -398,6 +402,102 @@ async function playDemo(demo) {
       await demoSleep(2500, g);
     }
   } catch (e) { /* 시연 멈춤 */ }
+}
+
+// ---------- 군무 시연 (8대) ----------
+// 실제 군무는 PC + USB 동글로 여러 대를 동시에 제어하는 파이썬 multi_* 함수 방식(공식 라이브러리)과 같은 흐름으로 보여 줌
+const DANCE_CODE = `// 🐕×8 군무 시연 — 여러 대를 한 번에 움직이는 방식(파이썬 kocoafab-robodog의 multi_* 함수)
+// 마이크로비트 1대 코드가 아니라, PC가 USB 동글로 로보독 여러 대에 같은 명령을 보내는 방식이에요.
+//
+// dogs = RoboDogMultiOpen()                                   # 연결된 로보독 모두 열기
+// multi_gesture(dogs, STANDUP)                                # 1. 준비
+// multi_leg_bend(dogs, ALL_LEG, 20) / (dogs, ALL_LEG, 90)     # 2. 바운스: 다 함께 낮게↔높게
+// multi_leg_bend_sequential(dogs, 0.12, ORDER_LOW_TO_HIGH, ALL_LEG, 90)   # 3. 웨이브: 차례로
+// multi_bodyLED_sequential(dogs, 0.12, ORDER_LOW_TO_HIGH, RED)            # 4. 불빛 웨이브
+// multi_headLEDExp_sequential(dogs, 0.15, ORDER_LOW_TO_HIGH, ILOVEYOU)    # 5. 표정 웨이브
+// multi_rotate(dogs, CW, 180, 70)                             # 6. 다 함께 회전
+// multi_gesture(dogs, HEADSTAND)                              # 7. 물구나무
+// multi_gesture_sequential(dogs, 0.2, ORDER_LOW_TO_HIGH, GREETING)        # 8. 차례로 인사
+// RoboDogMultiClose(dogs)
+`;
+let danceOn = false;
+function danceCam() {
+  if (!view3d || !view3d.ready) return;
+  view3d.follow = false;
+  view3d.camera.position.set(60, 58, -28); view3d.controls.target.set(60, 2, 46);
+}
+function endDance() {
+  if (!danceOn) return;
+  danceOn = false;
+  world.extra = [];
+  robot.reset(); setTable(true);
+  if (view3d && view3d.ready) {
+    view3d.follow = $('follow').checked;
+    view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y);
+  }
+}
+function setupDance() {
+  runner.stop(); world.obstacles.length = 0; setTable(false);
+  robot.reset(); world.extra = [];
+  const xs = [22.5, 47.5, 72.5, 97.5], ys = [30, 62];
+  let k = 0;
+  for (const y of ys) for (const x of xs) {
+    const R = k === 0 ? robot : new Robot(world);
+    R.x = x; R.y = y; R.heading = 0; R.trail = [{ x, y }];
+    if (k > 0) world.extra.push(R);
+    k++;
+  }
+  danceOn = true;
+  danceCam();
+}
+async function runDance(g) {
+  $('code').value = DANCE_CODE; save();
+  const sleep = (ms) => demoSleep(ms, g);
+  for (;;) {
+    setupDance();
+    const dogs = [robot, ...world.extra];
+    const api = new Map(dogs.map((R, i) => [R, makeRobodogApi(R, {
+      warnOnce: () => {}, sleep, soundOn: () => i === 0 && $('soundOn').checked,
+      button: () => false, battery: () => 100, tilt: () => 0,
+    })]));
+    const order = dogs.slice().sort((a, b) => a.x - b.x || a.y - b.y);     // 왼쪽 → 오른쪽
+    const all = (fn) => dogs.forEach((R, i) => fn(api.get(R), i));
+    const seq = async (ms, fn, list = order) => { for (let i = 0; i < list.length; i++) { fn(api.get(list[i]), i); await sleep(ms); } };
+    const N = 8; let k = 0;
+    const cap = (t) => { setCaption(t, `${++k}/${N}`); log('(군무) ' + t); };
+    const RAINBOW = [[255, 0, 0], [255, 140, 0], [255, 230, 0], [0, 200, 0], [0, 160, 255], [60, 60, 255], [180, 0, 255], [255, 0, 150]];
+
+    cap('준비 — multi_gesture(dogs, STANDUP): 8대가 동시에 준비 자세');
+    all(a => { a.gesture(0); a.headLedExp(13); a.bodyLed(0, 0, 0); }); await sleep(1500);
+
+    cap('바운스 — multi_leg_bend: 다 함께 낮게 ↔ 높게');
+    for (let r = 0; r < 6; r++) { all(a => a.legBend(0, 10)); await sleep(420); all(a => a.legBend(0, 100)); await sleep(420); }
+
+    cap('웨이브 — multi_leg_bend_sequential(0.12초 간격): 왼쪽부터 차례로 일어나고 앉기');
+    all(a => a.legBend(0, 10)); await sleep(700);
+    for (let r = 0; r < 2; r++) { await seq(120, a => a.legBend(0, 100)); await sleep(250); await seq(120, a => a.legBend(0, 10)); await sleep(250); }
+    all(a => a.legBend(0, 70)); await sleep(600);
+
+    cap('불빛 웨이브 — multi_bodyLED_sequential: 몸통 LED가 차례로 무지개색');
+    for (let r = 0; r < 3; r++) await seq(110, (a, i) => a.bodyLed(...RAINBOW[(i + r) % RAINBOW.length]));
+    await sleep(700);
+
+    cap('표정 웨이브 — multi_headLEDExp_sequential: 눈이 차례로 하트(ILOVEYOU), 그다음 다 함께 웃는 눈');
+    await seq(150, a => a.headLedExp(1)); await sleep(1300); all(a => a.headLedExp(3)); await sleep(1300);
+
+    cap('다 함께 회전 — multi_rotate(dogs, CW, 180): 동시에 반 바퀴, 다시 반대로');
+    all(a => a.rotation(0, 180, 70)); await sleep(3000); all(a => a.rotation(1, 180, 70)); await sleep(3000);
+
+    cap('물구나무 — multi_gesture(dogs, HEADSTAND): 8대가 동시에 머리를 바닥에!');
+    all(a => { a.gesture(2); a.headLedExp(2); }); await sleep(3800); all(a => { a.gesture(0); a.headLedExp(13); }); await sleep(1300);
+
+    cap('인사 — multi_gesture_sequential(0.2초 간격, GREETING): 차례로 인사하고 "멍멍!"');
+    await seq(200, a => { a.gesture(4); a.headLedExp(1); a.soundPlay(1, 2); }); await sleep(2600);
+    all(a => { a.gesture(0); a.bodyLed(0, 0, 0); a.headLedExp(13); });
+
+    setCaption('군무 한 바퀴 끝! 다시 보여 줄게요 (3D 보기로 보면 더 실감 나요)');
+    await sleep(2500);
+  }
 }
 $('demoCards').innerHTML = DEMOS.map(d => `<button data-id="${d.id}">${d.title}<small>${d.sub}</small></button>`).join('');
 $('demoCards').querySelectorAll('button').forEach(b => b.onclick = () => playDemo(DEMOS.find(d => d.id === b.dataset.id)));

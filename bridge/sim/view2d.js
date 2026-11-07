@@ -59,7 +59,23 @@ export class View2D {
     const bx = R.x + Math.sin(rad) * EST.bodyLen / 2, by = R.y - Math.cos(rad) * EST.bodyLen / 2;
     ctx.strokeStyle = 'rgba(255,80,80,.55)'; ctx.setLineDash([4, 4]); ctx.beginPath();
     ctx.moveTo(ox + bx * s, oy + by * s); ctx.lineTo(ox + (bx + Math.sin(rad) * Math.min(d, 255)) * s, oy + (by - Math.cos(rad) * Math.min(d, 255)) * s); ctx.stroke(); ctx.setLineDash([]);
-    // 로보독(위에서)
+    // 로보독(위에서) — 군무 중이면 추가 로봇들도
+    for (const R2 of (W.extra || [])) this.drawRobotTop(ctx, R2, s, ox, oy);
+    this.drawRobotTop(ctx, R, s, ox, oy);
+    // 말풍선
+    if (R.bubble) {
+      ctx.font = 'bold 14px system-ui'; const tw = ctx.measureText(R.bubble).width + 14;
+      const x = ox + R.x * s + 14, y = oy + R.y * s - 34;
+      ctx.fillStyle = css('--bubble'); ctx.strokeStyle = css('--line'); roundRect(ctx, x, y, tw, 24, 8); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = css('--text'); ctx.fillText(R.bubble, x + 7, y + 17);
+    }
+    if (R.fallen) banner(ctx, c, '⚠ 로보독이 책상에서 떨어졌어요! [처음으로]를 누르세요', '#d43c3c');
+    else if (R.bumped) banner(ctx, c, '쿵! 장애물에 부딪혔어요', '#c27c0e');
+    if (this.placing) { ctx.fillStyle = css('--accent'); ctx.font = 'bold 12px system-ui'; ctx.fillText('장애물 놓기: 클릭하면 놓기/지우기', ox + 6, oy + W.table.h * s - 8); }
+  }
+
+  drawRobotTop(ctx, R, s, ox, oy) {
+    const rad = R.heading * Math.PI / 180;
     ctx.save();
     ctx.translate(ox + R.x * s, oy + R.y * s); ctx.rotate(rad);
     // 공식 비율: 몸통 12.2×6cm, 머리 10×2.7cm(몸 중심에서 6.7cm 앞), 엉덩이 앞뒤 ±4.6cm
@@ -80,16 +96,6 @@ export class View2D {
     ctx.fillStyle = css('--dog-head'); roundRect(ctx, -hw / 2, hz - hd / 2, hw, hd, hd / 2); ctx.fill();
     ctx.fillStyle = '#f4f8ff'; ctx.fillRect(-hw * 0.42, hz - hd / 2 - 1.5, hw * 0.34, 2); ctx.fillRect(hw * 0.08, hz - hd / 2 - 1.5, hw * 0.34, 2);
     ctx.restore();
-    // 말풍선
-    if (R.bubble) {
-      ctx.font = 'bold 14px system-ui'; const tw = ctx.measureText(R.bubble).width + 14;
-      const x = ox + R.x * s + 14, y = oy + R.y * s - 34;
-      ctx.fillStyle = css('--bubble'); ctx.strokeStyle = css('--line'); roundRect(ctx, x, y, tw, 24, 8); ctx.fill(); ctx.stroke();
-      ctx.fillStyle = css('--text'); ctx.fillText(R.bubble, x + 7, y + 17);
-    }
-    if (R.fallen) banner(ctx, c, '⚠ 로보독이 책상에서 떨어졌어요! [처음으로]를 누르세요', '#d43c3c');
-    else if (R.bumped) banner(ctx, c, '쿵! 장애물에 부딪혔어요', '#c27c0e');
-    if (this.placing) { ctx.fillStyle = css('--accent'); ctx.font = 'bold 12px system-ui'; ctx.fillText('장애물 놓기: 클릭하면 놓기/지우기', ox + 6, oy + W.table.h * s - 8); }
   }
 
   drawSide() {

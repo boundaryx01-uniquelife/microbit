@@ -37,7 +37,8 @@ export class View3D {
     // 경로
     this.trailLine = new THREE.Line(new THREE.BufferGeometry(), new THREE.LineBasicMaterial({ color: 0x2f6fe4 }));
     scene.add(this.trailLine);
-    this.buildDog();
+    this.parts = new Map();   // 로봇 → 3D 모형
+    this.buildBubble();
     this.ready = true;
     new ResizeObserver(() => this.resize()).observe(this.container);
     this.resize();
@@ -68,8 +69,9 @@ export class View3D {
     }
     this.tableKey = W.useTable;
   }
-  buildDog() {
-    const dog = this.dog = new THREE.Group();
+  makeDog() {
+    const P = {};
+    const dog = P.dog = new THREE.Group();
     this.scene.add(dog);
     // 비율: 코코아팹 공식 다리 시뮬레이터, 모양·배치: 제품 사진 (검은 몸통, 넓은 머리에 8×8 LED 두 개)
     const G = GEOM;
@@ -79,34 +81,34 @@ export class View3D {
     const servoMat = new THREE.MeshStandardMaterial({ color: 0x232a32, roughness: 0.6 });
     const upperMat = new THREE.MeshStandardMaterial({ color: 0x46505d, roughness: 0.6 });
     const lowerMat = new THREE.MeshStandardMaterial({ color: 0x3a434e, roughness: 0.6 });
-    this.body = new THREE.Group(); dog.add(this.body);
+    P.body = new THREE.Group(); dog.add(P.body);
     // 몸통: 영상 장면처럼 뒤쪽 2/3는 둥근 덮개(통풍구), 앞쪽은 회로판이 보이는 받침
     const shellLen = G.bodyLen * 0.68, shellZ = G.bodyLen / 2 - shellLen / 2;
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid, G.bodyH, shellLen - G.bodyH), bodyMat); torso.position.z = shellZ; torso.castShadow = true; this.body.add(torso);
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid, G.bodyH, shellLen - G.bodyH), bodyMat); torso.position.z = shellZ; torso.castShadow = true; P.body.add(torso);
     [-1, 1].forEach(s => {
       const cap = new THREE.Mesh(new THREE.CylinderGeometry(G.bodyH / 2, G.bodyH / 2, G.bodyWid, 20), bodyMat);
-      cap.rotation.z = Math.PI / 2; cap.position.z = shellZ + s * (shellLen - G.bodyH) / 2; cap.castShadow = true; this.body.add(cap);
+      cap.rotation.z = Math.PI / 2; cap.position.z = shellZ + s * (shellLen - G.bodyH) / 2; cap.castShadow = true; P.body.add(cap);
     });
     const chassis = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid * 0.9, G.bodyH * 0.55, G.bodyLen - shellLen + 0.6), darkMat);
-    chassis.position.set(0, -G.bodyH * 0.1, -G.bodyLen / 2 + (G.bodyLen - shellLen) / 2); chassis.castShadow = true; this.body.add(chassis);
+    chassis.position.set(0, -G.bodyH * 0.1, -G.bodyLen / 2 + (G.bodyLen - shellLen) / 2); chassis.castShadow = true; P.body.add(chassis);
     const pcb = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid * 0.95, 0.12, G.bodyLen - shellLen), new THREE.MeshStandardMaterial({ color: 0xc9b98a, roughness: 0.8 }));
-    pcb.position.set(0, G.bodyH * 0.2, -G.bodyLen / 2 + (G.bodyLen - shellLen) / 2); this.body.add(pcb);
+    pcb.position.set(0, G.bodyH * 0.2, -G.bodyLen / 2 + (G.bodyLen - shellLen) / 2); P.body.add(pcb);
     // 등의 통풍구 무늬
     for (let k = 0; k < 7; k++) {
       const v = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid * 0.45, 0.05, 0.14), darkMat);
-      v.position.set(0, G.bodyH / 2 + 0.02, shellZ - shellLen * 0.3 + k * 0.32); this.body.add(v);
+      v.position.set(0, G.bodyH / 2 + 0.02, shellZ - shellLen * 0.3 + k * 0.32); P.body.add(v);
     }
     // 마이크로비트(등 뒤쪽 슬롯)
     const mb = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.12, 3.4), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-    mb.position.set(0, G.bodyH / 2 + 0.07, G.bodyLen * 0.3); this.body.add(mb);
+    mb.position.set(0, G.bodyH / 2 + 0.07, G.bodyLen * 0.3); P.body.add(mb);
     // 몸통 RGB LED (옆면 띠)
-    this.ledMat = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x000000 });
+    P.ledMat = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x000000 });
     [-1, 1].forEach(s => {
-      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, shellLen * 0.6), this.ledMat);
-      strip.position.set(s * (G.bodyWid / 2 + 0.04), 0.3, shellZ); this.body.add(strip);
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.12, 0.8, shellLen * 0.7), P.ledMat);
+      strip.position.set(s * (G.bodyWid / 2 + 0.04), 0.3, shellZ); P.body.add(strip);
     });
     // 머리: 앞다리 바로 위 받침에 올린 알약형(양끝이 둥근) 머리 — 영상 장면 기준
-    const head = new THREE.Group(); head.position.set(0, HEAD.up, -HEAD.fwd); this.body.add(head);
+    const head = new THREE.Group(); head.position.set(0, HEAD.up, -HEAD.fwd); P.body.add(head);
     const mount = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.5, 2.0), darkMat); mount.position.y = -G.headH / 2 - 0.2; head.add(mount);
     const hw = G.headWid, hh = G.headH, rr = hh * 0.48;
     const shape = new THREE.Shape();
@@ -118,17 +120,17 @@ export class View3D {
     const shell = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: G.headDepth, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.25, bevelSegments: 3 }), headMat);
     shell.position.z = -G.headDepth / 2; shell.castShadow = true; head.add(shell);
     // 앞면: 모서리가 둥근 LED 판 두 개 + 가운데 카메라·거리센서 (캔버스 그림)
-    this.eyeCanvas = document.createElement('canvas'); this.eyeCanvas.width = 512; this.eyeCanvas.height = 224;
-    this.eyeTex = new THREE.CanvasTexture(this.eyeCanvas); this.eyeTex.colorSpace = THREE.SRGBColorSpace;
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(hw * 0.86, hh * 0.84), new THREE.MeshBasicMaterial({ map: this.eyeTex, transparent: true }));
+    P.eyeCanvas = document.createElement('canvas'); P.eyeCanvas.width = 512; P.eyeCanvas.height = 224;
+    P.eyeTex = new THREE.CanvasTexture(P.eyeCanvas); P.eyeTex.colorSpace = THREE.SRGBColorSpace;
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(hw * 0.86, hh * 0.84), new THREE.MeshBasicMaterial({ map: P.eyeTex, transparent: true }));
     face.position.set(0, 0, -G.headDepth / 2 - 0.27); face.rotation.y = Math.PI; head.add(face);
     // 카메라 렌즈(살짝 튀어나옴)
     const cam = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 20), new THREE.MeshStandardMaterial({ color: 0x050607, metalness: 0.7, roughness: 0.15 }));
     cam.rotation.x = Math.PI / 2; cam.position.set(0, hh * 0.18, -G.headDepth / 2 - 0.33); head.add(cam);
     // 다리: 0 왼앞,1 왼뒤,2 오른뒤,3 오른앞. 왼쪽 = -x (앞이 -z). 엉덩이: 몸 중심에서 앞뒤 ±4.6cm, 0.7cm 아래
     const pos = [[-1, -1], [-1, 1], [1, 1], [1, -1]];
-    this.legs3 = pos.map(([lr, fb]) => {
-      const hip = new THREE.Group(); hip.position.set(lr * (G.bodyWid / 2 + 0.75), -(96 - 80.5) * 0.045, fb * G.hipGap / 2); this.body.add(hip);
+    P.legs3 = pos.map(([lr, fb]) => {
+      const hip = new THREE.Group(); hip.position.set(lr * (G.bodyWid / 2 + 0.75), -(96 - 80.5) * 0.045, fb * G.hipGap / 2); P.body.add(hip);
       const servo = new THREE.Mesh(new THREE.BoxGeometry(1.3, 2.3, 2.4), servoMat); servo.position.set(0, 0.4, 0); servo.castShadow = true; hip.add(servo);
       const legRoot = new THREE.Group(); legRoot.position.x = lr * 0.9; hip.add(legRoot);
       const thigh = new THREE.Group(); legRoot.add(thigh);
@@ -139,6 +141,9 @@ export class View3D {
       const foot = new THREE.Mesh(new THREE.SphereGeometry(0.55, 14, 10), darkMat); foot.position.y = -G.lower; foot.castShadow = true; knee.add(foot);
       return { hip: thigh, knee };
     });
+    return P;
+  }
+  buildBubble() {
     // 말풍선(스프라이트)
     this.bubbleCanvas = document.createElement('canvas'); this.bubbleCanvas.width = 256; this.bubbleCanvas.height = 64;
     this.bubbleTex = new THREE.CanvasTexture(this.bubbleCanvas);
@@ -154,11 +159,29 @@ export class View3D {
     this.renderer.domElement.style.width = '100%'; this.renderer.domElement.style.height = '100%';
     this.camera.aspect = w / h; this.camera.updateProjectionMatrix();
   }
-  updateEyes(frames) {
-    const c = this.eyeCanvas, ctx = c.getContext('2d');
+  updateEyes(P, frames) {
+    const key = JSON.stringify(frames) + getComputedStyle(document.documentElement).getPropertyValue('--eye-on');
+    if (key === P.eyeKey) return;          // 바뀔 때만 다시 그림(여러 대일 때 부담 줄이기)
+    P.eyeKey = key;
+    const c = P.eyeCanvas, ctx = c.getContext('2d');
     ctx.clearRect(0, 0, c.width, c.height);
     drawFace(ctx, c.width, c.height, frames);
-    this.eyeTex.needsUpdate = true;
+    P.eyeTex.needsUpdate = true;
+  }
+  drawRobot(R, frames) {
+    let P = this.parts.get(R);
+    if (!P) { P = this.makeDog(); this.parts.set(R, P); }
+    const pose = R.bodyPose();
+    const y = R.fallen ? -60 : pose.center;   // 몸 중심 높이(가장 낮은 점이 바닥에 닿도록 계산됨)
+    P.dog.position.set(R.x, y, R.y);
+    P.dog.rotation.set(0, -R.heading * Math.PI / 180, R.fallen ? Math.PI / 2 : 0);
+    P.body.rotation.x = pose.pitch;   // 앞(-z)이 높으면 +
+    R.legs.forEach((lg, i) => { P.legs3[i].hip.rotation.x = lg.sh; P.legs3[i].knee.rotation.x = lg.kn; });
+    const [r, g, b] = R.bodyLed;
+    P.ledMat.color.setRGB(r / 255 * 0.6 + 0.2, g / 255 * 0.6 + 0.2, b / 255 * 0.6 + 0.2);
+    P.ledMat.emissive.setRGB(r / 255, g / 255, b / 255);
+    this.updateEyes(P, frames);
+    return y;
   }
   draw(eyeFrames) {
     if (!this.ready) return;
@@ -175,22 +198,11 @@ export class View3D {
     }
     const pts = R.trail.map(p => new THREE.Vector3(p.x, 0.2, p.y)); pts.push(new THREE.Vector3(R.x, 0.2, R.y));
     this.trailLine.geometry.setFromPoints(pts);
-    // 로봇 위치·방향·자세
-    const pose = R.bodyPose();
-    let y = pose.center;   // 몸 중심 높이(가장 낮은 점이 바닥에 닿도록 계산됨)
-    if (R.fallen) y = -60;
-    this.dog.position.set(R.x, y, R.y);
-    this.dog.rotation.set(0, -R.heading * Math.PI / 180, R.fallen ? Math.PI / 2 : 0);
-    this.body.rotation.x = pose.pitch;   // 앞(-z)이 높으면 +
-    R.legs.forEach((lg, i) => {
-      // 어깨각: 앞(+)으로 → 다리가 -z 쪽으로 기울도록
-      this.legs3[i].hip.rotation.x = lg.sh;
-      this.legs3[i].knee.rotation.x = lg.kn;
-    });
-    const [r, g, b] = R.bodyLed;
-    this.ledMat.color.setRGB(r / 255 * 0.6 + 0.2, g / 255 * 0.6 + 0.2, b / 255 * 0.6 + 0.2);
-    this.ledMat.emissive.setRGB(r / 255, g / 255, b / 255);
-    this.updateEyes(eyeFrames);
+    // 로봇들 위치·방향·자세 (군무 중이면 여러 대)
+    const robots = [R, ...(W.extra || [])];
+    for (const [k, P] of this.parts) if (!robots.includes(k)) { this.scene.remove(P.dog); this.parts.delete(k); }
+    (W.extra || []).forEach(R2 => this.drawRobot(R2, R2.headFrame()));
+    const y = this.drawRobot(R, eyeFrames);
     // 말풍선
     if (R.bubble) {
       if (this.lastBubble !== R.bubble) {

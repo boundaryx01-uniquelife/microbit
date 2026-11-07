@@ -299,6 +299,7 @@ export class World {
   constructor() {
     this.table = { w: 120, h: 80 };   // cm
     this.useTable = true;
+    this.extra = [];                   // 군무용 추가 로봇들
     this.obstacles = [];               // {x,y,w,h}
     this.start = { x: 60, y: 55, heading: 0 };
   }
@@ -360,6 +361,76 @@ export function compile(src) {
     sourceType: 'script',
   });
   return out.code + '\nreturn __main;';
+}
+
+// ------------------------------------------------------------
+// 로보독 블록 동작 (확장 kocoafab/robodog 2.0.1을 따름). 어느 로봇에든 적용 가능 → 여러 대 군무에도 사용
+// h: { warnOnce, sleep, soundOn, button, battery, tilt }
+// ------------------------------------------------------------
+export function makeRobodogApi(R, h) {
+  return {
+      gesture: (p) => { R.setMode(4); R.posture = clamp(p, 0, 4); R.postureT = 0; },
+      legBend: (legs, height) => {
+        R.setMode(1);
+        const v = mapRange(height, 0, 100, 20, 90);
+        const sets = { 0: [0, 1, 2, 3], 1: [0, 3], 2: [1, 2], 3: [0, 1], 4: [2, 3] }[legs] || [];
+        sets.forEach(i => { R.walkH[i] = v; });
+      },
+      leg: (leg, height, fb) => {
+        R.setMode(2);
+        const h = mapRange(height, 0, 100, 20, 90), f = mapRange(fb, -100, 100, -90, 90);
+        (LEG_SEL[leg] || []).forEach((on, i) => { if (on) R.legHF[i] = [h, f]; });
+      },
+      motor: (leg, deg1, deg2) => {
+        R.setMode(3);
+        (LEG_SEL[leg] || []).forEach((on, i) => { if (on) R.motorA[i] = [clamp(deg1, -90, 90), clamp(deg2, -90, 70)]; });
+      },
+      move: (dir, velocity) => {
+        R.setMode(1);
+        const v = clamp(velocity, -100, 100);
+        R.vel = dir === 0 ? v : -v;
+        if (Math.abs(v) > 30) h.warnOnce('fast', '책상 위에서는 속도 30 이하를 권장해요');
+      },
+      rotation: (dir, deg, velocity) => {
+        R.setMode(1);
+        const a = clamp(Math.abs(Math.round(deg)), 0, 360);
+        R.rotTarget = R.controlYaw + (dir === 0 ? a : -a);
+        R.rotVel = clamp(velocity, 10, 100);
+      },
+      stop: () => { R.setMode(1); R.vel = 0; },
+      rotationAbsolute: async (angle = 0, velocity = 100) => {
+        R.setMode(1);
+        const norm = (v) => ((Math.round(v) % 360) + 360) % 360;
+        let d = norm(norm(angle) - norm(R.controlYaw)); if (d > 180) d -= 360;
+        R.rotTarget = R.controlYaw + d; R.rotVel = clamp(velocity, 10, 100);
+        const t0 = performance.now();
+        while (performance.now() - t0 < 3000 && Math.abs(R.rotDelta()) > 5) await h.sleep(20);
+        R.rotTarget = null;
+      },
+      headLedExp: (exp) => { R.headMode = 2; R.expr = exp; R.exprT = 0; },
+      headLedPrint: (what, ch) => {
+        R.headMode = 3; const m = char8(String(ch).charAt(0) || ' ');
+        if (what === 0 || what === 2) R.headL = m; if (what === 1 || what === 2) R.headR = m;
+        if (/[^\x20-\x7e]/.test(String(ch))) h.warnOnce('korchar', '로보독 눈 LED에는 영문·숫자 한 글자만 표시돼요');
+      },
+      headLedDraw: (what, data) => {
+        R.headMode = 1; const m = parseImage(data, 8, 8);
+        if (what === 0 || what === 2) R.headL = m; if (what === 1 || what === 2) R.headR = m;
+      },
+      headLedImageLiteral: (s) => s,
+      headLedClear: () => { R.headMode = 0; R.headL = blank8(); R.headR = blank8(); },
+      bodyLed: (r, g, b) => { R.bodyLed = [clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)]; },
+      soundPlay: (what, volume) => {
+        const s = SOUNDS[what] || ['소리', [440]];
+        R.bubble = s[0]; R.bubbleT = 1.5;
+        playTones(s[1], volume || 2, h.soundOn());
+      },
+      getButton: () => h.button(),
+      getBattery: () => h.battery(),
+      getTof: () => R.tof(),
+      getTilt: (what) => h.tilt(what),
+      getRotation: () => { let h = ((Math.round(R.heading) % 360) + 360) % 360; if (h > 180) h -= 360; return h; },
+  };
 }
 
 // ------------------------------------------------------------
@@ -541,69 +612,14 @@ export class Runner {
     const musicWarn = new Proxy({}, { get(t, p) { if (typeof p === 'symbol') return undefined; return (...a) => { self.warnOnce('music', '⚠ 로보독 마이크로비트에서 \'음악\' 블록은 로봇 통신 핀(P0)과 겹칠 수 있어요. 소리는 로보독 효과음 블록을 쓰세요.'); return 0; }; } });
 
     // ---- 로보독 블록 (확장 kocoafab/robodog 2.0.1 동작을 따름) ----
-    const robodog = warnProxy('robodog', {
-      gesture: (p) => { R.setMode(4); R.posture = clamp(p, 0, 4); R.postureT = 0; },
-      legBend: (legs, height) => {
-        R.setMode(1);
-        const v = mapRange(height, 0, 100, 20, 90);
-        const sets = { 0: [0, 1, 2, 3], 1: [0, 3], 2: [1, 2], 3: [0, 1], 4: [2, 3] }[legs] || [];
-        sets.forEach(i => { R.walkH[i] = v; });
-      },
-      leg: (leg, height, fb) => {
-        R.setMode(2);
-        const h = mapRange(height, 0, 100, 20, 90), f = mapRange(fb, -100, 100, -90, 90);
-        (LEG_SEL[leg] || []).forEach((on, i) => { if (on) R.legHF[i] = [h, f]; });
-      },
-      motor: (leg, deg1, deg2) => {
-        R.setMode(3);
-        (LEG_SEL[leg] || []).forEach((on, i) => { if (on) R.motorA[i] = [clamp(deg1, -90, 90), clamp(deg2, -90, 70)]; });
-      },
-      move: (dir, velocity) => {
-        R.setMode(1);
-        const v = clamp(velocity, -100, 100);
-        R.vel = dir === 0 ? v : -v;
-        if (Math.abs(v) > 30) self.warnOnce('fast', '책상 위에서는 속도 30 이하를 권장해요');
-      },
-      rotation: (dir, deg, velocity) => {
-        R.setMode(1);
-        const a = clamp(Math.abs(Math.round(deg)), 0, 360);
-        R.rotTarget = R.controlYaw + (dir === 0 ? a : -a);
-        R.rotVel = clamp(velocity, 10, 100);
-      },
-      stop: () => { R.setMode(1); R.vel = 0; },
-      rotationAbsolute: async (angle = 0, velocity = 100) => {
-        R.setMode(1);
-        const norm = (v) => ((Math.round(v) % 360) + 360) % 360;
-        let d = norm(norm(angle) - norm(R.controlYaw)); if (d > 180) d -= 360;
-        R.rotTarget = R.controlYaw + d; R.rotVel = clamp(velocity, 10, 100);
-        const t0 = performance.now();
-        while (performance.now() - t0 < 3000 && Math.abs(R.rotDelta()) > 5) await self.sleep(20);
-        R.rotTarget = null;
-      },
-      headLedExp: (exp) => { R.headMode = 2; R.expr = exp; R.exprT = 0; },
-      headLedPrint: (what, ch) => {
-        R.headMode = 3; const m = char8(String(ch).charAt(0) || ' ');
-        if (what === 0 || what === 2) R.headL = m; if (what === 1 || what === 2) R.headR = m;
-        if (/[^\x20-\x7e]/.test(String(ch))) self.warnOnce('korchar', '로보독 눈 LED에는 영문·숫자 한 글자만 표시돼요');
-      },
-      headLedDraw: (what, data) => {
-        R.headMode = 1; const m = parseImage(data, 8, 8);
-        if (what === 0 || what === 2) R.headL = m; if (what === 1 || what === 2) R.headR = m;
-      },
-      headLedImageLiteral: (s) => s,
-      headLedClear: () => { R.headMode = 0; R.headL = blank8(); R.headR = blank8(); },
-      bodyLed: (r, g, b) => { R.bodyLed = [clamp(r, 0, 255), clamp(g, 0, 255), clamp(b, 0, 255)]; },
-      soundPlay: (what, volume) => {
-        const s = SOUNDS[what] || ['소리', [440]];
-        R.bubble = s[0]; R.bubbleT = 1.5;
-        playTones(s[1], volume || 2, self.ui.soundOn && self.ui.soundOn());
-      },
-      getButton: () => !!(self.robotBtnUntil && performance.now() < self.robotBtnUntil),
-      getBattery: () => self.battery,
-      getTof: () => R.tof(),
-      getTilt: (what) => what === 0 ? self.tilt[0] : self.tilt[1],
-      getRotation: () => { let h = ((Math.round(R.heading) % 360) + 360) % 360; if (h > 180) h -= 360; return h; },
-    });
+    const robodog = warnProxy('robodog', makeRobodogApi(R, {
+      warnOnce: (k, m) => self.warnOnce(k, m),
+      sleep: (ms) => self.sleep(ms),
+      soundOn: () => !!(self.ui.soundOn && self.ui.soundOn()),
+      button: () => !!(self.robotBtnUntil && performance.now() < self.robotBtnUntil),
+      battery: () => self.battery,
+      tilt: (what) => (what === 0 ? self.tilt[0] : self.tilt[1]),
+    }));
 
     const deflib = {
       Posture: { Ready: 0, SitDown: 1, Handstand: 2, Stretch: 3, SayHello: 4 },
