@@ -9,6 +9,7 @@ Playwright(크로미움)가 필요합니다.
 | `sim-e2e.js` | 시뮬레이터 51항목(예제·시연, 걷기·회전 수치, 자세, 공식 다리 표본, 라디오 감시·잠금, 장애물, 추락, 무한 반복, 경고, 3D, AI 브리지 연동, 좁은 화면, MakeCode 편집기 연동) | 위 서버 실행 후 `node tests/sim-e2e.js` |
 | `assistant-ui.js` | 로보독 도우미 화면 22항목(규칙 도우미, AI 응답·실패 시 전환, 빈 입력·오류 안내, 편집기 화면 배치) — AI 서버 응답은 가짜로 대신 | 위 서버 실행 후 `node tests/assistant-ui.js` |
 | `rule-assistant.mjs` | 규칙 도우미 안전 규칙 31항목(속도 30, 계속 걷기 자동 멈춤, 거리 0 멈춤, 라디오 2초 감시, 모르는 버튼 거절 등) | `node tests/rule-assistant.mjs` |
+| `intro-docs.js` | 소개 페이지(애니메이션·건너뛰기·움직임 줄이기·링크)와 수업 자료 페이지(링크·내려받기·인쇄) 15항목 | 위 서버 실행 후 `node tests/intro-docs.js` |
 | `assistant-function.mjs` | 도우미 서버 함수 14항목(가짜 Claude API 서버, 요금 없음) | `node tests/assistant-function.mjs` |
 | `sim-shots.js` | 3D 자세 화면 캡처(육안 확인) | `node tests/sim-shots.js` |
 | `build-sim-examples.js` | `makecode/*.ts` → `bridge/sim/examples.js` 생성 | 예제를 고친 뒤 실행 |
