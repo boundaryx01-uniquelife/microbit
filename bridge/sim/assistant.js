@@ -119,6 +119,8 @@ const TRIGGERS = [
   { re: /(?<![A-Za-z가-힣])(A|에이)\s*(버튼|단추)?\s*(을|를|이|가)?\s*(누르면|누를\s*때|눌렀을\s*때|눌리면)/i, kind: 'btn', arg: 'A' },
   { re: /(?<![A-Za-z가-힣])(B|비)\s*(버튼|단추)?\s*(을|를|이|가)?\s*(누르면|누를\s*때|눌렀을\s*때|눌리면)/i, kind: 'btn', arg: 'B' },
   { re: /(라디오|신호|숫자)\s*(로)?\s*(\d)\s*(을|를|이|가)?\s*(받으면|오면|들어오면|받았을\s*때)/, kind: 'radio' },
+  // "라디오 A 버튼을 누르면"(붙여 써도 됨) = 손에 든 리모컨 마이크로비트의 A 버튼 → 라디오 숫자 1, B → 2 로 받는 규칙
+  { re: /(라디오|무선|리모컨|리모콘)\s*(로)?\s*(A|B|에이|비)\s*(버튼|단추)\s*(을|를|이|가)?\s*(누르면|누를\s*때|눌렀을\s*때|눌리면)/i, kind: 'radio', letter: true },
   { re: /(?:(?:장애물|벽|물건)이?\s*)?(가까우면|가까워지면|가까이\s*오면|장애물이?\s*(있으면|보이면|나타나면)|벽이?\s*(있으면|가까우면)|부딪히기\s*전에)/, kind: 'near' },
   { re: /(멀면|아니면|없으면)/, kind: 'else' },
   { re: /(계속해서|계속|무한\s*반복|무한히)\s*(반복)?\s*(해|하기|해줘)?/, kind: 'forever' },
@@ -136,7 +138,7 @@ export function ruleAssistant(text) {
   const marks = [];
   for (const t of TRIGGERS) {
     const g = new RegExp(t.re.source, t.re.flags.includes('g') ? t.re.flags : t.re.flags + 'g');
-    let m; while ((m = g.exec(src))) marks.push({ at: m.index, end: m.index + m[0].length, kind: t.kind, arg: t.arg || (t.kind === 'radio' ? Number(m[3]) : null) });
+    let m; while ((m = g.exec(src))) marks.push({ at: m.index, end: m.index + m[0].length, kind: t.kind, arg: t.arg || (t.kind === 'radio' ? (t.letter ? (/^(A|에이)$/i.test(m[3]) ? 1 : 2) : Number(m[3])) : null) });
   }
   marks.sort((a, b) => a.at - b.at);
   const clean = [];
@@ -260,6 +262,7 @@ export function ruleAssistant(text) {
     tail.push('        }', '    }', '    basic.pause(50)', '})');
     expl.push('안전장치: 2초 동안 신호가 없으면 멈춤' + (lock ? `, ${btnName(lockBtn)} = 멈춤 잠금 ↔ 풀기(잠그면 눈에 X)` : ''));
     warnings.push('라디오 모둠번호는 1로 넣었어요. USB 마이크로비트(AI 브리지)와 같은 번호로 맞추세요.');
+    if (/(라디오|무선|리모컨|리모콘)\s*(로)?\s*(A|B|에이|비)\s*(버튼|단추)/i.test(src)) warnings.push('리모컨(손에 든 마이크로비트)에는 A 버튼을 누르면 radio.sendNumber(1), B 버튼을 누르면 radio.sendNumber(2)를 보내는 코드를 넣고, 모둠번호를 1로 같게 맞추세요.');
     if (!lock) warnings.push('버튼이 모두 다른 일에 쓰여 "멈춤 잠금"을 넣지 못했어요. 비상시에는 전원을 끄세요.');
   }
 
@@ -327,10 +330,10 @@ export const SAMPLE_REQUESTS = [
 export async function checkAi() {
   try {
     const r = await fetch('/api/robodog-assistant', { method: 'GET', cache: 'no-store' });
-    if (!r.ok) return { available: false };
+    if (!r.ok) return { available: false, reason: 'offline' };
     const j = await r.json();
-    return { available: !!j.configured, needsCode: !!j.needsCode };
-  } catch (e) { return { available: false }; }
+    return { available: !!j.configured, needsCode: !!j.needsCode, reason: j.configured ? '' : 'not_configured' };
+  } catch (e) { return { available: false, reason: 'offline' }; }
 }
 export async function askAi(request, currentCode, classCode) {
   const r = await fetch('/api/robodog-assistant', {
