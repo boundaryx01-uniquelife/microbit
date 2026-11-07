@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { OrbitControls } from './lib/OrbitControls.js';
 import { EST, GEOM, HEAD } from './runtime.js';
 import { drawFace } from './view2d.js';
+import { radioCard } from './devices.js';
 
 export class View3D {
   constructor(container, world, robot) {
@@ -39,6 +40,7 @@ export class View3D {
     scene.add(this.trailLine);
     this.parts = new Map();   // 로봇 → 3D 모형
     this.buildBubble();
+    this.buildDevices();
     this.ready = true;
     new ResizeObserver(() => this.resize()).observe(this.container);
     this.resize();
@@ -151,6 +153,75 @@ export class View3D {
     this.bubble.scale.set(16, 4, 1); this.bubble.visible = false; this.scene.add(this.bubble);
     this.lastBubble = null;
   }
+  // 코드에 필요한 장치를 장면에 함께 보여 줌: 거리센서 빔, AI 신호 카드, 본체 버튼 표시
+  label(w, h) {
+    const c = document.createElement('canvas'); c.width = w; c.height = h;
+    const tex = new THREE.CanvasTexture(c); tex.colorSpace = THREE.SRGBColorSpace;
+    const sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false, transparent: true }));
+    sp.visible = false; sp.renderOrder = 5; this.scene.add(sp);
+    return { c, tex, sp, key: '' };
+  }
+  buildDevices() {
+    this.beam = new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(), new THREE.Vector3(0, 0, -1)]),
+      new THREE.LineDashedMaterial({ color: 0xe5484d, dashSize: 1.2, gapSize: 0.8, depthTest: false, transparent: true }));
+    this.beam.visible = false; this.beam.renderOrder = 4; this.scene.add(this.beam);
+    this.hitDot = new THREE.Mesh(new THREE.SphereGeometry(0.7, 12, 8), new THREE.MeshBasicMaterial({ color: 0xe5484d, depthTest: false }));
+    this.hitDot.visible = false; this.hitDot.renderOrder = 4; this.scene.add(this.hitDot);
+    this.tofTag = this.label(256, 96); this.tofTag.sp.scale.set(6, 2.25, 1);
+    this.card = this.label(320, 260); this.card.sp.scale.set(8, 6.5, 1);
+    this.btnTag = this.label(300, 90); this.btnTag.sp.scale.set(7, 2.1, 1);
+  }
+  paint(L, key, fn) { if (L.key === key) return; L.key = key; const x = L.c.getContext('2d'); x.clearRect(0, 0, L.c.width, L.c.height); fn(x, L.c.width, L.c.height); L.tex.needsUpdate = true; }
+  drawDevices(R, y) {
+    const W = this.world, devs = W.devices || [], now = performance.now();
+    const rad = R.heading * Math.PI / 180, fx = Math.sin(rad), fz = -Math.cos(rad), sx = Math.cos(rad), sz = Math.sin(rad);
+    // 거리센서: 코에서 앞으로 재는 선과 값
+    const tofOn = devs.includes('tof') && !R.fallen;
+    this.beam.visible = this.hitDot.visible = this.tofTag.sp.visible = tofOn;
+    if (tofOn) {
+      const d = R.tof(), off = EST.noseOffset, hy = y + 1.5;
+      const a = new THREE.Vector3(R.x + fx * off, hy, R.y + fz * off), b = new THREE.Vector3(R.x + fx * (off + Math.min(d, 120)), hy, R.y + fz * (off + Math.min(d, 120)));
+      this.beam.geometry.setFromPoints([a, b]); this.beam.computeLineDistances();
+      this.hitDot.position.copy(b); this.hitDot.visible = d < EST.tofMax;
+      const tl = Math.min(d, 120) * 0.2; this.tofTag.sp.position.set(a.x + fx * tl, hy + 2.5, a.z + fz * tl);
+      this.paint(this.tofTag, String(d), (x, w, h) => {
+        x.fillStyle = 'rgba(229,72,77,.95)'; x.beginPath(); x.roundRect(2, 2, w - 4, h - 4, 30); x.fill();
+        x.fillStyle = '#fff'; x.font = 'bold 50px system-ui'; x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillText(d >= EST.tofMax ? '거리 없음' : '거리 ' + d, w / 2, h / 2 + 2);
+      });
+    }
+    // AI 신호 카드: 라디오로 받은 마지막 숫자를 카드 색으로
+    const radioOn = devs.includes('radio');
+    this.card.sp.visible = radioOn;
+    if (radioOn) {
+      const rl = W.radioLast, age = rl ? now - rl.t : 1e9, fresh = age < 600;
+      this.card.sp.position.set(R.x - sx * 9 + fx * 12, y + 3, R.y - sz * 9 + fz * 12);
+      this.paint(this.card, (rl ? rl.n : '-') + (fresh ? '!' : ''), (x, w, h) => {
+        x.fillStyle = 'rgba(255,255,255,.96)'; x.beginPath(); x.roundRect(2, 2, w - 4, h - 4, 24); x.fill();
+        x.strokeStyle = fresh ? '#2456e5' : '#c9d1dd'; x.lineWidth = fresh ? 10 : 4; x.stroke();
+        x.fillStyle = '#4b5565'; x.font = 'bold 30px system-ui'; x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillText('AI가 본 카드', w / 2, 36);
+        if (rl) {
+          const cd = radioCard(rl.n);
+          x.fillStyle = cd.color; x.beginPath(); x.roundRect(40, 66, w - 80, 150, 18); x.fill();
+          x.fillStyle = cd.ink; x.font = 'bold 74px system-ui'; x.fillText(String(rl.n), w / 2, 126);
+          x.font = 'bold 34px system-ui'; x.fillText(cd.name, w / 2, 190);
+        } else { x.fillStyle = '#7a8499'; x.font = 'bold 32px system-ui'; x.fillText('아직 없음', w / 2, 120); x.font = '24px system-ui'; x.fillText('라디오 숫자를 보내 보세요', w / 2, 170); }
+      });
+    }
+    // 본체 버튼: 누르면 파랗게
+    const btnOn = devs.includes('button');
+    this.btnTag.sp.visible = btnOn;
+    if (btnOn) {
+      const pressed = (W.btnT || 0) > now - 400;
+      this.btnTag.sp.position.set(R.x + sx * 11 - fx * 4, y - 1, R.y + sz * 11 - fz * 4);
+      this.paint(this.btnTag, pressed ? 'on' : 'off', (x, w, h) => {
+        x.fillStyle = pressed ? 'rgba(36,86,229,.97)' : 'rgba(255,255,255,.92)'; x.beginPath(); x.roundRect(2, 2, w - 4, h - 4, 40); x.fill();
+        x.fillStyle = pressed ? '#fff' : '#1d2433'; x.font = 'bold 40px system-ui'; x.textAlign = 'center'; x.textBaseline = 'middle';
+        x.fillText(pressed ? '본체 버튼 눌림!' : '본체 버튼', w / 2, h / 2 + 2);
+      });
+    }
+  }
   resize() {
     if (!this.ready) return;
     const w = this.container.clientWidth, h = this.container.clientHeight;
@@ -203,6 +274,7 @@ export class View3D {
     for (const [k, P] of this.parts) if (!robots.includes(k)) { this.scene.remove(P.dog); this.parts.delete(k); }
     (W.extra || []).forEach(R2 => this.drawRobot(R2, R2.headFrame()));
     const y = this.drawRobot(R, eyeFrames);
+    this.drawDevices(R, y);
     // 말풍선
     if (R.bubble) {
       if (this.lastBubble !== R.bubble) {

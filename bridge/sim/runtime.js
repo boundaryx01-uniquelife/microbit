@@ -519,10 +519,11 @@ export class Runner {
   }
   setButton(btn, down) { this.buttons[btn] = down; }
   radioReceive(n) {
+    if (this.robot.world) this.robot.world.radioLast = { n, t: performance.now() };   // 장면의 AI 신호 카드 표시용
     if (!this.running) return;
     (this.handlers.radioNum || []).forEach(h => this.spawn(h, n));
   }
-  robotButton() { this.robotBtnUntil = performance.now() + 300; }
+  robotButton() { this.robotBtnUntil = performance.now() + 300; if (this.robot.world) this.robot.world.btnT = performance.now(); }
 
   // ---- 환경(전역 이름들) ----
   buildEnv() {
