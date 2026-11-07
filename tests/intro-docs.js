@@ -26,6 +26,7 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
   await p.goto(BASE, { waitUntil: 'domcontentloaded' });
   await p.waitForFunction(() => window.__tm.img > 0, null, { timeout: 15000 });
   const first = await p.evaluate(() => ({ ok: window.__tm.imgOk, cap: window.__tm.cap }));
+  check('포스터 그림은 장식(aria-hidden)으로 일관', await p.evaluate(() => document.getElementById('poster').getAttribute('aria-hidden') === 'true' && document.querySelector('#poster img').getAttribute('alt') === ''));
   check('포스터와 함께 첫 자막이 바로 보임', first.cap.includes('할아버지'), first.cap);
   check('첫 화면 그림(포스터)이 3D보다 먼저 바로 보임', first.ok === true, JSON.stringify(first));
   await p.waitForFunction(() => window.__tm.ready > 0, null, { timeout: 90000 });
@@ -96,9 +97,15 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
     check(`${w}x${h}: 장면마다 꼭 보여야 할 물건이 화면 안에 다 들어옴(${times.length}곳)`, bad.length === 0, bad.slice(0, 4).join(' | '));
     check(`${w}x${h}: 가로 스크롤 없음`, await q.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.body.scrollWidth <= innerWidth));
     check(`${w}x${h}: 조절 버튼이 화면 안`, await q.evaluate(() => [...document.querySelectorAll('#ctl button')].filter(x => !x.hidden).every(x => { const r = x.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.width >= 36 && r.height >= 36; })));
+    if (w < 721) {
+      const row = await q.evaluate(() => { const bs = [...document.querySelectorAll('#ctl button')].filter(x => !x.hidden), rs = bs.map(x => x.getBoundingClientRect()); return { n: bs.length, oneRow: rs.every(r => Math.abs(r.top - rs[0].top) < 2), min: Math.min(...rs.map(r => Math.min(r.width, r.height))), labeled: bs.every(x => x.getAttribute('aria-label')), titleShown: getComputedStyle(document.querySelector('.title')).display !== 'none', trunc: [...document.querySelectorAll('.top *')].some(e => e.scrollWidth > e.clientWidth + 1 && getComputedStyle(e).display !== 'none' && e.clientWidth > 0 && getComputedStyle(e).overflow !== 'visible') }; });
+      check(`${w}x${h}: 조절 버튼 ${row.n}개가 한 줄, 44px 이상, 이름표(aria-label) 있음, 잘린 글자 없음`, row.n >= 5 && row.oneRow && row.min >= 44 && row.labeled && !row.titleShown && !row.trunc, JSON.stringify(row));
+    }
+    check(`${w}x${h}: 장면 3~7에서 할아버지(머리~무릎)가 통째로 보이거나 상자에 포함됨`, await q.evaluate(() => [8.5, 14, 21, 25.5, 29].every(t => { window.__intro.seek(t); const r = window.__intro.frameInfo(); return r.x0 >= -1.001 && r.x1 <= 1.001; })));
     await q.evaluate(() => window.__intro.seek(35)); await q.waitForTimeout(1500);
     const endR = await q.evaluate(() => { const f = document.querySelector('.foot').getBoundingClientRect(), card = document.querySelector('.end-in').getBoundingClientRect(), st = document.getElementById('stage').getBoundingClientRect(); return { footH: f.height, footB: f.bottom, footFs: parseFloat(getComputedStyle(document.querySelector('.foot')).fontSize), ch: card.height / st.height, links: [...document.querySelectorAll('.cta a')].map(a => { const r = a.getBoundingClientRect(); return r.bottom <= innerHeight && r.top > 0 && r.width > 50; }) }; });
     check(`${w}x${h}: 끝 카드의 링크와 바닥글이 화면 안, 글자 12px 이상`, endR.links.every(Boolean) && endR.footH > 10 && endR.footB <= h && endR.footFs >= 12, JSON.stringify(endR));
+    check(`${w}x${h}: 끝 카드에 학생 링크(수업 코드)가 보임`, await q.evaluate(() => { const r = document.querySelector('.joinl a').getBoundingClientRect(); return r.width > 50 && r.bottom <= innerHeight && r.top > 0; }));
     check(`${w}x${h}: 끝 카드가 장면을 너무 가리지 않음(${(endR.ch * 100).toFixed(0)}%)`, endR.ch <= (w < 721 ? 0.36 : 0.42), String(endR.ch));
     await c2.close();
   }

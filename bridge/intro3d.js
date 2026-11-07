@@ -123,14 +123,14 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     const hill = mk(new THREE.CircleGeometry(w * 0.42, 24, 0, Math.PI), new THREE.MeshBasicMaterial({ color: new THREE.Color(c).multiplyScalar(0.7) }), g, x, y - h * 0.5, 106.6, false); hill.rotation.y = Math.PI;
   });
   // 화분·스탠드(소품)
-  const plant = new THREE.Group(); plant.position.set(152, 0, 98); plant.scale.setScalar(2.1); scene.add(plant);
+  const plant = new THREE.Group(); plant.position.set(168, 0, 100); plant.scale.setScalar(2.1); scene.add(plant);
   mk(new THREE.CylinderGeometry(3.2, 2.5, 5, 18), mat(0xc4673f, 0.7), plant, 0, 2.5, 0);
   for (let i = 0; i < 7; i++) { const l = mk(new THREE.SphereGeometry(1, 12, 10), mat(i % 2 ? 0x4f8c55 : 0x62a266, 0.7), plant, Math.cos(i * 0.9) * 1.6, 8 + (i % 3) * 2.4, Math.sin(i * 0.9) * 1.6); l.scale.set(1.5, 3.4, 0.6); l.rotation.set(Math.sin(i) * 0.4, i * 0.9, Math.cos(i * 1.7) * 0.5); }
-  const lamp = new THREE.Group(); lamp.position.set(40, 0, 100); lamp.scale.setScalar(2); scene.add(lamp);
+  const lamp = new THREE.Group(); lamp.position.set(-6, 0, 100); lamp.scale.setScalar(2); scene.add(lamp);
   mk(new THREE.CylinderGeometry(3, 3.4, 0.8, 18), mat(0x4a3a2c, 0.5), lamp, 0, 0.4, 0);
   mk(new THREE.CylinderGeometry(0.35, 0.35, 22, 10), mat(0x4a3a2c, 0.5), lamp, 0, 11, 0);
   const shade = mk(new THREE.CylinderGeometry(3.2, 4.6, 5.4, 22, 1, true), new THREE.MeshStandardMaterial({ color: 0xffe2a8, emissive: 0xffc46b, emissiveIntensity: 0.9, roughness: 0.9, side: THREE.DoubleSide }), lamp, 0, 23.5, 0, false);
-  blob(plant.position.x, plant.position.z, 22, 18, 0.9); blob(40, 100, 18, 18, 0.7);
+  blob(plant.position.x, plant.position.z, 22, 18, 0.9); blob(-6, 100, 18, 18, 0.7);
 
   // 소파: 둥글게 깎은 모서리
   const sofa = new THREE.Group(); sofa.position.set(SOFA.x, 0, SOFA.z); sofa.scale.setScalar(BIG); scene.add(sofa);
@@ -230,10 +230,11 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     s.scale.set(0.01, 0.01, 1); scene.add(s); return s;
   }
   const retext = (s, txt) => { if (s.userData.txt !== txt) { s.userData.txt = txt; s.userData.draw(txt); } };
+  let bk = 1.3;   // 말풍선 배율: 세로 화면일수록 크게
   function tagAnim(s, t, show, hide = 1e9) {   // show 시각에 튀어나오고 hide 시각에 사라짐
     const k = Math.max(0.01, back(fade(t, show, show + 0.4)));
     s.material.opacity = Math.min(1, fade(t, show, show + 0.2)) * (1 - fade(t, hide, hide + 0.35));
-    const u = s.userData.w / TW; s.scale.set(u * s.userData.cw * k, u * TH * k, 1);
+    const u = s.userData.w * bk / TW; s.scale.set(u * s.userData.cw * k, u * TH * k, 1);
   }
   const speak = (text, w) => tagSprite(text, WHITE, w, { ink: '#1a2030', stroke: '#d6c9b3', tail: true });
   const bSearch = speak('약이 어디 있더라…', 34); bSearch.position.set(SOFA.x - 3, GH, SOFA.z - 4);
@@ -246,7 +247,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   const t3 = tagSprite('약통 = 3', accent, 21); t3.position.set(MB.x, 14.5, MB.z);
   const tArrive = tagSprite('여기예요!', GREEN, 24, { tail: true }); tArrive.position.set(DOG1.x, 19, DOG1.y);
   // 말풍선이 차지하는 자리(카메라 상자에 넣기 위함)
-  const tagItem = (s) => { const u = s.userData.w / TW, w = u * s.userData.cw, h = u * TH; return [s.position.x, s.position.y + h * (0.5 - s.center.y), s.position.z, w / 2, h / 2, 1]; };
+  const tagItem = (s) => { const u = s.userData.w * bk / TW, w = u * s.userData.cw, h = u * TH; return [s.position.x, s.position.y + h * (0.5 - s.center.y), s.position.z, w / 2, h / 2, 1]; };
 
   // ---------- 약통 그림(카드·사진에 쓰는 아이콘) ----------
   const drawPill = (c, cx, cy, s) => {
@@ -276,7 +277,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   scan.rotation.y = Math.PI; cardPivot.add(scan);
   cardPivot.scale.set(1, 0.001, 1);
   const flash = new THREE.Sprite(new THREE.SpriteMaterial({ map: glowTex, transparent: true, opacity: 0, depthWrite: false, blending: THREE.AdditiveBlending, color: 0xffffff })); flash.scale.set(14, 14, 1); flash.position.set(CARD.x, 8, CARD.z - 1); scene.add(flash);
-  blob(CARD.x, CARD.z + 1, 12, 8, 0.8);
+  const tmpShadows = [blob(CARD.x, CARD.z + 1, 12, 8, 0.8)];
 
   // ---------- AI 뇌: 사진이 날아 들어가면 빛나며 배움 ----------
   const brain = new THREE.Group(); brain.position.copy(BRAIN); scene.add(brain);
@@ -307,7 +308,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   });
   const photoA = (i) => 12.5 + i * 0.3, photoB = (i) => 15.3 + i * 0.28;   // 카드에서 나오는 때 / 뇌로 날아가는 때
   const stackPos = (i) => V(STACK.x + Math.sin(i * 1.9) * 0.5, 0.35 + i * 0.36, STACK.z);
-  blob(STACK.x, STACK.z, 10, 10, 0.8);
+  tmpShadows.push(blob(STACK.x, STACK.z, 10, 10, 0.8));
 
   // ---------- 마이크로비트 + 전파 ----------
   const DIGITS = { 3: ['###..', '...#.', '..#..', '...#.', '###..'], 0: ['.....', '.....', '.....', '.....', '.....'] };
@@ -331,7 +332,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   mbBoard.position.z = 0;
   mk(rbox(6.2, 1.1, 3.4, 0.4), mat(0x8a96a8, 0.5), mbGrp, 0, -3.3, 0.7);
   mbGrp.scale.setScalar(0.001);
-  blob(MB.x, MB.z + 0.5, 9, 6, 0.8);
+  tmpShadows.push(blob(MB.x, MB.z + 0.5, 9, 6, 0.8));
   const ringMat = () => new THREE.MeshBasicMaterial({ color: accent, transparent: true, opacity: 0, side: THREE.DoubleSide, depthWrite: false, depthTest: false });
   const rings = [0, 1, 2, 3].map(() => { const m = new THREE.Mesh(new THREE.RingGeometry(0.88, 1, 48), ringMat()); m.visible = false; m.renderOrder = 6; scene.add(m); return m; });
   const packet = tagSprite('3', accent, 13);
@@ -373,19 +374,20 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   const grandItem = [SOFA.x, 22, SOFA.z - 1, 31.5, 22, 14];
   const sofaB = (s) => tagItem(s);
   const cardItem = [CARD.x, 7.5, CARD.z, 6, 8, 3], stackItem = [STACK.x, 3, STACK.z, 5, 4, 5], brainItem = [BRAIN.x, 17, BRAIN.z, 7.6, 11, 7.6];
-  const tableItem = [TABLE.x, 11, TABLE.z, 13, 12, 9];
+  const tableItem = [TABLE.x, 11, TABLE.z, 14, 12, 10];
+  const gMid = [SOFA.x, 26, SOFA.z - 4, 15, 20, 12];   // 할아버지 머리~무릎(소파는 잘려도 됨, 할아버지는 통째로)
   const dogAt = () => [robot.x, 6.5, robot.y, 10, 7.5, 10];
-  const walkBox = () => U([robot.x, 12, robot.y, 22, 14, 16], [Math.min(TABLE.x, robot.x + 34), 13, robot.y, 15, 14, 15]);
+  const walkBox = () => U([robot.x, 8, robot.y, 11, 9, 11], tableItem, [TABLE.x, 20, TABLE.z, 8, 14, 6], gMid);
   const finalA = U(dogItem(DOG1.x, DOG1.y), tableItem, [TABLE.x, 30, TABLE.z, 4, 5, 4], tagItem(tArrive));
   const finalB = U(dogItem(DOG1.x, DOG1.y), tableItem, [TABLE.x, 30, TABLE.z, 4, 5, 4], tagItem(tArrive), grandItem, sofaB(bThanks));
   // box: p(0~1, 장면 안 진행도)를 받아 상자 / az: 방위각(°) [처음, 끝], azP: 세로 화면일 때 / el: 올려다보는 각 / dolly: 거리 배율 [처음, 끝]
   const CAM = [
     { box: () => U(grandItem, sofaB(bSearch), dogItem(DOG0.x, DOG0.y)), az: [-30, -20], azP: [-26, -16], el: [10, 9], dolly: [1.02, 0.94] },
     { box: () => U(grandItem, sofaB(bAsk), dogItem(DOG0.x, DOG0.y)), az: [-38, -30], azP: [-20, -14], el: [12, 11], dolly: [1.05, 0.95] },
-    { box: () => U(dogItem(DOG0.x, DOG0.y), cardItem, tagItem(tFail)), az: [-22, -10], azP: [-10, 0], el: [11, 10], dolly: [1.12, 0.96] },
-    { box: () => U(cardItem, stackItem, brainItem, tagItem(tCount), tagItem(tPhotos)), az: [14, 4], azP: [10, 4], el: [12, 11], dolly: [1.1, 0.96] },
-    { box: () => U(cardItem, brainItem, dogItem(DOG0.x, DOG0.y), tagItem(tOk), tagItem(tCount)), az: [-6, -16], azP: [-2, -8], el: [14, 13], dolly: [1.1, 0.98] },
-    { box: () => U([MB.x, 8, MB.z, 5, 7, 3], dogItem(DOG0.x, DOG0.y), tagItem(t3)), az: [-18, -26], azP: [-10, -16], el: [12, 11], dolly: [1.1, 0.97] },
+    { box: () => U(dogItem(DOG0.x, DOG0.y), cardItem, tagItem(tFail), gMid), az: [-22, -10], azP: [-10, 0], el: [11, 10], dolly: [1.12, 0.96] },
+    { box: () => U(cardItem, stackItem, brainItem, tagItem(tCount), tagItem(tPhotos), gMid, dogItem(DOG0.x, DOG0.y)), az: [14, 4], azP: [10, 4], el: [12, 11], dolly: [1.1, 0.96] },
+    { box: () => U(cardItem, brainItem, dogItem(DOG0.x, DOG0.y), tagItem(tOk), tagItem(tCount), gMid), az: [-6, -16], azP: [-2, -8], el: [14, 13], dolly: [1.1, 0.98] },
+    { box: () => U([MB.x, 8, MB.z, 5, 7, 3], dogItem(DOG0.x, DOG0.y), tagItem(t3), gMid), az: [-18, -26], azP: [-10, -16], el: [12, 11], dolly: [1.1, 0.97] },
     { box: () => walkBox(), az: [8, -10], azP: [4, -6], el: [13, 12], dolly: [1.06, 0.97] },
     { box: (p) => mixBox(finalA, finalB, ease(fade(p, 0.3, 0.8))), az: [-24, -14], azP: [-10, 0], el: [12, 14], dolly: [1.02, 1.0] },
   ];
@@ -464,6 +466,9 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   }
   function render(dt, force = false) {
     const day = dayAt(t);
+    { const a0 = (host.clientWidth || 1) / (host.clientHeight || 1); bk = 1.25 + 0.6 * Math.min(1, Math.max(0, (1.15 - a0) / 0.55)); }
+    const gone = 1 - ease(fade(t, 24.1, 24.8)), goneOn = gone > 0.01;   // 마이크로비트 장면이 끝나면 카드·AI 뇌는 치움
+    cardGrp.visible = goneOn; cardGrp.scale.setScalar(Math.max(0.001, gone)); tmpShadows.forEach(m => { m.visible = goneOn; });
     scene.background.copy(night).lerp(bg, day);
     lights.forEach((l, i) => { l.intensity = baseI[i] * (0.45 + 0.55 * day); });
     shade.material.emissiveIntensity = 1.3 - 0.6 * day;
@@ -480,7 +485,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     if (t > 7 && !smiling) { mouthSmile.visible = true; mouthFlat.visible = false; mouthO.visible = false; }
     cheeks.forEach(c => { c.material.opacity = 0.7 * (smiling ? fade(t, 31.9, 32.5) : 0); });
     eyes.forEach(e => e.scale.y = smiling ? lerp(1, 0.25, fade(t, 31.9, 32.3)) : (Math.sin(t * 0.9) > 0.97 ? 0.2 : 1));
-    tagAnim(bSearch, t, 0.8, 3.3); tagAnim(bAsk, t, 4.0, 7.0); tagAnim(bThanks, t, 34.1);
+    tagAnim(bSearch, t, 0.8, 3.3); tagAnim(bAsk, t, 4.0, 7.0); tagAnim(bThanks, t, 32.9);
     // 약통: 도착하면 은은히 빛나고 화살표가 통통
     const arr = fade(t, 31.7, 32.3);
     pillGlow.material.opacity = 0.85 * arr * (0.8 + 0.2 * Math.sin(t * 5)); pillGlow.scale.setScalar(14 + Math.sin(t * 5) * 1.5);
@@ -490,6 +495,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     const ff = fade(t, 8.6, 9.6); fmat.opacity = ff * (t > 19 ? 0.4 : 1); finder.scale.setScalar(1.7 - 0.7 * ease(ff));
     let sc = 0; for (const a of [9.4, 13.2, 19.0]) { const s = fade(t, a, a + 1.0); if (s > 0 && s < 1) { sc = s; break; } }
     scan.material.opacity = sc > 0 ? 0.9 : 0; scan.position.set(0, 13.4 - 11.6 * sc, -0.35);
+    tPhotos.position.y = 28 + 14 * Math.min(1, (bk - 1.25) / 0.6);   // 세로 화면에서는 말풍선이 커져서 위로 올려 겹치지 않게
     tagAnim(tFail, t, 9.9, 12.0); tagAnim(tPhotos, t, 12.4, 18.4); tagAnim(tOk, t, 19.2, 24.0); tagAnim(t3, t, 24.9, 27.6);
     // 사진
     let fl = 0, arrived = 0;
@@ -504,7 +510,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     flash.material.opacity = fl * 0.9 * (t < 18 ? 1 : 0);
     // AI 뇌
     const show = fade(t, 12.0, 12.6), learned = fade(t, 18.9, 19.5);
-    brain.visible = bar.visible = show > 0; brain.scale.setScalar(Math.max(0.01, back(show)) * (1 + learned * 0.08));
+    brain.visible = bar.visible = show > 0 && goneOn; brain.scale.setScalar(Math.max(0.01, back(show)) * (1 + learned * 0.08) * gone);
     let pulse = 0; for (let i = 0; i < PHOTOS; i++) { const d = t - (photoB(i) + 0.7); if (d > 0) pulse = Math.max(pulse, Math.exp(-d * 7)); }
     brain.position.y = BRAIN.y + Math.sin(t * 2.2) * 0.35; brain.rotation.y = Math.sin(t * 0.7) * 0.25;
     brainMat.emissiveIntensity = 0.12 + pulse * 0.9 + learned * 0.5; brainMat.emissive.set(0xff5d93).lerp(new THREE.Color(0x35e07f), learned); brainMat.color.set(0xf2a4bd).lerp(new THREE.Color(0xa9f0c4), learned);
