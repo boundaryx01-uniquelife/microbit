@@ -26,7 +26,7 @@ r = R('10cm보다 가까우면 뒤로 2초 걸어'); check('가까우면 뒤로 
 r = R('장애물이 가까우면 멈추고 멀면 뒤로 걸어'); check('멀면 뒤로 계속 걷기 거절', !/상태 = 2[\s\S]*Backward/.test(r.code) && r.warnings.some(w => /뒤로 계속/.test(w)));
 r = R('라디오 1을 받으면 멈춰, 라디오 3을 받으면 초록 불 켜고 앞으로 걸어');
 check('라디오: 2초 무신호 멈춤', /마지막신호 > 2000/.test(r.code));
-check('라디오: A 잠금·B 풀기', /잠금 = true/.test(r.code) && /잠금 = false/.test(r.code));
+check('라디오: 본체 버튼 = 멈춤 잠금 토글(꽂으면 A·B가 가려짐)', /잠금 = !\(잠금\)/.test(r.code) && /robodog\.getButton\(\)/.test(r.code) && !/Button\.A/.test(r.code), r.code);
 check('라디오: 수신 처리기 안에서 기다리지 않음', !/onReceivedNumber\(function \(받은수\) \{[^}]*basic\.pause/.test(r.code));
 r = R('a누르면 짖어'); check('소문자 a + 버튼 생략', /Button\.A/.test(r.code));
 r = R('앞으로가서 뒤로와'); check('한 구절 안 순서(앞→뒤)', r.code.indexOf('Forward') > 0 && r.code.indexOf('Forward') < r.code.indexOf('Backward'));
@@ -34,7 +34,10 @@ r = R('뒤로 돌아'); check('뒤로 돌아 = 180° 회전(후진 아님)', /18
 r = R('오른쪽으로 걸어'); check('오른쪽으로 걸어 = 돌고 걷기', /Clockwise, 90/.test(r.code) && /Forward/.test(r.code));
 r = R('높게 서서 춤춰 5번'); check('높게 → 춤 순서', r.code.indexOf('AllLegs, 100)') < r.code.indexOf('for (let'));
 r = R('일어서'); check('일어서 = 준비 자세', /Posture\.Ready/.test(r.code.split('\n').slice(2).join('\n')));
-r = R('앞으로 계속 걸어'); check('앞으로 계속 걸어 → 켜자마자 걷지 않음', !r.code.split('input.onButtonPressed')[0].includes('robodog.move('), r.code);
+r = R('앞으로 계속 걸어'); check('앞으로 계속 걸어 → 켜자마자 걷지 않음(걷는중일 때만)', r.code.indexOf('robodog.move(') > r.code.indexOf('if (걷는중)') && r.code.indexOf('if (걷는중)') > 0, r.code);
+check('앞으로 계속 걸어 → 본체 버튼으로 켜고 끔', /robodog\.getButton\(\)/.test(r.code) && !/input\.onButtonPressed/.test(r.code), r.code);
+r = R('A 버튼 누르면 멍멍 짖어'); check('A·B 버튼 코드는 "꽂으면 가려짐" 경고', r.warnings.some(w => /가려져/.test(w)));
+r = R('로보독 버튼 누르면 인사해'); check('본체 버튼 코드는 가려짐 경고 없음', !r.warnings.some(w => /가려져/.test(w)));
 r = R('속도 80으로 걸어'); check('조사: 30으로, 80은', /속도 30으로/.test(r.explanation) && /80은/.test(r.explanation), r.explanation);
 r = R('하늘을 날아'); check('모르는 말 → 코드 없음 + 할 수 있는 말 안내', !r.code && /할 수 있는 말/.test(r.explanation));
 r = R(''); check('빈 입력 안내', !r.code && /적어/.test(r.explanation));

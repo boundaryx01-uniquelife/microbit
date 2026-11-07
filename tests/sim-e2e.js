@@ -26,7 +26,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   await p.waitForTimeout(4000);
   const cap0 = await p.textContent('#caption');
   const st0 = await p.evaluate(() => ({ mode: window.__sim.robot.mode, posture: window.__sim.robot.posture, code: document.getElementById('code').value.includes('동작 둘러보기') }));
-  check('처음 열면 "동작 둘러보기" 자동 시연', st0.code && /A 버튼/.test(cap0) && st0.mode === 4, `${cap0.slice(0, 30)} mode=${st0.mode}`);
+  check('처음 열면 "동작 둘러보기" 자동 시연', st0.code && /본체 버튼/.test(cap0) && st0.mode === 4, `${cap0.slice(0, 30)} mode=${st0.mode}`);
   await p.screenshot({ path: path.join(OUT, 'sim_demo_auto.png') });
   check('편집기 화면에서는 시연 카드 접힘 + 자막은 보임', await p.evaluate(() => !document.getElementById('demoBox').open) && await p.isVisible('#caption'));
   await p.click('#demoBox > summary');   // 시연 펼치기
@@ -62,13 +62,21 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
     await p.evaluate(() => { document.getElementById('log').innerHTML = ''; });
   }
 
-  // 2. 동작 둘러보기: B = 앞으로 1초(속도 30) → 90° 회전
+  // 2. 동작 둘러보기 (실물처럼 본체 버튼: 1번째 = 자세 둘러보기, 2번째 = 사각형 걷기)
+  const pressRobot = async () => { await p.click('#btnRobot'); };
   await loadExample('05_motion-tour'); await run(); await p.waitForTimeout(500);
+  await pressRobot(); await p.waitForTimeout(400);
+  check('본체 버튼 1번째 → 앉기 자세', (await state()).posture === 1 && (await state()).mode === 4);
+  await p.waitForTimeout(6200);
+  const sp = await state();
+  check('… → 인사 자세 + ILOVEYOU 표정', sp.posture === 4 && sp.expr === 1, `posture=${sp.posture} expr=${sp.expr}`);
+  await p.screenshot({ path: path.join(OUT, 'sim_2d_hello.png') });
+  await p.waitForTimeout(3600);   // 자세 둘러보기가 끝날 때까지
   const s0 = await state();
-  await pressMb('B'); await p.waitForTimeout(1050);
+  await pressRobot(); await p.waitForTimeout(1050);
   const s1 = await state();
   const moved = s0.y - s1.y;
-  check('속도 30으로 1초 → 약 4.5cm 전진(추정치 기준)', moved > 3.5 && moved < 5.5, `${moved.toFixed(2)}cm`);
+  check('본체 버튼 2번째: 속도 30으로 1초 → 약 4.5cm 전진(추정치 기준)', moved > 3.5 && moved < 5.5, `${moved.toFixed(2)}cm`);
   check('걷는 동안 몸통 LED 초록', JSON.stringify(s1.led) === '[0,255,0]' || JSON.stringify(s1.led) === '[0,0,255]', JSON.stringify(s1.led));
   await p.waitForTimeout(1500);
   const s2 = await state();
@@ -78,14 +86,6 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   check('사각형 4번 → 처음 방향(360°)', Math.abs(s3.h - 360) < 4, `heading=${s3.h.toFixed(1)}`);
   check('사각형 → 거의 제자리로 복귀', Math.hypot(s3.x - s0.x, s3.y - s0.y) < 2, `차이 ${Math.hypot(s3.x - s0.x, s3.y - s0.y).toFixed(2)}cm`);
   await p.screenshot({ path: path.join(OUT, 'sim_2d_square.png') });
-
-  // 3. A = 자세 둘러보기
-  await pressMb('A'); await p.waitForTimeout(400);
-  check('A → 앉기 자세', (await state()).posture === 1 && (await state()).mode === 4);
-  await p.waitForTimeout(6200);
-  const sp = await state();
-  check('… → 인사 자세 + ILOVEYOU 표정', sp.posture === 4 && sp.expr === 1, `posture=${sp.posture} expr=${sp.expr}`);
-  await p.screenshot({ path: path.join(OUT, 'sim_2d_hello.png') });
 
   // 4. 신호등 안내견: 라디오 3 계속 → 걷기, 끊기면 2초 뒤 정지, A 잠금
   // 03은 "R1" 글자를 흘린 뒤(약 1.4초)에 라디오 받기를 등록함 → 실제 기기처럼 그 전 신호는 무시됨
@@ -98,20 +98,20 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   check('신호 2초 끊김 → 자동 정지', (await state()).vel === 0);
   await send(1); await p.waitForTimeout(300);
   check('라디오 1(빨강) → 빨간 몸통', JSON.stringify((await state()).led) === '[255,0,0]');
-  await pressMb('A'); await p.waitForTimeout(200);
+  await pressRobot(); await p.waitForTimeout(400);
   for (let i = 0; i < 4; i++) { await send(3); await p.waitForTimeout(300); }
-  check('A 잠금 중 초록을 받아도 정지 유지', (await state()).vel === 0);
-  await pressMb('B'); await p.waitForTimeout(200);
+  check('본체 버튼 잠금 중 초록을 받아도 정지 유지', (await state()).vel === 0);
+  await pressRobot(); await p.waitForTimeout(400);
   for (let i = 0; i < 3; i++) { await send(3); await p.waitForTimeout(300); }
-  check('B로 잠금 풀면 다시 출발', (await state()).vel === 25);
+  check('본체 버튼 다시 누르면 잠금 풀리고 출발', (await state()).vel === 25);
 
   // 5. 거리센서: 앞에 장애물 → 멈춤
   await p.click('#btnStop'); await p.click('#btnReset');
   await S(() => { const w = window.__sim.world; w.obstacles.length = 0; w.obstacles.push({ x: 55, y: 15, w: 10, h: 6 }); });
   await loadExample('02_distance-rule'); await run(); await p.waitForTimeout(300);
   check('02: 켜자마자 걷지 않음', (await state()).vel === 0);
-  await pressMb('B'); await p.waitForTimeout(800);
-  check('02: B → 걷기 시작', (await state()).vel === 25);
+  await pressRobot(); await p.waitForTimeout(800);
+  check('02: 본체 버튼 → 걷기 시작', (await state()).vel === 25);
   await p.waitForTimeout(9000);
   const tofNow = await S(() => window.__sim.robot.tof());
   const d5 = await state();
@@ -151,7 +151,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   await p.click('#tab3d'); await p.waitForTimeout(2500);
   const has3d = await p.evaluate(() => { const c = document.querySelector('#view3d canvas'); if (!c) return false; return c.width > 100; });
   check('3D 화면 그리기', has3d);
-  await pressMb('A'); await p.waitForTimeout(7500);
+  await pressRobot(); await p.waitForTimeout(7500);
   await p.screenshot({ path: path.join(OUT, 'sim_3d_hello.png') });
   await p.click('#tab2d');
 

@@ -24,7 +24,8 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   await p.click('#askBtn');
   const code = await p.textContent('#askCode');
   check('버튼 이벤트·불빛·소리 코드 생성', code.includes('Button.A') && code.includes('bodyLed(255, 0, 0)') && code.includes('SoundEffect.Bark') && code.includes('SitDown'));
-  check('경고 없음(문법 정상)', (await p.$$eval('#askWarn li', l => l.length)) === 0);
+  const ws = await p.$$eval('#askWarn li', l => l.map(x => x.textContent));
+  check('문법 경고 없음 + "A·B 가려짐" 안내만', ws.length === 1 && /가려져/.test(ws[0]), ws.join(' | '));
   await p.click('#askRun'); await p.waitForTimeout(800);
   await p.evaluate(() => window.__sim.runner.press('A')); await p.waitForTimeout(600);
   check('실행 후 A → 몸통 빨간 불', await p.evaluate(() => { return window.__sim.robot.bodyLed[0] === 255; }), await p.evaluate(() => JSON.stringify(window.__sim.robot.bodyLed)));

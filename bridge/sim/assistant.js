@@ -197,6 +197,15 @@ export function ruleAssistant(text) {
   }
   const used = new Set(handlers.map(h => h.btn));
   const freeBtn = () => ['B', 'A', 'AB'].find(b => !used.has(b));
+  // 로보독 등에 꽂은 마이크로비트의 A·B 버튼은 가려져서 못 누름 → 켜고 끄기는 로보독 본체 버튼(전원 스위치 옆)을 먼저 씀
+  let robotUsed = robotBtn.some(r => r.lines.length), robotDeclared = false;
+  const takeToggle = () => { if (!robotUsed) { robotUsed = true; return 'ROBOT'; } const b = freeBtn() || 'B'; used.add(b); return b; };
+  const btnName = (b) => b === 'ROBOT' ? '로보독 본체 버튼' : (b === 'AB' ? 'A+B' : b) + ' 버튼';
+  const onPress = (b, lines) => {
+    if (b !== 'ROBOT') return [`input.onButtonPressed(Button.${b}, function () {`, ...indent(lines), '})'];
+    if (!robotDeclared) { robotDeclared = true; code.splice(1, 0, 'let 본체이전 = false'); }
+    return ['basic.forever(function () {', '    let 본체 = robodog.getButton()', '    if (본체 && !(본체이전)) {', ...indent(lines, 2), '    }', '    본체이전 = 본체', '    basic.pause(50)', '})'];
+  };
 
   // 계속 걷기(이동이 있는 반복)는 버튼으로 켜고 끄며, 10초 지나면 저절로 멈춤(책상 안전)
   let walkerNo = 0;
@@ -204,11 +213,11 @@ export function ruleAssistant(text) {
     const cl = continuous(lines);
     if (cl.every(l => l.includes('robodog.move('))) { lines = cl; label = label.replace(/\d+(\.\d+)?초 /g, ''); }   // 걷기만이면 끊기지 않고 쭉 걷기
     const v = walkerNo ? `걷는중${walkerNo + 1}` : '걷는중', t0 = walkerNo ? `시작시간${walkerNo + 1}` : '시작시간'; walkerNo++;
-    used.add(btn);
+    if (btn !== 'ROBOT') used.add(btn);
     code.splice(1, 0, `let ${v} = false`, `let ${t0} = 0`);
-    tail.push('', `input.onButtonPressed(Button.${btn}, function () {`, `    ${v} = !(${v})`, `    ${t0} = input.runningTime()`, `    if (!(${v})) {`, '        robodog.stop()', '    }', '})',
+    tail.push('', ...onPress(btn, [`${v} = !(${v})`, `${t0} = input.runningTime()`, `if (!(${v})) {`, '    robodog.stop()', '}']),
       'basic.forever(function () {', `    if (${v}) {`, ...indent(lines, 2), `        if (input.runningTime() - ${t0} > 10000) {`, `            ${v} = false`, '            robodog.stop()', '        }', '    }', '    basic.pause(20)', '})');
-    expl.push(`${btn === 'AB' ? 'A+B' : btn} 버튼을 누르면 ${label} 시작, 다시 누르면 멈춤 (10초 지나면 저절로 멈춤)`);
+    expl.push(`${btnName(btn)}을 누르면 ${label} 시작, 다시 누르면 멈춤 (10초 지나면 저절로 멈춤)`);
     warnings.push('계속 걷는 코드는 10초 뒤 저절로 멈추게 했어요(책상에서 떨어지지 않게). 바닥에서 시험하고, 시간은 10000(10초)을 바꾸면 돼요.');
   };
 
@@ -237,11 +246,11 @@ export function ruleAssistant(text) {
 
   if (radioCases.length) {
     // 03 예제와 같은 구조: 받은 숫자는 기록만, 처리는 한 곳에서. 2초 동안 신호가 없거나 A(멈춤 잠금)면 멈춤
-    const lock = !used.has('A') && !used.has('B');
+    const lockBtn = !robotUsed ? takeToggle() : (!used.has('A') ? (used.add('A'), 'A') : null);
+    const lock = !!lockBtn;
     code.splice(1, 0, 'let 신호 = 0', 'let 마지막신호 = 0', 'let 이전신호 = -1', ...(lock ? ['let 잠금 = false'] : []), 'radio.setGroup(1)');
     tail.push('', 'radio.onReceivedNumber(function (받은수) {', '    신호 = 받은수', '    마지막신호 = input.runningTime()', '})');
-    if (lock) tail.push('input.onButtonPressed(Button.A, function () {', '    잠금 = true', '    robodog.stop()', '    basic.showIcon(IconNames.No)', '})',
-      'input.onButtonPressed(Button.B, function () {', '    잠금 = false', '    basic.clearScreen()', '})');
+    if (lock) tail.push(...onPress(lockBtn, ['잠금 = !(잠금)', 'if (잠금) {', '    robodog.stop()', '    robodog.headLedPrint(deflib.HeadLedSide.Both, "X")', '}', '이전신호 = -1']));
     tail.push('basic.forever(function () {', `    if (${lock ? '잠금 || ' : ''}input.runningTime() - 마지막신호 > 2000) {`, '        if (이전신호 != 0) {', '            robodog.stop()', '            이전신호 = 0', '        }',
       '    } else if (신호 != 이전신호) {', '        이전신호 = 신호', '        robodog.stop()');
     radioCases.forEach((c, i) => {
@@ -249,15 +258,15 @@ export function ruleAssistant(text) {
       expl.push(`라디오 ${c.n}: ` + ((hasMove(c.lines) ? c.desc.join(' → ').replace(/\d+(\.\d+)?초 /g, '') : c.desc.join(' → ')) || '멈추기') + (hasMove(c.lines) ? ' (신호가 오는 동안 계속)' : ''));
     });
     tail.push('        }', '    }', '    basic.pause(50)', '})');
-    expl.push('안전장치: 2초 동안 신호가 없으면 멈춤' + (lock ? ', A = 멈춤 잠금, B = 풀기' : ''));
+    expl.push('안전장치: 2초 동안 신호가 없으면 멈춤' + (lock ? `, ${btnName(lockBtn)} = 멈춤 잠금 ↔ 풀기(잠그면 눈에 X)` : ''));
     warnings.push('라디오 모둠번호는 1로 넣었어요. USB 마이크로비트(AI 브리지)와 같은 번호로 맞추세요.');
-    if (!lock) warnings.push('A·B 버튼을 다른 일에 써서 "A = 멈춤 잠금"을 넣지 못했어요. 비상시에는 전원을 끄세요.');
+    if (!lock) warnings.push('버튼이 모두 다른 일에 쓰여 "멈춤 잠금"을 넣지 못했어요. 비상시에는 전원을 끄세요.');
   }
 
   if (nearPart) {
     // 02 예제와 같은 구조: 값 0(못 읽음)은 멈춤, 상태가 바뀔 때만 명령
     const cm = num(src, /(\d+)\s*(cm|센티)/, 20);
-    const sb = freeBtn() || 'B'; used.add(sb);
+    const sb = takeToggle();
     const thenL = nearPart.lines.length ? nearPart.lines : ['robodog.stop()'];
     let elseL = elsePart && elsePart.lines.length ? continuous(elsePart.lines) : ['robodog.move(deflib.MoveDirection.Forward, 20)'];
     if (elseL.some(l => /MoveDirection\.Backward/.test(l))) {
@@ -265,21 +274,22 @@ export function ruleAssistant(text) {
       warnings.push('거리센서는 앞만 봐서 "멀면 뒤로 계속 걷기"는 넣지 않고 멈추게 했어요.');
     }
     code.splice(1, 0, 'let 걷는중 = false', 'let 상태 = 0');
-    tail.push('', `input.onButtonPressed(Button.${sb}, function () {`, '    걷는중 = !(걷는중)', '    상태 = 0', '    if (!(걷는중)) {', '        robodog.stop()', '    }', '})',
+    tail.push('', ...onPress(sb, ['걷는중 = !(걷는중)', '상태 = 0', 'if (!(걷는중)) {', '    robodog.stop()', '}']),
       'basic.forever(function () {', '    if (걷는중) {', '        let 거리 = robodog.getTof()', '        if (거리 == 0) {', '            if (상태 != 0) {', '                robodog.stop()', '                상태 = 0', '            }',
       `        } else if (거리 < ${cm}) {`, '            if (상태 != 1) {', '                상태 = 1', ...indent(thenL, 4), '            }',
       '        } else if (상태 != 2) {', '            상태 = 2', ...indent(elseL, 3), '        }', '    }', '    basic.pause(100)', '})');
-    expl.push(`${sb === 'AB' ? 'A+B' : sb} 버튼으로 시작/멈춤. 거리센서 값이 ${cm}보다 작아지면 한 번: ` + (nearPart.desc.join(' → ') || '멈추기') + ' / 멀면: ' + ((elsePart && elsePart.desc.join(' → ').replace(/\d+초 /g, '계속 ')) || '천천히 계속 앞으로') + ' / 값이 0(못 읽음)이면 멈춤');
+    expl.push(`${btnName(sb)}으로 시작/멈춤. 거리센서 값이 ${cm}보다 작아지면 한 번: ` + (nearPart.desc.join(' → ') || '멈추기') + ' / 멀면: ' + ((elsePart && elsePart.desc.join(' → ').replace(/\d+초 /g, '계속 ')) || '천천히 계속 앞으로') + ' / 값이 0(못 읽음)이면 멈춤');
     warnings.push('거리센서 값의 단위는 실물에서 확인이 필요해요(시뮬레이터는 cm로 가정). 거리센서는 책상 끝(낭떠러지)은 못 봐요 — 바닥에서 시험하세요.');
   }
 
   for (const f of foreverParts) {
     if (!f.lines.length) continue;
-    if (hasMove(f.lines)) { const b = freeBtn() || 'B'; walker(b, f.lines, '계속 ' + f.desc.join(' → ')); continue; }
+    if (hasMove(f.lines)) { walker(takeToggle(), f.lines, '계속 ' + f.desc.join(' → ')); continue; }
     tail.push('', 'basic.forever(function () {', ...indent(f.lines), '})');
     expl.push('계속 반복: ' + f.desc.join(' → '));
   }
   code.push(...tail);
+  if (code.some(l => l.includes('input.onButtonPressed'))) warnings.push('로보독 등에 꽂은 마이크로비트의 A·B 버튼은 가려져서 누를 수 없어요. 실물 로보독에서는 "로보독 버튼 누르면"으로 말하거나, 리모컨 마이크로비트(라디오)를 쓰세요. A·B는 시뮬레이터와 손에 든 마이크로비트에서만 눌러요.');
   if (unknown.length) warnings.push('이해하지 못한 말: ' + unknown.map(u => `"${u}"`).join(', ') + ' — 아래 "이렇게 말해 보세요" 표현을 참고하세요.');
 
   const body = code.filter((l, i, a) => !(l === '' && a[i - 1] === ''));

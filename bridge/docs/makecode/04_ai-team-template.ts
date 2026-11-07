@@ -8,7 +8,8 @@
 //    (사람 얼굴 대신 물건·배지를 학습시켜 개인정보 문제를 피합니다)
 //  - 교실 도우미견: 1=조용히 손 모양, 2=정리 시간 카드 → 알림 동작
 //
-// 안전장치(지우지 마세요): 2초 동안 신호가 없으면 멈춤, A=멈춤 잠금, B=잠금 풀기
+// 안전장치(지우지 마세요): 2초 동안 신호가 없으면 멈춤, 로보독 본체 버튼 = 멈춤 잠금 ↔ 풀기(잠그면 눈에 X)
+// ※ 꽂은 마이크로비트의 A·B 버튼은 가려지므로 본체 버튼(전원 스위치 옆)을 씁니다.
 // ※ 로보독 마이크로비트에서는 '음악' 블록을 쓰지 마세요(로봇 통신 핀과 겹칠 수 있음).
 // =============================================================
 
@@ -50,33 +51,37 @@ radio.onReceivedNumber(function (받은수) {
     마지막수신 = input.runningTime()
 })
 
-input.onButtonPressed(Button.A, function () {
-    멈춤잠금 = true
-})
-
-input.onButtonPressed(Button.B, function () {
-    멈춤잠금 = false
-})
-
-let 화면잠금표시 = false
+// 본체 버튼: 누를 때마다 멈춤 잠금 ↔ 풀기
+let 버튼이전 = false
 basic.forever(function () {
-    let 할일 = 받은신호
-    if (멈춤잠금 || input.runningTime() - 마지막수신 > 2000) {
-        할일 = 0
+    let 버튼지금 = robodog.getButton()
+    if (버튼지금 && !(버튼이전)) {
+        멈춤잠금 = !(멈춤잠금)
     }
-    if (할일 != 현재신호) {
-        현재신호 = 할일
-        번호에맞게행동하기(현재신호)
-        화면잠금표시 = false
-        basic.showNumber(현재신호)
-    }
-    // 잠금 상태가 바뀌면 화면도 바꿈 (잠금 = X 표시)
-    if (멈춤잠금 && !(화면잠금표시)) {
-        화면잠금표시 = true
-        basic.showIcon(IconNames.No)
-    } else if (!(멈춤잠금) && 화면잠금표시) {
-        화면잠금표시 = false
-        basic.showNumber(현재신호)
+    버튼이전 = 버튼지금
+    basic.pause(50)
+})
+
+basic.forever(function () {
+    if (멈춤잠금) {
+        // 잠금: 라디오를 무시하고 멈춤, 눈에 X
+        if (현재신호 != -2) {
+            현재신호 = -2
+            robodog.stop()
+            robodog.bodyLed(255, 0, 0)
+            robodog.headLedPrint(deflib.HeadLedSide.Both, "X")
+            basic.showIcon(IconNames.No)
+        }
+    } else {
+        let 할일 = 받은신호
+        if (input.runningTime() - 마지막수신 > 2000) {
+            // 신호가 끊김 → 안전하게 멈춤
+            할일 = 0
+        }
+        if (할일 != 현재신호) {
+            현재신호 = 할일
+            번호에맞게행동하기(현재신호)
+        }
     }
     basic.pause(50)
 })

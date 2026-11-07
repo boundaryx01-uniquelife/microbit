@@ -27,7 +27,8 @@ const SYSTEM = `당신은 초등학생과 선생님을 돕는 "로보독 코딩 
 - 변수·함수 이름은 한글로 써도 됩니다(예: 거리, 신호에반응하기).
 - 처음에 robodog.gesture(deflib.Posture.Ready) 로 준비 자세를 잡습니다.
 - 안전(반드시): 이동 속도는 30 이하(더 빠르게 요청해도 30으로 하고 설명에 알림). 한 번 이동은 basic.pause 뒤 robodog.stop().
-  계속 걷는 코드는 켜자마자 걷지 않게 버튼으로 시작·멈춤을 넣고, 시작 후 10초가 지나면 저절로 멈추게 합니다(input.runningTime() 비교).
+- 버튼(실물 확인됨): 로보독 등에 꽂은 마이크로비트의 A·B 버튼은 가려져서 누를 수 없습니다. 로보독 코드의 입력은 로보독 본체 버튼(전원 스위치 옆)을 robodog.getButton() 으로 읽고, 누르는 순간만 반응하도록 바로 전 값과 비교합니다(basic.forever 안에서 50ms마다). 학생이 "A 버튼"이라고 해도 본체 버튼으로 바꾸고 설명에 알립니다. 단, "리모컨"·"손에 든 마이크로비트" 코드라면 A·B를 써도 됩니다.
+  계속 걷는 코드는 켜자마자 걷지 않게 본체 버튼으로 시작·멈춤을 넣고, 시작 후 10초가 지나면 저절로 멈추게 합니다(input.runningTime() 비교).
   거리센서 규칙: 값 0은 "못 읽음"으로 보고 멈춤(이 자료의 안전 규칙), 상태가 바뀔 때만 동작·소리 명령(반복 재생 방지), 거리센서는 앞만 보므로 뒤로 계속 걷지 않음. 책상 끝은 감지 못하므로 바닥에서 시험하라고 warnings에 씁니다.
 - 맨 위에 한 줄 주석으로 무엇을 하는 코드인지 씁니다.
 - '음악'(music.*) 블록은 쓰지 않습니다(로봇 통신 핀과 겹칠 수 있음). 소리는 robodog.soundPlay 를 씁니다.
@@ -48,12 +49,12 @@ robodog.headLedClear()
 robodog.bodyLed(R 0~255, G 0~255, B 0~255)
 robodog.soundPlay(deflib.SoundEffect.Bark|Growl|Angry|Whine|HeavyBreath|Hello|Wait|MoveAside|Start|Laser|MotorRotation|DingDing|AlienSignal|Motion|Collision|Do|Re|Mi|Fa|Sol|La|Si|SharpDo, deflib.SoundVolume.Loud|Medium|Quiet)
   // 블록 이름: 멍멍·으르렁·화난·찡찡·거친숨·안녕·기다려·비켜·출발·레이저·모터회전·띠리리·외계신호·동작·충돌·도~#도
-센서(값): robodog.getButton() → 참/거짓(로보독 버튼), robodog.getBattery() → %, robodog.getTof() → 거리센서 값(0~255 정수, 단위 미확인), robodog.getTilt(deflib.TiltAxis.LeftRight|ForwardBackward), robodog.getRotation() → 방향(도)
+센서(값): robodog.getButton() → 참/거짓(로보독 본체 버튼, 전원 스위치 옆), robodog.getBattery() → %, robodog.getTof() → 거리센서 값(0~255 정수, 단위 미확인), robodog.getTilt(deflib.TiltAxis.LeftRight|ForwardBackward), robodog.getRotation() → 방향(도)
 
 ## 무선 확장 kocoafab/robodog-radio (마이크로비트를 손에 들고 라디오로 제어, 로보독 AI 카메라 사용)
 사용자가 카메라·얼굴·색 인식·QR을 원할 때만 이 확장을 씁니다. 유선 확장과 함께 쓰지 않습니다.
 처음에 robodog.rfBand(밴드) 를 부릅니다(라디오 그룹은 14로 고정). 밴드는 로보독 본체와 같아야 하고, 같은 교실의 모둠은 서로 다른 밴드를 써야 섞이지 않습니다(로보독 쪽 밴드 설정 방법은 확인 필요 — warnings에 적기). 예제 기본은 7.
-위 동작·LED·소리·센서 블록도 같은 이름으로 쓸 수 있습니다. 무선 코드에서는 A 버튼 멈춤 외에 "전원 스위치로 끄기"를 비상 정지로 안내합니다.
+위 동작·LED·소리·센서 블록도 같은 이름으로 쓸 수 있습니다. 무선 코드(손에 든 마이크로비트)에서는 A 버튼 멈춤 외에 "전원 스위치로 끄기"를 비상 정지로 안내합니다.
 robodog.aiDetection(deflib.AiMode.Camera|FaceDetect|FaceTracking|ColorDetect|QrCode)
 robodog.faceTracking(deflib.AiClass.Class1~Class5)
 robodog.getCameraAlive() → 참/거짓, robodog.getFaceClass() → 받은 번호(범위 미확인), robodog.getFaceTracking() → 수, robodog.getColorDetect() → 받은 번호(범위 미확인), robodog.getQrCode() → 글자(없으면 "none"), robodog.getAiPosition(deflib.AiPositionAxis.X|Y) → -128~127(부호·의미 실물 확인 필요)

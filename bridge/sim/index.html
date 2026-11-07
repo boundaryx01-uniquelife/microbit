@@ -88,7 +88,7 @@
     body.mc-mode .codehint { display: none; }
   }
   body.mc-mode .panels .panel { padding: 8px; }
-  body.mc-mode .panels .note { display: none; }
+  body.mc-mode .panels .note:not(.keep) { display: none; }
   body.mc-mode .panels { grid-template-columns: minmax(0, 1fr); }
   body.mc-mode #mbled { width: 84px; height: 84px; }
   @media (max-width: 980px) { body.mc-mode main { grid-template-columns: minmax(0, 1fr); } }
@@ -241,6 +241,7 @@
           <button class="mbbtn" data-btn="B" aria-label="B 버튼">B</button>
         </div>
         <div class="row" style="margin-top:8px"><button id="btnAB">A+B 함께</button></div>
+        <p class="note keep" style="margin:6px 0 0">⚠ 실물에서는 로보독 등에 꽂으면 A·B 버튼이 <b>가려져요</b>. 로보독 코드에서는 오른쪽 <b>로보독 본체 버튼</b>이나 라디오를 쓰세요.</p>
       </div>
       <div class="panel radio">
         <h2 class="ph">라디오로 숫자 보내기</h2>
@@ -258,7 +259,7 @@
           <span>이동 속도</span><b id="sVel">-</b>
         </div>
         <div class="row" style="margin-top:6px">
-          <button id="btnRobot">로보독 버튼 누르기</button>
+          <button id="btnRobot" title="실물: 본체 아래쪽 전원 스위치 옆 버튼">로보독 본체 버튼 누르기</button>
         </div>
         <label class="row" style="gap:6px;margin-top:6px">배터리 <input id="battery" type="range" min="0" max="100" value="100"> <b id="batVal">100</b>%</label>
       </div>
@@ -440,21 +441,21 @@ requestAnimationFrame(frame);
 const DEMOS = [
   { id: '05_motion-tour', title: '동작 둘러보기', sub: '자세 4가지 · 사각형 걷기 · 다리', steps: [
     ['wait', 1500, '로보독이 준비 자세로 서 있어요'],
-    ['press', 'A', 'A 버튼 → 앉기 · 물구나무 · 기지개 · 인사'], ['wait', 10000],
-    ['press', 'B', 'B 버튼 → 앞으로 1초 걷고 90° 돌기를 4번 (사각형)'], ['wait', 11000],
-    ['press', 'AB', 'A+B 버튼 → 다리 높이 · 다리 하나 · 모터 각도 · 눈에 글자'], ['wait', 9000],
+    ['robot', '본체 버튼 1번째 → 앉기 · 물구나무 · 기지개 · 인사'], ['wait', 10000],
+    ['robot', '본체 버튼 2번째 → 앞으로 1초 걷고 90° 돌기를 4번 (사각형)'], ['wait', 11000],
+    ['robot', '본체 버튼 3번째 → 다리 높이 · 다리 하나 · 모터 각도 · 눈에 글자'], ['wait', 9000],
   ] },
   { id: '01_hello-robodog', title: '1. 안녕, 로보독', sub: '순차 구조', steps: [
-    ['wait', 1200, '전원을 켜면 준비 자세 + 웃는 얼굴'],
-    ['press', 'A', 'A 버튼 → 표정 · 파란 불 · "안녕" · 인사 자세 (순서대로!)'], ['wait', 5000],
-    ['press', 'B', 'B 버튼 → 앞으로 1초 걷고 멈추기'], ['wait', 2500],
-    ['press', 'AB', 'A+B 버튼 → 앉기'], ['wait', 3000],
+    ['wait', 1200, '전원을 켜면 준비 자세 · 반짝 눈 (등에 꽂은 마이크로비트 버튼은 가려져서 본체 버튼을 써요)'],
+    ['robot', '본체 버튼 1번째 → 파란 불 · "안녕" · 인사 자세 (순서대로!)'], ['wait', 5000],
+    ['robot', '본체 버튼 2번째 → 앞으로 1초 걷고 멈추기'], ['wait', 2500],
+    ['robot', '본체 버튼 3번째 → 앉기'], ['wait', 3000],
   ] },
   { id: '02_distance-rule', title: '2. 규칙으로 반응하기', sub: '거리센서 + 만약', setup: 'obstacle', steps: [
     ['wait', 1000, '앞에 빨간 장애물이 있어요. 켜자마자 걷지는 않아요'],
-    ['press', 'A', 'A 버튼 → 지금 거리센서 값 보기(마이크로비트 화면)'], ['wait', 2500],
-    ['press', 'B', 'B 버튼 → 걷기 시작! 가까워지면(20 미만) 멈추고 "비켜!"'], ['wait', 10000],
-    ['press', 'B', 'B 버튼 → 멈춤'], ['wait', 2000],
+    ['wait', 2500, '멈춘 채로 몸통 불빛이 거리를 알려 줘요 (빨강 = 가까움, 초록 = 멂)'],
+    ['robot', '본체 버튼 → 걷기 시작! 가까워지면(20 미만) 멈추고 "비켜!"'], ['wait', 10000],
+    ['robot', '본체 버튼 → 멈춤'], ['wait', 2000],
   ] },
   { id: '03_ai-traffic-dog', title: '3. AI 신호등 안내견', sub: '라디오로 AI 결과 받기', steps: [
     ['wait', 2200, 'AI 브리지 대신 라디오 숫자를 보내 볼게요'],
@@ -511,6 +512,9 @@ async function playDemo(demo) {
           setCaption(s[2], `${++k}/${n}`);
           flash(s[1] === 'AB' ? $('btnAB') : document.querySelector(`.mbbtn[data-btn="${s[1]}"]`));
           runner.press(s[1]); log(`(시연) ${s[1] === 'AB' ? 'A+B' : s[1]} 버튼`);
+        } else if (s[0] === 'robot') {
+          setCaption(s[1], `${++k}/${n}`);
+          flash($('btnRobot')); runner.robotButton(); log('(시연) 로보독 본체 버튼');
         } else if (s[0] === 'radio') {
           setCaption(s[3], `${++k}/${n}`);
           const btn = document.querySelector(`#radioBtns button:nth-child(${s[1] + 1})`);
