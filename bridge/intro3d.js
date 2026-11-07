@@ -230,11 +230,12 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     s.scale.set(0.01, 0.01, 1); scene.add(s); return s;
   }
   const retext = (s, txt) => { if (s.userData.txt !== txt) { s.userData.txt = txt; s.userData.draw(txt); } };
-  let bk = 1.3;   // 말풍선 배율: 세로 화면일수록 크게
+  let bk = 1.3, pw = 0;   // pw: 세로 화면 정도(0~1)
+  const bkOf = (s) => Math.min(bk, 46 / s.userData.w);   // 긴 말풍선은 폭 46cm까지만 키움   // 말풍선 배율: 세로 화면일수록 크게
   function tagAnim(s, t, show, hide = 1e9) {   // show 시각에 튀어나오고 hide 시각에 사라짐
     const k = Math.max(0.01, back(fade(t, show, show + 0.4)));
     s.material.opacity = Math.min(1, fade(t, show, show + 0.2)) * (1 - fade(t, hide, hide + 0.35));
-    const u = s.userData.w * bk / TW; s.scale.set(u * s.userData.cw * k, u * TH * k, 1);
+    const u = s.userData.w * bkOf(s) / TW; s.scale.set(u * s.userData.cw * k, u * TH * k, 1);
   }
   const speak = (text, w) => tagSprite(text, WHITE, w, { ink: '#1a2030', stroke: '#d6c9b3', tail: true });
   const bSearch = speak('약이 어디 있더라…', 34); bSearch.position.set(SOFA.x - 3, GH, SOFA.z - 4);
@@ -247,7 +248,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   const t3 = tagSprite('약통 = 3', accent, 21); t3.position.set(MB.x, 14.5, MB.z);
   const tArrive = tagSprite('여기예요!', GREEN, 24, { tail: true }); tArrive.position.set(DOG1.x, 19, DOG1.y);
   // 말풍선이 차지하는 자리(카메라 상자에 넣기 위함)
-  const tagItem = (s) => { const u = s.userData.w * bk / TW, w = u * s.userData.cw, h = u * TH; return [s.position.x, s.position.y + h * (0.5 - s.center.y), s.position.z, w / 2, h / 2, 1]; };
+  const tagItem = (s) => { const u = s.userData.w * bkOf(s) / TW, w = u * s.userData.cw, h = u * TH; return [s.position.x, s.position.y + h * (0.5 - s.center.y), s.position.z, w / 2, h / 2, 1]; };
 
   // ---------- 약통 그림(카드·사진에 쓰는 아이콘) ----------
   const drawPill = (c, cx, cy, s) => {
@@ -371,25 +372,30 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
 
   // ---------- 카메라: 장면마다 '꼭 보여야 할 덩어리'를 정하고, 화면 비율에 맞춰 거리를 계산 ----------
   const dogItem = (x, z) => [x, 6.5, z, 10, 7.5, 10];
-  const grandItem = [SOFA.x, 22, SOFA.z - 1, 31.5, 22, 14];
+  const grandItem = () => [SOFA.x, 22, SOFA.z - 1, lerp(24, 31.5, pw), 22, 14];
   const sofaB = (s) => tagItem(s);
   const cardItem = [CARD.x, 7.5, CARD.z, 6, 8, 3], stackItem = [STACK.x, 3, STACK.z, 5, 4, 5], brainItem = [BRAIN.x, 17, BRAIN.z, 7.6, 11, 7.6];
   const tableItem = [TABLE.x, 11, TABLE.z, 14, 12, 10];
-  const gMid = [SOFA.x, 26, SOFA.z - 4, 15, 20, 12];   // 할아버지 머리~무릎(소파는 잘려도 됨, 할아버지는 통째로)
+  const gMid = () => [SOFA.x, 26, SOFA.z - 4, lerp(15, 6, pw), 20, 12];   // 세로 화면에서는 머리·어깨 폭만(소파 가장자리는 잘려도 됨)
+  const gHead = [SOFA.x, 26, SOFA.z - 4, 6, 20, 12];   // 할아버지 머리~무릎(소파는 잘려도 됨, 할아버지는 통째로)
   const dogAt = () => [robot.x, 6.5, robot.y, 10, 7.5, 10];
-  const walkBox = () => U([robot.x, 8, robot.y, 11, 9, 11], tableItem, [TABLE.x, 20, TABLE.z, 8, 14, 6], gMid);
-  const finalA = U(dogItem(DOG1.x, DOG1.y), tableItem, [TABLE.x, 30, TABLE.z, 4, 5, 4], tagItem(tArrive));
-  const finalB = U(dogItem(DOG1.x, DOG1.y), tableItem, [TABLE.x, 30, TABLE.z, 4, 5, 4], tagItem(tArrive), grandItem, sofaB(bThanks));
+  const walkBox = () => {   // 로보독을 따라가며, 거의 다 가면 탁자·약통이 통째로 들어옴
+    const q = Math.min(1, Math.max(0, (robot.x - DOG0.x) / (DOG1.x - DOG0.x))), lo = robot.x - 11;
+    const hi = lerp(robot.x + 24, TABLE.x + 15, ease(fade(q, 0.3, 0.85)));
+    return U([(lo + hi) / 2, 9, lerp(robot.y, TABLE.z, 0.5), (hi - lo) / 2, 10, 14], gHead);
+  };
+  const finalA = () => U(dogItem(DOG1.x, DOG1.y), tableItem, [TABLE.x, 30, TABLE.z, 4, 5, 4], tagItem(tArrive));
+  const finalB = () => U(dogItem(DOG1.x, DOG1.y), tableItem, [TABLE.x, 30, TABLE.z, 4, 5, 4], tagItem(tArrive), grandItem(), sofaB(bThanks));
   // box: p(0~1, 장면 안 진행도)를 받아 상자 / az: 방위각(°) [처음, 끝], azP: 세로 화면일 때 / el: 올려다보는 각 / dolly: 거리 배율 [처음, 끝]
   const CAM = [
-    { box: () => U(grandItem, sofaB(bSearch), dogItem(DOG0.x, DOG0.y)), az: [-30, -20], azP: [-26, -16], el: [10, 9], dolly: [1.02, 0.94] },
-    { box: () => U(grandItem, sofaB(bAsk), dogItem(DOG0.x, DOG0.y)), az: [-38, -30], azP: [-20, -14], el: [12, 11], dolly: [1.05, 0.95] },
-    { box: () => U(dogItem(DOG0.x, DOG0.y), cardItem, tagItem(tFail), gMid), az: [-22, -10], azP: [-10, 0], el: [11, 10], dolly: [1.12, 0.96] },
-    { box: () => U(cardItem, stackItem, brainItem, tagItem(tCount), tagItem(tPhotos), gMid, dogItem(DOG0.x, DOG0.y)), az: [14, 4], azP: [10, 4], el: [12, 11], dolly: [1.1, 0.96] },
-    { box: () => U(cardItem, brainItem, dogItem(DOG0.x, DOG0.y), tagItem(tOk), tagItem(tCount), gMid), az: [-6, -16], azP: [-2, -8], el: [14, 13], dolly: [1.1, 0.98] },
-    { box: () => U([MB.x, 8, MB.z, 5, 7, 3], dogItem(DOG0.x, DOG0.y), tagItem(t3), gMid), az: [-18, -26], azP: [-10, -16], el: [12, 11], dolly: [1.1, 0.97] },
+    { box: () => U(grandItem(), sofaB(bSearch), dogItem(DOG0.x, DOG0.y)), az: [-30, -20], azP: [-26, -16], el: [10, 9], dolly: () => [lerp(0.97, 1.02, pw), lerp(0.95, 0.94, pw)] },
+    { box: () => U(grandItem(), sofaB(bAsk), dogItem(DOG0.x, DOG0.y)), az: [-38, -30], azP: [-20, -14], el: [12, 11], dolly: () => [lerp(1.0, 1.05, pw), lerp(0.95, 0.95, pw)] },
+    { box: () => U(dogItem(DOG0.x, DOG0.y), cardItem, tagItem(tFail), gMid()), az: [-22, -10], azP: [-10, 0], el: [11, 10], dolly: [1.12, 0.96] },
+    { box: () => U(cardItem, stackItem, brainItem, tagItem(tCount), tagItem(tPhotos), gMid(), dogItem(DOG0.x, DOG0.y)), az: [14, 4], azP: [10, 4], el: [12, 11], dolly: [1.1, 0.96] },
+    { box: () => U(cardItem, brainItem, dogItem(DOG0.x, DOG0.y), tagItem(tOk), tagItem(tCount), gMid()), az: [-6, -16], azP: [-2, -8], el: [14, 13], dolly: [1.1, 0.98] },
+    { box: () => U([MB.x, 8, MB.z, 5, 7, 3], dogItem(DOG0.x, DOG0.y), tagItem(t3), gMid()), az: [-18, -26], azP: [-10, -16], el: [12, 11], dolly: [1.1, 0.97] },
     { box: () => walkBox(), az: [8, -10], azP: [4, -6], el: [13, 12], dolly: [1.06, 0.97] },
-    { box: (p) => mixBox(finalA, finalB, ease(fade(p, 0.3, 0.8))), az: [-24, -14], azP: [-10, 0], el: [12, 14], dolly: [1.02, 1.0] },
+    { box: (p) => mixBox(finalA(), finalB(), ease(fade(p, 0.3, 0.8))), az: [-24, -14], azP: [-10, 0], el: [12, 14], dolly: [1.02, 1.0] },
   ];
   const sceneAt = (t) => { let c = 0; while (c + 1 < SCENES.length && t >= SCENES[c + 1].t) c++; return c; };
   const sceneEnd = (i) => (i + 1 < SCENES.length ? SCENES[i + 1].t : END);
@@ -402,13 +408,13 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     cen.copy(box.mn).add(box.mx).multiplyScalar(0.5);
     dir.set(Math.sin(az) * Math.cos(el), Math.sin(el), -Math.cos(az) * Math.cos(el));
     fwd.copy(dir).negate(); rgt.set(0, 1, 0).cross(dir).normalize(); upv.copy(dir).cross(rgt).normalize();   // 눈높이(수평선 기울지 않음)
-    const tv = Math.tan(camera.fov * Math.PI / 360) * (1 - insets.top - insets.bottom) * 0.93, th = Math.tan(camera.fov * Math.PI / 360) * asp * 0.93;
+    const tv = Math.tan(camera.fov * Math.PI / 360) * (1 - insets.top - insets.bottom) * 0.93, th = Math.tan(camera.fov * Math.PI / 360) * asp * lerp(0.93, 0.87, w);   // 세로 화면은 양옆 여백을 더 둠
     let need = 8;
     for (let c = 0; c < 8; c++) {
       o3.set(c & 1 ? box.mx.x : box.mn.x, c & 2 ? box.mx.y : box.mn.y, c & 4 ? box.mx.z : box.mn.z).sub(cen);
       const zc = o3.dot(dir); need = Math.max(need, zc + Math.abs(o3.dot(rgt)) / th, zc + Math.abs(o3.dot(upv)) / tv);
     }
-    const dist = need * lerp(d.dolly[0], d.dolly[1], k);
+    const dl = typeof d.dolly === 'function' ? d.dolly() : d.dolly, dist = need * lerp(dl[0], dl[1], k);
     outPos.copy(cen).addScaledVector(dir, dist); outTgt.copy(cen);
   }
   const pa = V(0, 0, 0), ta = V(0, 0, 0), pb = V(0, 0, 0), tb = V(0, 0, 0);
@@ -466,7 +472,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   }
   function render(dt, force = false) {
     const day = dayAt(t);
-    { const a0 = (host.clientWidth || 1) / (host.clientHeight || 1); bk = 1.25 + 0.6 * Math.min(1, Math.max(0, (1.15 - a0) / 0.55)); }
+    { const a0 = (host.clientWidth || 1) / (host.clientHeight || 1); pw = Math.min(1, Math.max(0, (1.15 - a0) / 0.55)); bk = 1.25 + 0.6 * pw; }
     const gone = 1 - ease(fade(t, 24.1, 24.8)), goneOn = gone > 0.01;   // 마이크로비트 장면이 끝나면 카드·AI 뇌는 치움
     cardGrp.visible = goneOn; cardGrp.scale.setScalar(Math.max(0.001, gone)); tmpShadows.forEach(m => { m.visible = goneOn; });
     scene.background.copy(night).lerp(bg, day);
@@ -495,7 +501,7 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     const ff = fade(t, 8.6, 9.6); fmat.opacity = ff * (t > 19 ? 0.4 : 1); finder.scale.setScalar(1.7 - 0.7 * ease(ff));
     let sc = 0; for (const a of [9.4, 13.2, 19.0]) { const s = fade(t, a, a + 1.0); if (s > 0 && s < 1) { sc = s; break; } }
     scan.material.opacity = sc > 0 ? 0.9 : 0; scan.position.set(0, 13.4 - 11.6 * sc, -0.35);
-    tPhotos.position.y = 28 + 14 * Math.min(1, (bk - 1.25) / 0.6);   // 세로 화면에서는 말풍선이 커져서 위로 올려 겹치지 않게
+    tPhotos.position.y = 28 + 14 * pw;   // 세로 화면에서는 말풍선이 커져서 위로 올려 겹치지 않게
     tagAnim(tFail, t, 9.9, 12.0); tagAnim(tPhotos, t, 12.4, 18.4); tagAnim(tOk, t, 19.2, 24.0); tagAnim(t3, t, 24.9, 27.6);
     // 사진
     let fl = 0, arrived = 0;
@@ -568,6 +574,10 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
     sun.castShadow = q.sh; renderer.shadowMap.enabled = q.sh; scene.traverse(o => { if (o.material) [].concat(o.material).forEach(m => { m.needsUpdate = true; }); });
   }
   setQuality(0, false);
+  if (adaptive) {   // 소프트웨어 그래픽(SwiftShader·llvmpipe 등)이면 처음부터 낮은 화질로
+    try { const gl = renderer.getContext(), ex = gl.getExtension('WEBGL_debug_renderer_info'), nm = String(ex ? gl.getParameter(ex.UNMASKED_RENDERER_WEBGL) : gl.getParameter(gl.RENDERER));
+      if (/swiftshader|llvmpipe|softpipe|software|basic render/i.test(nm)) setQuality(2, false); } catch (e) {}
+  }
   function sample(real) {
     if (locked || level >= LEVELS.length - 1) return;
     if (warm++ < 12) return;
@@ -591,7 +601,9 @@ export function createStory({ host, still = false, onScene = () => {}, onTick = 
   function replay() { seek(0, { silent: true }); cuesOn = true; if (!still) { playing = true; audio.resume(); loop(); } }
   function finish() { seek(END); }
   function firstFrame() {   // 처음 화면을 실제로 그리고, 화면에 나온 뒤에 알려 줌(그 전에는 시간이 흐르지 않음)
-    seek(still ? SCENES[0].rep : 0, { silent: true }); findHead(); finishMats(); render(0.016, true);
+    seek(still ? SCENES[0].rep : 0, { silent: true }); findHead(); finishMats();
+    const t0 = performance.now(); render(0.016, true);
+    if (adaptive && !locked && level < 2 && performance.now() - t0 > 250) setQuality(2, false);   // 첫 장면부터 너무 느리면 바로 낮춤
     return new Promise((res) => requestAnimationFrame(() => requestAnimationFrame(res)));
   }
   function frameInfo() {   // 시험용: 지금 장면의 '꼭 보여야 할 상자' 모서리가 화면(자막·카드 자리 제외) 안에 얼마나 들어오는지(1이면 가장자리)
