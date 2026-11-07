@@ -38,6 +38,25 @@
   .stage.is3d { background: var(--stage); }
   .stage.is3d svg { display: none; }
   .stage.is3d #stage3d { display: block; }
+  /* 이야기 자막 + 장면 점 */
+  .cap { position: absolute; left: 14px; top: 12px; max-width: min(62%, 440px); display: flex; pointer-events: none; }
+  @media (max-width: 600px) { .cap { right: 14px; max-width: none; top: auto; bottom: 26px; } .dots { bottom: auto; top: 10px; } }
+  .cap > div { background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line);
+    border-radius: 16px; padding: 8px 16px 9px; text-align: left; box-shadow: 0 6px 20px rgba(10,20,50,.12); max-width: 100%;
+    transition: opacity .35s ease, transform .45s cubic-bezier(.2,.9,.25,1.25); }
+  .cap.swap > div { opacity: 0; transform: translateY(12px) scale(.96); }
+  .cap small { display: block; font-size: 12.5px; font-weight: 700; color: var(--accent); letter-spacing: .02em; }
+  .cap b { display: block; font-size: clamp(16px, 2.6vw, 24px); line-height: 1.3; }
+  .dots { position: absolute; bottom: 12px; left: 0; right: 0; display: flex; justify-content: center; gap: 6px; pointer-events: none; }
+  .dots i { width: 8px; height: 8px; border-radius: 4px; background: color-mix(in srgb, var(--muted) 45%, transparent); transition: width .3s, background .3s; }
+  .dots i.on { width: 22px; background: var(--accent); }
+  .stage:not(.is3d) .cap, .stage:not(.is3d) .dots { display: none; }
+  /* 이야기 모드: 아래 버튼은 일찍 보여 주고(이야기를 다 안 봐도 시작 가능), 흐름 칸은 장면에 맞춰 켜짐 */
+  .story .beats li { animation: none; transition: all .35s ease; }
+  .story .beats li.on { opacity: 1; color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+  .story .hero h1 { animation-delay: 1.2s; } .story .hero p { animation-delay: 1.4s; }
+  .story .cta a:nth-child(1) { animation-delay: 1.6s; } .story .cta a:nth-child(2) { animation-delay: 1.7s; } .story .cta a:nth-child(3) { animation-delay: 1.8s; }
+  .story .sub { animation-delay: 1.9s; } .story .foot { animation-delay: 2s; }
   .beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
   .beats li { text-align: center; font-weight: 800; font-size: clamp(14px, 2.2vw, 20px); padding: 10px 6px; border-radius: 14px;
     color: var(--muted); background: var(--card); border: 1px solid var(--line); opacity: .45; animation: beat .4s ease forwards; }
@@ -190,7 +209,9 @@
         </g>
       </g>
     </svg>
-    <div id="stage3d" role="img" aria-label="카드를 본 AI가 마이크로비트로 숫자 3을 보내고, 로보독이 눈을 켜고 걸어와 하트 눈으로 인사하는 3D 장면"></div>
+    <div class="dots" id="dots" aria-hidden="true"></div>
+    <div class="cap" id="cap" aria-live="polite"><div><small id="capSub"></small><b id="capText"></b></div></div>
+    <div id="stage3d" role="img" aria-label="잠든 로보독, AI가 초록 카드를 보고 마이크로비트가 3을 보내면 로보독이 깨어나 걷고, 빨간 카드를 보면 멈춘 뒤 하트 눈으로 인사하는 3D 이야기"></div>
   </div>
   <ol class="beats" aria-label="수업의 흐름">
     <li>① AI가 본다<span>웹캠으로 카드를 학습·인식</span></li>
@@ -252,19 +273,29 @@ document.getElementById('replay').onclick = () => { try { sessionStorage.removeI
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') finish(); });
 </script>
 <script type="module">
-// 3D 장면: WebGL이 되면 시뮬레이터의 로보독 모형으로 같은 이야기를 보여 줌. 안 되면 위의 2D 그림 그대로
+// 3D 이야기: WebGL이 되면 시뮬레이터의 로보독 모형으로 6장면 이야기를 보여 줌. 안 되면 위의 2D 그림 그대로
 const ok = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
 if (ok && !new URLSearchParams(location.search).has('2d')) {
   try {
-    const { startIntro3D } = await import('./intro3d.js');
-    const stage = document.getElementById('stage');
-    stage.classList.add('is3d');
+    const { startIntro3D, CHAPTERS } = await import('./intro3d.js');
+    const stage = document.getElementById('stage'), app = document.getElementById('app');
+    const cap = document.getElementById('cap'), dots = document.getElementById('dots');
+    const beats = [...document.querySelectorAll('.beats li')];
+    dots.innerHTML = CHAPTERS.map(() => '<i></i>').join('');
+    stage.classList.add('is3d'); app.classList.add('story');
+    let timer = 0;
+    const onChapter = (i, c) => {
+      [...dots.children].forEach((d, k) => d.classList.toggle('on', k === i));
+      beats.forEach((b, k) => b.classList.toggle('on', k < c.beat));
+      clearTimeout(timer); cap.classList.add('swap');
+      timer = setTimeout(() => { document.getElementById('capSub').textContent = c.sub; document.getElementById('capText').textContent = c.text; cap.classList.remove('swap'); }, i ? 250 : 0);
+    };
     window.__intro3d = startIntro3D({
-      host: document.getElementById('stage3d'),
-      instant: document.getElementById('app').classList.contains('instant'),
+      host: document.getElementById('stage3d'), onChapter,
+      instant: app.classList.contains('instant'),
       still: matchMedia('(prefers-reduced-motion: reduce)').matches,
     });
-  } catch (e) { document.getElementById('stage').classList.remove('is3d'); console.warn('3D 인트로를 켜지 못해 2D로 보여요:', e); }
+  } catch (e) { document.getElementById('stage').classList.remove('is3d'); document.getElementById('app').classList.remove('story'); console.warn('3D 인트로를 켜지 못해 2D로 보여요:', e); }
 }
 </script>
 </body>
