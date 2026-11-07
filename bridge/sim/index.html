@@ -75,6 +75,8 @@
   label { font-size: 13px; }
   label:has(> input[type=checkbox]) { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 6px 2px 0; cursor: pointer; }
   .site-foot a { display: inline-block; padding: 10px 6px; }
+  #battery { height: 28px; }
+  label:has(> #battery) { min-height: 36px; align-items: center; }
   input[type=range] { width: 120px; accent-color: var(--accent); }
   input[type=checkbox] { width: 24px; height: 24px; flex: none; margin: 0; accent-color: var(--accent); }
   .hidden { display: none !important; }
@@ -84,9 +86,10 @@
   /* 코드 칸 ↔ 로보독 칸 폭 조절 손잡이 (끌기·화살표 키, 두 번 누르면 원래대로) */
   main.sized, body.mc-mode main.sized { grid-template-columns: minmax(0, 1fr) 12px var(--rw); }
   .splitter { cursor: col-resize; border-radius: 6px; position: relative; touch-action: none; align-self: stretch; }
-  .splitter::before { content: ""; position: absolute; left: 4px; width: 4px; top: 0; bottom: 0; border-radius: 2px; background: var(--line); }
+  .splitter { --bar: var(--line); }
+  .splitter::before { content: ""; position: absolute; left: -6px; width: 24px; top: 0; bottom: 0; background: linear-gradient(to right, transparent 10px, var(--bar) 10px, var(--bar) 14px, transparent 14px); }
   .splitter::after { content: "⋮"; position: sticky; top: 45vh; display: block; text-align: center; font-weight: 900; color: var(--muted); line-height: 1; }
-  .splitter:hover::before, .splitter:focus-visible::before, body.resizing .splitter::before { background: var(--accent); }
+  .splitter:hover, .splitter:focus-visible, body.resizing .splitter { --bar: var(--accent); }
   .splitter:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   body.resizing { cursor: col-resize; user-select: none; }
   body.resizing iframe { pointer-events: none; }

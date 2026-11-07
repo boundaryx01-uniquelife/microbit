@@ -10,6 +10,8 @@
   body { --page-w: 1100px; }
   a, a:visited { color: var(--accent); }
   input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+  label:has(> input[type=checkbox]), label:has(> input[type=file]) { display: inline-flex; align-items: center; min-height: 32px; cursor: pointer; }
+  .site-foot a { display: inline-block; padding: 8px 6px; }
   input[type=range] { height: 28px; accent-color: var(--accent); }
   .camwrap { position: relative; }
   .camwrap:not(.live)::after { content: '📷 [카메라 켜기]를 누르면 여기에 보여요'; position: absolute; inset: 0; display: grid; place-items: center; color: #d6dbe6; font-size: 17px; font-weight: 700; text-align: center; padding: 16px; pointer-events: none; }
