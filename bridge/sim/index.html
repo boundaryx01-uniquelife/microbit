@@ -796,6 +796,17 @@ $('askUse').onclick = () => {
   log($('mcWrap').classList.contains('hidden') ? 'JavaScript 칸에 넣었어요' : '블록 코딩 편집기로 보내는 중… (잠시 뒤 블록으로 보여요)');
 };
 
+// 탭 키보드 조작: 왼쪽·오른쪽 화살표로 옆 탭(접근성)
+document.querySelectorAll('[role="tablist"]').forEach(list => list.addEventListener('keydown', (e) => {
+  if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+  const tabs = [...list.querySelectorAll('[role="tab"]')], i = tabs.indexOf(document.activeElement);
+  if (i < 0) return;
+  const next = tabs[(i + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length];
+  e.preventDefault(); next.focus(); next.click();
+}));
+$('tabEditor').setAttribute('aria-controls', 'mcWrap'); $('tabJs').setAttribute('aria-controls', 'code');
+$('tab2d').setAttribute('aria-controls', 'pane2d'); $('tab3d').setAttribute('aria-controls', 'pane3d');
+
 window.__sim = { runner, robot, world, showTab, showCodeTab, mcState: () => ({ mcReady, mcFromEditor }), playDemo: (i) => playDemo(DEMOS[i]), stopDemo, view3d: () => view3d, aiMode: () => aiOn };   // 자동 시험용
 </script>
 </body>
