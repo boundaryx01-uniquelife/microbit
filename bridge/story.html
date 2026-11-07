@@ -3,18 +3,18 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>로보독의 모험 (인트로 시안)</title>
-<meta name="description" content="복도의 문제를 로보독과 AI로 풀어 가는 약 30초 3D 영상 — 로보독 AI 교실 새 인트로 시안">
+<title>로보독의 모험: 할아버지의 약 (인트로 시안)</title>
+<meta name="description" content="약을 찾지 못하는 할아버지를 위해 AI를 가르쳐 약통을 찾아가는 로보독 — 약 30초 3D 영상, 로보독 AI 교실 새 인트로 시안">
 <link rel="stylesheet" href="assets/brand.css">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <script type="importmap">{ "imports": { "three": "./sim/lib/three.module.min.js" } }</script>
 <style>
   :root {
-    --stage: #e8edf6; --table: #d9c29b; --wall: #dfe7f5; --sky: #bfe3ff; --floor: #cdb88f;
+    --stage: #e8edf6; --table: #d9c29b; --wall: #efe6d8; --sky: #bfe3ff; --floor: #c9a77c; --rug: #6f9a9a;
     --hdr: 58px;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --stage: #141a24; --table: #4d4130; --wall: #1a2230; --sky: #243a58; --floor: #4a4033; }
+    :root:not([data-theme="light"]) { --stage: #141a24; --table: #4d4130; --wall: #2d2830; --sky: #243a58; --floor: #4a3a2a; --rug: #3f5f66; }
   }
   html, body { height: 100%; }
   body { --page-w: 1100px; display: flex; flex-direction: column; overflow: hidden; }
@@ -91,11 +91,11 @@
 </div></header>
 
 <main class="stage" id="stage">
-  <div id="stage3d" role="img" aria-label="학교 복도에서 아이들이 뛰어다니고 잠든 로보독이 있다가, 신호등 아이디어를 떠올리고, AI가 카드를 처음엔 못 알아보지만 사진을 더 모아 가르치면 알아보고, 마이크로비트를 거쳐 로보독이 깨어나 걷고 빨간 카드에서 멈추는 약 30초 3D 영상"></div>
+  <div id="stage3d" role="img" aria-label="거실에서 할아버지가 약을 찾지 못해 로보독에게 약을 가져다 달라고 부탁하고, 로보독이 약통을 처음엔 몰라 갸웃하지만 약통 사진을 더 모아 가르치면 AI가 알아보고, 마이크로비트를 거쳐 로보독이 깨어나 걸어가 약통이 놓인 탁자 앞에서 멈춰 여기예요 하고 알려 주는 약 30초 3D 영상"></div>
   <div class="loading" id="loading">로보독을 깨우는 중…</div>
   <div class="nogl" id="nogl"><div>이 기기에서는 3D 영상을 켤 수 없어요.<br>아래 버튼으로 바로 시작할 수 있어요. <a href="./">기존 소개 화면</a>에서 2D 그림으로도 볼 수 있어요.</div></div>
 
-  <div class="title">로보독의 모험</div>
+  <div class="title">로보독의 모험 · 할아버지의 약</div>
   <div class="ctl">
     <button id="skip" type="button">건너뛰기 ⏭</button>
     <button id="replay" type="button" hidden>↺ 다시 보기</button>
@@ -103,14 +103,14 @@
   <div class="cap" id="cap" aria-live="polite"><b id="capText"></b><div class="segs" id="segs" aria-hidden="true"></div></div>
 
   <section class="end" id="end" aria-label="시작하기"><div class="end-in">
-    <h1>내가 가르친 <em>AI</em>로 로보독이 움직여요</h1>
+    <h1>내가 가르친 <em>AI</em>로 로보독이 약통을 찾아 줘요</h1>
     <p>로봇이 없어도 시뮬레이터로 시작할 수 있어요. 우리 학교의 문제는 무엇인가요?</p>
     <nav class="cta">
       <a class="main" href="sim/"><div class="step">STEP 1</div><b>시뮬레이터에서 코딩</b><span>블록 코딩과 3D 로보독 미리 보기, 말로 시키면 코드를 만들어 주는 도우미</span><em class="go">시작하기</em></a>
       <a href="ai.html"><div class="step" style="color:var(--accent)">STEP 2</div><b>AI 브리지</b><span>웹캠으로 카드를 가르치고 결과를 마이크로비트로 보내요</span><em class="go">열기</em></a>
       <a href="docs/"><div class="step" style="color:var(--accent)">선생님께</div><b>수업 자료</b><span>2·4·8차시 수업안, 활동지·평가, 운영 가이드</span><em class="go">보기</em></a>
     </nav>
-    <p class="foot"><span class="partner">코코아팹 협력</span> 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. 영상 속 장면은 이해를 돕는 그림이에요.</p>
+    <p class="foot"><span class="partner">코코아팹 협력</span> 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. 영상은 이야기를 위한 상상이에요. 실물 로보독은 물건을 집지 못해서, 찾아가서 알려 주는 역할로 수업해요.</p>
   </div></section>
 </main>
 
