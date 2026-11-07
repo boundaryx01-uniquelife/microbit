@@ -260,10 +260,11 @@
       if (!sync.host) return;
       var h = sync.host;
       api('POST', { op: 'set', room: h.room, key: h.key, slide: cur, lesson: id }).then(function (j) {
+        if (sync.host !== h) return;   // 그사이 연결을 끝냈으면 무시
         if (j._status === 404 || j._status === 403) { endHost(); setPill('학생 연결이 끝났어요', 'off'); $('syncmsg').textContent = '연결 시간이 지나 끝났어요. 다시 [학생 연결]을 누르세요.'; }
         else if (j._status !== 200) setPill('학생 연결: 다시 시도 중…', 'paused');
         else hostPill();
-      }, function () { setPill('학생 연결: 인터넷 확인', 'paused'); });
+      }, function () { if (sync.host === h) setPill('학생 연결: 인터넷 확인', 'paused'); });
     }
     function showDlg() {
       var d = $('syncdlg');
@@ -282,7 +283,7 @@
         hostPill(); push();
       }, function () { $('syncmsg').textContent = '인터넷 연결을 확인해 주세요.'; });
     }
-    function endHost() { sync.host = null; try { localStorage.removeItem(HKEY); } catch (e) {} document.body.classList.remove('hosting'); setPill(''); }
+    function endHost() { clearTimeout(sync.pushT); sync.host = null; try { localStorage.removeItem(HKEY); } catch (e) {} document.body.classList.remove('hosting'); setPill(''); }
     $('syncbtn').onclick = startHost;
     $('syncstop').onclick = function () { endHost(); $('syncdlg').close ? $('syncdlg').close() : $('syncdlg').removeAttribute('open'); };
     $('syncclose').onclick = function () { $('syncdlg').close ? $('syncdlg').close() : $('syncdlg').removeAttribute('open'); };
