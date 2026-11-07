@@ -1,16 +1,19 @@
-// 스크롤로 이어지는 3D 이야기 "로보독의 모험" (story.html 용). 2D 그림 없이 한 장면의 3D 무대에서 세 화를 보여 줌.
-// 로보독 모형·움직임은 시뮬레이터(sim/)와 같은 것을 씀. 장(章)마다 시간 구간이 있고, 스크롤로 장이 바뀌면 그 구간을 처음부터 재생함.
-//   0화 복도의 문제  [0, 8.5]   잠든 로보독, 복도를 뛰는 아이들, 신호등 아이디어
-//   1화 첫 시도 실패 [8.5, 19]  카드를 못 알아봄 → 사진을 더 모아 다시 가르침 → 찾았다
-//   2화 성공         [19, 29]   AI → 마이크로비트 → 로보독 걷기 → 빨간 불에 멈춤 → 인사
+// 자동 재생 3D 영상 "로보독의 모험" (story.html 용). 한 장면의 3D 무대에서 약 29초, 장면마다 3~4초 안팎.
+// 로보독 모형·움직임은 시뮬레이터(sim/)와 같은 것을 씀. 스크롤이나 클릭 없이 열면 바로 재생되고, 끝나면 시작 버튼이 나옴.
 import * as THREE from 'three';
 import { View3D } from './sim/view3d.js';
 import { Robot, World, makeRobodogApi } from './sim/runtime.js';
 
-export const CHAPTERS = [
-  { t: 0, end: 8.5 },
-  { t: 8.5, end: 19 },
-  { t: 19, end: 29 },
+export const END = 29;
+export const SCENES = [   // t: 장면 시작 시각(초). 자막 text
+  { t: 0, text: '쉬는 시간 복도는 달리기 대회장!' },
+  { t: 4.5, text: '로보독이 신호등이 되면 어떨까?' },
+  { t: 8.5, text: '어라, 로보독이 카드를 못 알아봐요' },
+  { t: 12, text: '사진을 더 모아 다시 가르쳐요' },
+  { t: 15.2, text: '초록! 찾았다!' },
+  { t: 19, text: '마이크로비트가 숫자 3을 보내요' },
+  { t: 21.8, text: '로보독이 깨어나 걸어가요' },
+  { t: 25.25, text: '빨간 카드를 보면 — 멈춤!' },
 ];
 const css = (n) => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
 const ease = (x) => x * x * (3 - 2 * x);
@@ -18,7 +21,7 @@ const back = (x) => { const c = 1.9; x -= 1; return 1 + (c + 1) * x * x * x + c 
 const fade = (t, a, b) => Math.min(1, Math.max(0, (t - a) / (b - a)));
 const V = (x, y, z) => new THREE.Vector3(x, y, z);
 
-export function createStory({ host, still = false }) {
+export function createStory({ host, still = false, onScene = () => {}, onTick = () => {}, onEnd = () => {} }) {
   const world = new World();
   world.useTable = false;
   world.start = { x: 60, y: 72, heading: 0 };
@@ -240,18 +243,22 @@ export function createStory({ host, still = false }) {
   const dayAt = (t) => t < 8.5 ? 0.35 : t < 10 ? 0.35 + 0.3 * ease(fade(t, 8.5, 10)) : t < 19.2 ? 0.65 : 0.65 + 0.35 * ease(fade(t, 19.2, 20.8));
 
   // ---------- 시간 진행 ----------
-  let shX = 0, shY = 0, shTX = 0, shTY = 0;
-  let t = 0, ev = 0, cap = CHAPTERS[0].end - 1e-3, cur = -1, raf = 0, last = performance.now(), running = false, firstFrame = true;
+  let playShift = 0.07, endShift = 0.2;     // 화면 아래 자막·끝 카드 자리만큼 장면을 위로 올림(세로 비율)
+  let shX = 0, shY = 0, shTX = 0, shTY = playShift;
+  let t = 0, ev = 0, sceneIdx = -1, ended = false, raf = 0, last = performance.now(), running = false, firstFrame = true;
   const camPos = new THREE.Vector3(), camTgt = new THREE.Vector3(), pos = new THREE.Vector3(), tgt = new THREE.Vector3(), head = new THREE.Vector3();
   function reset() { robot.reset(); mbDigit = 0; drawMb(); ev = 0; t = 0; }
   function advance(dt) {
     t += dt;
     while (ev < events.length && t >= events[ev][0]) events[ev++][1]();
     robot.step(dt);
+    let c = sceneIdx; while (c + 1 < SCENES.length && t >= SCENES[c + 1].t) c++;
+    if (c !== sceneIdx) { sceneIdx = c; onScene(c, SCENES[c]); }
+    if (!ended && t >= END - 1e-6) { ended = true; shTY = endShift; onEnd(); }
   }
-  function seek(target) {           // 건너뛰기(그리지 않고 상태만 진행). 뒤로 가면 처음부터 다시 진행
-    if (target < t - 1e-6) reset();
-    while (t < target - 1e-6) advance(Math.min(1 / 30, target - t));
+  function finish() {   // 건너뛰기: 끝 장면까지 한 번에 진행
+    while (t < END - 1e-6) advance(Math.min(1 / 30, END - t));
+    render(0.016);
   }
   function ringAnim(rs, t0, to) {
     head.set(robot.x, 8, robot.y - 4);
@@ -265,6 +272,7 @@ export function createStory({ host, still = false }) {
   function render(dt) {
     const day = dayAt(t);
     scene.background.copy(night).lerp(bg, day); scene.fog.color.copy(scene.background);
+    const fz = Math.max(1, 1.6 / view.camera.aspect); scene.fog.near = 80 * fz; scene.fog.far = 200 * fz;   // 세로 화면은 카메라가 멀어지므로 안개를 넓힘
     lights.forEach((l, i) => { l.intensity = baseI[i] * (0.25 + 0.75 * day); });
     spot.intensity = 900 * (1 - day);
     // 아이들: 1화(0~8.5초) 동안 복도를 달림
@@ -277,7 +285,8 @@ export function createStory({ host, still = false }) {
     });
     tagAnim(tSign, t, 0.4, 8.3);
     // 신호등: 5초에 등장, 초록/빨강 번갈아 켜지다가 → 3화에서 걷기(초록)·멈춤(빨강)을 알려 줌
-    TL.scale.setScalar(Math.max(0.001, back(fade(t, 5.0, 5.7))));
+    // 2화(카드·사진) 장면에서는 화면을 가리지 않게 접어 두고, 3화에서 다시 나옴
+    TL.scale.setScalar(Math.max(0.001, t < 14 ? back(fade(t, 5.0, 5.7)) * (1 - fade(t, 8.3, 8.8)) : back(fade(t, 21.0, 21.7))));
     let tg = 0, tr = 0;
     if (t >= 5.7 && t < 8.5) { const ph = Math.floor((t - 5.7) / 0.7) % 2; tg = ph === 0 ? 1 : 0; tr = 1 - tg; }
     else if (t >= 21.8 && t < 25.25) tg = 1; else if (t >= 25.25) tr = 1;
@@ -318,25 +327,21 @@ export function createStory({ host, still = false }) {
   function frame(now) {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (!document.hidden) {
-      const nt = Math.min(t + dt, cap);
+      const nt = Math.min(t + dt, END);
       if (nt > t) advance(nt - t);
-      render(dt);
+      render(dt); onTick(t);
     }
     if (running) raf = requestAnimationFrame(frame);
   }
   function play() { if (running || still) return; running = true; last = performance.now(); raf = requestAnimationFrame(frame); }
   function pause() { running = false; cancelAnimationFrame(raf); }
-  // side: 글 카드가 있는 쪽(+1 오른쪽, -1 왼쪽). 그 반대쪽으로 장면을 밀어 줌. vertical: 카드가 아래에 있을 때(휴대폰)
-  function goto(k, side = 0, vertical = false) {
-    shTX = vertical ? 0 : side * 0.14; shTY = vertical ? 0.2 : 0;
-    if (k === cur) { if (still) render(0.016); return; }
-    cur = k;
-    cap = CHAPTERS[k].end - 1e-3;
-    seek(CHAPTERS[k].t);
-    if (still) { seek(cap); render(0.016); } else play();
+  function replay() {
+    reset(); sceneIdx = -1; ended = false; shTY = playShift; firstFrame = true; advance(0);
+    if (still) { finish(); render(0.016); } else { render(0.016); play(); }
   }
+  function setShift(p, e) { playShift = p; endShift = e; shTY = ended ? e : p; }
   new ResizeObserver(() => { if (still) render(0.016); }).observe(host);
-  return { goto, play, pause, view, robot, state: () => ({ t, cur, cam: camPos.toArray(), dog: [robot.x, robot.y] }) };
+  return { replay, finish, setShift, play, pause, view, robot, state: () => ({ t, scene: sceneIdx, ended, cam: camPos.toArray(), dog: [robot.x, robot.y] }) };
 }
 
 function rr(c, x, y, w, h, r) { c.beginPath(); c.moveTo(x + r, y); c.arcTo(x + w, y, x + w, y + h, r); c.arcTo(x + w, y + h, x, y + h, r); c.arcTo(x, y + h, x, y, r); c.arcTo(x, y, x + w, y, r); c.closePath(); }
