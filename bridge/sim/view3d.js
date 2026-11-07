@@ -1,7 +1,8 @@
 // 3D 화면 (three.js). 단위: cm. 세계 좌표 (x, y평면) → three (x, z)
 import * as THREE from 'three';
 import { OrbitControls } from './lib/OrbitControls.js';
-import { EST, GEOM } from './runtime.js';
+import { EST, GEOM, HEAD } from './runtime.js';
+import { drawFace } from './view2d.js';
 
 export class View3D {
   constructor(container, world, robot) {
@@ -79,48 +80,51 @@ export class View3D {
     const upperMat = new THREE.MeshStandardMaterial({ color: 0x46505d, roughness: 0.6 });
     const lowerMat = new THREE.MeshStandardMaterial({ color: 0x3a434e, roughness: 0.6 });
     this.body = new THREE.Group(); dog.add(this.body);
-    // 몸통(둥근 상자): 가운데 상자 + 앞뒤 원기둥
-    const torso = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid, G.bodyH, G.bodyLen - G.bodyH), bodyMat); torso.castShadow = true; this.body.add(torso);
+    // 몸통: 영상 장면처럼 뒤쪽 2/3는 둥근 덮개(통풍구), 앞쪽은 회로판이 보이는 받침
+    const shellLen = G.bodyLen * 0.68, shellZ = G.bodyLen / 2 - shellLen / 2;
+    const torso = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid, G.bodyH, shellLen - G.bodyH), bodyMat); torso.position.z = shellZ; torso.castShadow = true; this.body.add(torso);
     [-1, 1].forEach(s => {
       const cap = new THREE.Mesh(new THREE.CylinderGeometry(G.bodyH / 2, G.bodyH / 2, G.bodyWid, 20), bodyMat);
-      cap.rotation.z = Math.PI / 2; cap.position.z = s * (G.bodyLen - G.bodyH) / 2; cap.castShadow = true; this.body.add(cap);
+      cap.rotation.z = Math.PI / 2; cap.position.z = shellZ + s * (shellLen - G.bodyH) / 2; cap.castShadow = true; this.body.add(cap);
     });
+    const chassis = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid * 0.9, G.bodyH * 0.55, G.bodyLen - shellLen + 0.6), darkMat);
+    chassis.position.set(0, -G.bodyH * 0.1, -G.bodyLen / 2 + (G.bodyLen - shellLen) / 2); chassis.castShadow = true; this.body.add(chassis);
+    const pcb = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid * 0.95, 0.12, G.bodyLen - shellLen), new THREE.MeshStandardMaterial({ color: 0xc9b98a, roughness: 0.8 }));
+    pcb.position.set(0, G.bodyH * 0.2, -G.bodyLen / 2 + (G.bodyLen - shellLen) / 2); this.body.add(pcb);
     // 등의 통풍구 무늬
-    for (let k = 0; k < 6; k++) {
-      const v = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid * 0.6, 0.05, 0.12), darkMat);
-      v.position.set(0, G.bodyH / 2 + 0.02, -G.bodyLen * 0.28 + k * 0.35); this.body.add(v);
+    for (let k = 0; k < 7; k++) {
+      const v = new THREE.Mesh(new THREE.BoxGeometry(G.bodyWid * 0.45, 0.05, 0.14), darkMat);
+      v.position.set(0, G.bodyH / 2 + 0.02, shellZ - shellLen * 0.3 + k * 0.32); this.body.add(v);
     }
     // 마이크로비트(등 뒤쪽 슬롯)
     const mb = new THREE.Mesh(new THREE.BoxGeometry(4.2, 0.12, 3.4), new THREE.MeshStandardMaterial({ color: 0x111111 }));
-    mb.position.set(0, G.bodyH / 2 + 0.07, G.bodyLen * 0.18); this.body.add(mb);
+    mb.position.set(0, G.bodyH / 2 + 0.07, G.bodyLen * 0.3); this.body.add(mb);
     // 몸통 RGB LED (옆면 띠)
     this.ledMat = new THREE.MeshStandardMaterial({ color: 0x333333, emissive: 0x000000 });
     [-1, 1].forEach(s => {
-      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, G.bodyLen * 0.55), this.ledMat);
-      strip.position.set(s * (G.bodyWid / 2 + 0.04), 0.3, 0); this.body.add(strip);
+      const strip = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.35, shellLen * 0.6), this.ledMat);
+      strip.position.set(s * (G.bodyWid / 2 + 0.04), 0.3, shellZ); this.body.add(strip);
     });
-    // 머리: 공식 측면도 기준 몸 중심보다 약 6.7cm 앞, 1.1cm 위. 정면은 넓은 둥근 사각형.
-    const head = new THREE.Group(); head.position.set(0, (80.5 - 57) * 0.045, -(356 - 207) * 0.045); this.body.add(head);
-    const hm = new THREE.Mesh(new THREE.BoxGeometry(G.headWid, G.headH * 0.9, G.headDepth), headMat); hm.castShadow = true; head.add(hm);
-    [-1, 1].forEach(s => {
-      const side = new THREE.Mesh(new THREE.CylinderGeometry(G.headH * 0.45, G.headH * 0.45, G.headDepth, 24, 1, false, 0, Math.PI), headMat);
-      side.rotation.x = Math.PI / 2; side.rotation.y = s > 0 ? 0 : Math.PI; side.position.x = s * G.headWid / 2;
-      side.scale.set(0.35, 1, 1); head.add(side);
-    });
-    // 눈 LED 판(8×8 두 개) — 앞면(-z)
-    this.eyeCanvas = document.createElement('canvas'); this.eyeCanvas.width = 256; this.eyeCanvas.height = 112;
+    // 머리: 앞다리 바로 위 받침에 올린 알약형(양끝이 둥근) 머리 — 영상 장면 기준
+    const head = new THREE.Group(); head.position.set(0, HEAD.up, -HEAD.fwd); this.body.add(head);
+    const mount = new THREE.Mesh(new THREE.BoxGeometry(2.6, 0.5, 2.0), darkMat); mount.position.y = -G.headH / 2 - 0.2; head.add(mount);
+    const hw = G.headWid, hh = G.headH, rr = hh * 0.48;
+    const shape = new THREE.Shape();
+    shape.moveTo(-hw / 2 + rr, -hh / 2); shape.lineTo(hw / 2 - rr, -hh / 2);
+    shape.quadraticCurveTo(hw / 2, -hh / 2, hw / 2, -hh / 2 + rr); shape.lineTo(hw / 2, hh / 2 - rr);
+    shape.quadraticCurveTo(hw / 2, hh / 2, hw / 2 - rr, hh / 2); shape.lineTo(-hw / 2 + rr, hh / 2);
+    shape.quadraticCurveTo(-hw / 2, hh / 2, -hw / 2, hh / 2 - rr); shape.lineTo(-hw / 2, -hh / 2 + rr);
+    shape.quadraticCurveTo(-hw / 2, -hh / 2, -hw / 2 + rr, -hh / 2);
+    const shell = new THREE.Mesh(new THREE.ExtrudeGeometry(shape, { depth: G.headDepth, bevelEnabled: true, bevelThickness: 0.25, bevelSize: 0.25, bevelSegments: 3 }), headMat);
+    shell.position.z = -G.headDepth / 2; shell.castShadow = true; head.add(shell);
+    // 앞면: 모서리가 둥근 LED 판 두 개 + 가운데 카메라·거리센서 (캔버스 그림)
+    this.eyeCanvas = document.createElement('canvas'); this.eyeCanvas.width = 512; this.eyeCanvas.height = 224;
     this.eyeTex = new THREE.CanvasTexture(this.eyeCanvas); this.eyeTex.colorSpace = THREE.SRGBColorSpace;
-    const face = new THREE.Mesh(new THREE.PlaneGeometry(G.headWid * 0.92, G.headH * 0.8), new THREE.MeshBasicMaterial({ map: this.eyeTex }));
-    face.position.set(0, 0, -G.headDepth / 2 - 0.01); face.rotation.y = Math.PI; head.add(face);
-    // AI 카메라(눈 사이 위), 거리센서(그 아래), 스피커(머리 위)
-    const cam = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, 0.2, 20), new THREE.MeshStandardMaterial({ color: 0x050607, metalness: 0.6, roughness: 0.2 }));
-    cam.rotation.x = Math.PI / 2; cam.position.set(0, G.headH * 0.18, -G.headDepth / 2 - 0.08); head.add(cam);
-    const tofM = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.45, 0.15), new THREE.MeshStandardMaterial({ color: 0x3a1010 }));
-    tofM.position.set(0, -G.headH * 0.2, -G.headDepth / 2 - 0.06); head.add(tofM);
-    for (let k = 0; k < 4; k++) {
-      const g = new THREE.Mesh(new THREE.BoxGeometry(1.4, 0.04, 0.12), darkMat);
-      g.position.set(-G.headWid * 0.2, G.headH * 0.45 + 0.02, -0.5 + k * 0.32); head.add(g);
-    }
+    const face = new THREE.Mesh(new THREE.PlaneGeometry(hw * 0.86, hh * 0.84), new THREE.MeshBasicMaterial({ map: this.eyeTex, transparent: true }));
+    face.position.set(0, 0, -G.headDepth / 2 - 0.27); face.rotation.y = Math.PI; head.add(face);
+    // 카메라 렌즈(살짝 튀어나옴)
+    const cam = new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.3, 0.2, 20), new THREE.MeshStandardMaterial({ color: 0x050607, metalness: 0.7, roughness: 0.15 }));
+    cam.rotation.x = Math.PI / 2; cam.position.set(0, hh * 0.18, -G.headDepth / 2 - 0.33); head.add(cam);
     // 다리: 0 왼앞,1 왼뒤,2 오른뒤,3 오른앞. 왼쪽 = -x (앞이 -z). 엉덩이: 몸 중심에서 앞뒤 ±4.6cm, 0.7cm 아래
     const pos = [[-1, -1], [-1, 1], [1, 1], [1, -1]];
     this.legs3 = pos.map(([lr, fb]) => {
@@ -152,17 +156,8 @@ export class View3D {
   }
   updateEyes(frames) {
     const c = this.eyeCanvas, ctx = c.getContext('2d');
-    ctx.fillStyle = '#0c0f12'; ctx.fillRect(0, 0, c.width, c.height);
-    const cell = 12, gap = 40, x0 = (c.width - (16 * cell + gap)) / 2, y0 = (c.height - 8 * cell) / 2;
-    // 앞에서 볼 때 왼쪽 = 로보독의 오른눈 (제품 사진처럼 하얀 LED 점)
-    [frames[1], frames[0]].forEach((m, e) => {
-      const px = x0 + e * (8 * cell + gap);
-      ctx.fillStyle = '#1a1f25'; ctx.fillRect(px - 3, y0 - 3, 8 * cell + 6, 8 * cell + 6);
-      for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-        ctx.fillStyle = m[y][x] ? '#f4f8ff' : '#2a3038';
-        ctx.beginPath(); ctx.arc(px + (x + 0.5) * cell, y0 + (y + 0.5) * cell, cell * 0.36, 0, Math.PI * 2); ctx.fill();
-      }
-    });
+    ctx.clearRect(0, 0, c.width, c.height);
+    drawFace(ctx, c.width, c.height, frames);
     this.eyeTex.needsUpdate = true;
   }
   draw(eyeFrames) {
@@ -182,7 +177,7 @@ export class View3D {
     this.trailLine.geometry.setFromPoints(pts);
     // 로봇 위치·방향·자세
     const pose = R.bodyPose();
-    let y = pose.height + (96 - 80.5) * 0.045 + 0.55;   // 발→엉덩이 높이 + 엉덩이(몸 중심 0.7cm 아래) + 발 반지름
+    let y = pose.center;   // 몸 중심 높이(가장 낮은 점이 바닥에 닿도록 계산됨)
     if (R.fallen) y = -60;
     this.dog.position.set(R.x, y, R.y);
     this.dog.rotation.set(0, -R.heading * Math.PI / 180, R.fallen ? Math.PI / 2 : 0);

@@ -13,12 +13,19 @@ export const GEOM = {
   bodyLen: PX.body * CM_PER_PX,        // 약 12.2cm
   bodyH: PX.bodyH * CM_PER_PX,         // 약 2.9cm
   bodyWid: 6.0,                        // 추정
-  headDepth: PX.headDepth * CM_PER_PX, // 약 2.7cm
-  headH: PX.headH * CM_PER_PX,         // 약 5.0cm
+  // 머리: 공식 홍보 영상 장면 기준 — 앞다리 바로 위 받침에 올린 알약형 머리(가로:세로 약 2.3:1)
+  headDepth: 3.0,                      // 추정
+  headH: 4.4,                          // 추정
   headWid: 10.0,                       // 추정(사진에서 몸통 길이와 비슷)
   hipGap: PX.hipGap * CM_PER_PX,       // 앞·뒤 엉덩이 사이 약 9.2cm
   upper: PX.upper * CM_PER_PX,         // 윗다리 약 4.1cm
   lower: PX.lower * CM_PER_PX,         // 아랫다리 약 4.9cm
+};
+
+// 머리 중심 위치(몸 중심 기준, cm): 앞다리 엉덩이보다 조금 앞, 몸통 윗면 위 받침에 올림 (영상 장면 기준 추정)
+export const HEAD = {
+  fwd: GEOM.hipGap / 2 + 1.2,
+  up: GEOM.bodyH / 2 + 0.35 + GEOM.headH / 2,
 };
 
 const SPECIAL_REACH_CURVES = {

@@ -5,8 +5,8 @@
 // ------------------------------------------------------------
 // 상수 (추정치 — 실물 측정 후 조정)
 // ------------------------------------------------------------
-import { GEOM, lengthToAngles, legFromAngles } from './legs.js';
-export { GEOM };
+import { GEOM, HEAD, lengthToAngles, legFromAngles } from './legs.js';
+export { GEOM, HEAD };
 
 export const EST = {
   walkCmPerSecAt100: 15,   // 속도 100일 때 걷는 속도(cm/s) — 추정치
@@ -14,7 +14,7 @@ export const EST = {
   servoDegPerSec: 450,     // 관절이 움직이는 빠르기(MG90 서보 기준 추정)
   bodyLen: GEOM.bodyLen, bodyWid: GEOM.bodyWid,   // 비율은 공식 시뮬레이터, 절대 크기는 추정
   upperLeg: GEOM.upper, lowerLeg: GEOM.lower,
-  noseOffset: GEOM.bodyLen / 2 + 2,               // 몸 중심 → 머리 앞(거리센서) cm
+  noseOffset: HEAD.fwd + GEOM.headDepth / 2,       // 몸 중심 → 머리 앞면(거리센서) cm
   tofMax: 255,             // 거리센서 최대값(값 단위를 cm로 가정)
   radius: 7,               // 충돌 반경(cm)
 };
@@ -73,7 +73,10 @@ const mirror8 = (m) => m.map(r => r.slice().reverse());
 const EYE_OPEN = E8(['00111100', '01000010', '10000001', '10011001', '10011001', '10000001', '01000010', '00111100']);
 const EYE_CLOSED = E8(['00000000', '00000000', '00000000', '10000001', '01000010', '00111100', '00000000', '00000000']);
 const EYE_SPARK = E8(['00111100', '01111110', '11001111', '11001111', '11111111', '11111111', '01111110', '00111100']);
-const EYE_HAPPY = E8(['00000000', '00011000', '00100100', '01000010', '10000001', '00000000', '00000000', '00000000']);
+// 웃는 눈: 홍보 영상 장면처럼 두꺼운 ∩ 모양
+const EYE_HAPPY = E8(['00111100', '01111110', '11100111', '11000011', '11000011', '00000000', '00000000', '00000000']);
+// 기본 큰 눈: 홍보 영상 장면처럼 전부 켜고 가운데 작은 + 무늬만 끔
+const EYE_FULL_PLUS = E8(['11111111', '11111111', '11101111', '11000111', '11101111', '11111111', '11111111', '11111111']);
 const HEART = E8(['00000000', '01100110', '11111111', '11111111', '01111110', '00111100', '00011000', '00000000']);
 const HEART_S = E8(['00000000', '00000000', '00100100', '01111110', '00111100', '00011000', '00000000', '00000000']);
 const SPARROW = E8(['00000000', '00000000', '00011000', '00111100', '00111100', '00011000', '00000000', '00000000']);
@@ -100,7 +103,7 @@ export const EXPRESSIONS = [
   { name: '깜박', f: (t) => (t % 2.5 > 2.2 ? [EYE_CLOSED, EYE_CLOSED] : [pupil(3), pupil(3)]) },
   { name: '뱀눈', f: () => [SNAKE, SNAKE] },
   { name: '바람개비', f: (t) => { const p = PIN[Math.floor(t * 4) % 2]; return [p, p]; } },
-  { name: '왕눈이', f: () => [EYE_OPEN, EYE_OPEN] },
+  { name: '왕눈이', f: () => [EYE_FULL_PLUS, mirror8(EYE_FULL_PLUS)] },
 ];
 const blank8 = () => Array.from({ length: 8 }, () => new Array(8).fill(0));
 function char8(ch) {
@@ -218,7 +221,10 @@ export class Robot {
     const P = this.posture, t = this.postureT;
     const L = (h, r) => lengthToAngles(h, r);
     if (P === 1) return front ? L(90, 0) : L(20, 0);                // 앉기 (근사)
-    if (P === 2) return front ? L(20, 0) : L(90, 0);                // 물구나무 (근사)
+    if (P === 2) {                                                  // 물구나무 (영상 장면 근사): 앞다리 접고 뒷다리는 위로 뻗음
+      if (!front) { this.raised[i] = t > 0.4; return [-40, -80]; }
+      return L(20, -30);
+    }
     if (P === 3) return front ? L(30, -70) : L(90, 10);             // 기지개 (근사)
     if (P === 4) {                                                  // 인사 (근사): 앉은 채 오른 앞다리를 들어 흔들기
       if (i === 3 && t > 0.7) { this.raised[3] = true; return [90, -35 + Math.sin((t - 0.7) * 7) * 30]; }
@@ -258,20 +264,28 @@ export class Robot {
     this.legs = this.joint.map(([s, e], i) => Object.assign(legFromAngles(s, e), { raised: this.raised[i] }));
   }
   // 몸 높이·앞뒤 기울기(라디안). 들어 올린 다리는 몸을 받치지 않음
+  // 반환: center = 몸 중심 높이(cm), pitch = 앞이 들리면 +, height = 엉덩이 높이(호환용)
   bodyPose() {
     const L = this.legs;
-    const fr = L[3].raised ? L[0].h : (L[0].h + L[3].h) / 2;
-    const r = (L[1].h + L[2].h) / 2;
-    const pitch = Math.atan2(fr - r, GEOM.hipGap);
-    let height = Math.max(0.5, (fr + r) / 2);
-    // 머리 앞 아래 모서리(몸 중심에서 앞 8.05cm, 아래 1.19cm)와 몸통 끝이 바닥 아래로 내려가지 않게 몸을 들어 올림
-    const hipDrop = 0.7, center = height + hipDrop * Math.cos(pitch);
-    const lowest = Math.min(
-      center + 8.05 * Math.sin(pitch) - 1.19 * Math.cos(pitch),
-      center - (GEOM.bodyLen / 2) * Math.sin(pitch) - (GEOM.bodyH / 2) * Math.cos(pitch),
-      center + (GEOM.bodyLen / 2) * Math.sin(pitch) - (GEOM.bodyH / 2) * Math.cos(pitch));
-    if (lowest < 0) height -= lowest;
-    return { height, pitch };
+    const sup = [0, 1, 2, 3].filter(i => !L[i].raised);
+    const avg = (ids) => ids.length ? ids.reduce((a, i) => a + L[i].h, 0) / ids.length : null;
+    const fr = avg(sup.filter(i => i === 0 || i === 3)), r = avg(sup.filter(i => i === 1 || i === 2));
+    let pitch = (fr !== null && r !== null) ? Math.atan2(fr - r, GEOM.hipGap) : 0;
+    // 물구나무(영상 장면): 머리를 바닥에 대고 몸을 거의 세움, 뒷다리는 위로
+    if (this.mode === 4 && this.posture === 2) pitch = pitch + (-70 * Math.PI / 180 - pitch) * Math.min(1, this.postureT / 1.2);
+    const s = Math.sin(pitch), c = Math.cos(pitch);
+    const rel = (dx, dy) => dx * s + dy * c;            // 몸 중심 기준 점(dx 앞, dy 위)의 높이
+    const pts = [];
+    sup.forEach(i => {                                    // 바닥을 딛는 발
+      const front = i === 0 || i === 3;
+      pts.push(rel((front ? 1 : -1) * GEOM.hipGap / 2 + L[i].fx, -0.7 - L[i].h) - 0.55);
+    });
+    [[-1, -1], [-1, 1], [1, -1], [1, 1]].forEach(([a, b]) => {   // 몸통 모서리, 머리 모서리
+      pts.push(rel(a * GEOM.bodyLen / 2, b * GEOM.bodyH / 2));
+      pts.push(rel(HEAD.fwd + a * GEOM.headDepth / 2, HEAD.up + b * GEOM.headH / 2));
+    });
+    const center = -Math.min(...pts);                    // 가장 낮은 점이 바닥에 닿도록
+    return { center, pitch, height: center - 0.7 };
   }
   tof() {
     return this.world.raycast(this.x, this.y, this.heading, EST.noseOffset, EST.tofMax);

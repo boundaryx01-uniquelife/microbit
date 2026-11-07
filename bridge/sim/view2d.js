@@ -1,5 +1,5 @@
 // 2D 화면: 위에서 본 책상(이동 경로·장애물) + 옆에서 본 다리 자세
-import { EST, GEOM } from './runtime.js';
+import { EST, GEOM, HEAD } from './runtime.js';
 
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
@@ -76,7 +76,7 @@ export class View2D {
     // 마이크로비트(등 뒤쪽)
     ctx.fillStyle = '#111'; ctx.fillRect(-2.1 * s, 0.5 * s, 4.2 * s, 3.4 * s);
     // 머리(넓은 판)와 정면 표시
-    const hz = -6.7 * s, hw = GEOM.headWid * s, hd = GEOM.headDepth * s;
+    const hz = -HEAD.fwd * s, hw = GEOM.headWid * s, hd = GEOM.headDepth * s;
     ctx.fillStyle = css('--dog-head'); roundRect(ctx, -hw / 2, hz - hd / 2, hw, hd, hd / 2); ctx.fill();
     ctx.fillStyle = '#f4f8ff'; ctx.fillRect(-hw * 0.42, hz - hd / 2 - 1.5, hw * 0.34, 2); ctx.fillRect(hw * 0.08, hz - hd / 2 - 1.5, hw * 0.34, 2);
     ctx.restore();
@@ -97,12 +97,12 @@ export class View2D {
     const W = c.clientWidth, H = c.clientHeight;
     ctx.clearRect(0, 0, W, H);
     // 코코아팹 공식 다리 시뮬레이터와 같은 비율(px→cm 0.045)로 그린 오른쪽 옆모습
-    const s = Math.min(W / 24, H / 15), ground = H - 14;
+    const s = Math.min(W / 26, H / 21), ground = H - 10;   // 물구나무처럼 몸을 세워도 들어가도록
     ctx.strokeStyle = css('--line'); ctx.beginPath(); ctx.moveTo(0, ground); ctx.lineTo(W, ground); ctx.stroke();
     ctx.fillStyle = css('--muted'); ctx.font = '11px system-ui'; ctx.fillText('옆에서 본 모습 (오른쪽이 앞)', 8, 14);
     const pose = R.bodyPose(), p = pose.pitch, cx = W / 2 - 1.2 * s;
     const hipDrop = (96 - 80.5) * 0.045;                         // 엉덩이: 몸 중심보다 0.7cm 아래
-    const cy = ground - (pose.height + hipDrop) * s;              // 몸 중심
+    const cy = ground - pose.center * s;                          // 몸 중심
     const toWorld = (dx, dy) => ({ x: cx + (dx * Math.cos(p) + dy * Math.sin(p)) * s, y: cy + (-dx * Math.sin(p) + dy * Math.cos(p)) * s });
     const front = toWorld(GEOM.hipGap / 2, hipDrop), rear = toWorld(-GEOM.hipGap / 2, hipDrop);
     const drawLeg = (hip, lg, c1, c2) => {
@@ -121,8 +121,9 @@ export class View2D {
     const [r, g, b] = R.bodyLed, lit = r + g + b > 0;
     ctx.fillStyle = css('--dog'); ctx.strokeStyle = lit ? `rgb(${r},${g},${b})` : css('--dog-edge'); ctx.lineWidth = lit ? 4 : 1.5;
     roundRect(ctx, -GEOM.bodyLen / 2 * s, -GEOM.bodyH / 2 * s, GEOM.bodyLen * s, GEOM.bodyH * s, GEOM.bodyH / 2.2 * s); ctx.fill(); ctx.stroke();
-    // 머리: 몸 중심에서 앞으로 6.7cm, 위로 1.1cm (공식 측면도), 앞면에 LED 판
-    const hx = 6.7 * s, hy = -(80.5 - 57) * 0.045 * s, hw = GEOM.headDepth * s, hh = GEOM.headH * s;
+    // 머리: 앞다리 바로 위 받침에 올린 알약형 머리(영상 장면), 앞면에 LED 판
+    const hx = HEAD.fwd * s, hy = -HEAD.up * s, hw = GEOM.headDepth * s, hh = GEOM.headH * s;
+    ctx.fillStyle = '#14181d'; ctx.fillRect(hx - 1.3 * s, -GEOM.bodyH / 2 * s - 0.4 * s, 2.6 * s, 0.6 * s);   // 머리 받침
     ctx.fillStyle = css('--dog-head'); roundRect(ctx, hx - hw / 2, hy - hh / 2, hw, hh, hw / 3); ctx.fill();
     const eyesOn = R.headFrame()[0].some(row => row.some(v => v));
     ctx.fillStyle = eyesOn ? '#f4f8ff' : '#3a414a'; ctx.fillRect(hx + hw / 2 - 1, hy - hh * 0.36, 3, hh * 0.72);
@@ -131,23 +132,42 @@ export class View2D {
   }
 }
 
+// 로보독 얼굴 그리기 (홍보 영상 장면 기준): 진회색 테두리 안에 모서리가 둥근 LED 판 두 개,
+// 가운데 위에 카메라, 그 아래 검은 거리센서 창. 앞에서 본 모습이므로 화면 왼쪽 = 로보독 오른눈.
+export function drawFace(ctx, w, h, frames) {
+  const on = (css('--eye-on') || '#eef6ff'), glow = (css('--eye-glow') || 'rgba(220,235,255,.55)');
+  ctx.fillStyle = '#20262d'; roundRect(ctx, 0, 0, w, h, h * 0.42); ctx.fill();
+  const pad = h * 0.1, mid = w * 0.12, pw = (w - 2 * pad - mid) / 2, ph = h - 2 * pad;
+  const cell = Math.min(pw, ph) / 8.4;
+  [frames[1], frames[0]].forEach((m, e) => {
+    const px = pad + e * (pw + mid), py = pad;
+    ctx.fillStyle = '#0d1014'; roundRect(ctx, px, py, pw, ph, ph * 0.22); ctx.fill();
+    const gx = px + (pw - 8 * cell) / 2, gy = py + (ph - 8 * cell) / 2;
+    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
+      const lit = m[y][x];
+      ctx.shadowBlur = lit ? cell * 0.8 : 0; ctx.shadowColor = glow;
+      ctx.fillStyle = lit ? on : '#262c33';
+      ctx.beginPath(); ctx.arc(gx + (x + 0.5) * cell, gy + (y + 0.5) * cell, cell * 0.36, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.shadowBlur = 0;
+  });
+  // 카메라(렌즈) + 거리센서 창
+  const cx = w / 2, cw = mid * 0.62;
+  ctx.fillStyle = '#0a0c0f'; roundRect(ctx, cx - cw / 2, pad + ph * 0.06, cw, cw, cw * 0.2); ctx.fill();
+  ctx.fillStyle = '#1c232b'; ctx.beginPath(); ctx.arc(cx, pad + ph * 0.06 + cw / 2, cw * 0.28, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#3a4a5c'; ctx.beginPath(); ctx.arc(cx - cw * 0.08, pad + ph * 0.06 + cw * 0.42, cw * 0.08, 0, Math.PI * 2); ctx.fill();
+  ctx.fillStyle = '#050607'; roundRect(ctx, cx - cw * 0.55, pad + ph * 0.5, cw * 1.1, ph * 0.36, cw * 0.1); ctx.fill();
+  ctx.fillStyle = '#7a5a20'; ctx.fillRect(cx - cw * 0.42, pad + ph * 0.6, cw * 0.12, cw * 0.2);
+}
+
 export function drawEyes(canvas, frames) {
   const dpr = window.devicePixelRatio || 1, w = canvas.clientWidth, h = canvas.clientHeight;
   if (w < 60 || h < 30) return;   // 숨겨져 있을 때
   if (canvas.width !== Math.round(w * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
   const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#0c0f12'; ctx.fillRect(0, 0, w, h);
-  const cell = Math.min((w - 40) / 16, (h - 12) / 8), gap = 24;
-  const x0 = (w - (16 * cell + gap)) / 2, y0 = (h - 8 * cell) / 2;
-  // 로보독을 마주 본 모습: 화면 왼쪽 = 로보독 오른눈. 가운데 = AI 카메라
-  ctx.fillStyle = '#050607'; ctx.beginPath(); ctx.arc(w / 2, y0 + cell * 2, cell * 0.7, 0, Math.PI * 2); ctx.fill();
-  ctx.strokeStyle = '#3a414a'; ctx.lineWidth = 1.5; ctx.stroke();
-  [frames[1], frames[0]].forEach((m, e) => {
-    for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-      ctx.fillStyle = m[y][x] ? '#f4f8ff' : '#262c33';
-      ctx.beginPath(); ctx.arc(x0 + e * (8 * cell + gap) + (x + 0.5) * cell, y0 + (y + 0.5) * cell, cell * 0.38, 0, Math.PI * 2); ctx.fill();
-    }
-  });
+  ctx.clearRect(0, 0, w, h);
+  const fh = Math.min(h - 8, (w - 8) / 2.3), fw = fh * 2.3;
+  ctx.save(); ctx.translate((w - fw) / 2, (h - fh) / 2); drawFace(ctx, fw, fh, frames); ctx.restore();
 }
 
 function roundRect(ctx, x, y, w, h, r) {
