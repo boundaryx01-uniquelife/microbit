@@ -4,6 +4,7 @@ const fs = require('fs'), path = require('path');
 const root = path.join(__dirname, '..');
 const dir = path.join(root, 'makecode');
 const titles = {
+  '00_check-robodog': '0. 연결·배터리 점검 (수업 전)',
   '01_hello-robodog': '1. 안녕, 로보독 (순차)',
   '02_distance-rule': '2. 규칙으로 반응하기 (거리센서)',
   '03_ai-traffic-dog': '3. AI 신호등 안내견 (라디오)',
