@@ -35,6 +35,7 @@
 | `bridge/` | AI 브리지 웹 프로그램(라이브러리·모델 동봉, 설치 불필요) |
 | `bridge/sim/` | 로보독 시뮬레이터(2D·3D) |
 | `makecode/*.ts` | MakeCode 예제 (JavaScript 탭에 붙여넣기 → 블록으로 보기) |
+| `makecode/06~08_radio-*.ts` | **무선 확장 `kocoafab/robodog-radio`** 예제: 로보독 내장 AI 카메라(QR·색상·얼굴 추적) 사용 — 실물 미검증 |
 
 ## 빠른 시작 (교사)
 

@@ -4,7 +4,11 @@ const fs = require('fs');
 const OUT = __dirname + '/mc';
 fs.mkdirSync(OUT, { recursive: true });
 const file = process.argv[2];
-const needExt = process.argv[3] === 'ext';
+// 3번째 인자: ext = kocoafab/robodog, ext:<저장소> = 다른 확장(예: ext:kocoafab/robodog-radio)
+const extArg = process.argv[3] || '';
+const needExt = extArg.startsWith('ext');
+const extRepo = extArg.includes(':') ? extArg.split(':')[1] : 'kocoafab/robodog';
+const extName = extRepo.split('/')[1];
 const name = require('path').basename(file, '.ts');
 
 (async () => {
@@ -26,12 +30,12 @@ const name = require('path').basename(file, '.ts');
     const search = await p.waitForSelector('input[placeholder*="검색"]', { timeout: 30000 });
     const inp = p.locator('.extensions-browser input').first();
     console.log('inputs:', await p.locator('.extensions-browser input').count());
-    await inp.fill('kocoafab/robodog');
+    await inp.fill(extRepo);
     console.log('value:', await inp.inputValue());
     await inp.press('Enter');
     await p.waitForTimeout(10000);
     await shot('ext_search');
-    const card = p.locator('.extensions-browser .common-card, .extensions-browser [class*="card"]').filter({ hasText: /robodog/i }).first();
+    const card = p.locator('.extensions-browser .common-card, .extensions-browser [class*="card"]').filter({ hasText: new RegExp(extName.replace('-', '[- ]?') + '(?![-\\w])', 'i') }).first();
     if (!(await card.count())) { console.log('RESULT ext card not found'); await b.close(); return; }
     console.log('card text:', (await card.innerText()).replace(/\n/g, ' ').slice(0, 80));
     await card.click();
