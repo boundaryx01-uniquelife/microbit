@@ -3,7 +3,6 @@ const { chromium } = require('playwright');
 const BASE = (process.argv[2] || 'http://127.0.0.1:8765/').replace(/\/?$/, '/');
 const results = [];
 const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name} ${ok ? '' : detail}`); };
-const opacity = (pg) => pg.evaluate(() => +getComputedStyle(document.querySelector('.cta a')).opacity);
 (async () => {
   const b = await chromium.launch();
   const errs = [];
@@ -12,25 +11,31 @@ const opacity = (pg) => pg.evaluate(() => +getComputedStyle(document.querySelect
   p.on('pageerror', e => errs.push(e.message));
   p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   await p.goto(BASE);
-  const op0 = await opacity(p);
-  check('처음에는 버튼이 숨어 있다가(애니메이션)', op0 < 0.5, op0);
-  await p.waitForTimeout(6000);
-  const fin = await p.evaluate(() => [...document.querySelectorAll('.cta a')].map(a => ({ op: +getComputedStyle(a).opacity, bottom: a.getBoundingClientRect().bottom })));
-  check('6초 뒤 버튼 3개가 보임', fin.length === 3 && fin.every(f => f.op > 0.95), JSON.stringify(fin));
-  check('3D 장면이 켜짐(그래픽 가속)', await p.evaluate(() => document.getElementById('stage').classList.contains('is3d') && !!document.querySelector('#stage3d canvas')));
-  check('노트북(768) 첫 화면 안에 버튼', fin.every(f => f.bottom <= 768), JSON.stringify(fin));
+  // 열면 바로 자동 재생(스크롤 없음): 자막이 나오고 3D 무대가 켜진다
+  await p.waitForFunction(() => document.getElementById('capText').textContent.length > 0, null, { timeout: 60000 });
+  check('열면 바로 자막이 나옴(자동 재생)', (await p.textContent('#capText')).includes('할아버지'));
+  check('3D 무대가 켜짐(그래픽 가속)', await p.evaluate(() => document.getElementById('stage').classList.contains('ready') && !!document.querySelector('#stage3d canvas')));
+  check('장면 진행 막대 8개', (await p.$$('#segs i')).length === 8);
+  check('재생 중에는 시작 카드가 숨어 있음', !(await p.evaluate(() => document.getElementById('stage').classList.contains('ended'))));
+  check('스크롤 없는 한 화면', await p.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1));
+  await p.click('#skip'); await p.waitForTimeout(1200);
+  const fin = await p.evaluate(() => [...document.querySelectorAll('.cta a')].map(a => ({ bottom: a.getBoundingClientRect().bottom, w: a.getBoundingClientRect().width })));
+  check('[건너뛰기] → 시작 카드 링크 3개가 보임', fin.length === 3 && fin.every(f => f.w > 50), JSON.stringify(fin));
+  check('노트북(768) 한 화면 안에 버튼', fin.every(f => f.bottom <= 768), JSON.stringify(fin));
+  const hrefs = await p.$$eval('.cta a', as => as.map(a => a.href));
+  await p.click('#replay'); await p.waitForTimeout(500);
+  check('[다시 보기] → 처음부터 다시 재생', await p.evaluate(() => !document.getElementById('stage').classList.contains('ended') && window.__story.state().t < 3));
+  await p.reload(); await p.waitForTimeout(2500);
+  check('같은 탭에서 새로고침하면 영상을 건너뛰고 시작 카드', await p.evaluate(() => document.getElementById('stage').classList.contains('ended')));
 
-  const ctx2 = await b.newContext({ viewport: { width: 1366, height: 768 } });
-  const p2 = await ctx2.newPage(); await p2.goto(BASE);
-  await p2.click('#skip'); await p2.waitForTimeout(200);
-  check('[건너뛰기] → 바로 끝 화면', (await opacity(p2)) > 0.95);
-  const p4 = await ctx2.newPage(); await p4.goto(BASE + '?2d'); await p4.waitForTimeout(300);
-  check('?2d 이면 2D 그림으로', await p4.evaluate(() => !document.getElementById('stage').classList.contains('is3d') && getComputedStyle(document.querySelector('.stage svg')).display !== 'none'));
   const rm = await b.newContext({ reducedMotion: 'reduce' });
-  const p3 = await rm.newPage(); await p3.goto(BASE); await p3.waitForTimeout(300);
-  check('움직임 줄이기 설정이면 바로 끝 화면', (await opacity(p3)) > 0.95);
+  const p3 = await rm.newPage(); await p3.goto(BASE); await p3.waitForTimeout(2500);
+  check('움직임 줄이기 설정이면 바로 끝 화면(시작 카드)', await p3.evaluate(() => document.getElementById('stage').classList.contains('ended')));
+  const nogl = await b.newContext({ viewport: { width: 1366, height: 768 } });
+  await nogl.addInitScript(() => { HTMLCanvasElement.prototype.getContext = () => null; });
+  const p4 = await nogl.newPage(); await p4.goto(BASE); await p4.waitForTimeout(1000);
+  check('그래픽 가속이 없어도 안내 문구와 시작 카드가 보임', await p4.evaluate(() => getComputedStyle(document.getElementById('nogl')).display !== 'none' && document.getElementById('stage').classList.contains('ended')));
 
-  const hrefs = await p.$$eval('.cta a, .sub a', as => as.map(a => a.href));
   for (const h of hrefs) { const r = await p.request.get(h); check('링크 열림: ' + h.replace(BASE, '/'), r.ok(), r.status()); }
 
   // 수업 자료
