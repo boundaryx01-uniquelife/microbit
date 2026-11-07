@@ -5,36 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>로보독 피지컬 AI 교실</title>
 <meta name="description" content="AI가 보고, 마이크로비트가 전하고, 로보독이 움직인다 — 초·중·고 피지컬 AI 수업 자료와 시뮬레이터">
+<link rel="stylesheet" href="assets/brand.css">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <script type="importmap">{ "imports": { "three": "./sim/lib/three.module.min.js" } }</script>
 <style>
   :root {
-    --bg: #f4f6fb; --ink: #141a26; --muted: #556079; --line: #dbe1ee; --card: #ffffff;
-    --accent: #2259d6; --accent-ink: #ffffff; --go: #1fa463; --warn: #f2b300; --stop: #e5484d;
+    --go: var(--signal-green); --warn-c: var(--signal-yellow);
     --dog: #2b333f; --dog-edge: #0e1218; --leg: #3c4655; --eye-off: #1a2029; --eye-on: #e9f3ff; --mb: #1d2330; --mb-led: #ff3b30;
-    --wave: #2f6fe4; --stage: #e9eef7; --table: #d9c29b;
+    --wave: var(--accent); --stage: #e8edf6; --table: #d9c29b;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) {
-      --bg: #0f1218; --ink: #eef1f7; --muted: #a2abc0; --line: #2a3140; --card: #181d27; --accent: #6b9bf5; --accent-ink: #0b0e14;
-      --dog: #3b4554; --dog-edge: #8d98aa; --leg: #8d98aa; --eye-off: #0b0e13; --mb: #262d3b; --wave: #6b9bf5; --stage: #161b25; --table: #4d4130;
-    }
+    :root:not([data-theme="light"]) { --dog: #3b4554; --dog-edge: #8d98aa; --leg: #8d98aa; --eye-off: #0b0e13; --mb: #262d3b; --stage: #141a24; --table: #4d4130; }
   }
-  * { box-sizing: border-box; }
-  html, body { margin: 0; }
-  body { background: var(--bg); color: var(--ink); font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
-    min-height: 100vh; display: flex; flex-direction: column; }
+  body { min-height: 100vh; display: flex; flex-direction: column; --page-w: 1100px; }
   a { color: inherit; }
   .wrap { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 16px; }
-  .top { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 6px; font-size: 14px; color: var(--muted); }
-  .top b { color: var(--ink); font-size: 16px; }
-  .skip { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 8px 16px; cursor: pointer; min-height: 40px; }
+  .skip { font-size: 14px; border-radius: var(--r-pill); min-height: 36px; padding: 6px 14px; }
   .skip:focus-visible, .cta a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
   /* ---------- 무대 ---------- */
   .stage { position: relative; background: linear-gradient(to bottom, var(--stage) 83.7%, color-mix(in srgb, var(--table) 55%, var(--stage)) 83.7%); border-radius: 24px; overflow: hidden; margin-top: 6px; }
   .stage svg { display: block; width: 100%; height: auto; max-height: 35vh; min-height: 190px; margin: 0 auto; }
   /* 3D 장면(그래픽 가속이 되면 SVG 대신) */
-  #stage3d { display: none; width: 100%; height: clamp(220px, 38vh, 420px); }
+  #stage3d { display: none; width: 100%; height: clamp(200px, 32vh, 400px); }
   .stage.is3d { background: var(--stage); }
   .stage.is3d svg { display: none; }
   .stage.is3d #stage3d { display: block; }
@@ -53,16 +46,16 @@
   .stage:not(.is3d) .cap, .stage:not(.is3d) .dots { display: none; }
   /* 이야기 모드: 아래 버튼은 일찍 보여 주고(이야기를 다 안 봐도 시작 가능), 흐름 칸은 장면에 맞춰 켜짐 */
   .story .beats li { animation: none; transition: all .35s ease; }
-  .story .beats li.on { opacity: 1; color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; }
+  .story .beats li.on { opacity: 1; color: var(--ink); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: var(--accent-soft); }
   .story .hero h1 { animation-delay: 1.2s; } .story .hero p { animation-delay: 1.4s; }
   .story .cta a:nth-child(1) { animation-delay: 1.6s; } .story .cta a:nth-child(2) { animation-delay: 1.7s; } .story .cta a:nth-child(3) { animation-delay: 1.8s; }
   .story .sub { animation-delay: 1.9s; } .story .foot { animation-delay: 2s; }
   .beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
-  .beats li { text-align: center; font-weight: 800; font-size: clamp(14px, 2.2vw, 20px); padding: 10px 6px; border-radius: 14px;
+  .beats li { text-align: center; font-weight: 800; font-size: clamp(14px, 2vw, 18px); padding: 10px 8px; border-radius: var(--r-lg); letter-spacing: -0.02em;
     color: var(--muted); background: var(--card); border: 1px solid var(--line); opacity: .45; animation: beat .4s ease forwards; }
   .beats li span { display: block; font-size: 12px; font-weight: 600; margin-top: 2px; }
   .beats li:nth-child(1) { animation-delay: .2s; } .beats li:nth-child(2) { animation-delay: 1.5s; } .beats li:nth-child(3) { animation-delay: 2.6s; }
-  @keyframes beat { to { opacity: 1; color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; } }
+  @keyframes beat { to { opacity: 1; color: var(--ink); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: var(--accent-soft); } }
 
   /* 1) AI가 본다: 카드 + 뷰파인더 */
   .finder { transform-box: fill-box; transform-origin: center; opacity: 0; animation: finder .7s cubic-bezier(.2,.8,.2,1) .2s forwards; }
@@ -109,21 +102,29 @@
   .hero p { margin: 12px auto 0; max-width: 680px; color: var(--muted); font-size: clamp(15px, 2vw, 18px); line-height: 1.6;
     opacity: 0; animation: rise .6s ease 4.85s forwards; }
   @keyframes rise { to { opacity: 1; transform: none; } }
-  .cta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 18px 0 6px; }
-  .cta a { display: block; text-decoration: none; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 16px;
-    opacity: 0; transform: translateY(16px); animation: rise .5s ease forwards; transition: border-color .15s, transform .15s, box-shadow .15s; }
+  .cta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 22px 0 6px; text-align: left; }
+  .cta a { position: relative; display: flex; flex-direction: column; text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line);
+    border-radius: var(--r-xl); padding: 16px 18px 14px; box-shadow: var(--shadow-sm);
+    opacity: 0; transform: translateY(16px); animation: rise .5s ease forwards; transition: border-color .15s, transform .2s var(--ease), box-shadow .2s; }
   .cta a:nth-child(1) { animation-delay: 5.05s; } .cta a:nth-child(2) { animation-delay: 5.15s; } .cta a:nth-child(3) { animation-delay: 5.25s; }
-  .cta a:hover { border-color: var(--accent); box-shadow: 0 8px 24px rgba(30,60,140,.12); }
-  .cta a.main { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
-  .cta .ic { font-size: 30px; line-height: 1; }
-  .cta b { display: block; font-size: 20px; margin: 10px 0 4px; }
-  .cta span { display: block; font-size: 14.5px; line-height: 1.5; opacity: .85; }
-  .cta a.main span { opacity: 1; }
+  .cta a:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
+  .cta a.main { background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #6a3df0)); color: var(--accent-ink); border-color: transparent; }
+  .cta .ic { width: 46px; height: 46px; border-radius: 14px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent); }
+  .cta .ic svg { width: 26px; height: 26px; }
+  .cta a.main .ic { background: rgba(255,255,255,.18); color: #fff; }
+  .cta b { display: block; font-size: 19px; margin: 10px 0 2px; letter-spacing: -0.02em; }
+  .cta span { display: block; font-size: 14.5px; line-height: 1.55; color: var(--muted); }
+  .cta a.main span { color: inherit; opacity: .9; }
+  .cta .go { margin-top: auto; padding-top: 8px; font-size: 14px; font-weight: 700; color: var(--accent); }
+  .cta a.main .go { color: inherit; }
+  .cta .go::after { content: "→"; margin-left: 5px; display: inline-block; transition: transform .2s var(--ease); }
+  .cta a:hover .go::after { transform: translateX(4px); }
   .sub { margin: 6px 0 0; font-size: 15px; opacity: 0; animation: rise .5s ease 5.35s forwards; }
   .sub a { color: var(--accent); font-weight: 700; }
   .foot { margin-top: auto; padding: 18px 0 22px; font-size: 13px; color: var(--muted); line-height: 1.6; text-align: center;
     opacity: 0; animation: rise .5s ease 5.4s forwards; }
-  .replay { font: inherit; font-size: 13px; color: var(--accent); background: none; border: 0; text-decoration: underline; cursor: pointer; padding: 6px; }
+  .replay { font-size: 13px; color: var(--accent); background: none; border: 0; text-decoration: underline; padding: 6px; min-height: 0; font-weight: 600; }
+  .foot .partner { display: inline-block; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: var(--r-pill); padding: 1px 9px; margin-bottom: 2px; }
 
   /* 건너뛰기·움직임 줄이기: 모든 애니메이션을 끝 상태로 */
   .instant *, .instant { animation-duration: 0s !important; animation-delay: 0s !important; transition: none !important; }
@@ -138,8 +139,13 @@
 </style>
 </head>
 <body>
+<header class="gnb"><div class="gnb-in">
+  <a class="brand" href="./"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#2456e5"/><path d="M22.2 5.6a5.6 5.6 0 0 1 4.3 3.4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".85"/><rect x="4.5" y="10.5" width="23" height="13" rx="6.5" fill="#fff"/><rect x="8" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><rect x="17.4" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><circle cx="11.3" cy="17" r="1.6" fill="#8fd8ff"/><circle cx="20.7" cy="17" r="1.6" fill="#8fd8ff"/></svg>
+<span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
+  <nav aria-label="주 메뉴"><a href="./" aria-current="page">처음</a><a href="sim/">시뮬레이터</a><a href="ai.html">AI 브리지</a><a href="docs/">수업 자료</a></nav>
+  <div class="slot"><button class="skip" id="skip">건너뛰기 ⏭</button></div>
+</div></header>
 <main class="wrap" id="app">
-  <div class="top"><span><b>🐶 로보독 피지컬 AI 교실</b></span><button class="skip" id="skip">건너뛰기 ⏭</button></div>
 
   <div class="stage" id="stage">
     <svg viewBox="0 0 900 380" role="img" aria-labelledby="stageTitle">
@@ -223,15 +229,15 @@
     <h1>내가 가르친 <em>AI</em>로<br class="nb"> 로봇이 움직인다</h1>
     <p>마이크로비트와 로보독으로 하는 초·중·고 피지컬 AI 수업. 로봇이 없어도 시뮬레이터로 시작할 수 있어요.</p>
     <nav class="cta" aria-label="시작하기">
-      <a class="main" href="sim/"><div class="ic">🧩</div><b>시뮬레이터에서 코딩</b><span>MakeCode 블록 + 로보독 2D·3D 미리 보기. 말로 시키면 코드를 만들어 주는 도우미</span></a>
-      <a href="ai.html"><div class="ic">📷</div><b>AI 브리지</b><span>웹캠으로 카드를 학습시키고 결과를 마이크로비트(로보독)로 보내기</span></a>
-      <a href="docs/"><div class="ic">📚</div><b>수업 자료</b><span>2·4·8차시 수업안, 활동지·평가, 운영 가이드, MakeCode 예제 내려받기</span></a>
+      <a class="main" href="sim/"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M8 4h3a2 2 0 1 1 4 0h3a1 1 0 0 1 1 1v3a2 2 0 1 1 0 4v3a1 1 0 0 1-1 1h-3a2 2 0 1 0-4 0H8a1 1 0 0 1-1-1v-3a2 2 0 1 0 0-4V5a1 1 0 0 1 1-1z"/><path d="M4 20h16"/></svg></div><b>시뮬레이터에서 코딩</b><span>MakeCode 블록 코딩과 3D 로보독 미리 보기. 말로 시키면 코드를 만들어 주는 도우미까지</span><em class="go" style="font-style:normal">시작하기</em></a>
+      <a href="ai.html"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 8a2 2 0 0 1 2-2h2l1.5-2h7L17 6h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="12" cy="12.5" r="3.5"/><path d="M17.5 9.5h.01"/></svg></div><b>AI 브리지</b><span>웹캠으로 카드를 학습시키고, 인식 결과를 마이크로비트를 거쳐 로보독으로 보내요</span><em class="go" style="font-style:normal">열기</em></a>
+      <a href="docs/"><div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v15H6.5A2.5 2.5 0 0 0 4 20.5z"/><path d="M4 20.5A2.5 2.5 0 0 0 6.5 23H20v-5"/><path d="M8.5 7.5h7M8.5 11h5"/></svg></div><b>수업 자료</b><span>2·4·8차시 수업안, 활동지·평가, 운영 가이드, MakeCode 예제 내려받기</span><em class="go" style="font-style:normal">보기</em></a>
     </nav>
     <p class="sub"><a href="sim/?tab=js">로봇 없이 예제 시연부터 보기 →</a></p>
   </section>
 
   <p class="foot">
-    로보독(빅아이 로보독)은 코코아팹의 제품이며, 이 사이트는 교사가 만든 비공식 수업 도구입니다. 시뮬레이터는 실물과 다를 수 있어요.<br>
+    <span class="partner">코코아팹 협력</span> · 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다.<br>시뮬레이터의 걷는 속도·크기 등은 추정치라 실물과 다를 수 있어요.<br>
     <button class="replay" id="replay">↺ 처음 장면 다시 보기</button>
   </p>
 </main>

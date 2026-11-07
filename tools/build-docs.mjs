@@ -38,17 +38,17 @@ function linkify(html) {
 }
 
 const CSS = `
-:root { --bg:#f6f7fb; --card:#fff; --ink:#18202e; --muted:#566079; --line:#dde2ee; --accent:#2f6fe4; --accent-ink:#fff; --code:#eef1f7; --mark:#fff4c2; }
-@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#10141b; --card:#181d27; --ink:#e9edf5; --muted:#a3acc1; --line:#2b3242; --accent:#6b9bf5; --accent-ink:#0b0e14; --code:#222936; --mark:#4a3f12; } }
-*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:17px;line-height:1.75}
-a{color:var(--accent)} header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
-.bar{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
-.bar .home{font-weight:800;text-decoration:none;color:var(--ink)} .bar nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0}
-.bar nav a{white-space:nowrap;text-decoration:none;font-size:14px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
-.bar nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
-.bar button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
-main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
-h1{font-size:30px;line-height:1.3;margin:10px 0 18px} h2{font-size:23px;margin:36px 0 10px;padding-top:6px;border-top:2px solid var(--line)} h3{font-size:19px;margin:24px 0 6px}
+body{font-size:17px;line-height:1.75;--page-w:1100px}
+.subnav{position:sticky;top:58px;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.subnav .in{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;align-items:center}
+.subnav nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:thin}
+.subnav nav a{white-space:nowrap;text-decoration:none;font-size:14px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.subnav nav a:hover{color:var(--ink);border-color:var(--line-strong)}
+.subnav nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.subnav button{font-size:14px;min-height:34px;padding:5px 12px;border-radius:999px;white-space:nowrap}
+@media (max-width:720px){.subnav{top:0}}
+main{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:32px;line-height:1.3;margin:10px 0 18px;letter-spacing:-0.025em} h2{font-size:23px;margin:36px 0 10px;padding-top:6px;border-top:2px solid var(--line)} h3{font-size:19px;margin:24px 0 6px}
 code{background:var(--code);border-radius:5px;padding:1px 6px;font-size:.88em;font-family:ui-monospace,Consolas,"D2Coding",monospace}
 pre{background:var(--code);border-radius:10px;padding:12px 14px;overflow:auto;line-height:1.5} pre code{padding:0;background:none}
 .tbl{overflow-x:auto;margin:12px 0} table{border-collapse:collapse;width:100%;font-size:15.5px;line-height:1.6;background:var(--card)}
@@ -56,21 +56,26 @@ th,td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;text-alig
 blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0}
 li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line);margin:28px 0}
 .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:10px 0 26px}
-.cards a{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
-.cards a:hover{border-color:var(--accent)} .cards b{display:block;font-size:18px} .cards span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:4px}
+.cards a{display:block;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow-sm);transition:border-color .15s,box-shadow .2s,transform .2s}
+.cards a:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-1px)} .cards b{display:block;font-size:18px} .cards span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:4px}
 .dl{columns:2 260px;padding-left:20px} .note{color:var(--muted);font-size:14.5px}
-a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
-@media print { header,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
+@media print { header,.subnav,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
   h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2}
   pre{background:#fff;border:1px solid #999;font-size:12pt;line-height:2.1;white-space:pre-wrap}   /* 활동지: 글씨 쓸 칸 넉넉히 */ }
 `;
 const page = (title, active, body) => `<!doctype html>
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)} · 로보독 수업 자료</title><style>${CSS}</style></head>
-<body><header><div class="bar"><a class="home" href="../">🐶 로보독 AI 교실</a>
-<nav aria-label="수업 자료">${['index', ...docs.map(d => d.slug)].map(s => `<a href="${s}.html"${s === active ? ' aria-current="page"' : ''}>${s === 'index' ? '전체' : SHORT[s] || s}</a>`).join('')}</nav>
-<button onclick="print()">🖨 인쇄</button></div></header>
-<main>${body}</main></body></html>`;
+<title>${esc(title)} · 로보독 수업 자료</title>
+<link rel="stylesheet" href="../assets/brand.css"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><style>${CSS}</style></head>
+<body><header class="gnb"><div class="gnb-in">
+<a class="brand" href="../"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#2456e5"/><path d="M22.2 5.6a5.6 5.6 0 0 1 4.3 3.4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".85"/><rect x="4.5" y="10.5" width="23" height="13" rx="6.5" fill="#fff"/><rect x="8" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><rect x="17.4" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><circle cx="11.3" cy="17" r="1.6" fill="#8fd8ff"/><circle cx="20.7" cy="17" r="1.6" fill="#8fd8ff"/></svg>
+<span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
+<nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
+</div></header>
+<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록">${['index', ...docs.map(d => d.slug)].map(s => `<a href="${s}.html"${s === active ? ' aria-current="page"' : ''}>${s === 'index' ? '전체' : SHORT[s] || s}</a>`).join('')}</nav>
+<button onclick="print()">🖨 인쇄</button></div></div>
+<main>${body}</main>
+<footer class="site-foot">빅아이 로보독은 코코아팹의 제품이며, 이 교육 자료는 코코아팹과 협력해 만들었습니다.</footer></body></html>`;
 
 // 한국어 문서의 '5~6학년' 같은 물결표가 취소선(~글자~)으로 바뀌지 않게: 코드 밖의 홑 물결표를 문자로
 // 또 **굵게** 가 괄호·기호 뒤 한글 앞에서 풀리지 않는 문제(마크다운 규칙)를 피하려고 <strong>으로 바꿈
