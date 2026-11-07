@@ -17,12 +17,15 @@ const opacity = (pg) => pg.evaluate(() => +getComputedStyle(document.querySelect
   await p.waitForTimeout(6000);
   const fin = await p.evaluate(() => [...document.querySelectorAll('.cta a')].map(a => ({ op: +getComputedStyle(a).opacity, bottom: a.getBoundingClientRect().bottom })));
   check('6초 뒤 버튼 3개가 보임', fin.length === 3 && fin.every(f => f.op > 0.95), JSON.stringify(fin));
+  check('3D 장면이 켜짐(그래픽 가속)', await p.evaluate(() => document.getElementById('stage').classList.contains('is3d') && !!document.querySelector('#stage3d canvas')));
   check('노트북(768) 첫 화면 안에 버튼', fin.every(f => f.bottom <= 768), JSON.stringify(fin));
 
   const ctx2 = await b.newContext({ viewport: { width: 1366, height: 768 } });
   const p2 = await ctx2.newPage(); await p2.goto(BASE);
   await p2.click('#skip'); await p2.waitForTimeout(200);
   check('[건너뛰기] → 바로 끝 화면', (await opacity(p2)) > 0.95);
+  const p4 = await ctx2.newPage(); await p4.goto(BASE + '?2d'); await p4.waitForTimeout(300);
+  check('?2d 이면 2D 그림으로', await p4.evaluate(() => !document.getElementById('stage').classList.contains('is3d') && getComputedStyle(document.querySelector('.stage svg')).display !== 'none'));
   const rm = await b.newContext({ reducedMotion: 'reduce' });
   const p3 = await rm.newPage(); await p3.goto(BASE); await p3.waitForTimeout(300);
   check('움직임 줄이기 설정이면 바로 끝 화면', (await opacity(p3)) > 0.95);

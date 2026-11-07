@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>로보독 피지컬 AI 교실</title>
 <meta name="description" content="AI가 보고, 마이크로비트가 전하고, 로보독이 움직인다 — 초·중·고 피지컬 AI 수업 자료와 시뮬레이터">
+<script type="importmap">{ "imports": { "three": "./sim/lib/three.module.min.js" } }</script>
 <style>
   :root {
     --bg: #f4f6fb; --ink: #141a26; --muted: #556079; --line: #dbe1ee; --card: #ffffff;
@@ -32,6 +33,11 @@
   /* ---------- 무대 ---------- */
   .stage { position: relative; background: linear-gradient(to bottom, var(--stage) 83.7%, color-mix(in srgb, var(--table) 55%, var(--stage)) 83.7%); border-radius: 24px; overflow: hidden; margin-top: 6px; }
   .stage svg { display: block; width: 100%; height: auto; max-height: 35vh; min-height: 190px; margin: 0 auto; }
+  /* 3D 장면(그래픽 가속이 되면 SVG 대신) */
+  #stage3d { display: none; width: 100%; height: clamp(220px, 38vh, 420px); }
+  .stage.is3d { background: var(--stage); }
+  .stage.is3d svg { display: none; }
+  .stage.is3d #stage3d { display: block; }
   .beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
   .beats li { text-align: center; font-weight: 800; font-size: clamp(14px, 2.2vw, 20px); padding: 10px 6px; border-radius: 14px;
     color: var(--muted); background: var(--card); border: 1px solid var(--line); opacity: .45; animation: beat .4s ease forwards; }
@@ -184,6 +190,7 @@
         </g>
       </g>
     </svg>
+    <div id="stage3d" role="img" aria-label="카드를 본 AI가 마이크로비트로 숫자 3을 보내고, 로보독이 눈을 켜고 걸어와 하트 눈으로 인사하는 3D 장면"></div>
   </div>
   <ol class="beats" aria-label="수업의 흐름">
     <li>① AI가 본다<span>웹캠으로 카드를 학습·인식</span></li>
@@ -237,11 +244,27 @@ const eye = (id, rows) => {
 eye('eyesOpen', OPEN); eye('eyesHeart', HEART);
 
 const app = document.getElementById('app');
-const finish = () => { app.classList.add('instant'); document.getElementById('skip').hidden = true; };
+const finish = () => { app.classList.add('instant'); document.getElementById('skip').hidden = true; if (window.__intro3d) window.__intro3d.finish(); };
 document.getElementById('skip').onclick = finish;
 // 한 번 본 사람은 다음부터 바로 (같은 브라우저)
 try { if (sessionStorage.getItem('intro-seen')) finish(); sessionStorage.setItem('intro-seen', '1'); } catch (e) {}
 document.getElementById('replay').onclick = () => { try { sessionStorage.removeItem('intro-seen'); } catch (e) {} location.reload(); };
 document.addEventListener('keydown', (e) => { if (e.key === 'Escape') finish(); });
+</script>
+<script type="module">
+// 3D 장면: WebGL이 되면 시뮬레이터의 로보독 모형으로 같은 이야기를 보여 줌. 안 되면 위의 2D 그림 그대로
+const ok = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
+if (ok && !new URLSearchParams(location.search).has('2d')) {
+  try {
+    const { startIntro3D } = await import('./intro3d.js');
+    const stage = document.getElementById('stage');
+    stage.classList.add('is3d');
+    window.__intro3d = startIntro3D({
+      host: document.getElementById('stage3d'),
+      instant: document.getElementById('app').classList.contains('instant'),
+      still: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    });
+  } catch (e) { document.getElementById('stage').classList.remove('is3d'); console.warn('3D 인트로를 켜지 못해 2D로 보여요:', e); }
+}
 </script>
 </body>

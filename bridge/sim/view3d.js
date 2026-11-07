@@ -208,7 +208,7 @@ export class View3D {
       if (this.lastBubble !== R.bubble) {
         const c = this.bubbleCanvas, ctx = c.getContext('2d');
         ctx.clearRect(0, 0, c.width, c.height);
-        ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.fillStyle = 'rgba(255,255,255,.95)'; ctx.beginPath(); ctx.roundRect(2, 2, c.width - 4, c.height - 4, 26); ctx.fill();
         ctx.fillStyle = '#1d2433'; ctx.font = 'bold 36px system-ui'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
         ctx.fillText(R.bubble, c.width / 2, c.height / 2);
         this.bubbleTex.needsUpdate = true; this.lastBubble = R.bubble;
