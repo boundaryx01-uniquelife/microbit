@@ -89,7 +89,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   check('편집기 모드에서 코딩 칸이 넓음(오른쪽 ≤ 400px)', right <= 400 && left > right * 2, lay.cols);
   check('도우미가 낮아 편집기가 첫 화면에 보임(위치 < 380px)', lay.frameTop < 380 && lay.chips < 160, JSON.stringify(lay));
   await p.setViewportSize({ width: 1366, height: 768 }); await p.mouse.wheel(0, 500); await p.waitForTimeout(400);
-  const vis = await p.evaluate(() => { const r = document.getElementById('top2d').getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; });
+  const vis = await p.evaluate(() => { const r = document.querySelector('#pane3d:not(.hidden), #pane2d:not(.hidden)').getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; });
   check('스크롤해도 로보독 화면이 보임(오른쪽 따라옴)', vis);
   await p.close();
 
