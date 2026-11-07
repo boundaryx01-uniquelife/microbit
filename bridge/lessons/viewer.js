@@ -52,6 +52,7 @@
   function cc(c, d) { return COLORS[c] ? c : (d || 'blue'); }
   function img(name, alt, cls) { return name ? '<img class="pic ' + (cls || '') + '" src="assets/' + encodeURIComponent(name) + '.png" alt="' + esc(alt) + '">' : ''; }
   function circle(text, color) { return '<span class="dot c-' + cc(color) + '">' + esc(text) + '</span>'; }
+  function hl(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, '<em>$1</em>'); }
   function foot(s) { return s.footer ? '<p class="sfoot">' + esc(s.footer) + '</p>' : ''; }
 
   var R = {
@@ -71,7 +72,7 @@
     },
     cards: function (s) {
       return '<div class="cds n' + s.cards.length + '">' + s.cards.map(function (c) {
-        return '<div class="cd c-' + cc(c.color) + '"><h3>' + (c.badge ? circle(c.badge, c.color) : '') + '<span>' + esc(c.head) + '</span></h3><ul>' +
+        return '<div class="cd c-' + cc(c.color) + (c.icon ? ' has-icon' : '') + '">' + (c.icon ? img(c.icon, c.head, 'cicon') : '') + '<h3>' + (c.badge ? circle(c.badge, c.color) : '') + '<span>' + esc(c.head) + '</span></h3><ul>' +
           c.lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>';
       }).join('') + '</div>' + foot(s);
     },
@@ -80,19 +81,20 @@
       var nodes = s.nodes.map(function (nd, i) {
         return (i ? '<span class="arr" aria-hidden="true">→</span>' : '') + '<div class="nd c-' + cc(nd.color) + '">' + (nd.tag ? '<em>' + esc(nd.tag) + '</em>' : '') + '<b>' + esc(nd.label) + '</b>' + (nd.sub ? '<small>' + esc(nd.sub) + '</small>' : '') + '</div>';
       }).join('');
-      var loop = s.loop ? '<svg class="loop" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M92 0 V12 H8 V2" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-dasharray="6 5"/><path d="M4 5 L8 0 L12 5" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>' : '';
+      var loop = s.loop ? '<div class="loop" style="width:' + ((n - 1) / n * 100 - 2).toFixed(1) + '%" aria-hidden="true"></div>' : '';
       var strip = s.strip && s.strip.length ? '<div class="strip">' + s.strip.map(esc).join(' <i aria-hidden="true">→</i> ') + '</div>' : '';
       var low = (s.image || strip) ? '<div class="low">' + img(s.image, s.title) + strip + '</div>' : '';
       return '<div class="flowwrap"><div class="flow n' + n + '">' + nodes + '</div>' + loop + low + '</div>';
     },
     question: function (s) {
       var big = s.big === '?' ? '<div class="q q-mark" aria-hidden="true">?</div>' : '<div class="q q-text">' + esc(s.big) + '</div>';
-      return '<div class="qa ' + (s.image ? 'has-img' : '') + '"><div class="qt">' + big + (s.sub ? '<p>' + esc(s.sub) + '</p>' : '') + '</div>' + img(s.image, s.title) + '</div>';
+      var pic = s.image && s.caption ? '<div class="capwrap">' + img(s.image, s.title) + '<div class="cap">' + esc(s.caption) + '</div></div>' : img(s.image, s.title);
+      return '<div class="qa ' + (s.image ? 'has-img' : '') + '"><div class="qt">' + big + (s.sub ? '<p>' + esc(s.sub) + '</p>' : '') + '</div>' + pic + '</div>';
     },
     image: function (s) {
       var side = '';
-      if (s.points && s.points.length) side += '<ul class="bul">' + s.points.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>';
-      if (s.callout) side += '<div class="callout">' + esc(s.callout) + '</div>';
+      if (s.points && s.points.length) side += '<ul class="bul">' + s.points.map(function (p) { return '<li>' + hl(p) + '</li>'; }).join('') + '</ul>';
+      if (s.callout) side += '<div class="callout">' + hl(s.callout) + '</div>';
       return '<div class="imgs">' + img(s.image, s.title) + '<div class="side">' + side + '</div></div>';
     },
     table: function (s) {

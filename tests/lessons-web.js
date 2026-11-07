@@ -20,24 +20,24 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
 
   await p.goto(L + '?l=2차시'); await p.waitForSelector('.slide');
   const total = await p.evaluate(() => window.__lesson.total);
-  check('슬라이드 24장 불러옴', total === 24 && (await p.textContent('#counter')).trim() === '1 / 24', await p.textContent('#counter'));
+  check('슬라이드 25장 불러옴', total === 25 && (await p.textContent('#counter')).trim() === '1 / 25', await p.textContent('#counter'));
   check('첫 장은 표지', await p.evaluate(() => !!document.querySelector('.slide.t-cover')));
   check('머리 메뉴의 현재 위치 = 수업 자료', (await p.textContent('.gnb nav a[aria-current="page"]')).includes('수업 자료'));
   await p.keyboard.press('ArrowRight');
-  check('→ 키로 2장, 주소 #2', (await p.textContent('#counter')).trim() === '2 / 24' && new URL(p.url()).hash === '#2');
+  check('→ 키로 2장, 주소 #2', (await p.textContent('#counter')).trim() === '2 / 25' && new URL(p.url()).hash === '#2');
   await p.keyboard.press('Space'); await p.keyboard.press('PageDown');
   check('Space·PageDown 으로 4장', new URL(p.url()).hash === '#4');
   await p.keyboard.press('ArrowLeft'); await p.keyboard.press('PageUp');
   check('← · PageUp 으로 2장', new URL(p.url()).hash === '#2');
   await p.click('#next');
-  check('[다음] 버튼', (await p.textContent('#counter')).trim() === '3 / 24');
+  check('[다음] 버튼', (await p.textContent('#counter')).trim() === '3 / 25');
   await p.selectOption('#chsel', '2');
   check('차시 메뉴로 2차시 첫 장(12)', new URL(p.url()).hash === '#12');
   check('바닥글에 "피지컬 AI 교실 · 2차시"', (await p.textContent('.sf')).includes('피지컬 AI 교실 · 2차시'));
 
   const p2 = await ctx.newPage();
-  await p2.goto(L + '?l=2차시#15'); await p2.waitForSelector('.slide');
-  check('#15 주소로 바로 15장', (await p2.textContent('#counter')).trim() === '15 / 24' && (await p2.textContent('.st')).includes('이렇게 연결돼요'));
+  await p2.goto(L + '?l=2차시#16'); await p2.waitForSelector('.slide');
+  check('#16 주소로 바로 16장', (await p2.textContent('#counter')).trim() === '16 / 25' && (await p2.textContent('.st')).includes('이렇게 연결돼요'));
   check('교사 모드는 처음엔 꺼짐(노트 숨김)', await p2.evaluate(() => document.getElementById('notes').hidden));
   await p2.keyboard.press('n');
   check('N 키 → 비밀번호 창(노트는 아직 숨김)', await p2.isVisible('#pindlg') && await p2.evaluate(() => document.getElementById('notes').hidden));
@@ -77,7 +77,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
       });
       if (r.h > 2 || r.w > 2 || r.sw > 2 || r.pw > 2) bad.push(i + ':' + JSON.stringify(r));
     }
-    check(`${label}: 24장 모두 넘침 없음`, bad.length === 0, bad.join(' '));
+    check(`${label}: 25장 모두 넘침 없음`, bad.length === 0, bad.join(' '));
   }
   const pd = await ctx.newPage(); pd.on('pageerror', e => errs.push(e.message));
   await pd.goto(L + '?l=2차시'); await pd.waitForSelector('.slide');
@@ -95,7 +95,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
       const r = await q.evaluate(() => { const e = document.querySelector('.sbody'), s = document.querySelector('.slide'); return Math.max(e.scrollHeight - e.clientHeight, e.scrollWidth - e.clientWidth, s.scrollWidth - s.clientWidth); });
       if (r > 2) bad.push(i);
     }
-    check(`${id}: ${n}장 모두 넘침 없음(1280x720)`, n > 20 && bad.length === 0, '넘친 장: ' + bad.join(','));
+    check(`${id}: ${n}장 모두 넘침 없음(1280x720)`, n > 40 && bad.length === 0, '넘친 장: ' + bad.join(','));
     await q.close();
   }
   check('휴대폰: 슬라이드 글자 크기 15px 이상', await tp.evaluate(() => parseFloat(getComputedStyle(document.querySelector('.stage')).fontSize) >= 15));
@@ -118,6 +118,44 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   await dp.goto(L + '?l=2차시#7'); await dp.waitForSelector('.slide');
   check('어두운 화면: 슬라이드 배경이 어두움', await dp.evaluate(() => { const c = getComputedStyle(document.getElementById('stage')).backgroundColor.match(/\d+/g).map(Number); return c[0] < 80; }));
   check('움직임 줄이기: 슬라이드 애니메이션 없음', await dp.evaluate(() => getComputedStyle(document.querySelector('.slide')).animationName === 'none'));
+
+  // 모든 수업·모든 장: 본문 글자 20px 이상, 자동 축소 0.85 이상, 바닥글 13px 이상, 그림 불러오기
+  const EXPECT = { '2차시': 25, '4차시': 48, '8차시': 91 };
+  for (const id of ['2차시', '4차시', '8차시']) {
+    const q = await ctx.newPage(); q.on('pageerror', e => errs.push(id + ': ' + e.message));
+    await q.goto(L + '?l=' + encodeURIComponent(id)); await q.waitForSelector('.slide');
+    const n = await q.evaluate(() => window.__lesson.total);
+    const small = [], shrunk = [], broken = [];
+    for (let i = 1; i <= n; i++) {
+      await q.evaluate(k => window.__lesson.go(k - 1), i);
+      await q.waitForFunction(() => [...document.querySelectorAll('.slide img')].every(im => im.complete), null, { timeout: 8000 }).catch(() => {});
+      const r = await q.evaluate(() => {
+        let min = 99, who = '';
+        const w = document.createTreeWalker(document.querySelector('.sbody'), NodeFilter.SHOW_TEXT);
+        for (let t; (t = w.nextNode());) { if (!t.textContent.trim()) continue; const fs = parseFloat(getComputedStyle(t.parentElement).fontSize); if (fs < min) { min = fs; who = t.textContent.trim().slice(0, 14); } }
+        const sb = document.querySelector('.sbody'), sf = document.querySelector('.sf span');
+        return { min, who, shrink: parseFloat(sb.style.fontSize) || 1, foot: parseFloat(getComputedStyle(sf).fontSize), imgs: [...document.querySelectorAll('.slide img')].filter(im => !(im.complete && im.naturalWidth > 0)).length };
+      });
+      if (r.min < 20 && !(document && false)) small.push(`${i}:${r.min}px(${r.who})`);
+      if (r.shrink < 0.85) shrunk.push(`${i}:${r.shrink}`);
+      if (r.imgs || r.foot < 13) broken.push(`${i}:img${r.imgs}/foot${r.foot}`);
+    }
+    check(`${id}: ${n}장(기대 ${EXPECT[id]}), 본문 글자 모두 20px 이상`, n === EXPECT[id] && small.length === 0, small.join(' '));
+    check(`${id}: 자동 축소 0.85 미만 장 없음`, shrunk.length === 0, shrunk.join(' '));
+    check(`${id}: 그림 모두 그려짐·바닥글 13px 이상`, broken.length === 0, broken.join(' '));
+    const refs = await q.evaluate(async (name) => { const d = await (await fetch('data/' + name + '.json')).json(); return { imgs: [...new Set(d.slides.flatMap(s => [s.image, ...(s.cards || []).map(c => c.icon)]).filter(Boolean))], noteBad: d.slides.map((s, i) => /^\[[^\]]+\] 발문: .* \/ 예상 답: .* \/ 진행: .* \/ 주의: /.test(s.notes || '') ? 0 : i + 1).filter(Boolean), mins: d.slides.reduce((a, s) => { const m = (s.notes || '').match(/^\[[^\]]*?(\d+)분[^\]]*\]/); return a + (m ? +m[1] : 0); }, 0) }; }, id);
+    let miss = 0; for (const nm of refs.imgs) { const r = await p.request.get(L + 'assets/' + encodeURIComponent(nm) + '.png'); if (!r.ok()) { miss++; console.log('  missing', nm); } }
+    check(`${id}: 참조한 그림 ${refs.imgs.length}개 모두 있음`, miss === 0);
+    check(`${id}: 모든 장의 노트가 [시간] 발문/예상 답/진행/주의 형식`, refs.noteBad.length === 0, '형식 아닌 장: ' + refs.noteBad.join(','));
+    if (id === '4차시') check('4차시: 노트 시간 합계 160분 이하', refs.mins <= 160, String(refs.mins));
+    await q.close();
+  }
+  // 전체 화면: 화면을 꽉 채움
+  { const f = await ctx.newPage(); await f.setViewportSize({ width: 1920, height: 1080 }); await f.goto(L + '?l=2차시#9'); await f.waitForSelector('.slide');
+    await f.keyboard.press('f'); await f.waitForTimeout(1200);
+    const r = await f.evaluate(() => { const b = document.getElementById('fit').getBoundingClientRect(); return { fs: !!document.fullscreenElement, w: b.width, h: b.height, iw: innerWidth, ih: innerHeight }; });
+    if (r.fs) check('전체 화면: 무대가 화면을 가득 채움', r.w >= r.iw - 12 && r.h >= r.ih - 8, JSON.stringify(r)); else console.log('  (이 환경은 전체 화면을 지원하지 않아 건너뜀)');
+    await f.close(); }
 
   check('페이지 오류 없음', errs.length === 0, errs.join(' | '));
   await b.close();

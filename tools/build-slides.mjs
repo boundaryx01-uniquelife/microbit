@@ -91,7 +91,8 @@ function build(data) {
   pres.title = data.title || data.id;
   const SH = pres.ShapeType;
 
-  const slides = data.slides || [];
+  const clean = (o) => (typeof o === 'string' ? o.replace(/\*\*/g, '') : Array.isArray(o) ? o.map(clean) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, clean(v)])) : o);
+  const slides = clean(data.slides || []);
   const chs = [...new Set(slides.map((s) => s.ch || 1))].sort((a, b) => a - b);
   for (const n of chs) {
     const ft = `피지컬 AI 교실 · ${n}차시`;
@@ -116,7 +117,7 @@ function build(data) {
       },
     }));
     s.addText(runs, {
-      x, y, w, h, fontFace: F, isTextBox: true, margin: 0, valign: o.valign || 'middle', align: o.align || 'left', fit: 'none',
+      x, y, w, h, fontFace: F, lang: 'ko-KR', isTextBox: true, margin: 0, valign: o.valign || 'middle', align: o.align || 'left', fit: 'none',
     });
     return f.s;
   }
@@ -148,7 +149,7 @@ function build(data) {
     const round = w > d + 0.01;
     s.addText(t, {
       shape: round ? SH.roundRect : SH.ellipse, rectRadius: d / 2, x, y, w, h: d, fill: { color: fill }, line: { color: fill, width: 0 },
-      fontFace: F, fontSize: sz, bold: true, color: tc, align: 'center', valign: 'middle', margin: 0, isTextBox: true, wrap: false,
+      fontFace: F, lang: 'ko-KR', fontSize: sz, bold: true, color: tc, align: 'center', valign: 'middle', margin: 0, isTextBox: true, wrap: false,
     });
     return w;
   }
@@ -240,13 +241,17 @@ function build(data) {
       const x = X0 + i * (cw + gap), cl = col(c.color, i);
       card(s, x, TOP, cw, ch, BG);
       let y = TOP + 0.2;
-      if (c.badge !== undefined && c.badge !== '') {
+      if (c.icon) {
+        const di = imgSize(c.icon);
+        if (di) { const ih = 1.0, iw = Math.min(cw - 0.6, ih * di.w / di.h); s.addImage({ path: di.f, x: x + (cw - iw) / 2, y, w: iw, h: ih, altText: c.head }); y += ih + 0.1; }
+      }
+      if (!c.icon && c.badge !== undefined && c.badge !== '') {
         const bd = 0.8, bw = badge(s, c.badge, x + (cw - bd) / 2, y, bd, cl, 30, cw - 0.4);
         // 알약이면 가운데 다시 맞춤
         if (bw > bd) { /* 위에서 x 고정 — 필요 시 좌측 정렬 */ }
         y += bd + 0.15;
       }
-      const hasB = c.badge !== undefined && c.badge !== '';
+      const hasB = !c.icon && c.badge !== undefined && c.badge !== '';
       const need = lineCount(c.head, 30, true, cw - 0.6) * 30 * 1.22 / 72 + 0.3;
       const headH = Math.max(0.85, Math.min(hasB ? 1.05 : 1.3, need));
       s.addShape(SH.roundRect, { x: x + 0.2, y, w: cw - 0.4, h: headH, fill: { color: cl }, line: { color: cl, width: 0 }, rectRadius: 0.15 });
@@ -322,7 +327,13 @@ function build(data) {
     const subH = d.sub ? Math.min(1.1, bh * 0.3) : 0;
     T(s, [{ t: d.big, bold: true }], X0 + 0.4, by, cw - 0.8, bh - subH - (subH ? 0.1 : 0), { max: bigOnly ? 200 : hasImg ? 48 : 54, min: 28, color: WH, align: 'center' });
     if (d.sub) T(s, [{ t: d.sub }], X0 + 0.4, TOP + ch - 0.3 - subH, cw - 0.8, subH, { max: 26, color: 'DCE6FF', align: 'center' });
-    if (hasImg) img(s, d.image, X0 + cw + 0.4, TOP, W - cw - 0.4, ch, 'center');
+    if (hasImg) {
+      const r = img(s, d.image, X0 + cw + 0.4, TOP, W - cw - 0.4, ch, 'center');
+      if (r && d.caption) {
+        const cy = r.Y + r.H - 1.15;
+        s.addText(d.caption, { shape: SH.roundRect, rectRadius: 0.12, x: r.X + 0.2, y: cy, w: r.W - 0.4, h: 0.95, fill: { color: INK }, line: { color: INK, width: 0 }, fontFace: F, lang: 'ko-KR', fontSize: 24, bold: true, color: WH, align: 'center', valign: 'middle', margin: 0.05, isTextBox: true });
+      }
+    }
   };
 
   R.image = (s, d) => {
