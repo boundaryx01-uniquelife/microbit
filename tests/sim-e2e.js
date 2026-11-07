@@ -15,8 +15,10 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   // 로컬 정적 서버에는 도우미 서버 함수가 없으므로 '키 없음' 응답으로 대신함
   await p.route('**/api/robodog-assistant', r => r.fulfill({ json: { ok: true, configured: false, needsCode: false } }));
   const errs = [];
-  p.on('pageerror', e => errs.push(e.message));
-  p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
+  // MakeCode iframe(makecode.com) 내부 오류는 우리 코드가 아니므로 따로 셈
+  const mcErrs = [];
+  p.on('pageerror', e => (/makecode\.(com|microbit\.org)/.test(e.stack || '') ? mcErrs : errs).push(e.message));
+  p.on('console', m => { if (m.type() === 'error') (/makecode\.(com|microbit\.org)/.test((m.location() || {}).url || '') || m.text().includes('ERR_FAILED') && /makecode/.test(JSON.stringify(m.location())) ? mcErrs : errs).push(m.text()); });
   p.on('dialog', d => d.accept());
   // 0. 처음 열면 자동 시연이 시작되는지
   await p.goto(BASE + 'sim/?demo=1');   // 블록 코딩 첫 화면은 자동 시연을 하지 않으므로 ?demo=1 로 켬
@@ -242,7 +244,8 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   const sw = await p.evaluate(() => document.documentElement.scrollWidth);
   check('390px 폭 가로 스크롤 없음', sw <= 390, `scrollWidth=${sw}`);
 
-  check('페이지 오류 없음', errs.length === 0, JSON.stringify(errs.slice(0, 3)));
+  check('페이지 오류 없음(우리 코드)', errs.length === 0, JSON.stringify(errs.slice(0, 3)));
+  if (mcErrs.length) console.log('참고: MakeCode 편집기 내부 오류 ' + mcErrs.length + '건(우리 코드 아님): ' + mcErrs.slice(0, 2).join(' / ').slice(0, 200));
   await b.close();
   const fail = results.filter(r => !r.ok).length;
   console.log(`\n${results.length - fail}/${results.length} PASS`);

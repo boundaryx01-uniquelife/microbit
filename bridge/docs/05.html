@@ -91,6 +91,16 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-off
 <td>막히면 정보부에 <code>microbit-bridge.netlify.app</code> 허용 요청(모델·라이브러리 모두 이 주소에서 받음)</td>
 </tr>
 <tr>
+<td>시뮬레이터 블록 코딩</td>
+<td><a href="https://microbit-bridge.netlify.app/sim/">https://microbit-bridge.netlify.app/sim/</a> 에서 블록 편집기가 1분 안에 열리는지</td>
+<td><code>makecode.microbit.org</code> 와 MakeCode가 쓰는 주소(확장을 받는 <code>github.com</code> 등 — 정보부가 브라우저 개발자 도구로 확인)도 허용 필요. 막히면 60초 뒤 <strong>글자 코드(JavaScript)</strong> 탭으로 바뀜</td>
+</tr>
+<tr>
+<td>로보독 도우미(AI)</td>
+<td>시뮬레이터 위 도우미 배지가 &#39;AI 도우미&#39;인지</td>
+<td>교사가 Netlify에 키를 넣은 경우만. 학생 입력이 외부 AI 서버로 전송되므로 학교 정책 확인. 키가 없으면 &#39;규칙 도우미&#39;(전송 없음)</td>
+</tr>
+<tr>
 <td>카메라</td>
 <td>[카메라 켜기] → 허용</td>
 <td>브라우저 주소창 왼쪽 자물쇠 → 카메라 허용</td>
@@ -106,8 +116,8 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-off
 <td>USB 저장장치 차단 정책이면 정보부에 예외 요청, 또는 교사 PC에서 일괄 다운로드</td>
 </tr>
 <tr>
-<td>복원 프로그램</td>
-<td>재부팅 후에도 동작하는지</td>
+<td>재부팅 후 다시 열기</td>
+<td>PC를 껐다 켜도(복원 프로그램이 있어도) 사이트가 다시 열리는지</td>
 <td>AI 모델은 배포 사이트에 함께 들어 있어 매번 다시 받아도 됨(약 8MB)</td>
 </tr>
 </tbody></table></div>
@@ -138,7 +148,7 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-off
 </tr>
 <tr>
 <td>같은 번호 반복 전송</td>
-<td>약 0.6초마다 다시 보냄</td>
+<td>약 0.5초마다 다시 보냄</td>
 </tr>
 <tr>
 <td>로보독 마이크로비트</td>
@@ -150,6 +160,7 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-off
 </tr>
 </tbody></table></div>
 <h2>4. 자주 생기는 문제</h2>
+<p>3분 안에 해결되지 않으면 <a href="01.html"><code>2차시 소개형</code></a>의 <strong>플랜 B</strong>(시뮬레이터·교사 PC 시연)로 바꾸고 쉬는 시간에 원인을 찾으세요.</p>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -182,18 +193,67 @@ a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-off
 <td>배경 종류 추가, 헷갈리는 물건도 학습시키기</td>
 </tr>
 <tr>
-<td>로보독이 2초마다 멈춤</td>
-<td>브리지 창이 가려졌거나 USB 연결이 끊김</td>
+<td>로보독이 걷다가 주저앉음·떨림</td>
+<td>배터리 부족(충전), 서보가 뜨거우면 5분 쉬기, 바닥이 미끄러운지</td>
 </tr>
 <tr>
-<td>로보독 동작이 이상함</td>
-<td>로보독 마이크로비트에 &#39;음악&#39; 블록을 쓰지 않았는지(로봇 통신 핀 P0와 겹칠 수 있음)</td>
+<td>로보독 전원은 켜지는데 동작이 이상함</td>
+<td>로보독 마이크로비트를 다시 꽂고 전원 껐다 켜기, 예제 01을 다시 내려받아 기본 동작 확인</td>
+</tr>
+<tr>
+<td>시뮬레이터 블록 편집기가 안 열림</td>
+<td>학교망의 <code>makecode.microbit.org</code> 차단 → 글자 코드 탭(60초 뒤 자동)</td>
 </tr>
 </tbody></table></div>
+<h3>기기별로 되는 활동 (2026-11-07 기준)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>기기</th>
+<th>시뮬레이터</th>
+<th>AI 브리지(웹캠)</th>
+<th>USB 마이크로비트 연결</th>
+<th>MakeCode 다운로드</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>윈도우·맥 PC(크롬·엣지)</td>
+<td>됨(시험함)</td>
+<td>됨(가짜 카메라로 시험)</td>
+<td>됨(Web Serial, 가짜 장치로 시험)</td>
+<td>됨</td>
+</tr>
+<tr>
+<td>크롬북</td>
+<td>될 것으로 예상(미검증)</td>
+<td>될 것으로 예상(미검증)</td>
+<td>미검증</td>
+<td>미검증</td>
+</tr>
+<tr>
+<td>아이패드</td>
+<td>화면은 열림(미검증)</td>
+<td>미검증</td>
+<td><strong>불가</strong>(Web Serial 없음)</td>
+<td>불가(파일 복사 어려움)</td>
+</tr>
+<tr>
+<td>안드로이드 태블릿</td>
+<td>미검증</td>
+<td>미검증</td>
+<td>미검증</td>
+<td>미검증</td>
+</tr>
+</tbody></table></div>
+<p>학교 기기가 미검증이면 수업 전에 교사가 한 대로 시험해 위 표를 채우세요.
+| 로보독이 2초마다 멈춤 | 브리지 창이 가려졌거나 USB 연결이 끊김 |
+| 로보독 동작이 이상함 | 로보독 마이크로비트에 &#39;음악&#39; 블록을 쓰지 않았는지(로봇 통신 핀 P0와 겹칠 수 있음) |</p>
 <h2>5. 개인정보·윤리</h2>
 <ul>
-<li>이 자료는 <strong>얼굴 학습을 쓰지 않습니다.</strong> 카메라는 책상·카드 쪽으로 향하게 하세요.</li>
-<li>영상은 브라우저 안에서만 처리되고 서버로 보내지 않습니다. AI 모델 파일만 내려받습니다.</li>
+<li>기본 수업(예제 01&#126;04, AI 브리지)은 <strong>얼굴 학습을 쓰지 않습니다.</strong> 카메라는 책상·카드 쪽으로 향하게 하세요. 무선 예제 08(얼굴 추적)도 얼굴 대신 사진·그림 카드를 권합니다.</li>
+<li>AI 브리지의 영상은 브라우저 안에서만 처리되고 서버로 보내지 않습니다. AI 모델 파일만 내려받습니다.</li>
+<li><strong>로보독 도우미(AI 모드)에 쓴 글은 외부 AI 서버(Anthropic)로 전송됩니다.</strong> 이름·학교·연락처를 쓰지 않도록 지도하고, 가정통신문·학교 정책에 함께 안내하세요. 규칙 도우미 모드는 전송하지 않습니다.</li>
+<li>교사가 AI 도우미를 켰다면 Netlify에 <code>ASSISTANT_CLASS_CODE</code>(수업 코드)를 꼭 넣으세요. <strong>넣지 않으면 주소를 아는 누구나 선생님 계정 요금으로 요청할 수 있습니다.</strong></li>
 <li>학습 데이터 저장(.json)에는 사진이 아니라 숫자 특징만 들어갑니다. 그래도 수업 후 지우는 습관을 들이세요.</li>
 <li>웹캠 사용은 학교 정책·가정통신문 안내를 따르세요.</li>
 </ul>

@@ -521,9 +521,9 @@ const DANCE_CODE = `// 🐕×8 군무 시연 — 여러 대를 한 번에 움직
 // dogs = RoboDogMultiOpen()                                   # 연결된 로보독 모두 열기
 // multi_gesture(dogs, STANDUP)                                # 1. 준비
 // multi_leg_bend(dogs, ALL_LEG, 20) / (dogs, ALL_LEG, 90)     # 2. 바운스: 다 함께 낮게↔높게
-// multi_leg_bend_sequential(dogs, 0.12, ORDER_LOW_TO_HIGH, ALL_LEG, 90)   # 3. 웨이브: 차례로
+// for d in dogs: multi_leg_bend([d], ALL_LEG, 90); sleep(0.12)   # 3. 웨이브: 차례로(개념 예시)
 // multi_bodyLED_sequential(dogs, 0.12, ORDER_LOW_TO_HIGH, RED)            # 4. 불빛 웨이브
-// multi_headLEDExp_sequential(dogs, 0.15, ORDER_LOW_TO_HIGH, ILOVEYOU)    # 5. 표정 웨이브
+// multi_headLEDExp_sequential(dogs, 0.15, ORDER_LOW_TO_HIGH, ILOVEU)    # 5. 표정 웨이브
 // multi_rotate(dogs, CW, 180, 70)                             # 6. 다 함께 회전
 // multi_gesture(dogs, HEADSTAND)                              # 7. 물구나무
 // multi_gesture_sequential(dogs, 0.2, ORDER_LOW_TO_HIGH, GREETING)        # 8. 차례로 인사
@@ -582,7 +582,7 @@ async function runDance(g) {
     cap('바운스 — multi_leg_bend: 다 함께 낮게 ↔ 높게');
     for (let r = 0; r < 6; r++) { all(a => a.legBend(0, 10)); await sleep(420); all(a => a.legBend(0, 100)); await sleep(420); }
 
-    cap('웨이브 — multi_leg_bend_sequential(0.12초 간격): 왼쪽부터 차례로 일어나고 앉기');
+    cap('웨이브 — 0.12초 간격으로 차례로: 왼쪽부터 차례로 일어나고 앉기');
     all(a => a.legBend(0, 10)); await sleep(700);
     for (let r = 0; r < 2; r++) { await seq(120, a => a.legBend(0, 100)); await sleep(250); await seq(120, a => a.legBend(0, 10)); await sleep(250); }
     all(a => a.legBend(0, 70)); await sleep(600);
