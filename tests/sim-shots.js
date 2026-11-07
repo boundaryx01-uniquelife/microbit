@@ -6,7 +6,7 @@ const OUT = path.join(__dirname, 'mc');
 (async () => {
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport: { width: 1400, height: 950 } });
-  await p.goto(BASE + 'sim/');
+  await p.goto(BASE + 'sim/?demo=0');
   await p.waitForFunction(() => window.__sim && window.Babel);
   await p.selectOption('#examples', '05_motion-tour'); await p.click('#btnRun');
   await p.click('#tab3d'); await p.waitForTimeout(2000);

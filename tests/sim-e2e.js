@@ -159,6 +159,18 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   check('AI 브리지 ■멈춤 → 시뮬레이터 정지', (await state()).vel === 0);
   await bp.close();
 
+  // 11-2. 공식 다리 각도 표와 일치 (코코아팹 다리 시뮬레이터 표본)
+  const jointAfter = async (code) => {
+    await p.click('#btnReset'); await p.fill('#code', code); await run(); await p.waitForTimeout(1200);
+    return p.evaluate(() => window.__sim.robot.joint.map(j => j.map(Math.round)));
+  };
+  let j = await jointAfter('robodog.leg(deflib.LegSelection.AllLegs, 100, 0)');          // 내부 (90, 0) → 표본 (0, -90)
+  check('다리 높이 100·발끝 0 → 공식 표본 어깨 0°, 무릎 -90°', j.every(a => a[0] === 0 && a[1] === -90), JSON.stringify(j[0]));
+  j = await jointAfter('robodog.leg(deflib.LegSelection.FrontLegs, 0, 0)');             // 내부 (20, 0) → 표본 (-90, 70)
+  check('앞다리 높이 0·발끝 0 → 공식 표본 어깨 -90°, 무릎 70°', j[0][0] === -90 && j[0][1] === 70 && j[3][0] === -90, JSON.stringify(j));
+  j = await jointAfter('robodog.motor(deflib.LegSelection.RightBack, 30, -20)');
+  check('모터 블록 → 오른쪽 뒷다리만 어깨 30°, 무릎 -20°', j[2][0] === 30 && j[2][1] === -20 && j[0][0] === 0, JSON.stringify(j));
+
   // 12. 좁은 화면
   await p.setViewportSize({ width: 390, height: 900 }); await p.waitForTimeout(400);
   const sw = await p.evaluate(() => document.documentElement.scrollWidth);

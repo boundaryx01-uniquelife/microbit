@@ -1,5 +1,5 @@
 // 2D 화면: 위에서 본 책상(이동 경로·장애물) + 옆에서 본 다리 자세
-import { EST } from './runtime.js';
+import { EST, GEOM } from './runtime.js';
 
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
@@ -62,20 +62,23 @@ export class View2D {
     // 로보독(위에서)
     ctx.save();
     ctx.translate(ox + R.x * s, oy + R.y * s); ctx.rotate(rad);
-    const L = EST.bodyLen * s, Wd = EST.bodyWid * s;
-    // 다리(발 위치)
+    // 공식 비율: 몸통 12.2×6cm, 머리 10×2.7cm(몸 중심에서 6.7cm 앞), 엉덩이 앞뒤 ±4.6cm
+    const L = GEOM.bodyLen * s, Wd = GEOM.bodyWid * s;
     const feet = [[-1, -1], [-1, 1], [1, 1], [1, -1]];   // [좌우, 앞뒤]: 0 왼앞,1 왼뒤,2 오른뒤,3 오른앞
     R.legs.forEach((lg, i) => {
-      const fx = feet[i][0] * (Wd / 2 + 2), fy = feet[i][1] * (L / 2 - 2 * s) - lg.fx * s;
+      const fx = feet[i][0] * (Wd / 2 + 0.9 * s), fy = feet[i][1] * (GEOM.hipGap / 2) * s - lg.fx * s;
       ctx.fillStyle = lg.raised ? css('--accent') : css('--leg');
-      ctx.beginPath(); ctx.arc(fx, fy, Math.max(3, 1.4 * s), 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(fx, fy, Math.max(2.5, 0.8 * s), 0, Math.PI * 2); ctx.fill();
     });
     const [r, g, b] = R.bodyLed, lit = r + g + b > 0;
     ctx.fillStyle = css('--dog'); ctx.strokeStyle = lit ? `rgb(${r},${g},${b})` : css('--dog-edge'); ctx.lineWidth = lit ? 4 : 2;
-    roundRect(ctx, -Wd / 2, -L / 2, Wd, L, 4 * s / 3); ctx.fill(); ctx.stroke();
-    // 머리와 눈 방향
-    ctx.fillStyle = css('--dog-head'); roundRect(ctx, -Wd / 2.6, -L / 2 - 5 * s, Wd / 1.3, 6 * s, 3); ctx.fill();
-    ctx.fillStyle = '#ff4040'; ctx.beginPath(); ctx.moveTo(0, -L / 2 - 7.5 * s); ctx.lineTo(-2 * s, -L / 2 - 4.8 * s); ctx.lineTo(2 * s, -L / 2 - 4.8 * s); ctx.closePath(); ctx.fill();
+    roundRect(ctx, -Wd / 2, -L / 2, Wd, L, GEOM.bodyH / 2 * s); ctx.fill(); ctx.stroke();
+    // 마이크로비트(등 뒤쪽)
+    ctx.fillStyle = '#111'; ctx.fillRect(-2.1 * s, 0.5 * s, 4.2 * s, 3.4 * s);
+    // 머리(넓은 판)와 정면 표시
+    const hz = -6.7 * s, hw = GEOM.headWid * s, hd = GEOM.headDepth * s;
+    ctx.fillStyle = css('--dog-head'); roundRect(ctx, -hw / 2, hz - hd / 2, hw, hd, hd / 2); ctx.fill();
+    ctx.fillStyle = '#f4f8ff'; ctx.fillRect(-hw * 0.42, hz - hd / 2 - 1.5, hw * 0.34, 2); ctx.fillRect(hw * 0.08, hz - hd / 2 - 1.5, hw * 0.34, 2);
     ctx.restore();
     // 말풍선
     if (R.bubble) {
@@ -93,33 +96,38 @@ export class View2D {
     const c = this.side, ctx = this.fit(c), R = this.robot;
     const W = c.clientWidth, H = c.clientHeight;
     ctx.clearRect(0, 0, W, H);
-    const s = Math.min(W / 40, H / 22), ground = H - 18;
+    // 코코아팹 공식 다리 시뮬레이터와 같은 비율(px→cm 0.045)로 그린 오른쪽 옆모습
+    const s = Math.min(W / 24, H / 15), ground = H - 14;
     ctx.strokeStyle = css('--line'); ctx.beginPath(); ctx.moveTo(0, ground); ctx.lineTo(W, ground); ctx.stroke();
     ctx.fillStyle = css('--muted'); ctx.font = '11px system-ui'; ctx.fillText('옆에서 본 모습 (오른쪽이 앞)', 8, 14);
-    const pose = R.bodyPose(), cx = W / 2;
-    const hipY = ground - pose.height * s;
-    const half = EST.bodyLen / 2 * s;
-    const front = { x: cx + half * Math.cos(pose.pitch), y: hipY - half * Math.sin(pose.pitch) };
-    const rear = { x: cx - half * Math.cos(pose.pitch), y: hipY + half * Math.sin(pose.pitch) };
-    const drawLeg = (hip, lg, color) => {
-      const L1 = EST.upperLeg * s, L2 = EST.lowerLeg * s;
+    const pose = R.bodyPose(), p = pose.pitch, cx = W / 2 - 1.2 * s;
+    const hipDrop = (96 - 80.5) * 0.045;                         // 엉덩이: 몸 중심보다 0.7cm 아래
+    const cy = ground - (pose.height + hipDrop) * s;              // 몸 중심
+    const toWorld = (dx, dy) => ({ x: cx + (dx * Math.cos(p) + dy * Math.sin(p)) * s, y: cy + (-dx * Math.sin(p) + dy * Math.cos(p)) * s });
+    const front = toWorld(GEOM.hipGap / 2, hipDrop), rear = toWorld(-GEOM.hipGap / 2, hipDrop);
+    const drawLeg = (hip, lg, c1, c2) => {
+      const L1 = GEOM.upper * s, L2 = GEOM.lower * s;
       const k = { x: hip.x + L1 * Math.sin(lg.sh), y: hip.y + L1 * Math.cos(lg.sh) };
       const f = { x: k.x + L2 * Math.sin(lg.sh + lg.kn), y: k.y + L2 * Math.cos(lg.sh + lg.kn) };
-      ctx.strokeStyle = color; ctx.lineWidth = Math.max(3, s * 1.1); ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(k.x, k.y); ctx.lineTo(f.x, f.y); ctx.stroke();
-      ctx.fillStyle = color; ctx.beginPath(); ctx.arc(k.x, k.y, s * 0.6, 0, Math.PI * 2); ctx.fill();
+      ctx.lineCap = 'round';
+      ctx.strokeStyle = c1; ctx.lineWidth = Math.max(4, s * 1.5); ctx.beginPath(); ctx.moveTo(hip.x, hip.y); ctx.lineTo(k.x, k.y); ctx.stroke();
+      ctx.strokeStyle = c2; ctx.lineWidth = Math.max(3, s * 1.0); ctx.beginPath(); ctx.moveTo(k.x, k.y); ctx.lineTo(f.x, f.y); ctx.stroke();
+      ctx.fillStyle = '#1f242c'; ctx.beginPath(); ctx.arc(k.x, k.y, s * 0.45, 0, Math.PI * 2); ctx.fill();
+      ctx.beginPath(); ctx.arc(hip.x, hip.y, s * 0.55, 0, Math.PI * 2); ctx.fill();
     };
-    // 뒤쪽(왼쪽 다리)을 흐리게, 앞쪽(오른쪽 다리)을 진하게
-    drawLeg(front, R.legs[0], css('--leg-far')); drawLeg(rear, R.legs[1], css('--leg-far'));
-    // 몸통
-    ctx.save(); ctx.translate(cx, hipY); ctx.rotate(-pose.pitch);
+    // 먼 쪽(왼쪽 다리)은 흐리게, 가까운 쪽(오른쪽 다리)은 진하게
+    drawLeg(front, R.legs[0], css('--leg-far'), css('--leg-far')); drawLeg(rear, R.legs[1], css('--leg-far'), css('--leg-far'));
+    ctx.save(); ctx.translate(cx, cy); ctx.rotate(-p);
     const [r, g, b] = R.bodyLed, lit = r + g + b > 0;
-    ctx.fillStyle = css('--dog'); ctx.strokeStyle = lit ? `rgb(${r},${g},${b})` : css('--dog-edge'); ctx.lineWidth = lit ? 4 : 2;
-    roundRect(ctx, -half - s, -3.5 * s, 2 * half + 2 * s, 5 * s, s); ctx.fill(); ctx.stroke();
-    ctx.fillStyle = css('--dog-head'); roundRect(ctx, half - s, -8 * s, 6 * s, 6 * s, s); ctx.fill();
-    ctx.fillStyle = '#222'; ctx.fillRect(half + 3.6 * s, -6.6 * s, 1.2 * s, 2.6 * s);
+    ctx.fillStyle = css('--dog'); ctx.strokeStyle = lit ? `rgb(${r},${g},${b})` : css('--dog-edge'); ctx.lineWidth = lit ? 4 : 1.5;
+    roundRect(ctx, -GEOM.bodyLen / 2 * s, -GEOM.bodyH / 2 * s, GEOM.bodyLen * s, GEOM.bodyH * s, GEOM.bodyH / 2.2 * s); ctx.fill(); ctx.stroke();
+    // 머리: 몸 중심에서 앞으로 6.7cm, 위로 1.1cm (공식 측면도), 앞면에 LED 판
+    const hx = 6.7 * s, hy = -(80.5 - 57) * 0.045 * s, hw = GEOM.headDepth * s, hh = GEOM.headH * s;
+    ctx.fillStyle = css('--dog-head'); roundRect(ctx, hx - hw / 2, hy - hh / 2, hw, hh, hw / 3); ctx.fill();
+    const eyesOn = R.headFrame()[0].some(row => row.some(v => v));
+    ctx.fillStyle = eyesOn ? '#f4f8ff' : '#3a414a'; ctx.fillRect(hx + hw / 2 - 1, hy - hh * 0.36, 3, hh * 0.72);
     ctx.restore();
-    drawLeg(front, R.legs[3], css('--leg')); drawLeg(rear, R.legs[2], css('--leg'));
+    drawLeg(front, R.legs[3], css('--leg'), css('--leg2')); drawLeg(rear, R.legs[2], css('--leg'), css('--leg2'));
   }
 }
 
@@ -128,13 +136,15 @@ export function drawEyes(canvas, frames) {
   if (w < 60 || h < 30) return;   // 숨겨져 있을 때
   if (canvas.width !== Math.round(w * dpr)) { canvas.width = Math.round(w * dpr); canvas.height = Math.round(h * dpr); }
   const ctx = canvas.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  ctx.fillStyle = '#101418'; ctx.fillRect(0, 0, w, h);
-  const cell = Math.min((w - 30) / 16, (h - 12) / 8), gap = 14;
+  ctx.fillStyle = '#0c0f12'; ctx.fillRect(0, 0, w, h);
+  const cell = Math.min((w - 40) / 16, (h - 12) / 8), gap = 24;
   const x0 = (w - (16 * cell + gap)) / 2, y0 = (h - 8 * cell) / 2;
-  // 로보독을 마주 본 모습: 화면 왼쪽 = 로보독 오른눈
+  // 로보독을 마주 본 모습: 화면 왼쪽 = 로보독 오른눈. 가운데 = AI 카메라
+  ctx.fillStyle = '#050607'; ctx.beginPath(); ctx.arc(w / 2, y0 + cell * 2, cell * 0.7, 0, Math.PI * 2); ctx.fill();
+  ctx.strokeStyle = '#3a414a'; ctx.lineWidth = 1.5; ctx.stroke();
   [frames[1], frames[0]].forEach((m, e) => {
     for (let y = 0; y < 8; y++) for (let x = 0; x < 8; x++) {
-      ctx.fillStyle = m[y][x] ? '#5fd3ff' : '#1d2730';
+      ctx.fillStyle = m[y][x] ? '#f4f8ff' : '#262c33';
       ctx.beginPath(); ctx.arc(x0 + e * (8 * cell + gap) + (x + 0.5) * cell, y0 + (y + 0.5) * cell, cell * 0.38, 0, Math.PI * 2); ctx.fill();
     }
   });

@@ -5,13 +5,18 @@
 // ------------------------------------------------------------
 // 상수 (추정치 — 실물 측정 후 조정)
 // ------------------------------------------------------------
+import { GEOM, lengthToAngles, legFromAngles } from './legs.js';
+export { GEOM };
+
 export const EST = {
-  walkCmPerSecAt100: 15,   // 속도 100일 때 걷는 속도(cm/s)
-  turnDegPerSecAt100: 120, // 회전 빠르기 100일 때(°/s)
-  bodyLen: 16, bodyWid: 9, // 몸통 크기(cm)
-  upperLeg: 5.5, lowerLeg: 5.5,
+  walkCmPerSecAt100: 15,   // 속도 100일 때 걷는 속도(cm/s) — 추정치
+  turnDegPerSecAt100: 120, // 회전 빠르기 100일 때(°/s) — 추정치
+  servoDegPerSec: 450,     // 관절이 움직이는 빠르기(MG90 서보 기준 추정)
+  bodyLen: GEOM.bodyLen, bodyWid: GEOM.bodyWid,   // 비율은 공식 시뮬레이터, 절대 크기는 추정
+  upperLeg: GEOM.upper, lowerLeg: GEOM.lower,
+  noseOffset: GEOM.bodyLen / 2 + 2,               // 몸 중심 → 머리 앞(거리센서) cm
   tofMax: 255,             // 거리센서 최대값(값 단위를 cm로 가정)
-  radius: 9,               // 충돌 반경(cm)
+  radius: 7,               // 충돌 반경(cm)
 };
 
 // 다리 번호: 확장 소스의 순서 (0 왼앞, 1 왼뒤, 2 오른뒤, 3 오른앞)
@@ -158,7 +163,10 @@ export class Robot {
     this.bubble = null; this.bubbleT = 0;
     this.fallen = false; this.bumped = false;
     this.trail = [{ x: this.x, y: this.y }];
-    this.legs = this.computeLegs(0);
+    const stand = lengthToAngles(69, 0);
+    this.joint = [0, 1, 2, 3].map(() => stand.slice());   // 지금 관절 각도 [어깨, 무릎](도)
+    this.raised = [false, false, false, false];
+    this.legs = this.joint.map(([s, e]) => legFromAngles(s, e));
   }
   setMode(m) {
     // 확장의 checkModeChange와 같이, 모드가 바뀌면 이동·회전 값이 초기화됨
@@ -175,82 +183,51 @@ export class Robot {
     if (this.headMode === 0) return [blank8(), blank8()];
     return [this.headL, this.headR];
   }
-  // 다리 각도 계산: 각 다리 {sh: 어깨각(아래 기준, 앞+), kn: 무릎각, h: 엉덩이 높이 cm, fx: 발 앞뒤 cm, lift}
-  ik(hInternal, fbInternal, front) {
-    const h = 4 + (clamp(hInternal, 20, 90) - 20) / 70 * 6.5;
-    const fx = clamp(fbInternal, -90, 90) / 90 * 4;
-    return this.ikCm(h, fx, front);
-  }
-  ikCm(h, fx, front) {
-    const L1 = EST.upperLeg, L2 = EST.lowerLeg;
-    let d = Math.hypot(fx, h); d = Math.min(d, L1 + L2 - 0.05);
-    const base = Math.atan2(fx, h);
-    const a = Math.acos(clamp((L1 * L1 + d * d - L2 * L2) / (2 * L1 * d), -1, 1));
-    const s = front ? -1 : 1;                       // 앞다리 무릎은 뒤로, 뒷다리 무릎은 앞으로
-    const sh = base + s * a;
-    const kneeX = L1 * Math.sin(sh), kneeY = L1 * Math.cos(sh);
-    const kn = Math.atan2(fx - kneeX, h - kneeY) - sh;
-    return { sh, kn, h, fx };
-  }
-  computeLegs(dt) {
-    const out = [];
-    const walking = this.mode === 1 && (this.vel !== 0 || this.rotTarget !== null && Math.abs(this.rotDelta()) > 1);
-    if (walking) {
-      const spd = Math.max(Math.abs(this.vel), this.rotTarget !== null ? this.rotVel : 0) / 100;
-      this.phase += dt * (3 + 5 * spd) ;
-    }
-    for (let i = 0; i < 4; i++) {
-      const front = (i === 0 || i === 3);
-      let leg;
-      if (this.mode === 3) {
-        const [sd, kd] = this.motorA[i];
-        const sh = sd * Math.PI / 180, kn = kd * Math.PI / 180;
-        const L1 = EST.upperLeg, L2 = EST.lowerLeg;
-        const fx = L1 * Math.sin(sh) + L2 * Math.sin(sh + kn), h = L1 * Math.cos(sh) + L2 * Math.cos(sh + kn);
-        leg = { sh, kn, h, fx };
-      } else if (this.mode === 2) {
-        leg = this.ik(this.legHF[i][0], this.legHF[i][1], front);
-      } else if (this.mode === 4) {
-        leg = this.postureLeg(i, front);
-      } else {
-        let h = 4 + (clamp(this.walkH[i], 20, 90) - 20) / 70 * 6.5, fx = 0;
-        if (walking) {
-          const off = (i === 0 || i === 2) ? 0 : Math.PI;      // 대각선 두 다리씩(트롯)
-          const p = this.phase + off;
-          const dir = this.vel >= 0 ? 1 : -1;
-          fx = 2.2 * Math.sin(p) * (this.vel !== 0 ? dir : (i < 2 ? 1 : -1));
-          const lift = Math.max(0, Math.cos(p)) * 1.4;
-          h -= lift;
-        }
-        leg = this.ikCm(h, fx, front);
-      }
-      out.push(leg);
-    }
-    return out;
-  }
-  postureLeg(i, front) {
-    const t = this.postureT, k = Math.min(1, t / 0.8);   // 0.8초 동안 자세로 이동
-    const lerp = (a, b) => a + (b - a) * k;
-    const P = this.posture;
-    if (P === 0) return this.ik(69, 0, front);
-    if (P === 1) return front ? this.ik(lerp(69, 80), lerp(0, 15), front) : this.ik(lerp(69, 22), lerp(0, -30), front);   // 앉기
-    if (P === 2) return front ? this.ik(lerp(69, 24), lerp(0, -10), front) : this.ik(lerp(69, 90), lerp(0, 10), front);   // 물구나무
-    if (P === 3) return front ? this.ik(lerp(69, 30), lerp(0, 70), front) : this.ik(lerp(69, 88), lerp(0, -10), front);   // 기지개
-    if (P === 4) {                                                                                                    // 인사(오른 앞다리 흔들기)
-      if (i === 3 && t > 0.8) {
-        const wave = Math.sin((t - 0.8) * 8) * 0.3;
-        return { sh: 1.9 + wave, kn: -0.7, h: 2, fx: 6, raised: true };   // 앞으로 들어 흔들기
-      }
-      return front ? this.ik(lerp(69, 80), lerp(0, 10), front) : this.ik(lerp(69, 30), lerp(0, -25), front);
-    }
-    return this.ik(69, 0, front);
-  }
   rotDelta() {
     if (this.rotTarget === null) return 0;
     return this.rotTarget - this.controlYaw;
   }
+  isWalking() {
+    return this.mode === 1 && (this.vel !== 0 || (this.rotTarget !== null && Math.abs(this.rotDelta()) > 1));
+  }
+  // 모드별 목표 관절 각도 (다리 0 왼앞, 1 왼뒤, 2 오른뒤, 3 오른앞)
+  targets(dt) {
+    this.raised = [false, false, false, false];
+    if (this.mode === 3) return this.motorA.map(([s, k]) => [s, k]);
+    if (this.mode === 2) return this.legHF.map(([h, f]) => lengthToAngles(h, f));
+    if (this.mode === 4) return [0, 1, 2, 3].map(i => this.postureTarget(i));
+    // 걷기 모드
+    if (this.isWalking()) {
+      const spd = Math.max(Math.abs(this.vel), this.rotTarget !== null ? this.rotVel : 0) / 100;
+      this.phase += dt * (4 + 6 * spd);
+      const dir = this.vel > 0 ? 1 : this.vel < 0 ? -1 : 0;
+      return [0, 1, 2, 3].map(i => {
+        const off = (i === 0 || i === 2) ? 0 : Math.PI;      // 대각선 두 다리씩(트롯)
+        const p = this.phase + off;
+        // 제자리 회전은 좌우 다리가 반대로 움직임
+        const turn = this.rotTarget !== null && dir === 0 ? (i < 2 ? 1 : -1) * Math.sign(this.rotDelta() || 1) : 0;
+        const reach = -32 * Math.sin(p) * (dir || turn);      // 발끝(음수 = 앞)
+        const lift = Math.max(0, Math.cos(p)) * 22;           // 앞으로 내딛는 동안 발을 듦
+        return lengthToAngles(this.walkH[i] - lift, reach);
+      });
+    }
+    return this.walkH.map(h => lengthToAngles(h, 0));
+  }
+  postureTarget(i) {
+    const front = (i === 0 || i === 3);
+    const P = this.posture, t = this.postureT;
+    const L = (h, r) => lengthToAngles(h, r);
+    if (P === 1) return front ? L(90, 0) : L(20, 0);                // 앉기 (근사)
+    if (P === 2) return front ? L(20, 0) : L(90, 0);                // 물구나무 (근사)
+    if (P === 3) return front ? L(30, -70) : L(90, 10);             // 기지개 (근사)
+    if (P === 4) {                                                  // 인사 (근사): 앉은 채 오른 앞다리를 들어 흔들기
+      if (i === 3 && t > 0.7) { this.raised[3] = true; return [90, -35 + Math.sin((t - 0.7) * 7) * 30]; }
+      return front ? L(90, 0) : L(20, 0);
+    }
+    return L(69, 0);                                                // 준비
+  }
   step(dt) {
-    if (this.fallen) { this.legs = this.computeLegs(0); return; }
+    if (this.fallen) return;
     this.postureT += dt; this.exprT += dt;
     if (this.bubble) { this.bubbleT -= dt; if (this.bubbleT <= 0) this.bubble = null; }
     // 회전
@@ -272,16 +249,32 @@ export class Robot {
       if (Math.hypot(last.x - this.x, last.y - this.y) > 1) { this.trail.push({ x: this.x, y: this.y }); if (this.trail.length > 2000) this.trail.shift(); }
       if (this.world.offTable(this.x, this.y)) { this.fallen = true; this.vel = 0; }
     }
-    this.legs = this.computeLegs(dt);
+    // 관절: MG90 서보처럼 정해진 빠르기로 목표 각도를 따라감
+    const tg = this.targets(dt), maxStep = EST.servoDegPerSec * dt;
+    for (let i = 0; i < 4; i++) for (let k = 0; k < 2; k++) {
+      const d = tg[i][k] - this.joint[i][k];
+      this.joint[i][k] += Math.sign(d) * Math.min(Math.abs(d), maxStep);
+    }
+    this.legs = this.joint.map(([s, e], i) => Object.assign(legFromAngles(s, e), { raised: this.raised[i] }));
   }
-  // 몸 높이·앞뒤 기울기(라디안)
+  // 몸 높이·앞뒤 기울기(라디안). 들어 올린 다리는 몸을 받치지 않음
   bodyPose() {
-    const f = (this.legs[0].h + this.legs[3].h) / 2, r = (this.legs[1].h + this.legs[2].h) / 2;
-    const fr = this.legs[3].raised ? this.legs[0].h : f;
-    return { height: (fr + r) / 2, pitch: Math.atan2(fr - r, EST.bodyLen) };
+    const L = this.legs;
+    const fr = L[3].raised ? L[0].h : (L[0].h + L[3].h) / 2;
+    const r = (L[1].h + L[2].h) / 2;
+    const pitch = Math.atan2(fr - r, GEOM.hipGap);
+    let height = Math.max(0.5, (fr + r) / 2);
+    // 머리 앞 아래 모서리(몸 중심에서 앞 8.05cm, 아래 1.19cm)와 몸통 끝이 바닥 아래로 내려가지 않게 몸을 들어 올림
+    const hipDrop = 0.7, center = height + hipDrop * Math.cos(pitch);
+    const lowest = Math.min(
+      center + 8.05 * Math.sin(pitch) - 1.19 * Math.cos(pitch),
+      center - (GEOM.bodyLen / 2) * Math.sin(pitch) - (GEOM.bodyH / 2) * Math.cos(pitch),
+      center + (GEOM.bodyLen / 2) * Math.sin(pitch) - (GEOM.bodyH / 2) * Math.cos(pitch));
+    if (lowest < 0) height -= lowest;
+    return { height, pitch };
   }
   tof() {
-    return this.world.raycast(this.x, this.y, this.heading, EST.bodyLen / 2, EST.tofMax);
+    return this.world.raycast(this.x, this.y, this.heading, EST.noseOffset, EST.tofMax);
   }
 }
 
