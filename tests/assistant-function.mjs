@@ -42,7 +42,29 @@ check('시스템 프롬프트 캐시(cache_control)', Array.isArray(last.body.sy
 check('키는 서버에서만 헤더로 전송', last.headers['x-api-key'] === 'test-key' || String(last.headers['authorization'] || '').includes('test-key'), Object.keys(last.headers).filter(k => /key|auth/i.test(k)).join(','));
 
 r = await call({ request: '앞으로', classCode: 'wrong' });
-check('수업 코드 틀리면 401', r.status === 401);
+check('수업 코드 틀리면 401', r.status === 401 && r.body.error === 'class_code');
+r = await call({ request: '앞으로' }, '7.7.7.7');
+check('수업 코드를 안 보내면 401(코드 없이는 사용 불가)', r.status === 401 && r.body.error === 'class_code');
+r = await call({ request: '앞으로', classCode: '' }, '7.7.7.7');
+check('빈 수업 코드도 401', r.status === 401);
+r = await call({ request: '앞으로', classCode: ' 1234 ' }, '7.7.7.7');
+check('앞뒤 공백은 무시하고 맞으면 200', r.status === 200);
+let locked = null;
+for (let i = 0; i < 7; i++) { const x = await call({ request: '앞으로', classCode: 'g' + i }, '8.8.8.8'); if (x.status === 429 && x.body.error === 'too_many_wrong_codes') locked = i; }
+check('수업 코드를 5번 틀리면 잠김(429 too_many_wrong_codes)', locked !== null && locked >= 5, String(locked));
+r = await call({ request: '앞으로', classCode: '1234' }, '8.8.8.8');
+check('잠긴 뒤에는 맞는 코드도 잠시 막힘', r.status === 429);
+const get = async () => (await handler(new Request('http://localhost/api/robodog-assistant'), { ip: '9.9.9.9' })).json();
+let g = await get();
+check('GET: 키·코드 모두 있으면 configured + needsCode', g.configured === true && g.needsCode === true);
+const savedCode = process.env.ASSISTANT_CLASS_CODE; delete process.env.ASSISTANT_CLASS_CODE;
+g = await get();
+check('GET: 수업 코드 설정이 없으면 configured=false(AI 꺼짐) + 안내', g.configured === false && g.needsCode === true && g.setup === 'no_class_code');
+r = await call({ request: '앞으로' }, '10.0.0.1');
+check('수업 코드 설정이 없으면 코드 없이는 못 씀(503 not_configured)', r.status === 503 && r.body.error === 'not_configured');
+r = await call({ request: '앞으로', classCode: '' }, '10.0.0.2');
+check('서버에 코드가 없을 때 빈 코드로도 못 씀', r.status === 503);
+process.env.ASSISTANT_CLASS_CODE = savedCode;
 r = await call({ request: 'x'.repeat(700), classCode: '1234' });
 check('너무 긴 요청 400', r.status === 400 && r.body.error === 'too_long');
 mode = 'refusal'; r = await call({ request: '이상한 요청', classCode: '1234' }, '2.2.2.2');

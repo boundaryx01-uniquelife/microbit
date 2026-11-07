@@ -1,15 +1,24 @@
 // 로보독 도우미 (Netlify Function) — 자연어 요청 → 로보독 MakeCode JavaScript
 // 필요한 환경 변수(Netlify 사이트 설정 → Environment variables):
 //   ANTHROPIC_API_KEY   (필수) Claude API 키. 브라우저에는 절대 노출되지 않음
-//   ASSISTANT_CLASS_CODE (권장) 수업 코드. 설정하면 이 코드를 아는 사람만 사용 가능(요금 보호)
+//   ASSISTANT_CLASS_CODE (필수) 수업 코드. 이 코드를 아는 사람만 AI 도우미를 쓸 수 있음(요금 보호).
+//                        설정하지 않으면 AI 도우미는 꺼져 있고(503 not_configured) 화면은 규칙 기반 도우미만 씀.
 //   ROBODOG_MODEL       (선택) 기본 claude-sonnet-5-5 (빠르고 저렴. 더 어려운 요청이 많으면 claude-opus-5-5)
-// 키가 없으면 503 { error: "not_configured" } 를 돌려주고, 화면은 규칙 기반 도우미로 바뀜.
+// 키 또는 수업 코드가 없으면 503 { error: "not_configured" } 를 돌려주고, 화면은 규칙 기반 도우미로 바뀜.
+import { createHash, timingSafeEqual } from "node:crypto";
 import Anthropic from "@anthropic-ai/sdk";
 
 const MODEL = process.env.ROBODOG_MODEL || "claude-sonnet-5-5";   // 함수 시간 제한(약 10초) 안에 답하도록 빠른 모델
 const MAX_INPUT = 600;              // 요청 글자 수 제한(학생 입력)
 const RATE_PER_MIN = 6;             // 같은 IP 1분당 요청 수(함수 인스턴스 단위의 간단한 제한)
 const hits = new Map();
+const MAX_WRONG = 5;                // 같은 IP가 수업 코드를 틀릴 수 있는 횟수(WRONG_WINDOW 안에서)
+const WRONG_WINDOW = 10 * 60000;    // 10분
+const wrong = new Map();
+const classCode = () => String(process.env.ASSISTANT_CLASS_CODE || "").trim();
+const isReady = () => !!process.env.ANTHROPIC_API_KEY && classCode() !== "";   // 키와 수업 코드가 모두 있어야 켜짐
+const sha = (t) => createHash("sha256").update(String(t)).digest();
+const codeMatches = (given) => timingSafeEqual(sha(String(given || "").trim()), sha(classCode()));
 
 // 로보독 블록 문법 — kocoafab/robodog 2.0.1, kocoafab/robodog-radio 소스에서 옮김(바뀌지 않는 부분이라 캐시됨)
 const SYSTEM = `당신은 초등학생과 선생님을 돕는 "로보독 코딩 도우미"입니다.
@@ -88,23 +97,27 @@ const json = (status, body) => new Response(JSON.stringify(body), {
 });
 
 export default async (req, context) => {
-  if (req.method === "GET") return json(200, { ok: true, configured: !!process.env.ANTHROPIC_API_KEY, needsCode: !!process.env.ASSISTANT_CLASS_CODE });
+  if (req.method === "GET") return json(200, { ok: true, configured: isReady(), needsCode: true, ...(process.env.ANTHROPIC_API_KEY && !classCode() ? { setup: "no_class_code" } : {}) });
   if (req.method !== "POST") return json(405, { error: "method" });
-  if (!process.env.ANTHROPIC_API_KEY) return json(503, { error: "not_configured" });
+  if (!isReady()) return json(503, { error: "not_configured" });
 
   let body;
   try { body = await req.json(); } catch { return json(400, { error: "bad_json" }); }
-  const request = String(body.request || "").trim();
-  const currentCode = String(body.currentCode || "").slice(0, 6000);
-  if (!request) return json(400, { error: "empty" });
-  if (request.length > MAX_INPUT) return json(400, { error: "too_long", max: MAX_INPUT });
-  if (process.env.ASSISTANT_CLASS_CODE && body.classCode !== process.env.ASSISTANT_CLASS_CODE) return json(401, { error: "class_code" });
-
-  // 간단한 요청 수 제한(서버리스 인스턴스마다 따로 셈 — 완전한 보호는 아님)
+  // 간단한 요청 수 제한(서버리스 인스턴스마다 따로 셈 — 완전한 보호는 아님). 수업 코드 확인보다 먼저 세어서 코드 추측도 막음
   const ip = (context && context.ip) || req.headers.get("x-nf-client-connection-ip") || "unknown";
   const now = Date.now(), list = (hits.get(ip) || []).filter(t => now - t < 60000);
   if (list.length >= RATE_PER_MIN) return json(429, { error: "rate_limited" });
   list.push(now); hits.set(ip, list);
+
+  // 수업 코드: 모든 요청에 필요. 틀린 횟수가 많으면 잠시 막음(코드 알아맞히기 방지)
+  const bad = (wrong.get(ip) || []).filter(t => now - t < WRONG_WINDOW);
+  if (bad.length >= MAX_WRONG) return json(429, { error: "too_many_wrong_codes" });
+  if (!codeMatches(body.classCode)) { bad.push(now); wrong.set(ip, bad); return json(401, { error: "class_code" }); }
+
+  const request = String(body.request || "").trim();
+  const currentCode = String(body.currentCode || "").slice(0, 6000);
+  if (!request) return json(400, { error: "empty" });
+  if (request.length > MAX_INPUT) return json(400, { error: "too_long", max: MAX_INPUT });
 
   const user = currentCode
     ? `지금 코드:\n\`\`\`\n${currentCode}\n\`\`\`\n\n요청: ${request}\n(지금 코드를 고치는 요청이면 고친 전체 코드를, 새 요청이면 새 코드를 주세요.)`
