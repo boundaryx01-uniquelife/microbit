@@ -345,7 +345,12 @@ function build(data) {
 
   R.image = (s, d) => {
     title(s, d.title);
-    const pts = d.points || [], hasSide = pts.length > 0 || !!d.callout, ah = BOT - TOP - 0.05;
+    const pts = d.points || [], hasSide = pts.length > 0 || !!d.callout;
+    const TOP = d.url ? 2.85 : 1.7, ah = BOT - TOP - 0.05;
+    if (d.url) { // 주소 한 줄(크게)
+      card(s, X0, 1.7, W, 1.0, TINT, { line: P });
+      T(s, [{ t: d.url, bold: true }], X0 + 0.2, 1.75, W - 0.4, 0.9, { max: 44, min: 30, color: P, align: 'center' });
+    }
     if (!hasSide) { img(s, d.image, X0, TOP, W, ah, 'center'); return; }
     const many = pts.length >= 5, gap = many ? 0.12 : 0.2;
     const iw = many ? 5.0 : pts.length >= 4 ? 5.2 : pts.length >= 3 ? 6.0 : 7.5, sx = X0 + iw + 0.4, sw = W - iw - 0.4;
@@ -435,15 +440,17 @@ function build(data) {
   R.checklist = (s, d) => {
     title(s, d.title);
     const items = d.items || [], n = items.length;
-    const grid = n >= 4, cols = grid ? 2 : 1, rowsN = Math.ceil(n / cols), gx = 0.3, gy = grid ? 0.3 : 0.25;
-    const cw = (W - gx * (cols - 1)) / cols, avail = grid ? 5.0 : 5.0;
-    const h = Math.min(grid ? 2.3 : 1.5, (avail - gy * (rowsN - 1)) / rowsN);
+    // 웹과 같게: 짧은 4개만 2×2, 나머지는 칸을 글 길이에 맞춘 줄 목록(글자 크게)
+    const grid = n === 4 && items.every((t) => String(t).length <= 12), cols = grid ? 2 : 1, rowsN = Math.ceil(n / cols), gx = 0.3, gy = grid ? 0.3 : 0.2;
+    const cw = grid ? (W - gx) / 2 : Math.min(W, 10.6), avail = 5.0;
+    const h = Math.min(grid ? 2.0 : n <= 3 ? 1.35 : 1.1, (avail - gy * (rowsN - 1)) / rowsN);
+    const totalH = rowsN * h + (rowsN - 1) * gy, y0 = 1.75 + Math.max(0, (avail - totalH) / 2), x0 = grid ? X0 : X0 + (W - cw) / 2;
     items.forEach((t, i) => {
-      const x = X0 + (i % cols) * (cw + gx), y = 1.75 + Math.floor(i / cols) * (h + gy);
+      const x = x0 + (i % cols) * (cw + gx), y = y0 + Math.floor(i / cols) * (h + gy);
       card(s, x, y, cw, h, BG);
-      const cd = Math.min(0.8, h - 0.4);
+      const cd = Math.min(0.6, h - 0.4);
       checkbox(s, x + 0.35, y + (h - cd) / 2, cd, P);
-      T(s, [{ t, bold: true }], x + 0.35 + cd + 0.35, y + 0.08, cw - cd - 1.0, h - 0.16, { max: 30 });
+      T(s, [{ t, bold: true }], x + 0.35 + cd + 0.35, y + 0.06, cw - cd - 1.0, h - 0.12, { max: 34 });
     });
   };
 

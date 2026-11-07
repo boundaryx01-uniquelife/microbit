@@ -36,7 +36,8 @@
     <button id="prev" type="button" aria-label="이전 슬라이드"><span aria-hidden="true">◀</span><span class="tx"> 이전</span></button>
     <span id="counter" class="counter" aria-label="현재 슬라이드">1 / 1</span>
     <button id="next" type="button" class="primary" aria-label="다음 슬라이드"><span class="tx">다음 </span><span aria-hidden="true">▶</span></button>
-    <select id="chsel" aria-label="차시 바로가기"></select>
+    <select id="chsel" aria-label="교시 바로가기"></select>
+    <button id="ovbtn" type="button" aria-label="슬라이드 목록 열기 (G)" aria-haspopup="dialog"><span aria-hidden="true">▦</span><span class="tx"> 목록</span></button>
     <span class="keyhint" aria-hidden="true">← → 키로 넘겨요</span>
     <span class="grow"></span>
     <button id="more" type="button" class="morebtn" aria-label="더 보기 (차시 이동·교사 모드·전체 화면)" aria-expanded="false" aria-controls="bar">⋯</button>
@@ -45,6 +46,10 @@
     <button id="teacher" type="button" aria-pressed="false" aria-label="교사 모드 (N)">교사 모드</button>
     <button id="fs" type="button" aria-label="전체 화면 (F)">전체 화면</button>
   </div>
+<dialog id="ovdlg" class="ovdlg" aria-label="슬라이드 목록">
+  <div class="ovhead"><h2>슬라이드 목록 <small>누르면 그 장으로 가요 · G 키 또는 Esc 로 닫기</small></h2><button type="button" class="btn primary" id="ovclose">닫기</button></div>
+  <div id="ovbody" class="ovbody"></div>
+</dialog>
 </div>
 <dialog id="syncdlg" class="syncdlg" aria-labelledby="syncttl">
   <h2 id="syncttl">학생 화면 연결</h2>

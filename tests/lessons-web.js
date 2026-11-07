@@ -188,6 +188,41 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
     if (r.fs) check('전체 화면: 무대가 화면을 가득 채움', r.w >= r.iw - 12 && r.h >= r.ih - 8, JSON.stringify(r)); else console.log('  (이 환경은 전체 화면을 지원하지 않아 건너뜀)');
     await f.close(); }
 
+  // 교사 모드: 조작 막대 한 줄(1280·1024), 노트 글자 17px 이상(1280 · 휴대폰), 슬라이드 목록(G) 열기·이동
+  { const PINH = '9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0';
+    for (const [w, h] of [[1280, 720], [1024, 768]]) {
+      const c2 = await b.newContext({ viewport: { width: w, height: h } }); const t = await c2.newPage(); t.on('pageerror', e => errs.push(e.message));
+      await t.addInitScript(k => { localStorage.setItem('lessonTeacherOK', k); localStorage.setItem('lessonTeacher', '1'); }, PINH);
+      await t.goto(L + '?l=8차시#40'); await t.waitForSelector('.slide');
+      const m = await t.evaluate(() => {
+        const bar = document.getElementById('bar'), bb = bar.getBoundingClientRect();
+        const tops = [...bar.children].filter(e => e.offsetParent && e.getBoundingClientRect().height).map(e => Math.round(e.getBoundingClientRect().top + e.getBoundingClientRect().height / 2));
+        const nb = document.getElementById('notesbody'), p = nb.querySelector('p');
+        return { h: bb.height, spread: Math.max(...tops) - Math.min(...tops), notes: parseFloat(getComputedStyle(p).fontSize), right: Math.max(...[...bar.children].filter(e => e.offsetParent).map(e => e.getBoundingClientRect().right)), iw: innerWidth, sw: document.documentElement.scrollWidth };
+      });
+      check(`교사 모드 ${w}px: 조작 막대가 한 줄(높이 ≤ 80, 가로 넘침 없음)`, m.h <= 80 && m.spread <= 4 && m.right <= m.iw && m.sw <= m.iw, JSON.stringify(m));
+      check(`교사 모드 ${w}px: 교사 노트 글자 17px 이상`, m.notes >= 17, JSON.stringify(m));
+      if (w === 1280) {
+        check('목록 단추가 보이고 이름이 있음(aria-label)', await t.isVisible('#ovbtn') && /목록/.test(await t.getAttribute('#ovbtn', 'aria-label')));
+        await t.keyboard.press('g'); await t.waitForSelector('#ovdlg[open]');
+        const o = await t.evaluate(() => ({ sec: document.querySelectorAll('#ovbody .ovch').length, btn: document.querySelectorAll('#ovbody button[data-i]').length, cur: document.querySelector('#ovbody [aria-current]').textContent, fs: parseFloat(getComputedStyle(document.querySelector('#ovbody button span')).fontSize), min: Math.min(...[...document.querySelectorAll('#ovbody button, #ovbody h3')].map(e => parseFloat(getComputedStyle(e).fontSize))) }));
+        check('G 키: 목록이 교시별 묶음(8)·장 91개로 열리고 현재 장 표시, 글자 18px 이상', o.sec === 8 && o.btn === 91 && o.cur.startsWith('40') && o.min >= 18, JSON.stringify(o));
+        await t.click('#ovbody button[data-i="59"]');
+        check('목록에서 눌러 60장으로 이동하고 닫힘', (await t.textContent('#counter')).trim() === '60 / 91' && new URL(t.url()).hash === '#60' && !(await t.evaluate(() => document.getElementById('ovdlg').open)));
+        await t.keyboard.press('g'); await t.waitForSelector('#ovdlg[open]'); await t.keyboard.press('Escape');
+        check('Esc 로 목록 닫기', !(await t.evaluate(() => document.getElementById('ovdlg').open)));
+        const bs = await t.evaluate(() => ({ btn: parseFloat(getComputedStyle(document.getElementById('next')).fontSize), cnt: parseFloat(getComputedStyle(document.getElementById('counter')).fontSize) }));
+        check('조작 막대 글자 크기(버튼 20px·번호 24px 이상)', bs.btn >= 20 && bs.cnt >= 24, JSON.stringify(bs));
+      }
+      await c2.close();
+    }
+    const c3 = await b.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, isMobile: true }); const t3 = await c3.newPage(); t3.on('pageerror', e => errs.push(e.message));
+    await t3.addInitScript(k => { localStorage.setItem('lessonTeacherOK', k); localStorage.setItem('lessonTeacher', '1'); }, PINH);
+    await t3.goto(L + '?l=4차시#43'); await t3.waitForSelector('.slide');
+    const pn = await t3.evaluate(() => { const p = document.querySelector('#notesbody p'); return { fs: parseFloat(getComputedStyle(p).fontSize), vis: !document.getElementById('notes').hidden, pw: document.documentElement.scrollWidth - innerWidth }; });
+    check('휴대폰 교사 모드: 노트가 보이고 글자 17px 이상·가로 넘침 없음', pn.vis && pn.fs >= 17 && pn.pw <= 2, JSON.stringify(pn));
+    await c3.close(); }
+
   check('페이지 오류 없음', errs.length === 0, errs.join(' | '));
   await b.close();
   const fail = results.filter(x => !x).length;

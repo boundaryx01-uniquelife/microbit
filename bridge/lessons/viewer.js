@@ -95,7 +95,8 @@
       var side = '';
       if (s.points && s.points.length) side += '<ul class="bul">' + s.points.map(function (p) { return '<li>' + hl(p) + '</li>'; }).join('') + '</ul>';
       if (s.callout) side += '<div class="callout">' + hl(s.callout) + '</div>';
-      return '<div class="imgs">' + img(s.image, s.title) + '<div class="side">' + side + '</div></div>';
+      var url = s.url ? '<p class="urlline"><span aria-hidden="true">🌐</span> ' + esc(s.url) + '</p>' : '';
+      return url + '<div class="imgs' + (s.url ? ' has-url' : '') + '">' + img(s.image, s.title) + '<div class="side">' + side + '</div></div>';
     },
     table: function (s) {
       var rows = '<ul class="rows">' + s.rows.map(function (r, i) {
@@ -108,13 +109,14 @@
         return '<li>' + circle(i + 1, 'blue') + '<div><b>' + esc(st.text) + '</b>' + (st.sub ? '<small>' + esc(st.sub) + '</small>' : '') + '</div></li>';
       }).join('') + '</ol>';
       var tip = s.tip ? '<div class="callout">' + esc(s.tip) + '</div>' : '';
-      return '<div class="split code ' + (s.image ? 'has-img' : '') + '"><div class="stepcol">' + steps + tip + '</div>' + img(s.image, s.title) + '</div>';
+      return '<div class="split code ' + (s.image ? 'has-img' : '') + '"><div class="stepcol">' + steps + '</div>' + img(s.image, s.title) + '</div>' + tip;
     },
     core: function (s) {
       return '<ol class="core">' + s.items.map(function (t, i) { return '<li>' + circle(i + 1, 'yellow') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ol>';
     },
     checklist: function (s) {
-      return '<ul class="chk">' + s.items.map(function (t) { return '<li><span class="box" aria-hidden="true"></span><span>' + esc(t) + '</span></li>'; }).join('') + '</ul>';
+      var n = s.items.length, grid = n === 4 && s.items.every(function (t) { return String(t).length <= 12; });
+      return '<ul class="chk ' + (grid ? 'grid' : 'list') + ' n' + n + '">' + s.items.map(function (t) { return '<li><span class="box" aria-hidden="true"></span><span>' + esc(t) + '</span></li>'; }).join('') + '</ul>';
     }
   };
 
@@ -211,6 +213,27 @@
     document.addEventListener('fullscreenchange', function () { document.body.classList.toggle('is-fs', !!document.fullscreenElement); setTimeout(fit, 50); });
 
     $('more').onclick = function () { var b = $('bar'), on = !b.classList.contains('open'); b.classList.toggle('open', on); $('more').setAttribute('aria-expanded', on ? 'true' : 'false'); };
+    /* 슬라이드 목록(G): 교시별로 묶은 제목 격자, 눌러서 바로 가기 */
+    var ov = $('ovdlg');
+    function ovOpen() {
+      var html = '', by = {};
+      slides.forEach(function (s, i) { (by[s.ch] = by[s.ch] || []).push(i); });
+      var chs = (d.chapters && d.chapters.length) ? d.chapters : Object.keys(by).map(function (n) { return { n: +n, title: '' }; });
+      chs.forEach(function (c) {
+        if (!by[c.n]) return;
+        html += '<section class="ovch"><h3>' + c.n + '교시' + (c.title ? ' · ' + esc(c.title) : '') + '</h3><ol class="ovgrid">' + by[c.n].map(function (i) {
+          return '<li><button type="button" data-i="' + i + '"' + (i === cur ? ' aria-current="true"' : '') + '><b>' + (i + 1) + '</b><span>' + esc(slides[i].title) + '</span></button></li>';
+        }).join('') + '</ol></section>';
+      });
+      $('ovbody').innerHTML = html;
+      if (ov.showModal && !ov.open) ov.showModal(); else ov.setAttribute('open', '');
+      var c = $('ovbody').querySelector('[aria-current]'); if (c) { c.focus(); c.scrollIntoView({ block: 'center' }); }
+    }
+    function ovClose() { if (ov.close) ov.close(); else ov.removeAttribute('open'); }
+    $('ovbtn').onclick = ovOpen;
+    $('ovclose').onclick = ovClose;
+    $('ovbody').onclick = function (e) { var b = e.target.closest('button[data-i]'); if (b) { ovClose(); go(+b.getAttribute('data-i')); } };
+    ov.addEventListener('click', function (e) { if (e.target === ov) ovClose(); });
     $('prev').onclick = function () { go(cur - 1); };
     $('next').onclick = function () { go(cur + 1); };
     sel.onchange = function () {
@@ -269,6 +292,7 @@
       else if (k === 'End') { e.preventDefault(); go(total - 1); }
       else if (k === 'f' || k === 'F') { fs(); }
       else if (k === 'n' || k === 'N') { $('teacher').click(); }
+      else if (k === 'g' || k === 'G') { if (ov.open) ovClose(); else ovOpen(); }
     });
 
     var sx = 0, sy = 0, st0 = 0;
