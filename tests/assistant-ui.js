@@ -58,9 +58,12 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
     posted = JSON.parse(req.postData());
     return route.fulfill({ json: { code: '// AI 코드\nrobodog.gesture(deflib.Posture.Ready)\nrobodog.gesture(deflib.Posture.Stretch)', explanation: '기지개를 켜요.', warnings: ['테스트 경고'] } });
   });
-  check('키 있으면 AI 도우미 표시', (await p.textContent('#askMode')).includes('AI'));
+  check('키 있어도 코드 전에는 규칙 도우미 + 코드 안내', (await p.textContent('#askMode')).includes('수업 코드') && !(await p.textContent('#askMode')).startsWith('AI'));
   check('수업 코드 칸 보임', await p.isVisible('#askClass'));
-  await p.fill('#askClass', '1234'); await p.dispatchEvent('#askClass', 'change');
+  await p.fill('#askText', '앞으로 2초 걸어'); await p.click('#askBtn'); await p.waitForSelector('#askOut:not(.hidden)');
+  check('코드 없이 만들기 → AI에 요청을 보내지 않고 규칙 도우미', posted === null && (await p.textContent('#askCode')).includes('MoveDirection.Forward') && (await p.textContent('#askWarn')).includes('수업 코드를 넣어야'));
+  await p.fill('#askClass', '1234');
+  check('코드를 넣으면 AI 도우미로 바뀜', (await p.textContent('#askMode')).includes('AI 도우미 (Claude)'));
   await p.fill('#askText', '기지개 켜'); await p.check('#askFix');
   await p.click('#askBtn'); await p.waitForSelector('#askOut:not(.hidden)');
   check('AI 응답 표시', (await p.textContent('#askCode')).includes('Stretch') && (await p.textContent('#askWarn')).includes('테스트 경고'));
@@ -72,6 +75,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
     if (route.request().method() === 'GET') return route.fulfill({ json: { ok: true, configured: true, needsCode: true } });
     return route.fulfill({ status: 401, json: { error: 'class_code' } });
   });
+  await p.fill('#askClass', '9999');
   await p.fill('#askText', '앞으로 2초 걸어');
   await p.click('#askBtn'); await p.waitForSelector('#askOut:not(.hidden)');
   check('AI 실패 → 규칙 도우미 코드 + 이유 안내', (await p.textContent('#askCode')).includes('MoveDirection.Forward') && (await p.textContent('#askWarn')).includes('수업 코드'));
