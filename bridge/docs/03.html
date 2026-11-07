@@ -1,0 +1,360 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>8차시 전체형 — &quot;로보독과 함께하는 피지컬 AI 문제해결&quot; · 로보독 수업 자료</title><style>
+:root { --bg:#f6f7fb; --card:#fff; --ink:#18202e; --muted:#566079; --line:#dde2ee; --accent:#2f6fe4; --accent-ink:#fff; --code:#eef1f7; --mark:#fff4c2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#10141b; --card:#181d27; --ink:#e9edf5; --muted:#a3acc1; --line:#2b3242; --accent:#6b9bf5; --accent-ink:#0b0e14; --code:#222936; --mark:#4a3f12; } }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:17px;line-height:1.75}
+a{color:var(--accent)} header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.bar{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .home{font-weight:800;text-decoration:none;color:var(--ink)} .bar nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0}
+.bar nav a{white-space:nowrap;text-decoration:none;font-size:14px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
+.bar nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bar button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:30px;line-height:1.3;margin:10px 0 18px} h2{font-size:23px;margin:36px 0 10px;padding-top:6px;border-top:2px solid var(--line)} h3{font-size:19px;margin:24px 0 6px}
+code{background:var(--code);border-radius:5px;padding:1px 6px;font-size:.88em;font-family:ui-monospace,Consolas,"D2Coding",monospace}
+pre{background:var(--code);border-radius:10px;padding:12px 14px;overflow:auto;line-height:1.5} pre code{padding:0;background:none}
+.tbl{overflow-x:auto;margin:12px 0} table{border-collapse:collapse;width:100%;font-size:15.5px;line-height:1.6;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;text-align:left} th{background:var(--code)}
+blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0}
+li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:10px 0 26px}
+.cards a{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.cards a:hover{border-color:var(--accent)} .cards b{display:block;font-size:18px} .cards span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:4px}
+.dl{columns:2 260px;padding-left:20px} .note{color:var(--muted);font-size:14.5px}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media print { header,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
+  h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2} }
+</style></head>
+<body><header><div class="bar"><a class="home" href="../">🐶 로보독 AI 교실</a>
+<nav aria-label="수업 자료"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html" aria-current="page">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a></nav>
+<button onclick="print()">🖨 인쇄</button></div></header>
+<main><h1>8차시 전체형 — &quot;로보독과 함께하는 피지컬 AI 문제해결&quot;</h1>
+<ul>
+<li>대상: 초등 5&#126;6학년 (중·고는 <a href="06.html"><code>중·고 확장</code></a> 참고)</li>
+<li>시간: 8차시(40분 × 2차시 × 4블록)</li>
+<li>바탕 자료: 코코아팹×서울대 8차시(창의적 문제해결 4단계 틀, 활동·평가 구조)<ul>
+<li>스크래치 인공지능 교안 CH10&#126;12 미션을 <strong>마이크로비트 + AI 브리지</strong>로 재구성</li>
+</ul>
+</li>
+<li>연계 교과: 실과(소프트웨어·로봇), 도덕(정보 윤리), 사회(공동체·사회적 약자)
+※ 2026학년도 초5&#126;6은 2022 개정 교육과정 적용 학년입니다. 성취기준 코드·문구는 고시문과 학교 교육과정으로 확인해 적으세요
+  (원 교안 지도안의 코드는 확인용 참고).</li>
+<li>모든 블록: <strong>앞 5분 배부·연결, 뒤 5분 정리·회수</strong>를 시간에 포함했습니다.</li>
+</ul>
+<h2>전체 흐름</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>블록</th>
+<th>문제해결 단계</th>
+<th>주제</th>
+<th>코딩 개념</th>
+<th>예제</th>
+<th>활동지</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1-2</td>
+<td>문제 이해</td>
+<td>로보독 만나기·문제 찾기</td>
+<td>순차, 반복</td>
+<td><code>01_hello-robodog</code></td>
+<td>서약서, D(문제 정의)</td>
+</tr>
+<tr>
+<td>3-4</td>
+<td>아이디어 생성</td>
+<td>센서로 반응하는 로봇</td>
+<td>변수, 조건</td>
+<td><code>02_distance-rule</code></td>
+<td>E(아이디어 발산)</td>
+</tr>
+<tr>
+<td>5-6</td>
+<td>아이디어 선택·설계</td>
+<td>AI로 보는 로봇 + AI 윤리</td>
+<td>데이터, 학습, 라디오, 함수</td>
+<td><code>03_ai-traffic-dog</code></td>
+<td>A(실험), C(설계표)</td>
+</tr>
+<tr>
+<td>7-8</td>
+<td>개발·공유</td>
+<td>모둠 AI 로보독 프로젝트</td>
+<td>종합, 디버깅</td>
+<td><code>04_ai-team-template</code></td>
+<td>F(성찰), 루브릭</td>
+</tr>
+</tbody></table></div>
+<p>활동지 A&#126;F와 안전 서약서는 <a href="04.html"><code>활동지·평가</code></a>에 있습니다.</p>
+<hr>
+<h2>1-2차시: 문제 이해 — &quot;로보독, 너는 누구니?&quot; (80분)</h2>
+<p><strong>목표</strong>: 피지컬 AI 개념을 이해하고, 로보독이 도울 수 있는 생활 속 문제를 찾는다.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>시간</th>
+<th>활동</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5분</td>
+<td>배부·전원</td>
+</tr>
+<tr>
+<td>8분</td>
+<td>로봇 안전 서약서 작성(떨어뜨리지 않기, 속도 30 이하, 위험하면 멈춤, 얼굴 찍지 않기)</td>
+</tr>
+<tr>
+<td>12분</td>
+<td>피지컬 AI 이야기: 센서(눈) → AI(뇌) → 모터(몸). 로보독 부품 찾기</td>
+</tr>
+<tr>
+<td>8분</td>
+<td>로보독 이름 짓기, MakeCode 확장 <code>kocoafab/robodog</code> 추가(전체 입력)</td>
+</tr>
+<tr>
+<td>25분</td>
+<td>순차 코딩: 표정·소리·자세로 &quot;자기소개 장면&quot; → 반복 블록으로 3번 인사</td>
+</tr>
+<tr>
+<td>17분</td>
+<td>문제 카드 4영역(환경·사회적 약자·정서·재난) 고르기 → 2×2 매트릭스(중요성×해결 가능성) → 문제 정의 한 문장</td>
+</tr>
+<tr>
+<td>5분</td>
+<td>정리·회수</td>
+</tr>
+</tbody></table></div>
+<h2>3-4차시: 아이디어 생성 — &quot;규칙으로 반응하는 로봇&quot; (80분)</h2>
+<p><strong>목표</strong>: 센서와 조건문으로 상황에 반응하는 로보독을 만들고, 규칙 방식의 한계를 발견한다.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>시간</th>
+<th>활동</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5분</td>
+<td>배부·<code>02_distance-rule</code> 넣기</td>
+</tr>
+<tr>
+<td>10분</td>
+<td>센서값 관찰: A 버튼으로 거리 값 보기(로봇은 움직이지 않음)</td>
+</tr>
+<tr>
+<td>20분</td>
+<td>기준값 정하기 → B 버튼으로 걷기 시작/멈춤 → 가까우면 멈춤·경고 확인</td>
+</tr>
+<tr>
+<td>12분</td>
+<td>확장(선택): 가까우면 멈춘 뒤 <code>회전</code> 블록으로 90° 돌아서 다시 걷기</td>
+</tr>
+<tr>
+<td>13분</td>
+<td>아이디어 발산: 우리 모둠 문제를 돕기 위해 로보독이 <strong>무엇을 알아봐야</strong> 하나? (활동지 E)</td>
+</tr>
+<tr>
+<td>15분</td>
+<td>한계 토의: &quot;땅콩 그림·내 필통·위험 표지&quot;를 거리센서 규칙으로 알 수 있을까? → AI 필요성. (색은 색값 규칙으로도 가능하다는 의견이 나오면 인정하고 그림·물건으로 넘어가기)</td>
+</tr>
+<tr>
+<td>5분</td>
+<td>정리·회수</td>
+</tr>
+</tbody></table></div>
+<h2>5-6차시: 아이디어 선택·설계 — &quot;AI로 보는 로봇&quot; (80분)</h2>
+<p><strong>목표</strong>: 예시 데이터로 AI를 학습시키고, 인식 결과로 로보독을 제어하며, AI의 한계와 윤리를 생각한다.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>시간</th>
+<th>활동</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5분</td>
+<td>배부·연결(로보독 03, PC USB 마이크로비트), AI 브리지 열기</td>
+</tr>
+<tr>
+<td>8분</td>
+<td>AI는 어떻게 배울까? <strong>&quot;정답 이름표가 붙은 예시를 보여 주기&quot;</strong>(지도학습). AI 브리지는 새 사진을 모아 둔 예시들과 비교해 <strong>가장 비슷한 것들의 이름</strong>으로 답한다</td>
+</tr>
+<tr>
+<td>17분</td>
+<td><strong>AI 신호등 안내견</strong>: 빨강·노랑·초록·배경 학습 → 정지/대기/출발. ■ 멈춤 연습</td>
+</tr>
+<tr>
+<td>15분</td>
+<td>데이터 실험(활동지 A): 주황 카드·가리기·어둡게 → 확신과 답 기록. &quot;<strong>자신 있게 틀릴 수 있다</strong>&quot; 발견</td>
+</tr>
+<tr>
+<td>15분</td>
+<td>AI 윤리 토의: ① 얼굴 사진은 개인정보 ② AI가 틀리면 누가 확인·책임? (사람이 최종 확인 = Human-in-the-loop) ③ 한 사람 손·한 조명에서만 모은 데이터는 다른 교실에서도 잘 될까? (데이터 치우침)</td>
+</tr>
+<tr>
+<td>15분</td>
+<td>모둠 해결안 설계표(활동지 C) + 코드 스케치 3질문(순서·블록·구조)</td>
+</tr>
+<tr>
+<td>5분</td>
+<td>정리·회수·&#39;모두 지우기&#39;</td>
+</tr>
+</tbody></table></div>
+<p>설계표 예시</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>번호</th>
+<th>AI가 보는 것</th>
+<th>로보독 행동</th>
+<th>왜?</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>땅콩 그림 카드</td>
+<td>빨간 몸통 + 으르렁 + 멈춤</td>
+<td>알레르기 경고</td>
+</tr>
+<tr>
+<td>2</td>
+<td>우유 그림 카드</td>
+<td>노란 몸통 + 기다려 소리</td>
+<td>확인 필요</td>
+</tr>
+<tr>
+<td>3</td>
+<td>안전한 음식 카드</td>
+<td>초록 몸통 + 인사</td>
+<td>먹어도 됨</td>
+</tr>
+<tr>
+<td>4</td>
+<td>배경</td>
+<td>준비 자세</td>
+<td>아무것도 없음</td>
+</tr>
+</tbody></table></div>
+<h2>7-8차시: 개발·공유 — &quot;우리 모둠 AI 로보독&quot; (80분)</h2>
+<p><strong>목표</strong>: 설계한 해결안을 구현·디버깅하고, 결과를 공유·성찰한다.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>시간</th>
+<th>활동</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>5분</td>
+<td>배부·연결</td>
+</tr>
+<tr>
+<td>30분</td>
+<td>구현: 모둠 카드 학습 → <code>04_ai-team-template</code> TODO 채우기 → 시험</td>
+</tr>
+<tr>
+<td>10분</td>
+<td>디버깅: &quot;AI가 틀린 건가, 코드가 틀린 건가?&quot; — 브리지 화면 &#39;지금 보내는 번호&#39;와 로보독 마이크로비트 화면 숫자 비교</td>
+</tr>
+<tr>
+<td>20분</td>
+<td>공유: 1가고 1남기(한 명은 설명, 나머지는 다른 모둠 체험) + 칭찬 쪽지(종이 갤러리 워크)</td>
+</tr>
+<tr>
+<td>10분</td>
+<td>성찰(활동지 F): 틀렸던 순간, 고친 방법, 실제로 쓰려면 더 필요한 것</td>
+</tr>
+<tr>
+<td>5분</td>
+<td>정리·회수·학습 데이터 &#39;모두 지우기&#39;</td>
+</tr>
+</tbody></table></div>
+<p>모둠 프로젝트 주제 (원 교안 미션의 초등·마이크로비트 버전)</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>주제</th>
+<th>원 교안</th>
+<th>AI가 볼 것</th>
+<th>개인정보</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>신호등 안내견</td>
+<td>스크래치 AI CH10 색상인식</td>
+<td>색 카드</td>
+<td>안전</td>
+</tr>
+<tr>
+<td>급식 알레르기 탐지견</td>
+<td>CH12 QR인식</td>
+<td>음식 그림 카드</td>
+<td>안전</td>
+</tr>
+<tr>
+<td>내 물건 알아보는 반려견</td>
+<td>CH11 얼굴인식</td>
+<td>얼굴 <strong>대신</strong> 필통·배지</td>
+<td>안전</td>
+</tr>
+<tr>
+<td>교실 도우미견</td>
+<td>신규</td>
+<td>손 모양(손만 촬영)</td>
+<td>얼굴이 나오지 않게</td>
+</tr>
+</tbody></table></div>
+<h2>평가 계획</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>영역</th>
+<th>평가 요소</th>
+<th>방법</th>
+<th>시기</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>지식</td>
+<td>피지컬 AI 구성, 규칙 vs 학습 차이</td>
+<td>활동지 서술</td>
+<td>4, 6차시</td>
+</tr>
+<tr>
+<td>기능</td>
+<td>조건·라디오·함수를 이용한 제어</td>
+<td>교사 관찰 체크리스트(◎○△, 판단 기준 포함)</td>
+<td>4, 8차시</td>
+</tr>
+<tr>
+<td>기능</td>
+<td>데이터 수집·개선</td>
+<td>활동지 A</td>
+<td>6차시</td>
+</tr>
+<tr>
+<td>태도</td>
+<td>안전·개인정보·협력</td>
+<td>자기평가 + 동료 칭찬 쪽지</td>
+<td>8차시</td>
+</tr>
+<tr>
+<td>산출물</td>
+<td>모둠 프로젝트</td>
+<td>루브릭(4기준 × 3단계)</td>
+<td>8차시</td>
+</tr>
+</tbody></table></div>
+<p>체크리스트·루브릭: <a href="04.html"><code>활동지·평가</code></a></p>
+<h2>운영 팁</h2>
+<ul>
+<li>모둠번호(라디오 그룹)를 마이크로비트·PC에 라벨로 붙이세요. 라디오 그룹은 혼선 방지용일 뿐 보안 장치가 아닙니다.</li>
+<li>브리지 화면의 번호가 맞는데 로보독이 다르게 움직이면 → 코드 문제, 화면 번호부터 틀리면 → 데이터 문제.</li>
+<li>수업이 끝나면 각 PC에서 &#39;모두 지우기&#39;(새로고침해도 지워짐).</li>
+<li>로보독 자체 AI 카메라(얼굴·색상·QR)는 마이크로비트에서 쓸 수 없습니다. 보여 주고 싶다면 원 교안 스크래치 AI CH10&#126;12를 <strong>교사 시연용</strong>으로 쓰세요.</li>
+<li>패들렛 등 온라인 동료평가는 학교 계정·연령 정책을 확인한 뒤 쓰세요. 기본안은 종이 칭찬 쪽지입니다.</li>
+</ul>
+</main></body></html>

@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>활동지와 평가 도구 · 로보독 수업 자료</title><style>
+:root { --bg:#f6f7fb; --card:#fff; --ink:#18202e; --muted:#566079; --line:#dde2ee; --accent:#2f6fe4; --accent-ink:#fff; --code:#eef1f7; --mark:#fff4c2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#10141b; --card:#181d27; --ink:#e9edf5; --muted:#a3acc1; --line:#2b3242; --accent:#6b9bf5; --accent-ink:#0b0e14; --code:#222936; --mark:#4a3f12; } }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:17px;line-height:1.75}
+a{color:var(--accent)} header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.bar{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .home{font-weight:800;text-decoration:none;color:var(--ink)} .bar nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0}
+.bar nav a{white-space:nowrap;text-decoration:none;font-size:14px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
+.bar nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bar button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:30px;line-height:1.3;margin:10px 0 18px} h2{font-size:23px;margin:36px 0 10px;padding-top:6px;border-top:2px solid var(--line)} h3{font-size:19px;margin:24px 0 6px}
+code{background:var(--code);border-radius:5px;padding:1px 6px;font-size:.88em;font-family:ui-monospace,Consolas,"D2Coding",monospace}
+pre{background:var(--code);border-radius:10px;padding:12px 14px;overflow:auto;line-height:1.5} pre code{padding:0;background:none}
+.tbl{overflow-x:auto;margin:12px 0} table{border-collapse:collapse;width:100%;font-size:15.5px;line-height:1.6;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;text-align:left} th{background:var(--code)}
+blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0}
+li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:10px 0 26px}
+.cards a{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.cards a:hover{border-color:var(--accent)} .cards b{display:block;font-size:18px} .cards span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:4px}
+.dl{columns:2 260px;padding-left:20px} .note{color:var(--muted);font-size:14.5px}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media print { header,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
+  h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2} }
+</style></head>
+<body><header><div class="bar"><a class="home" href="../">🐶 로보독 AI 교실</a>
+<nav aria-label="수업 자료"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html" aria-current="page">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a></nav>
+<button onclick="print()">🖨 인쇄</button></div></header>
+<main><h1>활동지와 평가 도구</h1>
+<p>모든 활동지는 그대로 A4에 출력해 쓸 수 있습니다. (학교 양식에 맞게 수정해도 됩니다)</p>
+<hr>
+<h2>로봇 안전 서약서</h2>
+<pre><code>[로보독 안전 약속]                         모둠: ____  이름: ________
+
+□ 로보독을 책상 가장자리에 두지 않고, 떨어뜨리지 않겠습니다.
+□ 로보독 속도는 30 이하로 정하겠습니다.
+□ 위험하면 바로 멈추겠습니다. (AI 활동: 화면 ■ 멈춤 또는 로보독 마이크로비트 A 버튼 / 그 밖의 활동: 로보독 전원 끄기)
+□ 카메라로 친구나 내 얼굴을 찍지 않겠습니다. 카드와 물건만 보여 주겠습니다.
+□ 수업이 끝나면 AI 학습 데이터를 &#39;모두 지우기&#39; 하겠습니다.
+
+                                   서명: ____________
+</code></pre>
+<hr>
+<h2>[활동지 A] AI 신호등 안내견 실험</h2>
+<pre><code>[AI는 어떨 때 헷갈릴까?]                    모둠: ____  이름: ________
+
+1. 종류마다 사진을 몇 장 모았나요?
+   빨강 ___장 / 노랑 ___장 / 초록 ___장 / 배경 ___장
+
+2. 실험 결과 (AI 답과 확신 막대를 보고 적기)
+   | 실험                    | AI의 답      | 확신(막대 또는 %) | 로보독 행동 |
+   |-------------------------|--------------|-------------------|-------------|
+   | 빨강 카드 (기준)        |              |                   |             |
+   | 주황 카드 (처음 보는 색)|              |                   |             |
+   | 카드를 손으로 반쯤 가림 |              |                   |             |
+   | 어둡게 함               |              |                   |             |
+
+3. AI가 확신이 높은데도 틀린 적이 있나요?  예 / 아니요
+   있다면 무엇을 무엇이라고 했나요? ______________________
+
+4. 진짜 길에서 로봇 안내견이 틀린다면 어떤 일이 생길까요?
+   ____________________________________________
+
+5. AI를 더 믿을 수 있게 하려면? (데이터, 멈춤 장치, 사람 확인 중 골라 쓰기)
+   ____________________________________________
+</code></pre>
+<p>교사용 예상 결과: 주황 카드는 빨강·노랑으로 <strong>높은 확신의 오답</strong>이 자주 나옵니다(정답 없음 — 관찰이 목적).</p>
+<hr>
+<h2>[활동지 B] 규칙 로봇 vs AI 로봇</h2>
+<pre><code>                      규칙 로봇(거리센서)          AI 로봇(카메라+학습)
+누가 기준을 정했나?   ____________________         ____________________
+무엇을 잘하나?        ____________________         ____________________
+언제 틀리나?          ____________________         ____________________
+</code></pre>
+<hr>
+<h2>[활동지 C] 우리 모둠 AI 로보독 설계표</h2>
+<pre><code>모둠: ____  주제: ______________________
+
+우리가 돕고 싶은 사람/상황: ____________________________________
+
+| 번호 | AI가 보는 것(카드·물건) | 로보독 행동(색·소리·표정·자세) | 왜? |
+|------|-------------------------|--------------------------------|-----|
+|  1   |                         |                                |     |
+|  2   |                         |                                |     |
+|  3   |                         |                                |     |
+|  4   | 배경(아무것도 없음)     | 준비 자세                      | 기본 |
+
+코드 스케치 3질문
+① 순서: 무엇이 먼저 일어나나요? _______________________
+② 블록: 어떤 블록이 필요한가요? _______________________
+③ 구조: &#39;만약 ~라면&#39;을 어떻게 나누나요? ________________
+
+AI가 틀리면 어떻게 안전하게 할까요? ______________________
+</code></pre>
+<hr>
+<h2>[활동지 D] 문제 정의 (8차시 1-2)</h2>
+<pre><code>1. 고른 영역: □ 환경  □ 사회적 약자  □ 정서  □ 재난
+
+2. 2×2 매트릭스에 문제 붙이기
+                 해결 가능성 높음 | 해결 가능성 낮음
+   중요성 높음   ________________ | ________________
+   중요성 낮음   ________________ | ________________
+
+3. 문제 정의 한 문장:
+   &quot;______________한 사람이 ______________ 때 어려움을 겪는다.&quot;
+</code></pre>
+<h2>[활동지 E] 아이디어 발산 (8차시 3-4)</h2>
+<pre><code>로보독이 우리 문제를 돕기 위해 &#39;알아봐야&#39; 할 것
+  1. ________________  → 거리센서로 가능? 예/아니요
+  2. ________________  → 거리센서로 가능? 예/아니요
+  3. ________________  → 거리센서로 가능? 예/아니요
+&#39;아니요&#39;인 것은 무엇이 있으면 알 수 있을까요? ____________
+</code></pre>
+<h2>[활동지 F] 성찰 (8차시 7-8)</h2>
+<pre><code>1. 우리 AI 로보독이 틀렸던 순간: ____________________________
+2. 그것은 AI(데이터) 문제였나, 코드 문제였나? 어떻게 알았나? ____________
+3. 고친 방법: ____________________________
+4. 진짜로 쓰려면 더 필요한 것: ____________________________
+5. 나의 별점: 협력 ☆☆☆  안전 ☆☆☆  끈기 ☆☆☆
+</code></pre>
+<hr>
+<h2>교사 관찰 체크리스트 (판단 기준 포함)</h2>
+<h3>소개형(2차시)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>문항</th>
+<th>◎ 잘함</th>
+<th>○ 보통</th>
+<th>△ 노력 필요</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>학습 데이터를 모았다</td>
+<td>4종류를 고르게 20장 이상, 각도·위치를 바꿔 모음</td>
+<td>4종류를 모았으나 수·다양성이 부족</td>
+<td>도움을 받아 일부만 모음</td>
+</tr>
+<tr>
+<td>AI가 틀리는 이유를 말했다</td>
+<td>예시(데이터)와 다른 입력이면 자신 있게도 틀린다고 설명</td>
+<td>&quot;헷갈려서&quot; 수준으로 말함</td>
+<td>이유를 말하지 못함</td>
+</tr>
+<tr>
+<td>안전 규칙을 지켰다</td>
+<td>멈춤 장치를 스스로 사용, 속도·위치 규칙 준수</td>
+<td>안내 후 지킴</td>
+<td>반복 안내 필요</td>
+</tr>
+</tbody></table></div>
+<h3>기본형(4차시)·전체형 공통</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>문항</th>
+<th>◎ 잘함</th>
+<th>○ 보통</th>
+<th>△ 노력 필요</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>규칙 vs AI 차이 설명</td>
+<td>두 방식 모두 사람의 선택(기준값/예시·이름표)이 들어감을 포함해 설명</td>
+<td>한쪽 특징만 설명</td>
+<td>차이를 말하지 못함</td>
+</tr>
+<tr>
+<td>조건문·라디오로 제어</td>
+<td>모든 번호에 행동을 정하고 멈춤 장치를 유지</td>
+<td>대부분 동작</td>
+<td>예제를 그대로 사용</td>
+</tr>
+<tr>
+<td>데이터 개선</td>
+<td>실험 결과를 보고 데이터를 바꿔 다시 확인</td>
+<td>실험만 함</td>
+<td>실험 기록 미흡</td>
+</tr>
+<tr>
+<td>윤리·안전</td>
+<td>얼굴 미촬영, 오류 시 멈춤·사람 확인을 설계에 반영</td>
+<td>안내받아 반영</td>
+<td>고려하지 않음</td>
+</tr>
+</tbody></table></div>
+<h3>모둠 프로젝트 루브릭(전체형 8차시)</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>기준</th>
+<th>3점</th>
+<th>2점</th>
+<th>1점</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>문제 해결</td>
+<td>정의한 문제와 로보독 행동이 분명히 연결됨</td>
+<td>일부 연결됨</td>
+<td>연결이 약함</td>
+</tr>
+<tr>
+<td>AI 활용</td>
+<td>3종류 이상 + 배경 학습, 실험으로 개선</td>
+<td>2종류 학습</td>
+<td>학습이 불안정</td>
+</tr>
+<tr>
+<td>코딩</td>
+<td>모든 번호에 행동 + 안전장치 유지</td>
+<td>대부분 동작</td>
+<td>일부 동작</td>
+</tr>
+<tr>
+<td>윤리·안전</td>
+<td>개인정보·오류 대처를 설명함</td>
+<td>일부 고려</td>
+<td>고려 없음</td>
+</tr>
+</tbody></table></div>
+</main></body></html>

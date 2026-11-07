@@ -1,0 +1,45 @@
+// 규칙 도우미 안전 규칙 시험(브라우저 없이): node tests/rule-assistant.mjs
+import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+const src = fs.readFileSync(new URL('../bridge/sim/assistant.js', import.meta.url), 'utf8');
+const tmp = path.join(fs.mkdtempSync(path.join(os.tmpdir(), 'rb-')), 'a.mjs'); fs.writeFileSync(tmp, src);
+const { ruleAssistant, SAMPLE_REQUESTS } = await import(tmp);
+const results = [];
+const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name} ${ok ? '' : detail}`); };
+const R = (t) => ruleAssistant(t);
+const speeds = (c) => [...c.matchAll(/move\([^,]+,\s*(\d+)\)/g)].map(m => Number(m[1]));
+
+for (const s of SAMPLE_REQUESTS) check('예시 문장 코드 생성: ' + s, !!R(s).code);
+let r = R('빠르게 10초 달려'); check('속도 30 이하로 제한(빠르게)', speeds(r.code).every(v => v <= 30), r.code);
+r = R('속도 100으로 걸어'); check('속도 100 → 30으로 줄이고 알림', speeds(r.code).every(v => v <= 30) && /줄였어요/.test(r.explanation));
+r = R('B 버튼을 누르면 계속 앞으로 걸어');
+check('버튼+계속 → 그 버튼으로 켜고 끄기', /Button\.B/.test(r.code) && /걷는중 = !\(걷는중\)/.test(r.code), r.code);
+check('계속 걷기는 10초 뒤 자동 멈춤', /runningTime\(\) - 시작시간 > 10000/.test(r.code));
+check('켜자마자 걷지 않음', !r.code.split('input.onButtonPressed')[0].includes('robodog.move('));
+r = R('버튼이 눌리면 앉아'); check('어느 버튼인지 모르면 코드 안 만듦', !r.code && /어느 버튼/.test(r.explanation));
+r = R('로보독 버튼을 누르면 멍멍'); check('로보독 버튼 → getButton 사용', /robodog\.getButton\(\)/.test(r.code) && /이전버튼/.test(r.code));
+r = R('장애물이 가까우면 멈추고 비켜라고 말해, 아니면 천천히 앞으로 걸어');
+check('거리 0이면 멈춤', /거리 == 0[\s\S]*?robodog\.stop\(\)/.test(r.code), r.code);
+check('상태가 바뀔 때만 명령(소리 반복 없음)', /상태 != 1/.test(r.code) && /상태 != 2/.test(r.code));
+r = R('10cm보다 가까우면 뒤로 2초 걸어'); check('가까우면 뒤로 2초: 기다림 유지', /Backward[\s\S]*basic\.pause\(2000\)/.test(r.code) && !r.warnings.some(w => /이해하지/.test(w)), r.code);
+r = R('장애물이 가까우면 멈추고 멀면 뒤로 걸어'); check('멀면 뒤로 계속 걷기 거절', !/상태 = 2[\s\S]*Backward/.test(r.code) && r.warnings.some(w => /뒤로 계속/.test(w)));
+r = R('라디오 1을 받으면 멈춰, 라디오 3을 받으면 초록 불 켜고 앞으로 걸어');
+check('라디오: 2초 무신호 멈춤', /마지막신호 > 2000/.test(r.code));
+check('라디오: A 잠금·B 풀기', /잠금 = true/.test(r.code) && /잠금 = false/.test(r.code));
+check('라디오: 수신 처리기 안에서 기다리지 않음', !/onReceivedNumber\(function \(받은수\) \{[^}]*basic\.pause/.test(r.code));
+r = R('a누르면 짖어'); check('소문자 a + 버튼 생략', /Button\.A/.test(r.code));
+r = R('앞으로가서 뒤로와'); check('한 구절 안 순서(앞→뒤)', r.code.indexOf('Forward') > 0 && r.code.indexOf('Forward') < r.code.indexOf('Backward'));
+r = R('뒤로 돌아'); check('뒤로 돌아 = 180° 회전(후진 아님)', /180/.test(r.code) && !/Backward/.test(r.code));
+r = R('오른쪽으로 걸어'); check('오른쪽으로 걸어 = 돌고 걷기', /Clockwise, 90/.test(r.code) && /Forward/.test(r.code));
+r = R('높게 서서 춤춰 5번'); check('높게 → 춤 순서', r.code.indexOf('AllLegs, 100)') < r.code.indexOf('for (let'));
+r = R('일어서'); check('일어서 = 준비 자세', /Posture\.Ready/.test(r.code.split('\n').slice(2).join('\n')));
+r = R('하늘을 날아'); check('모르는 말 → 코드 없음 + 할 수 있는 말 안내', !r.code && /할 수 있는 말/.test(r.explanation));
+r = R(''); check('빈 입력 안내', !r.code && /적어/.test(r.explanation));
+r = R('앞으로 가고 '.repeat(60)); check('너무 긴 입력 거절', !r.code && /너무 길어요/.test(r.explanation));
+for (const t of ['A 버튼을 누르면 계속 빨간 불 깜박여', '계속 앞으로 걸어', 'A+B 버튼을 누르면 물구나무']) {
+  const c = R(t).code; check('화살표 함수·템플릿 문자열 없음: ' + t, c && !/=>|`/.test(c));
+}
+const fail = results.filter(x => !x).length;
+console.log(`\n${results.length - fail}/${results.length} PASS`);
+process.exit(fail ? 1 : 0);

@@ -1,0 +1,200 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>교사용 운영 가이드 — AI 개념, 학교 PC 점검, 문제 해결 · 로보독 수업 자료</title><style>
+:root { --bg:#f6f7fb; --card:#fff; --ink:#18202e; --muted:#566079; --line:#dde2ee; --accent:#2f6fe4; --accent-ink:#fff; --code:#eef1f7; --mark:#fff4c2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#10141b; --card:#181d27; --ink:#e9edf5; --muted:#a3acc1; --line:#2b3242; --accent:#6b9bf5; --accent-ink:#0b0e14; --code:#222936; --mark:#4a3f12; } }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:17px;line-height:1.75}
+a{color:var(--accent)} header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.bar{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .home{font-weight:800;text-decoration:none;color:var(--ink)} .bar nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0}
+.bar nav a{white-space:nowrap;text-decoration:none;font-size:14px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
+.bar nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bar button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:30px;line-height:1.3;margin:10px 0 18px} h2{font-size:23px;margin:36px 0 10px;padding-top:6px;border-top:2px solid var(--line)} h3{font-size:19px;margin:24px 0 6px}
+code{background:var(--code);border-radius:5px;padding:1px 6px;font-size:.88em;font-family:ui-monospace,Consolas,"D2Coding",monospace}
+pre{background:var(--code);border-radius:10px;padding:12px 14px;overflow:auto;line-height:1.5} pre code{padding:0;background:none}
+.tbl{overflow-x:auto;margin:12px 0} table{border-collapse:collapse;width:100%;font-size:15.5px;line-height:1.6;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;text-align:left} th{background:var(--code)}
+blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0}
+li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:10px 0 26px}
+.cards a{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.cards a:hover{border-color:var(--accent)} .cards b{display:block;font-size:18px} .cards span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:4px}
+.dl{columns:2 260px;padding-left:20px} .note{color:var(--muted);font-size:14.5px}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media print { header,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
+  h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2} }
+</style></head>
+<body><header><div class="bar"><a class="home" href="../">🐶 로보독 AI 교실</a>
+<nav aria-label="수업 자료"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html" aria-current="page">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a></nav>
+<button onclick="print()">🖨 인쇄</button></div></header>
+<main><h1>교사용 운영 가이드 — AI 개념, 학교 PC 점검, 문제 해결</h1>
+<h2>1. 교사가 알아야 할 AI 개념 (AI 브리지 동작 원리)</h2>
+<p>AI 브리지는 두 단계로 동작합니다.</p>
+<ol>
+<li><strong>특징 뽑기(전이학습)</strong>: 이미 수많은 사진으로 학습된 모델(MobileNet)이 카메라 화면을 숫자 1,280개짜리 &quot;특징&quot;으로 바꿉니다.
+이 모델은 수업 중에 다시 학습하지 않습니다.</li>
+<li><strong>비교해서 답하기(k-최근접 이웃, KNN)</strong>: 학생이 모은 사진들의 특징을 기억해 두었다가,
+새 화면과 <strong>가장 비슷한 k장</strong>(기본 10장, 적게 모은 종류가 있으면 그 수만큼)을 찾아 <strong>가장 많은 이름</strong>으로 답합니다.</li>
+</ol>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>화면 표현</th>
+<th>정확한 의미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>&quot;사진 모으기&quot; = 학습</td>
+<td>예시를 저장하는 것. KNN은 따로 훈련 과정이 없음</td>
+</tr>
+<tr>
+<td>확신 %</td>
+<td>가까운 k장 중 같은 이름의 비율(투표 비율). <strong>맞을 확률이 아님</strong></td>
+</tr>
+<tr>
+<td>확신 기준</td>
+<td>이 비율이 기준보다 낮으면 로보독에 0(멈춤)을 보냄</td>
+</tr>
+</tbody></table></div>
+<p>꼭 짚을 점</p>
+<ul>
+<li><strong>확신이 높아도 틀릴 수 있습니다.</strong> 배우지 않은 것(예: 파란 카드)도 아는 것 중 가장 비슷한 것으로 100% 답할 수 있습니다(테스트에서 실제 확인).
+그래서 &#39;배경&#39; 종류와 멈춤 장치, 사람의 확인이 필요합니다.</li>
+<li><strong>사진 수 ≠ 다양성</strong>: 꾹 누르면 1초에 4장씩 비슷한 사진이 쌓입니다. 카드를 움직이고 기울이며 모으게 하세요.</li>
+<li><strong>종류별 사진 수 균형</strong>: 한 종류만 많으면 그쪽으로 답이 쏠릴 수 있습니다(화면에 경고 표시).</li>
+<li><strong>용어</strong>: 조명·처음 보는 색에 약한 것은 &#39;일반화&#39; 문제, 한 사람 손·한 조명에서만 모은 것은 &#39;데이터 치우침(편향)&#39;입니다.</li>
+</ul>
+<h2>2. 학교 PC 점검표 (수업 전 1회)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>점검</th>
+<th>방법</th>
+<th>안 될 때</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>브라우저</td>
+<td><strong>크롬 또는 엣지(최신)</strong> 권장. 웨일은 미검증</td>
+<td>크롬/엣지 설치 요청</td>
+</tr>
+<tr>
+<td>기기</td>
+<td><strong>윈도우·맥 PC</strong> 권장. 크롬북·안드로이드는 미검증, 아이패드는 USB 연결(Web Serial) 불가</td>
+<td>PC실 사용</td>
+</tr>
+<tr>
+<td>AI 브리지 주소</td>
+<td><strong><a href="https://microbit-bridge.netlify.app/ai.html">https://microbit-bridge.netlify.app/ai.html</a></strong> 을 열어 &quot;AI 준비 완료&quot; 확인</td>
+<td>막히면 정보부에 <code>microbit-bridge.netlify.app</code> 허용 요청(모델·라이브러리 모두 이 주소에서 받음)</td>
+</tr>
+<tr>
+<td>카메라</td>
+<td>[카메라 켜기] → 허용</td>
+<td>브라우저 주소창 왼쪽 자물쇠 → 카메라 허용</td>
+</tr>
+<tr>
+<td>USB 마이크로비트</td>
+<td>[USB 마이크로비트 연결] → &quot;BBC micro:bit&quot; 선택</td>
+<td>데이터용 케이블인지, MakeCode 탭이 연결을 잡고 있지 않은지 확인</td>
+</tr>
+<tr>
+<td>MakeCode 다운로드</td>
+<td>makecode.microbit.org에서 다운로드 → MICROBIT 드라이브에 복사</td>
+<td>USB 저장장치 차단 정책이면 정보부에 예외 요청, 또는 교사 PC에서 일괄 다운로드</td>
+</tr>
+<tr>
+<td>복원 프로그램</td>
+<td>재부팅 후에도 동작하는지</td>
+<td>AI 모델은 배포 사이트에 함께 들어 있어 매번 다시 받아도 됨(약 8MB)</td>
+</tr>
+</tbody></table></div>
+<p>※ 파일을 더블클릭해서 열면(file://) 모델을 인터넷(tfhub/kaggle)에서 받아 옵니다. 학교망에서 막힐 수 있으니 <strong>배포 주소로 여는 것을 권장</strong>합니다.</p>
+<h2>3. 안전 장치 정리</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>장치</th>
+<th>동작</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>브리지 ■ 멈춤 / Esc</td>
+<td>다시 누를 때까지 0(멈춤)을 계속 보냄</td>
+</tr>
+<tr>
+<td>확신 기준 미달</td>
+<td>잠시 헷갈리면 0을 보냄</td>
+</tr>
+<tr>
+<td>사진 모으는 중·데이터 지움·카메라 꺼짐</td>
+<td>0을 보냄</td>
+</tr>
+<tr>
+<td>브리지 창을 내리거나 다른 탭</td>
+<td>0을 보냄</td>
+</tr>
+<tr>
+<td>같은 번호 반복 전송</td>
+<td>약 0.6초마다 다시 보냄</td>
+</tr>
+<tr>
+<td>로보독 마이크로비트</td>
+<td>2초 동안 신호가 없으면 어떤 상태든 멈춤. A=멈춤 잠금, B=풀기</td>
+</tr>
+<tr>
+<td>USB 마이크로비트</td>
+<td>A=멈춤 잠금(0을 계속 보냄), B=풀기</td>
+</tr>
+</tbody></table></div>
+<h2>4. 자주 생기는 문제</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>증상</th>
+<th>확인할 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>로보독이 아무 반응이 없음</td>
+<td>모둠번호가 두 마이크로비트에서 같은지(켤 때 흘러가는 B1 ↔ R1, 또는 라벨), 로보독 전원, 브리지 &#39;지금 보내는 번호&#39;</td>
+</tr>
+<tr>
+<td>다른 모둠 로보독이 움직임</td>
+<td>모둠번호 중복</td>
+</tr>
+<tr>
+<td>&quot;AI 불러오기 실패&quot;</td>
+<td>인터넷/학교망 차단, 배포 주소로 열었는지, 새로고침</td>
+</tr>
+<tr>
+<td>연결 창에 마이크로비트가 없음</td>
+<td>데이터용 케이블, 다른 탭(MakeCode)의 연결 끊기</td>
+</tr>
+<tr>
+<td>계속 &#39;잘 모르겠어요&#39;</td>
+<td>사진을 더 다양하게, 확신 기준을 60%로</td>
+</tr>
+<tr>
+<td>엉뚱한 답을 자신 있게 함</td>
+<td>배경 종류 추가, 헷갈리는 물건도 학습시키기</td>
+</tr>
+<tr>
+<td>로보독이 2초마다 멈춤</td>
+<td>브리지 창이 가려졌거나 USB 연결이 끊김</td>
+</tr>
+<tr>
+<td>로보독 동작이 이상함</td>
+<td>로보독 마이크로비트에 &#39;음악&#39; 블록을 쓰지 않았는지(로봇 통신 핀 P0와 겹칠 수 있음)</td>
+</tr>
+</tbody></table></div>
+<h2>5. 개인정보·윤리</h2>
+<ul>
+<li>이 자료는 <strong>얼굴 학습을 쓰지 않습니다.</strong> 카메라는 책상·카드 쪽으로 향하게 하세요.</li>
+<li>영상은 브라우저 안에서만 처리되고 서버로 보내지 않습니다. AI 모델 파일만 내려받습니다.</li>
+<li>학습 데이터 저장(.json)에는 사진이 아니라 숫자 특징만 들어갑니다. 그래도 수업 후 지우는 습관을 들이세요.</li>
+<li>웹캠 사용은 학교 정책·가정통신문 안내를 따르세요.</li>
+</ul>
+</main></body></html>

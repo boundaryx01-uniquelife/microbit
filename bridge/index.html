@@ -3,634 +3,244 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>로보독 AI 브리지</title>
+<title>로보독 피지컬 AI 교실</title>
+<meta name="description" content="AI가 보고, 마이크로비트가 전하고, 로보독이 움직인다 — 초·중·고 피지컬 AI 수업 자료와 시뮬레이터">
 <style>
   :root {
-    --bg: #f6f7fb; --card: #ffffff; --text: #1d2433; --muted: #5d6680;
-    --line: #dde1ec; --accent: #2f6fe4; --accent-text: #ffffff;
-    --ok: #1f9d55; --bad: #d43c3c; --stop: #d43c3c; --stop-text: #ffffff;
+    --bg: #f4f6fb; --ink: #141a26; --muted: #556079; --line: #dbe1ee; --card: #ffffff;
+    --accent: #2f6fe4; --accent-ink: #ffffff; --go: #1fa463; --warn: #f2b300; --stop: #e5484d;
+    --dog: #2b333f; --dog-edge: #0e1218; --leg: #3c4655; --eye-off: #1a2029; --eye-on: #e9f3ff; --mb: #1d2330; --mb-led: #ff3b30;
+    --wave: #2f6fe4; --stage: #e9eef7; --table: #d9c29b;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --bg: #12151c; --card: #1b2029; --text: #e8ebf2; --muted: #9aa3b8;
-      --line: #2c3340; --accent: #5b8ff0; --accent-text: #0b0e14;
+      --bg: #0f1218; --ink: #eef1f7; --muted: #a2abc0; --line: #2a3140; --card: #181d27; --accent: #6b9bf5; --accent-ink: #0b0e14;
+      --dog: #3b4554; --dog-edge: #8d98aa; --leg: #8d98aa; --eye-off: #0b0e13; --mb: #262d3b; --wave: #6b9bf5; --stage: #161b25; --table: #4d4130;
     }
   }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-    font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif; }
-  header { padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--card);
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: space-between;
-    position: sticky; top: 0; z-index: 5; }
-  h1 { margin: 0; font-size: 20px; }
-  h2 { margin: 0 0 10px; font-size: 18px; }
-  main { max-width: 1100px; margin: 0 auto; padding: 16px; display: grid; gap: 16px;
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
-  @media (max-width: 820px) { main { grid-template-columns: minmax(0, 1fr); } }
-  section { background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 16px; min-width: 0; }
-  .full { grid-column: 1 / -1; }
-  .step { display: inline-block; background: var(--accent); color: var(--accent-text);
-    border-radius: 999px; padding: 2px 10px; font-size: 13px; margin-right: 6px; }
-  video { width: 100%; border-radius: 10px; background: #000; aspect-ratio: 4/3; object-fit: cover; }
-  video.mirror { transform: scaleX(-1); }
-  button { font: inherit; border: 1px solid var(--line); background: var(--card); color: var(--text);
-    border-radius: 10px; padding: 10px 14px; cursor: pointer; }
-  button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-  button:disabled { opacity: .45; cursor: not-allowed; }
-  button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  #btnStop { background: var(--stop); color: var(--stop-text); border-color: var(--stop); font-weight: 800; }
-  #btnStop.latched { animation: blink 1s infinite; }
-  @keyframes blink { 50% { opacity: .6; } }
-  select { font: inherit; padding: 8px; border-radius: 10px; border: 1px solid var(--line); background: var(--card); color: var(--text); max-width: 100%; }
-  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-  .cls { display: grid; grid-template-columns: 34px minmax(0, 1fr) auto; gap: 8px; align-items: center;
-    padding: 10px; border: 1px solid var(--line); border-radius: 12px; margin-bottom: 8px; }
-  .num { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; color: #fff; font-weight: 700; }
-  .cls input[type=text] { width: 100%; font: inherit; padding: 6px 8px; border: 1px solid var(--line);
-    border-radius: 8px; background: var(--bg); color: var(--text); }
-  .hold { user-select: none; touch-action: none; white-space: nowrap; }
-  .hold.active { outline: 3px solid var(--accent); }
-  .bar { height: 10px; border-radius: 6px; background: var(--line); overflow: hidden; grid-column: 2 / 4; }
-  .bar > i { display: block; height: 100%; width: 0%; transition: width .15s; }
-  .count { font-size: 13px; color: var(--muted); }
-  .big { font-size: 26px; font-weight: 800; text-align: center; padding: 14px; border-radius: 12px;
-    background: var(--bg); border: 1px dashed var(--line); margin: 10px 0; min-height: 70px; overflow-wrap: anywhere; }
-  .sending { text-align: center; font-size: 15px; color: var(--muted); }
-  .sending b { font-size: 22px; color: var(--text); }
-  .status { font-size: 13px; padding: 4px 10px; border-radius: 999px; border: 1px solid var(--line); }
-  .status.on { color: var(--ok); border-color: var(--ok); }
-  .status.off { color: var(--bad); border-color: var(--bad); }
-  .note { font-size: 13px; color: var(--muted); line-height: 1.6; }
-  .warn { font-size: 13px; color: var(--bad); line-height: 1.5; min-height: 1em; }
-  label.slider { display: flex; gap: 8px; align-items: center; font-size: 14px; flex-wrap: wrap; }
-  #log { font-family: ui-monospace, Consolas, monospace; font-size: 12px; color: var(--muted); white-space: pre-wrap;
-    max-height: 120px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 8px; margin-top: 8px; }
-  details > summary { cursor: pointer; font-weight: 700; font-size: 16px; }
-  table { border-collapse: collapse; font-size: 14px; margin-top: 8px; }
-  th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: center; }
-  .scroll { overflow-x: auto; }
+  html, body { margin: 0; }
+  body { background: var(--bg); color: var(--ink); font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+    min-height: 100vh; display: flex; flex-direction: column; }
+  a { color: inherit; }
+  .wrap { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 16px; }
+  .top { display: flex; justify-content: space-between; align-items: center; padding: 14px 0 6px; font-size: 14px; color: var(--muted); }
+  .top b { color: var(--ink); font-size: 16px; }
+  .skip { font: inherit; font-size: 14px; border: 1px solid var(--line); background: var(--card); color: var(--ink); border-radius: 999px; padding: 8px 16px; cursor: pointer; min-height: 40px; }
+  .skip:focus-visible, .cta a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+
+  /* ---------- 무대 ---------- */
+  .stage { position: relative; background: linear-gradient(to bottom, var(--stage) 83.7%, color-mix(in srgb, var(--table) 55%, var(--stage)) 83.7%); border-radius: 24px; overflow: hidden; margin-top: 6px; }
+  .stage svg { display: block; width: 100%; height: auto; max-height: 40vh; min-height: 200px; margin: 0 auto; }
+  .beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 12px 0 0; padding: 0; list-style: none; }
+  .beats li { text-align: center; font-weight: 800; font-size: clamp(14px, 2.2vw, 20px); padding: 10px 6px; border-radius: 14px;
+    color: var(--muted); background: var(--card); border: 1px solid var(--line); opacity: .45; animation: beat .4s ease forwards; }
+  .beats li span { display: block; font-size: 12px; font-weight: 600; margin-top: 2px; }
+  .beats li:nth-child(1) { animation-delay: .2s; } .beats li:nth-child(2) { animation-delay: 1.5s; } .beats li:nth-child(3) { animation-delay: 2.6s; }
+  @keyframes beat { to { opacity: 1; color: var(--ink); border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent) inset; } }
+
+  /* 1) AI가 본다: 카드 + 뷰파인더 */
+  .finder { transform-box: fill-box; transform-origin: center; opacity: 0; animation: finder .7s cubic-bezier(.2,.8,.2,1) .2s forwards; }
+  @keyframes finder { from { opacity: 0; transform: scale(1.7); } to { opacity: 1; transform: scale(1); } }
+  .scan { opacity: 0; animation: scan 1s linear .45s 1 forwards; }
+  @keyframes scan { 0% { opacity: .9; transform: translateY(0); } 90% { opacity: .9; } 100% { opacity: 0; transform: translateY(150px); } }
+  .tag { opacity: 0; transform-box: fill-box; transform-origin: center; animation: pop .35s cubic-bezier(.3,1.6,.5,1) 1.15s forwards; }
+  @keyframes pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
+
+  /* 2) 마이크로비트가 전한다: LED 숫자 + 전파 */
+  .mbled { opacity: .18; animation: ledon .25s ease forwards; }
+  @keyframes ledon { to { opacity: 1; } }
+  .arc { fill: none; stroke: var(--wave); stroke-width: 7; stroke-linecap: round; opacity: 0; animation: arc .9s ease-out forwards; }
+  .arc.a1 { animation-delay: 1.75s; } .arc.a2 { animation-delay: 1.9s; } .arc.a3 { animation-delay: 2.05s; }
+  .arc.b1 { animation-delay: 2.2s; } .arc.b2 { animation-delay: 2.35s; } .arc.b3 { animation-delay: 2.5s; }
+  @keyframes arc { 0% { opacity: 0; } 30% { opacity: 1; } 100% { opacity: .0; } }
+
+  /* 3) 로보독이 움직인다 */
+  .dog { animation: walk 1.5s cubic-bezier(.4,0,.3,1) 2.7s forwards; }
+  @keyframes walk { from { transform: translateX(0); } to { transform: translateX(70px); } }
+  .body { animation: bob .25s ease-in-out 2.7s 6 alternate; }
+  @keyframes bob { to { transform: translateY(-4px); } }
+  .leg { transform-box: fill-box; transform-origin: 50% 6%; }
+  .leg.p { animation: stepA .25s ease-in-out 2.7s 6 alternate; }
+  .leg.q { animation: stepB .25s ease-in-out 2.7s 6 alternate; }
+  @keyframes stepA { from { transform: rotate(16deg); } to { transform: rotate(-16deg); } }
+  @keyframes stepB { from { transform: rotate(-16deg); } to { transform: rotate(16deg); } }
+  .wave-leg { transform-box: fill-box; transform-origin: 50% 6%; animation: hello .5s ease-in-out 4.25s 3 alternate; }
+  @keyframes hello { from { transform: rotate(0); } to { transform: rotate(-58deg); } }
+  .eyes-off { animation: fadeout .2s ease 2.45s forwards; }
+  .eyes-open { opacity: 0; animation: fadein .2s ease 2.45s forwards, fadeout .2s ease 4.2s forwards; }
+  .eyes-heart { opacity: 0; animation: fadein .25s ease 4.2s forwards; }
+  @keyframes fadein { to { opacity: 1; } }
+  @keyframes fadeout { to { opacity: 0; } }
+  .glow { opacity: 0; animation: fadein .3s ease 2.45s forwards; }
+  .bubble { opacity: 0; transform-box: fill-box; transform-origin: 0% 100%; animation: pop .35s cubic-bezier(.3,1.6,.5,1) 4.35s forwards; }
+
+  /* 제목·버튼 */
+  .hero { text-align: center; padding: 18px 0 4px; }
+  .nb { display: none; }
+  .hero h1 { margin: 0; font-size: clamp(28px, 4.6vw, 50px); line-height: 1.15; letter-spacing: -0.02em;
+    opacity: 0; transform: translateY(18px); animation: rise .6s cubic-bezier(.2,.8,.2,1) 4.6s forwards; }
+  .hero h1 em { font-style: normal; color: var(--accent); }
+  .hero p { margin: 12px auto 0; max-width: 680px; color: var(--muted); font-size: clamp(15px, 2vw, 18px); line-height: 1.6;
+    opacity: 0; animation: rise .6s ease 4.85s forwards; }
+  @keyframes rise { to { opacity: 1; transform: none; } }
+  .cta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 18px 0 6px; }
+  .cta a { display: block; text-decoration: none; background: var(--card); border: 1px solid var(--line); border-radius: 18px; padding: 18px 18px 16px;
+    opacity: 0; transform: translateY(16px); animation: rise .5s ease forwards; transition: border-color .15s, transform .15s, box-shadow .15s; }
+  .cta a:nth-child(1) { animation-delay: 5.05s; } .cta a:nth-child(2) { animation-delay: 5.15s; } .cta a:nth-child(3) { animation-delay: 5.25s; }
+  .cta a:hover { border-color: var(--accent); box-shadow: 0 8px 24px rgba(30,60,140,.12); }
+  .cta a.main { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .cta .ic { font-size: 30px; line-height: 1; }
+  .cta b { display: block; font-size: 20px; margin: 10px 0 4px; }
+  .cta span { display: block; font-size: 14.5px; line-height: 1.5; opacity: .85; }
+  .sub { margin: 6px 0 0; font-size: 15px; opacity: 0; animation: rise .5s ease 5.35s forwards; }
+  .sub a { color: var(--accent); font-weight: 700; }
+  .foot { margin-top: auto; padding: 18px 0 22px; font-size: 13px; color: var(--muted); line-height: 1.6; text-align: center;
+    opacity: 0; animation: rise .5s ease 5.4s forwards; }
+  .replay { font: inherit; font-size: 13px; color: var(--accent); background: none; border: 0; text-decoration: underline; cursor: pointer; padding: 6px; }
+
+  /* 건너뛰기·움직임 줄이기: 모든 애니메이션을 끝 상태로 */
+  .instant *, .instant { animation-duration: 0s !important; animation-delay: 0s !important; transition: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; }
+  }
+  @media (max-width: 760px) {
+    .cta { grid-template-columns: minmax(0, 1fr); }
+    .beats li span { display: none; }
+    .nb { display: inline; }
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1>🐶 로보독 AI 브리지</h1>
-  <div class="row">
-    <span id="modelStatus" class="status off">AI 준비 중…</span>
-    <span id="serialStatus" class="status off">마이크로비트 연결 안 됨</span>
-    <a href="sim/" target="_blank" rel="noopener" style="font-size:14px">시뮬레이터 ↗</a>
-    <button id="btnStop" title="키보드 Esc 키로도 멈출 수 있어요">■ 멈춤</button>
+<div class="wrap" id="app">
+  <div class="top"><span><b>🐶 로보독 피지컬 AI 교실</b></span><button class="skip" id="skip">건너뛰기 ⏭</button></div>
+
+  <div class="stage" id="stage">
+    <svg viewBox="0 0 900 380" role="img" aria-labelledby="stageTitle">
+      <title id="stageTitle">카드를 본 AI가 마이크로비트로 숫자 3을 보내고, 로보독이 눈을 켜고 걸어와 하트 눈으로 인사하는 장면</title>
+      <!-- 바닥 -->
+
+      <!-- 1) 카드와 AI 뷰파인더 -->
+      <g transform="translate(70 92)">
+        <rect x="0" y="0" width="130" height="170" rx="14" fill="var(--card)" stroke="var(--line)" stroke-width="3"/>
+        <circle cx="65" cy="78" r="40" fill="var(--go)"/>
+        <rect x="30" y="134" width="70" height="12" rx="6" fill="var(--line)"/>
+        <g class="finder" stroke="var(--accent)" stroke-width="7" fill="none" stroke-linecap="round">
+          <path d="M-14 30 V-14"/><path d="M144 30 V-14"/><path d="M144 148 V184 H108"/><path d="M22 184 H-14 V148"/>
+        </g>
+        <rect class="scan" x="-8" y="6" width="146" height="4" rx="2" fill="var(--accent)"/>
+        <g class="tag" transform="translate(65 -50)">
+          <rect x="-62" y="-20" width="124" height="38" rx="19" fill="var(--accent)"/>
+          <text x="0" y="6" text-anchor="middle" font-size="19" font-weight="800" fill="var(--accent-ink)">초록 → 3</text>
+        </g>
+      </g>
+
+      <!-- 2) 마이크로비트 -->
+      <g transform="translate(300 128)">
+        <rect x="0" y="0" width="130" height="100" rx="16" fill="var(--mb)"/>
+        <circle cx="20" cy="50" r="9" fill="#3a4252"/><circle cx="110" cy="50" r="9" fill="#3a4252"/>
+        <g id="mbGrid" transform="translate(39 24)"></g>
+        <text x="65" y="128" text-anchor="middle" font-size="16" font-weight="700" fill="var(--muted)">마이크로비트</text>
+      </g>
+      <g transform="translate(445 178)">
+        <path class="arc a1" d="M0 -18 Q14 0 0 18"/><path class="arc a2" d="M14 -32 Q38 0 14 32"/><path class="arc a3" d="M28 -46 Q62 0 28 46"/>
+      </g>
+      <g transform="translate(445 178)" opacity=".7">
+        <path class="arc b1" d="M0 -18 Q14 0 0 18"/><path class="arc b2" d="M14 -32 Q38 0 14 32"/><path class="arc b3" d="M28 -46 Q62 0 28 46"/>
+      </g>
+
+      <!-- 3) 로보독 (옆모습, 오른쪽을 봄) -->
+      <g class="dog" transform="translate(0 0)">
+        <g transform="translate(520 168)">
+          <!-- 먼 쪽 다리 -->
+          <g opacity=".55">
+            <g class="leg q"><rect x="22" y="56" width="16" height="60" rx="8" fill="var(--leg)"/><rect x="20" y="108" width="22" height="44" rx="9" fill="var(--leg)"/></g>
+            <g class="leg p"><rect x="150" y="56" width="16" height="60" rx="8" fill="var(--leg)"/><rect x="148" y="108" width="22" height="44" rx="9" fill="var(--leg)"/></g>
+          </g>
+          <g class="body">
+            <!-- 몸통 -->
+            <rect x="0" y="22" width="200" height="56" rx="24" fill="var(--dog)" stroke="var(--dog-edge)" stroke-width="3"/>
+            <rect x="70" y="38" width="64" height="12" rx="6" fill="var(--accent)" class="glow"/>
+            <!-- 머리 받침 + 머리 -->
+            <rect x="176" y="8" width="18" height="26" rx="6" fill="var(--leg)"/>
+            <rect x="160" y="-52" width="118" height="68" rx="20" fill="var(--dog)" stroke="var(--dog-edge)" stroke-width="3"/>
+            <rect x="172" y="-42" width="94" height="48" rx="12" fill="var(--eye-off)"/>
+            <g class="eyes-off"><circle cx="196" cy="-18" r="3" fill="#39424f"/><circle cx="242" cy="-18" r="3" fill="#39424f"/></g>
+            <g id="eyesOpen" class="eyes-open"></g>
+            <g id="eyesHeart" class="eyes-heart"></g>
+            <!-- 꼬리 -->
+            <path d="M2 40 Q-26 22 -20 0" fill="none" stroke="var(--leg)" stroke-width="9" stroke-linecap="round"/>
+          </g>
+          <!-- 가까운 쪽 다리 -->
+          <g class="leg p"><rect x="30" y="58" width="18" height="62" rx="9" fill="var(--leg)" stroke="var(--dog-edge)" stroke-width="2"/><rect x="27" y="110" width="24" height="46" rx="10" fill="var(--leg)" stroke="var(--dog-edge)" stroke-width="2"/></g>
+          <g class="leg q"><g class="wave-leg"><rect x="158" y="58" width="18" height="62" rx="9" fill="var(--leg)" stroke="var(--dog-edge)" stroke-width="2"/><rect x="155" y="110" width="24" height="46" rx="10" fill="var(--leg)" stroke="var(--dog-edge)" stroke-width="2"/></g></g>
+          <!-- 말풍선 -->
+          <g class="bubble" transform="translate(250 -96)">
+            <rect x="0" y="-30" width="104" height="44" rx="16" fill="var(--card)" stroke="var(--line)" stroke-width="3"/>
+            <path d="M14 12 L4 28 L30 12 Z" fill="var(--card)"/>
+            <text x="52" y="0" text-anchor="middle" font-size="20" font-weight="800" fill="var(--ink)">안녕!</text>
+          </g>
+        </g>
+      </g>
+    </svg>
   </div>
-</header>
+  <ol class="beats" aria-label="수업의 흐름">
+    <li>① AI가 본다<span>웹캠으로 카드를 학습·인식</span></li>
+    <li>② 마이크로비트가 전한다<span>인식 결과를 라디오 숫자로</span></li>
+    <li>③ 로보독이 움직인다<span>내가 만든 규칙대로 행동</span></li>
+  </ol>
 
-<main>
-  <section>
-    <h2><span class="step">1</span>카메라 켜기</h2>
-    <video id="cam" class="mirror" autoplay playsinline muted></video>
-    <div class="row" style="margin-top:10px">
-      <button id="btnCam" class="primary">카메라 켜기</button>
-      <select id="camSelect" aria-label="카메라 선택"></select>
-      <label class="row" style="gap:6px;font-size:14px"><input id="mirror" type="checkbox" checked> 거울처럼 보기</label>
-    </div>
-    <p class="note">영상은 이 컴퓨터 안에서만 처리되고 저장·전송하지 않습니다.<br>
-      <b>카메라는 책상과 카드 쪽을 향하게</b> 하고, 사람 얼굴 대신 <b>색 카드·그림 카드·물건·손 모양</b>을 가르쳐 주세요.</p>
+  <section class="hero">
+    <h1>내가 가르친 <em>AI</em>로<br class="nb"> 로봇이 움직인다</h1>
+    <p>마이크로비트와 로보독으로 하는 초·중·고 피지컬 AI 수업. 로봇이 없어도 시뮬레이터로 시작할 수 있어요.</p>
+    <nav class="cta" aria-label="시작하기">
+      <a class="main" href="sim/"><div class="ic">🧩</div><b>시뮬레이터에서 코딩</b><span>MakeCode 블록 + 로보독 2D·3D 미리 보기. 말로 시키면 코드를 만들어 주는 도우미</span></a>
+      <a href="ai.html"><div class="ic">📷</div><b>AI 브리지</b><span>웹캠으로 카드를 학습시키고 결과를 마이크로비트(로보독)로 보내기</span></a>
+      <a href="docs/"><div class="ic">📚</div><b>수업 자료</b><span>2·4·8차시 수업안, 활동지·평가, 운영 가이드, MakeCode 예제 내려받기</span></a>
+    </nav>
+    <p class="sub"><a href="sim/?tab=js">로봇 없이 예제 시연부터 보기 →</a></p>
   </section>
 
-  <section>
-    <h2><span class="step">2</span>AI 가르치기</h2>
-    <p class="note" style="margin-top:0">카드를 카메라에 보여 주며 버튼을 <b>한 번 누르면 1장</b>, <b>꾹 누르고 있으면 1초에 4장</b>씩 모여요.
-      카드를 조금씩 움직이고 기울여 가며 종류마다 <b>20장 이상</b> 비슷한 수로 모으세요.
-      마지막 칸은 <b>아무것도 없는 배경</b>으로 두면 오작동이 줄어요.</p>
-    <div id="classes"></div>
-    <div id="balanceWarn" class="warn"></div>
-    <div class="row">
-      <button id="btnAdd">＋ 종류 추가</button>
-      <button id="btnClear">모두 지우기</button>
-    </div>
-  </section>
+  <p class="foot">
+    로보독(빅아이 로보독)은 코코아팹의 제품이며, 이 사이트는 교사가 만든 비공식 수업 도구입니다. 시뮬레이터는 실물과 다를 수 있어요.<br>
+    <button class="replay" id="replay">↺ 처음 장면 다시 보기</button>
+  </p>
+</div>
 
-  <section>
-    <h2><span class="step">3</span>AI가 보고 있는 것</h2>
-    <div id="result" class="big">AI를 준비하고 있어요…</div>
-    <label class="slider">확신 기준 <input id="thr" type="range" min="50" max="100" step="10" value="70"> <b id="thrVal">70%</b></label>
-    <p class="note">AI는 지금 화면과 <b>가장 비슷한 사진 <span id="kShow">10</span>장</b>을 찾아, 그중 몇 장이 같은 종류인지로 답해요(이것이 확신 %).
-      확신이 기준보다 낮으면 로보독에게 <b>0(멈춤)</b>을 보내요.</p>
-  </section>
-
-  <section>
-    <h2><span class="step">4</span>로보독에게 보내기</h2>
-    <div class="row">
-      <button id="btnSerial" class="primary">USB 마이크로비트 연결</button>
-      <label class="row" style="gap:6px"><input id="autoSend" type="checkbox" checked> AI 결과 자동 보내기</label>
-    </div>
-    <div class="sending">지금 보내는 번호: <b id="sendingNow">-</b></div>
-    <p class="note">USB로 컴퓨터에 꽂은 마이크로비트(켤 때 <b>B1, B2…</b> 글자가 흘러가는 것)를 연결하세요. PC의 크롬·엣지에서 됩니다.<br>
-      연결 창이 영어로 뜨면 <b>"BBC micro:bit"</b> 항목을 고르고 <b>Connect(연결)</b>를 누르세요.<br>
-      ⚠ 이 창을 내리거나 다른 탭으로 바꾸면 안전을 위해 0(멈춤)을 보내요. MakeCode는 <b>다른 창</b>으로 띄우세요.</p>
-    <p class="note" style="margin-bottom:4px">AI 없이 시험하기(자동 보내기를 끄면 누른 번호를 계속 보내요):</p>
-    <div class="row" id="manual"></div>
-    <div id="log" aria-live="polite"></div>
-  </section>
-
-  <section class="full">
-    <details id="adv">
-      <summary>선생님·심화(중·고) 설정과 정확도 실험</summary>
-      <div class="row" style="margin-top:12px">
-        <label class="slider"><input id="kAuto" type="checkbox" checked> k 자동</label>
-        <label class="slider">k(비교할 이웃 사진 수) <input id="kVal" type="range" min="1" max="15" value="10" disabled> <b id="kValShow">10</b></label>
-        <label class="slider">꾹 누를 때 1초에 <input id="rate" type="range" min="1" max="10" value="4"> <b id="rateShow">4</b>장</label>
-      </div>
-      <p class="note">k 자동: k = min(10, 가장 적게 모은 종류의 사진 수). 종류별 사진 수가 다르면 많이 모은 쪽으로 답이 쏠릴 수 있어요.</p>
-      <h3 style="margin:14px 0 6px;font-size:16px">정확도 실험 (학습용과 다른 시험 사진으로 평가)</h3>
-      <p class="note">학습에 쓰지 않은 <b>시험 사진</b>을 따로 모은 뒤 [정확도 계산]을 누르면 정확도와 혼동행렬이 나와요.
-        학습 사진을 찍은 직후 같은 자세로 시험 사진을 찍으면 거의 같은 사진이라 정확도가 부풀려집니다(데이터 누출). 위치·조명을 바꿔서 모으세요.</p>
-      <div id="testClasses" class="row"></div>
-      <div class="row" style="margin-top:8px">
-        <button id="btnEval" class="primary">정확도 계산</button>
-        <button id="btnTestClear">시험 사진 지우기</button>
-        <button id="btnCsv" disabled>결과 CSV 저장</button>
-      </div>
-      <div id="evalOut" class="scroll"></div>
-      <h3 style="margin:14px 0 6px;font-size:16px">학습 데이터 저장·불러오기</h3>
-      <p class="note">사진 자체가 아니라 AI가 뽑은 숫자 특징(특징 벡터)만 저장됩니다. 같은 조건으로 실험을 반복할 때 쓰세요.</p>
-      <div class="row">
-        <button id="btnSave">학습 데이터 저장(.json)</button>
-        <label class="row" style="gap:6px"><span>불러오기</span><input id="fileLoad" type="file" accept=".json,application/json"></label>
-      </div>
-    </details>
-  </section>
-</main>
-
-<script src="lib/tf.min.js"></script>
-<script src="lib/mobilenet.min.js"></script>
-<script src="lib/knn-classifier.min.js"></script>
 <script>
-(() => {
-  'use strict';
-  const COLORS = ['#e5484d', '#e9a23b', '#30a46c', '#8e8e9f', '#6e56cf', '#0091ff', '#d6409f', '#12a594', '#978365'];
-  const DEFAULT_NAMES = ['빨강 카드', '노랑 카드', '초록 카드', '배경(아무것도 없음)'];
-  const MAX_CLASSES = 9;        // 마이크로비트로 1~9를 보냄 (0 = 멈춤)
-  const STABLE_FRAMES = 4;      // 같은 답이 연속 이만큼 나와야 보냄
-  const UNSURE_FRAMES = 8;      // 확신 낮은 상태가 이만큼 이어지면 0
-  const FRESH_MS = 700;         // 이 시간 안에 나온 확실한 답만 유효
-  const HEARTBEAT_MS = 500;     // 같은 번호도 주기적으로 다시 보냄(로보독 2초 감시와 짝)
-  const LOOP_MS = 80;
+// 5×5 LED 점(마이크로비트 숫자 3, 로보독 눈)
+const NS = 'http://www.w3.org/2000/svg';
+const dots = (g, rows, cell, r, fill, cls, delayOf) => {
+  rows.forEach((row, y) => [...row].forEach((c, x) => {
+    if (c !== '#') return;
+    const d = document.createElementNS(NS, 'circle');
+    d.setAttribute('cx', x * cell); d.setAttribute('cy', y * cell); d.setAttribute('r', r); d.setAttribute('fill', fill);
+    if (cls) { d.setAttribute('class', cls); d.style.animationDelay = delayOf(x, y) + 's'; }
+    g.appendChild(d);
+  }));
+};
+const THREE = ['###..', '...#.', '..#..', '...#.', '###..'];
+const GRID = ['#####', '#####', '#####', '#####', '#####'];
+const mb = document.getElementById('mbGrid');
+dots(mb, GRID, 13, 3.4, '#3a2020');
+dots(mb, THREE.map(r => r.replace(/^(.)(.)(.)(.)(.)$/, '$1$2$3$4$5')), 13, 4.2, 'var(--mb-led)', 'mbled', (x, y) => 1.45 + (x + y) * 0.03);
+const OPEN = ['.###.', '#####', '#####', '#####', '.###.'];
+const HEART = ['.#.#.', '#####', '#####', '.###.', '..#..'];
+const eye = (id, rows) => {
+  const g = document.getElementById(id);
+  for (const ox of [180, 226]) {
+    const s = document.createElementNS(NS, 'g'); s.setAttribute('transform', `translate(${ox} -34)`);
+    dots(s, rows, 8, 3.2, 'var(--eye-on)'); g.appendChild(s);
+  }
+};
+eye('eyesOpen', OPEN); eye('eyesHeart', HEART);
 
-  const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
-  const video = $('cam');
-  let net = null, knn = null, stream = null, modelReady = false;
-  let classes = [];             // {name, count}
-  let holding = -1, holdTimer = null;
-  let port = null, writer = null, writeChain = Promise.resolve();
-  let estop = false;            // 멈춤 잠금
-  let lastTop = -1, stableCount = 0, unsureCount = 0;
-  let aiTarget = 0, aiValidAt = 0;
-  let manualValue = 0;
-  let lastSent = -1, lastSentAt = 0;
-  let testSet = [];             // {label, emb: Float32Array}
-  let lastEval = null;
-
-  function log(msg) {
-    const t = new Date().toLocaleTimeString('ko-KR', { hour12: false });
-    const el = $('log');
-    el.textContent = (`[${t}] ${msg}\n` + el.textContent).slice(0, 4000);
-  }
-
-  // ---------------- 클래스 UI ----------------
-  function renderClasses() {
-    const wrap = $('classes');
-    wrap.innerHTML = '';
-    classes.forEach((c, i) => {
-      const row = document.createElement('div');
-      row.className = 'cls';
-      row.innerHTML = `
-        <div class="num" style="background:${COLORS[i]}">${i + 1}</div>
-        <div><input type="text" value="${esc(c.name)}" aria-label="${i + 1}번 이름" maxlength="20">
-          <div class="count">사진 <b>${c.count}</b>장</div></div>
-        <button class="hold" aria-label="${i + 1}번 사진 모으기">사진 모으기</button>
-        <div class="bar"><i style="background:${COLORS[i]}"></i></div>`;
-      row.querySelector('input').addEventListener('input', (e) => { c.name = e.target.value; renderTestButtons(); });
-      const hb = row.querySelector('.hold');
-      hb.addEventListener('pointerdown', (e) => { e.preventDefault(); startHold(i, hb); });
-      ['pointerup', 'pointerleave', 'pointercancel'].forEach(ev => hb.addEventListener(ev, () => stopHold(i, hb)));
-      hb.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); addSample(i); } });
-      wrap.appendChild(row);
-    });
-    $('btnAdd').disabled = classes.length >= MAX_CLASSES;
-    renderManual();
-    renderTestButtons();
-    updateBalance();
-  }
-
-  function canCapture() {
-    if (!modelReady) { alert('AI가 아직 준비 중이에요. 위쪽에 "AI 준비 완료"가 뜰 때까지 기다려 주세요.'); return false; }
-    if (!stream) { alert('카메라를 먼저 켜 주세요.'); return false; }
-    return true;
-  }
-  function startHold(i, hb) {
-    if (!canCapture()) return;
-    holding = i; hb.classList.add('active');
-    addSample(i);
-    clearInterval(holdTimer);
-    holdTimer = setInterval(() => addSample(i), 1000 / Number($('rate').value));
-  }
-  function stopHold(i, hb) {
-    if (holding === i) { holding = -1; clearInterval(holdTimer); holdTimer = null; }
-    hb.classList.remove('active');
-  }
-  function addSample(i) {
-    if (!modelReady || !stream || video.readyState < 2) return;
-    const emb = tf.tidy(() => net.infer(video, true));
-    knn.addExample(emb, i);       // knn이 내부 보관(복사)함
-    emb.dispose();
-    classes[i].count++;
-    const cnt = document.querySelectorAll('.cls .count b')[i];
-    if (cnt) cnt.textContent = classes[i].count;
-    updateBalance();
-  }
-  function updateBalance() {
-    const counts = classes.map(c => c.count).filter(n => n > 0);
-    let msg = '';
-    if (counts.length >= 2) {
-      const mn = Math.min(...counts), mx = Math.max(...counts);
-      if (mn < 10) msg = '사진이 10장보다 적은 종류가 있어요. 더 모아 주세요.';
-      else if (mx > mn * 2) msg = '종류마다 사진 수 차이가 커요. 비슷하게 맞추면 더 공평하게 판단해요.';
-    }
-    $('balanceWarn').textContent = msg;
-    $('kShow').textContent = currentK();
-  }
-  function currentK() {
-    if (!$('kAuto').checked) return Number($('kVal').value);
-    const counts = classes.map(c => c.count).filter(n => n > 0);
-    return counts.length ? Math.max(1, Math.min(10, Math.min(...counts))) : 10;
-  }
-
-  function renderManual() {
-    const m = $('manual');
-    m.innerHTML = '';
-    const mk = (n, label, color) => {
-      const b = document.createElement('button');
-      b.textContent = label;
-      if (color) b.style.borderColor = color;
-      b.onclick = () => { manualValue = n; $('autoSend').checked = false; log(`직접 보내기: ${n}`); };
-      m.appendChild(b);
-    };
-    classes.forEach((c, i) => mk(i + 1, `${i + 1}`, COLORS[i]));
-    mk(0, '0 (멈춤)');
-  }
-
-  $('btnAdd').onclick = () => {
-    if (classes.length < MAX_CLASSES) { classes.push({ name: `${classes.length + 1}번`, count: 0 }); renderClasses(); }
-  };
-  $('btnClear').onclick = () => {
-    if (!confirm('모은 학습 사진(데이터)을 모두 지울까요?')) return;
-    if (knn) knn.clearAllClasses();
-    classes.forEach(c => c.count = 0);
-    testSet = []; lastEval = null; $('evalOut').innerHTML = ''; $('btnCsv').disabled = true;
-    resetDecision();
-    renderClasses();
-    log('학습 데이터 모두 지움 → 0(멈춤)');
-  };
-  $('thr').oninput = (e) => { $('thrVal').textContent = e.target.value + '%'; };
-  $('kAuto').onchange = (e) => { $('kVal').disabled = e.target.checked; updateBalance(); };
-  $('kVal').oninput = (e) => { $('kValShow').textContent = e.target.value; updateBalance(); };
-  $('rate').oninput = (e) => { $('rateShow').textContent = e.target.value; };
-  $('mirror').onchange = (e) => video.classList.toggle('mirror', e.target.checked);
-  $('autoSend').onchange = () => { manualValue = 0; resetDecision(); tick(true); };
-
-  function resetDecision() { lastTop = -1; stableCount = 0; unsureCount = 0; aiTarget = 0; aiValidAt = 0; }
-
-  // ---------------- 멈춤(비상 정지) ----------------
-  function setStop(on) {
-    estop = on;
-    $('btnStop').textContent = on ? '▶ 멈춤 풀기' : '■ 멈춤';
-    $('btnStop').classList.toggle('latched', on);
-    resetDecision(); manualValue = 0;   // 잠금/해제 모두 수동 번호를 0으로
-    log(on ? '멈춤! (0을 계속 보냄)' : '멈춤 풀림');
-    tick(true);
-  }
-  $('btnStop').onclick = () => setStop(!estop);
-  document.addEventListener('keydown', (e) => { if (e.key === 'Escape') setStop(true); });
-
-  // ---------------- 카메라 ----------------
-  async function listCams() {
-    try {
-      const sel = $('camSelect');
-      const prev = sel.value;
-      const devs = (await navigator.mediaDevices.enumerateDevices()).filter(d => d.kind === 'videoinput');
-      sel.innerHTML = devs.map((d, i) => `<option value="${esc(d.deviceId)}">${esc(d.label || '카메라 ' + (i + 1))}</option>`).join('');
-      const active = stream && stream.getVideoTracks()[0] && stream.getVideoTracks()[0].getSettings().deviceId;
-      if (active && devs.some(d => d.deviceId === active)) sel.value = active;
-      else if (prev && devs.some(d => d.deviceId === prev)) sel.value = prev;
-      sel.style.display = devs.length > 1 ? '' : 'none';
-    } catch (e) { /* 권한 전에는 목록이 비어 있을 수 있음 */ }
-  }
-  let camBusy = false;
-  async function startCam(deviceId) {
-    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
-      throw new Error('이 주소에서는 카메라를 쓸 수 없어요(https 주소로 열어 주세요)');
-    }
-    if (camBusy) return;               // 동시에 두 번 켜지 않도록
-    camBusy = true;
-    try { await startCamInner(deviceId); } finally { camBusy = false; }
-  }
-  async function startCamInner(deviceId) {
-    if (stream) stream.getTracks().forEach(t => t.stop());
-    stream = null;
-    stream = await navigator.mediaDevices.getUserMedia({
-      video: deviceId ? { deviceId: { exact: deviceId }, width: 640, height: 480 } : { width: 640, height: 480 },
-      audio: false
-    });
-    video.srcObject = stream;
-    await video.play();
-    stream.getVideoTracks()[0].addEventListener('ended', () => { stream = null; log('카메라가 꺼졌어요 → 0(멈춤)'); });
-    $('btnCam').textContent = '카메라 다시 켜기';
-    await listCams();
-    log('카메라 켜짐');
-  }
-  $('btnCam').onclick = () => startCam($('camSelect').value).catch(e => { alert('카메라를 켤 수 없어요: ' + e.message); log('카메라 오류: ' + e.message); });
-  $('camSelect').onchange = (e) => startCam(e.target.value).catch(err => log('카메라 오류: ' + err.message));
-
-  // ---------------- 마이크로비트(Web Serial) ----------------
-  function setSerialUI(on) {
-    $('serialStatus').textContent = on ? '마이크로비트 연결됨' : '마이크로비트 연결 안 됨';
-    $('serialStatus').className = 'status ' + (on ? 'on' : 'off');
-    $('btnSerial').textContent = on ? '연결 끊기' : 'USB 마이크로비트 연결';
-  }
-  async function connectSerial() {
-    if (!('serial' in navigator)) {
-      alert('이 브라우저는 USB 연결을 지원하지 않아요.\nPC(윈도우·맥)의 크롬이나 엣지에서 https 주소로 열어 주세요.');
-      return;
-    }
-    let p = null;
-    try {
-      p = await navigator.serial.requestPort({ filters: [{ usbVendorId: 0x0d28 }] });
-      await p.open({ baudRate: 115200 });
-      port = p;
-      writer = port.writable.getWriter();
-      setSerialUI(true);
-      log('마이크로비트 연결됨');
-      lastSent = -1;
-      tick(true);
-    } catch (e) {
-      try { if (p && p.readable) await p.close(); } catch (_) {}
-      port = null; writer = null; setSerialUI(false);
-      if (e.name !== 'NotFoundError') {
-        log('연결 실패: ' + e.message);
-        alert('연결하지 못했어요. MakeCode 등 다른 탭이 마이크로비트를 쓰고 있으면 그 탭의 연결을 끊거나 닫은 뒤 다시 해 보세요.');
-      }
-    }
-  }
-  async function disconnectSerial() {
-    const w = writer, p = port;
-    try { await writeLine(0); await writeChain; } catch (e) {}
-    writer = null; port = null;
-    try { w && w.releaseLock(); } catch (e) {}
-    try { p && await p.close(); } catch (e) {}
-    setSerialUI(false);
-    log('연결 끊음');
-  }
-  if ('serial' in navigator) {
-    navigator.serial.addEventListener('disconnect', (e) => {
-      if (port && e.target === port) { port = null; writer = null; setSerialUI(false); log('USB가 빠졌어요'); }
-    });
-  }
-  $('btnSerial').onclick = () => (port ? disconnectSerial() : connectSerial());
-
-  function writeLine(n) {
-    const w = writer;
-    if (!w) return Promise.resolve();
-    writeChain = writeChain.then(() => w.write(new TextEncoder().encode(n + '\n'))).catch(e => log('보내기 오류: ' + e.message));
-    return writeChain;
-  }
-
-  // 무엇을 보낼지 결정해서 보냄
-  function decideTarget() {
-    if (estop) return 0;
-    if (document.hidden) return 0;
-    if (!$('autoSend').checked) return manualValue;
-    if (!modelReady || !stream || holding >= 0) return 0;
-    if (performance.now() - aiValidAt > FRESH_MS) return 0;
-    return aiTarget;
-  }
-  function tick(force) {
-    const n = decideTarget();
-    const now = performance.now();
-    if (force || n !== lastSent || now - lastSentAt >= HEARTBEAT_MS) {
-      if (n !== lastSent) log(`보냄: ${n}${n ? ' (' + (classes[n - 1] ? classes[n - 1].name : '') + ')' : ' (멈춤)'}`);
-      lastSent = n; lastSentAt = now;
-      $('sendingNow').textContent = writer ? n : `${n} (연결 안 됨)`;
-      writeLine(n);
-    }
-  }
-  setInterval(() => tick(false), 100);
-
-  // 같은 컴퓨터에서 열린 로보독 시뮬레이터(sim/)에도 같은 번호를 알려 줌
-  let simChannel = null;
-  try { simChannel = new BroadcastChannel('robodog-ai-bridge'); } catch (e) { /* 지원 안 함 */ }
-  setInterval(() => { if (simChannel && lastSent >= 0) simChannel.postMessage({ n: lastSent }); }, 300);
-  document.addEventListener('visibilitychange', () => tick(true));
-
-  // ---------------- AI ----------------
-  async function loadModel() {
-    try {
-      try {
-        net = await mobilenet.load({ version: 2, alpha: 0.5, modelUrl: 'model/model.json', inputRange: [0, 1] });
-      } catch (localErr) {
-        // 동봉 모델과 같은 버전(classification/3)을 TF Hub에서 받음 → 저장한 학습 데이터와 호환
-        log('내장 모델을 못 열어 인터넷에서 받는 중…');
-        const HUB = 'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v2_050_224/classification/3/default/1';
-        const handler = tf.io.http(HUB + '/model.json?tfjs-format=file', {
-          weightUrlConverter: async (name) => `${HUB}/${name}?tfjs-format=file`
-        });
-        net = await mobilenet.load({ version: 2, alpha: 0.5, modelUrl: handler, inputRange: [0, 1] });
-      }
-      knn = knnClassifier.create();
-      modelReady = true;
-      $('modelStatus').textContent = 'AI 준비 완료';
-      $('modelStatus').className = 'status on';
-      $('result').textContent = '카메라를 켜고 두 종류 이상 가르쳐 주세요';
-      log('AI 모델 준비 완료');
-      loop();
-    } catch (e) {
-      $('modelStatus').textContent = 'AI 불러오기 실패';
-      $('result').textContent = 'AI를 불러오지 못했어요';
-      log('AI 모델 오류: ' + e.message);
-      alert('AI를 불러오지 못했어요.\n① 인터넷 연결 확인 ② 파일을 더블클릭해 연 경우 선생님이 안내한 웹 주소로 열기 ③ 새로고침(F5)');
-    }
-  }
-
-  async function loop() {
-    let emb = null;
-    try {
-      const trained = classes.filter(c => c.count > 0).length;
-      if (stream && video.readyState >= 2 && holding < 0 && trained >= 2 && !document.hidden) {
-        emb = tf.tidy(() => net.infer(video, true));
-        const res = await knn.predictClass(emb, currentK());
-        showResult(res);
-      } else if (stream && trained < 2 && holding < 0) {
-        $('result').textContent = '두 종류 이상 가르쳐 주세요';
-      }
-    } catch (e) {
-      log('인식 오류: ' + e.message);
-    } finally {
-      if (emb) emb.dispose();
-      setTimeout(loop, LOOP_MS);
-    }
-  }
-
-  function showResult(res) {
-    const bars = document.querySelectorAll('.cls .bar > i');
-    classes.forEach((c, i) => {
-      const p = (res.confidences[i] || 0) * 100;
-      if (bars[i]) bars[i].style.width = p.toFixed(0) + '%';
-    });
-    const top = Number(res.label);
-    const conf = (res.confidences[top] || 0) * 100;
-    const thr = Number($('thr').value);
-    if (conf + 1e-6 < thr) {
-      $('result').textContent = `잘 모르겠어요… (${conf.toFixed(0)}%)`;
-      stableCount = 0;
-      if (++unsureCount >= UNSURE_FRAMES) { aiTarget = 0; aiValidAt = performance.now(); }
-      return;
-    }
-    unsureCount = 0;
-    $('result').innerHTML = `<span style="color:${COLORS[top]}">${top + 1}. ${esc(classes[top].name)}</span> <small>(${conf.toFixed(0)}%)</small>`;
-    if (top === lastTop) stableCount++; else { lastTop = top; stableCount = 1; }
-    if (stableCount >= STABLE_FRAMES) { aiTarget = top + 1; aiValidAt = performance.now(); }
-  }
-
-  // ---------------- 정확도 실험 ----------------
-  function renderTestButtons() {
-    const w = $('testClasses');
-    if (!w) return;
-    w.innerHTML = '';
-    classes.forEach((c, i) => {
-      const n = testSet.filter(t => t.label === i).length;
-      const b = document.createElement('button');
-      b.innerHTML = `시험용 ${i + 1}. ${esc(c.name)} <b>${n}</b>장`;
-      b.style.borderColor = COLORS[i];
-      b.onclick = () => {
-        if (!canCapture()) return;
-        const emb = tf.tidy(() => net.infer(video, true));
-        testSet.push({ label: i, emb: emb.dataSync().slice() });
-        emb.dispose();
-        renderTestButtons();
-      };
-      w.appendChild(b);
-    });
-  }
-  $('btnTestClear').onclick = () => { testSet = []; renderTestButtons(); $('evalOut').innerHTML = ''; $('btnCsv').disabled = true; };
-  $('btnEval').onclick = async () => {
-    const trained = classes.filter(c => c.count > 0).length;
-    const valid = testSet.filter(t => t.label < classes.length);
-    if (trained < 2 || !valid.length) { alert('학습 사진(2종류 이상)과 시험 사진이 필요해요.'); return; }
-    const untrainedTest = [...new Set(valid.filter(t => classes[t.label].count === 0).map(t => t.label + 1))];
-    const n = classes.length;
-    const mat = Array.from({ length: n }, () => new Array(n).fill(0));
-    let correct = 0;
-    for (const t of valid) {
-      const x = tf.tensor(t.emb, [1, t.emb.length]);
-      const r = await knn.predictClass(x, currentK());
-      x.dispose();
-      const pred = Number(r.label);
-      mat[t.label][pred]++;
-      if (pred === t.label) correct++;
-    }
-    const acc = (correct / valid.length * 100).toFixed(1);
-    lastEval = { mat, acc, k: currentK() };
-    let html = `<p><b>정확도 ${acc}%</b> (${correct}/${valid.length}, k=${currentK()})</p>`;
-    if (untrainedTest.length) html += `<p class="warn">학습 사진이 없는 종류(${untrainedTest.join(', ')}번)의 시험 사진은 반드시 틀리게 계산돼요.</p>`;
-    html += `<table><tr><th>실제 \\ AI 답</th>`;
-    classes.forEach((c, j) => html += `<th>${j + 1}. ${esc(c.name)}</th>`);
-    html += '<th>재현율</th></tr>';
-    mat.forEach((row, i) => {
-      const tot = row.reduce((a, b) => a + b, 0);
-      html += `<tr><th>${i + 1}. ${esc(classes[i].name)}</th>` + row.map((v, j) => `<td style="${i === j ? 'font-weight:700' : ''}">${v}</td>`).join('') +
-        `<td>${tot ? (row[i] / tot * 100).toFixed(0) + '%' : '-'}</td></tr>`;
-    });
-    html += '</table>';
-    $('evalOut').innerHTML = html;
-    $('btnCsv').disabled = false;
-  };
-  $('btnCsv').onclick = () => {
-    if (!lastEval) return;
-    const head = ['실제\\AI', ...classes.map((c, j) => `${j + 1}.${c.name}`)];
-    const rows = [head, ...lastEval.mat.map((r, i) => [`${i + 1}.${classes[i].name}`, ...r])];
-    rows.push([], ['정확도(%)', lastEval.acc], ['k', lastEval.k]);
-    // 스프레드시트 수식 주입 방지: = + - @ 로 시작하는 글자 앞에 ' 붙임
-    const cell = (v) => { let s = String(v); if (/^[=+\-@\t\r]/.test(s) && isNaN(Number(s))) s = "'" + s; return `"${s.replace(/"/g, '""')}"`; };
-    const csv = '﻿' + rows.map(r => r.map(cell).join(',')).join('\n');
-    download(new Blob([csv], { type: 'text/csv' }), '로보독AI_혼동행렬.csv');
-  };
-
-  let featLenCache = 0;
-  function embeddingLength() {
-    if (!featLenCache) {
-      const z = tf.zeros([224, 224, 3]);
-      const e = net.infer(z, true);
-      featLenCache = e.shape[e.shape.length - 1];
-      z.dispose(); e.dispose();
-    }
-    return featLenCache;
-  }
-
-  // ---------------- 저장/불러오기 ----------------
-  function download(blob, name) {
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(blob); a.download = name;
-    document.body.appendChild(a); a.click(); a.remove();
-    setTimeout(() => URL.revokeObjectURL(a.href), 1000);
-  }
-  $('btnSave').onclick = () => {
-    if (!knn || !knn.getNumClasses()) { alert('저장할 학습 데이터가 없어요.'); return; }
-    const ds = knn.getClassifierDataset();
-    const data = {};
-    Object.keys(ds).forEach(k => { data[k] = { shape: ds[k].shape, values: Array.from(ds[k].dataSync()) }; });
-    const json = JSON.stringify({ app: 'robodog-ai-bridge', v: 1, names: classes.map(c => c.name), data });
-    download(new Blob([json], { type: 'application/json' }), '로보독AI_학습데이터.json');
-  };
-  $('fileLoad').onchange = async (e) => {
-    const f = e.target.files[0];
-    e.target.value = '';
-    if (!f) return;
-    if (!modelReady) { alert('AI가 준비된 뒤에 불러와 주세요.'); return; }
-    const ds = {};
-    try {
-      const obj = JSON.parse(await f.text());
-      if (!obj || obj.app !== 'robodog-ai-bridge') throw new Error('로보독 AI 브리지 파일이 아니에요');
-      if (!Array.isArray(obj.names) || obj.names.length < 1 || obj.names.length > MAX_CLASSES) throw new Error('종류 이름 정보가 잘못됐어요');
-      if (!obj.data || typeof obj.data !== 'object') throw new Error('학습 데이터가 없어요');
-      const featLen = embeddingLength();
-      // 1) 먼저 모두 검사
-      Object.keys(obj.data).forEach(k => {
-        const idx = Number(k);
-        const d = obj.data[k];
-        if (!Number.isInteger(idx) || idx < 0 || idx >= obj.names.length) throw new Error('종류 번호가 잘못됐어요');
-        if (!d || !Array.isArray(d.shape) || d.shape.length !== 2 || !Array.isArray(d.values) ||
-            d.values.length !== d.shape[0] * d.shape[1] || d.shape[1] !== featLen) throw new Error('다른 AI 모델로 만든 파일이거나 형식이 잘못됐어요');
-      });
-      // 2) 검사가 끝난 뒤에 바꿈
-      Object.keys(obj.data).forEach(k => { ds[k] = tf.tensor2d(obj.data[k].values, obj.data[k].shape); });
-      knn.clearAllClasses();
-      knn.setClassifierDataset(ds);
-      classes = obj.names.map((n, i) => ({ name: String(n).slice(0, 20), count: ds[i] ? ds[i].shape[0] : 0 }));
-      testSet = []; lastEval = null; $('evalOut').innerHTML = ''; $('btnCsv').disabled = true;
-      resetDecision();
-      renderClasses();
-      log('학습 데이터 불러옴');
-    } catch (err) {
-      Object.values(ds).forEach(t => { try { t.dispose(); } catch (_) {} });
-      alert('불러오기 실패: ' + err.message);
-    }
-  };
-
-  // ---------------- 시작 ----------------
-  classes = DEFAULT_NAMES.map(n => ({ name: n, count: 0 }));
-  renderClasses();
-  listCams();
-  loadModel();
-})();
+const app = document.getElementById('app');
+const finish = () => { app.classList.add('instant'); document.getElementById('skip').hidden = true; };
+document.getElementById('skip').onclick = finish;
+// 한 번 본 사람은 다음부터 바로 (같은 브라우저)
+try { if (sessionStorage.getItem('intro-seen')) finish(); sessionStorage.setItem('intro-seen', '1'); } catch (e) {}
+document.getElementById('replay').onclick = () => { try { sessionStorage.removeItem('intro-seen'); } catch (e) {} location.reload(); };
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') finish(); });
 </script>
 </body>
-</html>

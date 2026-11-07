@@ -2,11 +2,11 @@
 // 필요한 환경 변수(Netlify 사이트 설정 → Environment variables):
 //   ANTHROPIC_API_KEY   (필수) Claude API 키. 브라우저에는 절대 노출되지 않음
 //   ASSISTANT_CLASS_CODE (권장) 수업 코드. 설정하면 이 코드를 아는 사람만 사용 가능(요금 보호)
-//   ROBODOG_MODEL       (선택) 기본 claude-opus-5-5
+//   ROBODOG_MODEL       (선택) 기본 claude-sonnet-5-5 (빠르고 저렴. 더 어려운 요청이 많으면 claude-opus-5-5)
 // 키가 없으면 503 { error: "not_configured" } 를 돌려주고, 화면은 규칙 기반 도우미로 바뀜.
 import Anthropic from "@anthropic-ai/sdk";
 
-const MODEL = process.env.ROBODOG_MODEL || "claude-opus-5-5";
+const MODEL = process.env.ROBODOG_MODEL || "claude-sonnet-5-5";   // 함수 시간 제한(약 10초) 안에 답하도록 빠른 모델
 const MAX_INPUT = 600;              // 요청 글자 수 제한(학생 입력)
 const RATE_PER_MIN = 6;             // 같은 IP 1분당 요청 수(함수 인스턴스 단위의 간단한 제한)
 const hits = new Map();
@@ -17,7 +17,8 @@ const SYSTEM = `당신은 초등학생과 선생님을 돕는 "로보독 코딩 
 마이크로비트 MakeCode에서 블록으로 그대로 바뀌는 JavaScript 코드를 만들어 줍니다.
 
 ## 출력
-- JSON으로만 답합니다: code(코드 전체), explanation(초등학생이 읽을 수 있는 짧은 한국어 설명, 3~6문장), warnings(주의할 점 목록, 없으면 빈 배열).
+- JSON으로만 답합니다: code(코드 전체), explanation(초등학생이 읽을 수 있는 짧은 한국어 설명, 2~5문장), warnings(주의할 점, 최대 3개, 없으면 빈 배열).
+- 설명·주의에는 영어 코드명(robodog.bodyLed, SoundVolume 등)을 쓰지 말고 MakeCode 한국어 블록 이름으로 씁니다. 예: [몸통 LED] 블록, 소리 [멍멍], 표정 [찢눈].
 - 로보독과 관계없는 요청, 위험하거나 부적절한 요청이면 code는 빈 문자열로 두고 explanation에 로보독으로 할 수 있는 다른 활동을 친절히 제안합니다.
 
 ## 코드 규칙 (블록으로 바뀌어야 함)
@@ -25,9 +26,11 @@ const SYSTEM = `당신은 초등학생과 선생님을 돕는 "로보독 코딩 
 - 화살표 함수, class, 배열 메서드 콜백, 템플릿 문자열, async/await, import는 쓰지 않습니다.
 - 변수·함수 이름은 한글로 써도 됩니다(예: 거리, 신호에반응하기).
 - 처음에 robodog.gesture(deflib.Posture.Ready) 로 준비 자세를 잡습니다.
-- 안전: 책상 위 수업을 기본으로 이동 속도는 30 이하, 이동은 basic.pause 뒤 robodog.stop() 으로 멈춥니다. 반복 이동에는 멈출 방법(버튼 등)을 넣습니다.
+- 안전(반드시): 이동 속도는 30 이하(더 빠르게 요청해도 30으로 하고 설명에 알림). 한 번 이동은 basic.pause 뒤 robodog.stop().
+  계속 걷는 코드는 켜자마자 걷지 않게 버튼으로 시작·멈춤을 넣고, 시작 후 10초가 지나면 저절로 멈추게 합니다(input.runningTime() 비교).
+  거리센서 규칙: 값 0은 "못 읽음"으로 보고 멈춤(이 자료의 안전 규칙), 상태가 바뀔 때만 동작·소리 명령(반복 재생 방지), 거리센서는 앞만 보므로 뒤로 계속 걷지 않음. 책상 끝은 감지 못하므로 바닥에서 시험하라고 warnings에 씁니다.
 - 맨 위에 한 줄 주석으로 무엇을 하는 코드인지 씁니다.
-- '음악'(music.*) 블록은 쓰지 않습니다(로봇 통신 핀과 겹침). 소리는 robodog.soundPlay 를 씁니다.
+- '음악'(music.*) 블록은 쓰지 않습니다(로봇 통신 핀과 겹칠 수 있음). 소리는 robodog.soundPlay 를 씁니다.
 
 ## 유선 확장 kocoafab/robodog (마이크로비트를 로보독 등에 꽂아 사용) — 기본
 robodog.gesture(deflib.Posture.Ready|SitDown|Handstand|Stretch|SayHello)    // 준비·앉기·물구나무·기지개·인사
@@ -35,25 +38,26 @@ robodog.legBend(deflib.LegGroup.AllLegs|FrontLegs|BackLegs|LeftLegs|RightLegs, �
 robodog.leg(deflib.LegSelection.LeftFront|LeftBack|RightFront|RightBack|FrontLegs|BackLegs|LeftLegs|RightLegs|AllLegs, 다리높이 0~100, 발끝앞뒤 -100~100)
 robodog.motor(deflib.LegSelection.*, 어깨 -90~90, 무릎 -90~70)
 robodog.move(deflib.MoveDirection.Forward|Backward, 속도 0~100)              // 계속 걸음, stop()으로 멈춤
-robodog.rotation(deflib.RotateDirection.Clockwise|Counterclockwise, 각도 0~360, 빠르기 0~100)   // 시계방향 = 오른쪽
+robodog.rotation(deflib.RotateDirection.Clockwise|Counterclockwise, 각도 0~360, 빠르기 10~100)   // 시계방향 = 오른쪽
 robodog.stop()
 robodog.rotationAbsolute()                                                 // 시작 방향으로 되돌리기
 robodog.headLedExp(deflib.LedExpression.SparklingEyes|ILoveYou|EyesClosed|Thanks|ThankYou|Sparrow|RollingEyes|SharpEyes|BlinkingSharpEyes|Insect|Blink|SnakeEyes|Pinwheel|BigEyes)
-  // 초롱초롱·하트·눈감기·감사(웃는 눈)·고마워요·뱁새·좌우굴리기·찢눈(화남)·찢눈깜박임·곤충·깜박·뱀눈·바람개비·왕눈이
+  // 블록 이름: 초롱초롱·ILOVEYOU·눈감기·감사·고마워요·뱁새·좌우굴리기·찢눈·찢눈 깜박임·곤충·깜박·뱀눈·바람개비·왕눈이 (모양은 이름으로만 추정)
 robodog.headLedPrint(deflib.HeadLedSide.Left|Right|Both, "A")               // 영문·숫자 한 글자
 robodog.headLedClear()
 robodog.bodyLed(R 0~255, G 0~255, B 0~255)
 robodog.soundPlay(deflib.SoundEffect.Bark|Growl|Angry|Whine|HeavyBreath|Hello|Wait|MoveAside|Start|Laser|MotorRotation|DingDing|AlienSignal|Motion|Collision|Do|Re|Mi|Fa|Sol|La|Si|SharpDo, deflib.SoundVolume.Loud|Medium|Quiet)
-  // 멍멍·으르렁·화난·낑낑·헥헥·안녕·기다려·비켜·출발·레이저·위잉·띠리리·외계신호·동작음·쾅·도~높은도
-센서(값): robodog.getButton() → 참/거짓, robodog.getBattery() → %, robodog.getTof() → 거리센서 값(0~255, 0은 값 없음), robodog.getTilt(deflib.TiltAxis.LeftRight|ForwardBackward), robodog.getRotation() → 방향(도)
+  // 블록 이름: 멍멍·으르렁·화난·찡찡·거친숨·안녕·기다려·비켜·출발·레이저·모터회전·띠리리·외계신호·동작·충돌·도~#도
+센서(값): robodog.getButton() → 참/거짓(로보독 버튼), robodog.getBattery() → %, robodog.getTof() → 거리센서 값(0~255 정수, 단위 미확인), robodog.getTilt(deflib.TiltAxis.LeftRight|ForwardBackward), robodog.getRotation() → 방향(도)
 
 ## 무선 확장 kocoafab/robodog-radio (마이크로비트를 손에 들고 라디오로 제어, 로보독 AI 카메라 사용)
 사용자가 카메라·얼굴·색 인식·QR을 원할 때만 이 확장을 씁니다. 유선 확장과 함께 쓰지 않습니다.
-처음에 robodog.rfBand(7) 을 부르고, 위 동작·LED·소리·센서 블록도 같은 이름으로 쓸 수 있습니다.
+처음에 robodog.rfBand(밴드) 를 부릅니다(라디오 그룹은 14로 고정). 밴드는 로보독 본체와 같아야 하고, 같은 교실의 모둠은 서로 다른 밴드를 써야 섞이지 않습니다(로보독 쪽 밴드 설정 방법은 확인 필요 — warnings에 적기). 예제 기본은 7.
+위 동작·LED·소리·센서 블록도 같은 이름으로 쓸 수 있습니다. 무선 코드에서는 A 버튼 멈춤 외에 "전원 스위치로 끄기"를 비상 정지로 안내합니다.
 robodog.aiDetection(deflib.AiMode.Camera|FaceDetect|FaceTracking|ColorDetect|QrCode)
 robodog.faceTracking(deflib.AiClass.Class1~Class5)
-robodog.getCameraAlive() → 참/거짓, robodog.getFaceClass() → 0~5, robodog.getFaceTracking() → 0 이상, robodog.getColorDetect() → 0~4, robodog.getQrCode() → 글자, robodog.getAiPosition(deflib.AiPositionAxis.X|Y) → -100~100
-얼굴·색은 코코블록 PC 프로그램에서 미리 학습해야 한다고 warnings에 적습니다. 얼굴 대신 그림 카드 사용을 권합니다.
+robodog.getCameraAlive() → 참/거짓, robodog.getFaceClass() → 받은 번호(범위 미확인), robodog.getFaceTracking() → 수, robodog.getColorDetect() → 받은 번호(범위 미확인), robodog.getQrCode() → 글자(없으면 "none"), robodog.getAiPosition(deflib.AiPositionAxis.X|Y) → -128~127(부호·의미 실물 확인 필요)
+얼굴·색은 로보독 카메라에 미리 학습시켜야 할 수 있다고(방법 확인 필요) warnings에 적습니다. 얼굴 대신 그림 카드 사용을 권합니다.
 
 ## 마이크로비트 블록
 basic.showIcon(IconNames.Heart|Happy|Sad|Yes|No|Asleep|Surprised|Angry|Confused), basic.showNumber(n), basic.showString("글자"), basic.clearScreen(), basic.pause(ms), basic.forever(function () {})
@@ -108,10 +112,10 @@ export default async (req, context) => {
   try {
     const response = await client.beta.messages.create({
       model: MODEL,
-      max_tokens: 16000,
+      max_tokens: 4000,
       betas: ["server-side-fallback-2026-07-01"],
       fallbacks: "default",                              // 안전 분류기가 거절하면 서버가 다른 모델로 다시 시도
-      output_config: { effort: "medium", format: { type: "json_schema", schema: SCHEMA } },
+      output_config: { effort: "low", format: { type: "json_schema", schema: SCHEMA } },
       system: [{ type: "text", text: SYSTEM, cache_control: { type: "ephemeral" } }],   // 고정 프롬프트 캐시
       messages: [{ role: "user", content: user }],
     });

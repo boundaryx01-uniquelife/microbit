@@ -19,7 +19,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
   p.on('dialog', d => d.accept());
   // 0. 처음 열면 자동 시연이 시작되는지
-  await p.goto(BASE + 'sim/');
+  await p.goto(BASE + 'sim/?demo=1');   // 블록 코딩 첫 화면은 자동 시연을 하지 않으므로 ?demo=1 로 켬
   await p.waitForFunction(() => window.__sim && window.Babel, null, { timeout: 30000 });
   await p.waitForTimeout(4000);
   const cap0 = await p.textContent('#caption');
@@ -156,7 +156,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   // 11. AI 브리지 → 시뮬레이터 연동(BroadcastChannel)
   await p.click('#btnReset'); await loadExample('03_ai-traffic-dog'); await run(); await p.waitForTimeout(2200);
   const bp = await ctx.newPage();
-  await bp.goto(BASE + 'index.html');
+  await bp.goto(BASE + 'ai.html');
   await bp.waitForFunction(() => /완료|실패/.test(document.getElementById('modelStatus').textContent), null, { timeout: 120000 });
   await bp.click('#manual button:nth-child(3)');   // 수동 3
   await bp.waitForTimeout(1500);

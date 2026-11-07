@@ -3,5 +3,8 @@
   "private": true,
   "dependencies": {
     "@anthropic-ai/sdk": "^1.6.0"
+  },
+  "devDependencies": {
+    "marked": "^15.0.12"
   }
 }

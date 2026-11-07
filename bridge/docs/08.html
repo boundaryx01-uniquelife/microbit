@@ -1,0 +1,300 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>로보독 시뮬레이터 안내 · 로보독 수업 자료</title><style>
+:root { --bg:#f6f7fb; --card:#fff; --ink:#18202e; --muted:#566079; --line:#dde2ee; --accent:#2f6fe4; --accent-ink:#fff; --code:#eef1f7; --mark:#fff4c2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#10141b; --card:#181d27; --ink:#e9edf5; --muted:#a3acc1; --line:#2b3242; --accent:#6b9bf5; --accent-ink:#0b0e14; --code:#222936; --mark:#4a3f12; } }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:17px;line-height:1.75}
+a{color:var(--accent)} header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.bar{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .home{font-weight:800;text-decoration:none;color:var(--ink)} .bar nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0}
+.bar nav a{white-space:nowrap;text-decoration:none;font-size:14px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
+.bar nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bar button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:30px;line-height:1.3;margin:10px 0 18px} h2{font-size:23px;margin:36px 0 10px;padding-top:6px;border-top:2px solid var(--line)} h3{font-size:19px;margin:24px 0 6px}
+code{background:var(--code);border-radius:5px;padding:1px 6px;font-size:.88em;font-family:ui-monospace,Consolas,"D2Coding",monospace}
+pre{background:var(--code);border-radius:10px;padding:12px 14px;overflow:auto;line-height:1.5} pre code{padding:0;background:none}
+.tbl{overflow-x:auto;margin:12px 0} table{border-collapse:collapse;width:100%;font-size:15.5px;line-height:1.6;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;text-align:left} th{background:var(--code)}
+blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0}
+li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:10px 0 26px}
+.cards a{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.cards a:hover{border-color:var(--accent)} .cards b{display:block;font-size:18px} .cards span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:4px}
+.dl{columns:2 260px;padding-left:20px} .note{color:var(--muted);font-size:14.5px}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media print { header,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
+  h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2} }
+</style></head>
+<body><header><div class="bar"><a class="home" href="../">🐶 로보독 AI 교실</a>
+<nav aria-label="수업 자료"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html" aria-current="page">시뮬레이터 안내</a></nav>
+<button onclick="print()">🖨 인쇄</button></div></header>
+<main><h1>로보독 시뮬레이터 안내</h1>
+<p>주소: <strong><a href="https://microbit-bridge.netlify.app/sim/">https://microbit-bridge.netlify.app/sim/</a></strong></p>
+<p>로보독이 없어도, 또는 실물에 내려받기 전에, <strong>MakeCode로 짠 코드대로 로보독이 어떻게 움직이는지</strong> 2D·3D로 미리 봅니다.</p>
+<h2>쓰는 법</h2>
+<ol start="0">
+<li>처음 화면은 **🧩 블록 코딩(MakeCode 편집기)**입니다. 코딩 칸을 넓게 쓰도록 오른쪽 로보독 칸은 좁고, <strong>예제 자동 시연</strong> 카드는 접혀 있습니다(펼치면 카드 선택).
+시연 중에는 자막과 [시연 멈추기]만 보입니다. 처음 열면 &quot;동작 둘러보기&quot; 시연이 저절로 시작합니다(<code>?demo=0</code>이면 끔).</li>
+<li><strong>🤖 로보독 도우미</strong>(맨 위): 하고 싶은 일을 한국어로 적고 [코드 만들기] → 코드·설명·주의할 점이 나옵니다.
+[▶ 시뮬레이터에서 실행]으로 먼저 보고, [🧩 이 코드로 바꾸기]를 누르면 블록 코딩 편집기에 블록으로 들어갑니다. 자세한 내용은 아래 &quot;로보독 도우미&quot;.</li>
+<li><strong>🧩 블록 코딩 (MakeCode)</strong>: 진짜 MakeCode 편집기가 시뮬레이터 안에 열립니다.<ul>
+<li>로보독 확장이 미리 들어 있어 왼쪽 메뉴의 <strong>로보독</strong> 블록을 바로 끌어다 쓸 수 있습니다(무선 확장 코드면 <code>robodog-radio</code>가 들어감).</li>
+<li><strong>블록을 고치면 약 1초 뒤 시뮬레이터 로보독이 그 코드로 다시 움직입니다</strong>(&#39;블록을 고치면 바로 실행&#39; 체크).</li>
+<li>예제·시연·도우미 코드로 바꾸면 그 코드가 편집기로 들어갑니다. 마이크로비트에 넣으려면 편집기 아래 <strong>[다운로드]</strong>.</li>
+<li>MakeCode 공식 삽입 방식(controller 모드)을 쓰며 <code>makecode.microbit.org</code> 접속이 필요합니다.
+확장은 시험한 버전으로 고정(유선 331dd39, 무선 4a50d45). 프로젝트는 MakeCode 계정이 아니라 이 화면(브라우저)에 저장됩니다.</li>
+</ul>
+</li>
+<li><strong>JavaScript (인터넷이 안 될 때)</strong>: 학교망에서 MakeCode가 열리지 않으면(60초 뒤 자동 전환) 이 탭에 코드를 붙여넣고 <strong>▶ 실행</strong>.</li>
+<li>오른쪽 <strong>버튼 · 라디오 · 센서 · 환경</strong>(접기 가능): 마이크로비트 A·B, 라디오 숫자 0&#126;9, 로보독 버튼, 장애물·책상/바닥.</li>
+<li><strong>2D 보기</strong>: 위에서 본 책상(경로·거리센서 빔·장애물) + 옆모습(다리 자세) + 눈 LED / <strong>3D 보기</strong>: 마우스로 돌려 보기·확대.</li>
+<li><strong>↺ 처음으로</strong>: 로보독을 처음 자리로. <strong>■ 정지</strong>: 코드 멈춤.</li>
+</ol>
+<p>예제 목록에서 수업 예제 1&#126;5를 바로 불러올 수 있습니다.</p>
+<h2>로보독 도우미 (말로 코드 만들기)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th></th>
+<th>🤖 AI 도우미 (Claude)</th>
+<th>📘 규칙 도우미</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>언제</td>
+<td>사이트에 Claude API 키를 설정했을 때</td>
+<td>키가 없거나 AI 연결이 안 될 때(자동 전환)</td>
+</tr>
+<tr>
+<td>알아듣는 말</td>
+<td>자유로운 문장, &quot;지금 코드 고치기&quot; 가능</td>
+<td>정해진 표현만 (아래)</td>
+</tr>
+<tr>
+<td>비용·인터넷</td>
+<td>요청마다 API 요금(선생님 계정)</td>
+<td>무료, 브라우저 안에서만 동작</td>
+</tr>
+</tbody></table></div>
+<p><strong>규칙 도우미가 알아듣는 표현</strong></p>
+<ul>
+<li>언제: <code>A 버튼을 누르면</code>, <code>B 버튼을 누르면</code>, <code>A+B 버튼을 누르면</code>, <code>라디오 3을 받으면</code>, <code>장애물이 가까우면 … 아니면 …</code>, <code>계속</code>, <code>3번 반복</code></li>
+<li>무엇을: <code>앞으로/뒤로 2초 (천천히·빠르게·속도 20)</code>, <code>오른쪽/왼쪽으로 90도 돌아</code>, <code>한 바퀴</code>, <code>앉아·인사·물구나무·기지개·일어나</code>, <code>몸을 낮게/높게</code>, <code>멈춰</code>, <code>춤춰</code></li>
+<li>소리: <code>멍멍 짖어</code>, <code>으르렁</code>, <code>&quot;안녕/기다려/비켜/출발&quot;이라고 말해</code>, <code>도레미 노래</code> / 불빛: <code>빨간·초록·파란… 불 켜</code>, <code>불 꺼</code>, <code>무지개</code></li>
+<li>표정: <code>하트 눈</code>, <code>웃는 눈</code>, <code>눈 감아</code>, <code>화난 눈</code>, <code>초롱초롱</code>, <code>큰 눈</code>, <code>깜박</code> / 화면: <code>마이크로비트에 하트</code>, <code>마이크로비트에 거리</code></li>
+<li>문장은 <code>하고</code>, <code>한 다음</code>, 쉼표로 이어 말하면 순서대로 들어갑니다. 모르는 말은 &quot;이해하지 못한 말&quot;로 알려 주고 비슷한 예제를 추천합니다.</li>
+</ul>
+<p><strong>AI 도우미 켜기 (선생님·관리자)</strong> — 키는 채팅·코드·화면에 절대 넣지 말고 Netlify에만 넣습니다.</p>
+<ol>
+<li>Netlify → 사이트 → <strong>Site configuration → Environment variables</strong></li>
+<li><code>ANTHROPIC_API_KEY</code> = Claude API 키 (console.anthropic.com에서 발급)</li>
+<li><code>ASSISTANT_CLASS_CODE</code> = 수업 코드(예: 4자리) — <strong>권장</strong>. 이 코드를 아는 사람만 AI를 써서 요금을 보호합니다. 학생에게는 수업 시간에만 알려 주세요.</li>
+<li>(선택) <code>ROBODOG_MODEL</code> = 모델 이름(기본 <code>claude-opus-5-5</code>). 저렴하게 쓰려면 더 작은 모델로 바꿀 수 있습니다.</li>
+<li>다시 배포(Deploys → Trigger deploy)하면 도우미 배지가 **AI 도우미 (Claude)**로 바뀝니다.</li>
+</ol>
+<p>안전장치: 키는 서버 함수(<code>netlify/functions/robodog-assistant.mjs</code>)에만 있고 브라우저로 가지 않음 · 요청 600자 제한 · 같은 IP 1분 6회 제한 · 로보독과 관계없는 요청은 거절 안내 · 책상 속도 30 이하 규칙 · 만든 코드는 실행 전에 문법 검사.
+주의: AI가 만든 코드도 틀릴 수 있습니다. 시뮬레이터에서 먼저 보고, 실물은 낮은 속도로 시험하세요. 학생 입력은 Anthropic 서버로 전송됩니다(개인정보를 적지 않도록 지도).</p>
+<h2>할 수 있는 것</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>기능</th>
+<th>내용</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>로보독 블록 전체</td>
+<td>자세 5종, 보행 높이, 다리 높이·발끝, 어깨·무릎 각도, 이동, 회전, 정지, 시작방향 복귀, 눈 표정·문자·그림, 몸통 LED, 효과음, 센서 5종</td>
+</tr>
+<tr>
+<td>마이크로비트</td>
+<td>5×5 LED(숫자·글자·아이콘), A/B/A+B 버튼, 무한 반복, 일시정지, 변수·조건·반복·함수</td>
+</tr>
+<tr>
+<td>라디오</td>
+<td>숫자 받기(패널 버튼), <strong>같은 컴퓨터의 AI 브리지 결과를 바로 받기</strong></td>
+</tr>
+<tr>
+<td>환경</td>
+<td>책상(가장자리에서 떨어짐 경고) / 바닥(벽), 장애물 놓기(거리센서 반응)</td>
+</tr>
+<tr>
+<td>안전 학습</td>
+<td>책상 밖으로 나가면 &quot;떨어졌어요&quot; 경고, 속도 30 초과 시 안내, &#39;음악&#39; 블록 사용 시 경고</td>
+</tr>
+</tbody></table></div>
+<h3>AI 브리지와 함께 쓰기 (로보독 없이 AI 수업)</h3>
+<p>같은 컴퓨터에서 <strong>AI 브리지</strong>(<a href="https://microbit-bridge.netlify.app/ai.html)%EC%99%80">https://microbit-bridge.netlify.app/ai.html)와</a> <strong>시뮬레이터</strong>를 각각 창으로 열면,
+AI 브리지가 인식한 번호가 시뮬레이터 로보독에게 라디오처럼 전달됩니다(USB 마이크로비트 불필요).
+→ 로보독이 모자라거나 수업 전 연습할 때 <code>03_ai-traffic-dog</code>로 신호등 안내견을 미리 해 볼 수 있습니다.</p>
+<h2>군무 시연 (8대)</h2>
+<p>예제 카드 <strong>🐕×8 군무</strong>를 누르면 로보독 8대(2줄×4대)가 바닥에서 함께 춤을 춥니다. 3D 보기로 보면 더 실감 납니다.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>순서</th>
+<th>동작</th>
+<th>여러 대 제어 방식(파이썬 공식 라이브러리 함수)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>준비 자세</td>
+<td><code>multi_gesture(dogs, STANDUP)</code> — 동시에</td>
+</tr>
+<tr>
+<td>2</td>
+<td>바운스: 낮게↔높게 6번</td>
+<td><code>multi_leg_bend</code> — 동시에</td>
+</tr>
+<tr>
+<td>3</td>
+<td>웨이브: 왼쪽부터 차례로 일어나고 앉기</td>
+<td><code>multi_leg_bend_sequential(dogs, 0.12, …)</code> — 차례로</td>
+</tr>
+<tr>
+<td>4</td>
+<td>불빛 웨이브: 몸통 LED 무지개</td>
+<td><code>multi_bodyLED_sequential</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td>표정 웨이브: 하트 눈 → 웃는 눈</td>
+<td><code>multi_headLEDExp_sequential</code></td>
+</tr>
+<tr>
+<td>6</td>
+<td>다 함께 반 바퀴 회전, 다시 반대로</td>
+<td><code>multi_rotate</code></td>
+</tr>
+<tr>
+<td>7</td>
+<td>물구나무</td>
+<td><code>multi_gesture(dogs, HEADSTAND)</code></td>
+</tr>
+<tr>
+<td>8</td>
+<td>차례로 인사 + 멍멍</td>
+<td><code>multi_gesture_sequential(dogs, 0.2, …, GREETING)</code></td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>실제 군무는 마이크로비트 1대 코드가 아니라, PC가 USB 동글로 여러 대에 명령을 보내는 <strong>파이썬 <code>multi_*</code> 함수</strong> 방식입니다(공식 API 문서 기준).
+시연 중 코드 칸에 그 흐름을 주석으로 보여 줍니다.</li>
+<li>수업 활용: &quot;동시에(multi_*)&quot;와 &quot;차례로(*_sequential, 간격·순서)&quot;의 차이를 눈으로 비교하고, 모둠별 안무 순서를 짜 보는 활동에 쓸 수 있습니다.</li>
+<li>동작 시간·간격·안무 순서는 시연용으로 정한 값이며, 영상 속 실제 안무와 같지는 않습니다.</li>
+</ul>
+<h2>실물과 다른 점 (꼭 읽어 주세요)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>항목</th>
+<th>시뮬레이터</th>
+<th>비고</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>걷는 속도</td>
+<td>속도 100 ≈ 15cm/초</td>
+<td><strong>추정치</strong>. 실물 측정 후 <code>sim/runtime.js</code>의 <code>EST</code> 값 조정</td>
+</tr>
+<tr>
+<td>회전 빠르기</td>
+<td>빠르기 100 ≈ 120°/초</td>
+<td>추정치</td>
+</tr>
+<tr>
+<td>다리 높이·발끝 → 관절 각도</td>
+<td><strong>코코아팹 공식 다리 시뮬레이터의 실측 표본 125개 + 보간식 그대로</strong></td>
+<td>공식 값 (아래 &quot;공식 자료 반영&quot; 참고)</td>
+</tr>
+<tr>
+<td>몸·다리 비율</td>
+<td>공식 측면도 비율(몸통 270, 윗다리 92, 아랫다리 109, 머리 60×112 px)</td>
+<td>비율은 공식, cm 축척(0.045cm/px)은 추정 → 몸통 약 12cm</td>
+</tr>
+<tr>
+<td>겉모양</td>
+<td>제품 사진 기준(검은 몸통, 넓은 머리, 하얀 8×8 LED 2개, 눈 사이 카메라, 아래 거리센서, 등의 마이크로비트)</td>
+<td>머리 폭·몸 폭은 추정</td>
+</tr>
+<tr>
+<td>거리센서</td>
+<td>머리 앞에서 장애물까지 cm, 없으면 255</td>
+<td>실제 단위 미확인</td>
+</tr>
+<tr>
+<td>눈 표정 모양</td>
+<td>&#39;왕눈이&#39;·&#39;감사&#39;는 영상 장면과 같은 모양, 나머지는 근사 그림</td>
+<td>표정 번호와 영상 장면의 대응은 추정</td>
+</tr>
+<tr>
+<td>효과음</td>
+<td>비슷한 신호음 + 말풍선</td>
+<td>실제 소리 아님(기본 꺼짐)</td>
+</tr>
+<tr>
+<td>자세 동작(앉기·물구나무·기지개·인사)</td>
+<td>공식 다리 표로 만든 근사 자세, 관절은 서보처럼 초당 450°로 이동</td>
+<td>실제 펌웨어 자세 각도는 공개 자료가 없어 근사</td>
+</tr>
+<tr>
+<td>걷는 다리 움직임</td>
+<td>대각선 두 다리씩(트롯) 근사</td>
+<td>실제 보행 패턴과 다를 수 있음</td>
+</tr>
+<tr>
+<td>미끄러짐·넘어짐·배터리</td>
+<td>없음(배터리는 슬라이더 값)</td>
+<td></td>
+</tr>
+<tr>
+<td>지원 안 되는 블록</td>
+<td>음악, 게임, 핀, 가속도 등</td>
+<td>실행은 되고 로그에 &quot;지원하지 않는 블록&quot;으로 표시</td>
+</tr>
+</tbody></table></div>
+<p>시뮬레이터에서 잘 되는 코드도 실물에서는 속도·거리 값이 달라질 수 있습니다. <strong>수업 전 실물로 한 번 확인</strong>하세요.</p>
+<h2>동작 원리 (교사·개발자용)</h2>
+<ul>
+<li>붙여넣은 코드를 브라우저 안에서 변환(Babel)해 실행합니다. 코드는 서버로 보내지 않습니다.</li>
+<li>마이크로비트처럼 &#39;무한 반복&#39;과 버튼·라디오 이벤트가 동시에 실행되도록, 모든 블록 호출 사이에 차례 넘기기를 넣습니다.
+쉬기 블록이 없는 무한 반복도 화면이 멈추지 않습니다.</li>
+<li>로보독 블록의 동작은 확장 <code>kocoafab/robodog</code> 2.0.1 소스(입력 범위 변환, 모드 전환 시 값 초기화, 회전 목표 방식)를 따랐습니다.</li>
+<li>코드는 이 브라우저에만 저장됩니다(다른 기기와 공유되지 않음).</li>
+</ul>
+<h2>공식 자료 반영 (2026-11-07)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>자료</th>
+<th>반영한 것</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>코코아팹 공식 유튜브 &quot;AI Robot Friend in Our Classroom, Robodog Bigeye&quot;</td>
+<td>영상 본편은 YouTube가 서버 접속을 막아(로그인 확인) 볼 수 없었음. <strong>공개 대표 이미지</strong>로 외형(검은 몸, 넓은 머리, 하얀 LED 눈, 무릎이 뒤로 접히는 다리) 확인</td>
+</tr>
+<tr>
+<td>코코아팹 제품 페이지 사양표</td>
+<td>MG90 서보 8개(4족 8관절), 6축 자이로, ToF 거리센서, 8×8 도트 매트릭스, RGB LED, MP3+스피커, K210 AI 카메라, 1,600mAh</td>
+</tr>
+<tr>
+<td>제품 구성 사진</td>
+<td>부품 위치: 8×8 LED, 스피커, AI 비전 센서(눈 사이), 적외선 거리센서(아래), 마이크로비트·자이로·배터리(등), 서보모터</td>
+</tr>
+<tr>
+<td>공식 &quot;로보독 다리 시뮬레이션&quot;(edu.kocoafab.cc/robodog-simul)</td>
+<td>다리 높이·발끝 → 어깨·무릎 각도 표본 125개와 특수 곡선 4개, 역거리 보간(지수 3, 정규화 18·32), 무릎 기준 -90°, 측면도 px 비율. 표본 숫자는 공식 파일과 <strong>전부 일치함을 대조 확인</strong></td>
+</tr>
+<tr>
+<td>공식 &quot;얼굴 매트릭스 편집기&quot;</td>
+<td>8×8 비트 순서(왼쪽 열 = 최상위 비트) 확인. 내장 표정 14종 그림은 공개 자료에 없어 근사 유지</td>
+</tr>
+<tr>
+<td>홍보 영상 장면 캡처 6장(사용자 제공)</td>
+<td>머리를 앞다리 바로 위 받침에 올린 알약형으로, 눈 사이 위 카메라·아래 검은 거리센서 창, 둥근 LED 판. 몸통 뒤쪽 덮개 + 앞쪽 회로판 받침. 눈 LED 흰색/파란색 선택. &#39;왕눈이&#39; = 전부 켜고 가운데 + 무늬만 끈 눈, &#39;감사&#39; = 두꺼운 ∩ 눈(영상과 같은 모양). 물구나무 = 머리를 바닥에 대고 몸을 세워 뒷다리를 위로 뻗는 자세(위에서 본 군무 장면)</td>
+</tr>
+</tbody></table></div>
+</main></body></html>

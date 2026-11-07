@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>중학교·고등학교 확장안 · 로보독 수업 자료</title><style>
+:root { --bg:#f6f7fb; --card:#fff; --ink:#18202e; --muted:#566079; --line:#dde2ee; --accent:#2f6fe4; --accent-ink:#fff; --code:#eef1f7; --mark:#fff4c2; }
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --bg:#10141b; --card:#181d27; --ink:#e9edf5; --muted:#a3acc1; --line:#2b3242; --accent:#6b9bf5; --accent-ink:#0b0e14; --code:#222936; --mark:#4a3f12; } }
+*{box-sizing:border-box} body{margin:0;background:var(--bg);color:var(--ink);font-family:"Pretendard","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif;font-size:17px;line-height:1.75}
+a{color:var(--accent)} header{position:sticky;top:0;z-index:5;background:var(--card);border-bottom:1px solid var(--line)}
+.bar{max-width:1100px;margin:0 auto;padding:10px 16px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.bar .home{font-weight:800;text-decoration:none;color:var(--ink)} .bar nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0}
+.bar nav a{white-space:nowrap;text-decoration:none;font-size:14px;padding:6px 10px;border-radius:999px;border:1px solid var(--line);color:var(--ink)}
+.bar nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.bar button{font:inherit;font-size:14px;border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:6px 12px;cursor:pointer}
+main{max-width:900px;margin:0 auto;padding:20px 16px 60px}
+h1{font-size:30px;line-height:1.3;margin:10px 0 18px} h2{font-size:23px;margin:36px 0 10px;padding-top:6px;border-top:2px solid var(--line)} h3{font-size:19px;margin:24px 0 6px}
+code{background:var(--code);border-radius:5px;padding:1px 6px;font-size:.88em;font-family:ui-monospace,Consolas,"D2Coding",monospace}
+pre{background:var(--code);border-radius:10px;padding:12px 14px;overflow:auto;line-height:1.5} pre code{padding:0;background:none}
+.tbl{overflow-x:auto;margin:12px 0} table{border-collapse:collapse;width:100%;font-size:15.5px;line-height:1.6;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;text-align:left} th{background:var(--code)}
+blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0}
+li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:10px 0 26px}
+.cards a{display:block;text-decoration:none;color:var(--ink);background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px 16px}
+.cards a:hover{border-color:var(--accent)} .cards b{display:block;font-size:18px} .cards span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:4px}
+.dl{columns:2 260px;padding-left:20px} .note{color:var(--muted);font-size:14.5px}
+a:focus-visible,button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+@media print { header,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
+  h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2} }
+</style></head>
+<body><header><div class="bar"><a class="home" href="../">🐶 로보독 AI 교실</a>
+<nav aria-label="수업 자료"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html" aria-current="page">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a></nav>
+<button onclick="print()">🖨 인쇄</button></div></header>
+<main><h1>중학교·고등학교 확장안</h1>
+<p>초등 자료(01&#126;03)의 흐름을 유지하면서, 같은 장비로 중·고 수준의 탐구를 하도록 바꾸는 방법입니다.
+※ 2026학년도 기준 중1·2, 고1·2는 2022 개정, 중3·고3은 2015 개정이 적용됩니다(학교 편성 확인 필요).
+  성취기준 코드·문구는 고시문으로 확인해 적으세요(이 문서는 영역 수준으로만 연결).</p>
+<h2>중학교 (정보, 45분)</h2>
+<p>연계 영역: 인공지능(학습 원리·분류·사회적 영향), 컴퓨팅 시스템(피지컬 컴퓨팅), 알고리즘과 프로그래밍</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>차시</th>
+<th>초등과 다른 점</th>
+<th>활동</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>1</td>
+<td>블록 대신 <strong>MakeCode JavaScript/Python</strong> 텍스트 코딩</td>
+<td><code>01_hello-robodog</code>을 JS로 읽고 함수로 나누기</td>
+</tr>
+<tr>
+<td>2</td>
+<td>규칙 설계를 <strong>상태 기계</strong>로</td>
+<td><code>02_distance-rule</code>의 <code>지금상태</code>(0&#126;3)를 상태도로 그리고, 회피 상태 추가</td>
+</tr>
+<tr>
+<td>3</td>
+<td><strong>통신 규약 설계</strong></td>
+<td>번호 의미표 작성, 끊김 감시(2초)·하트비트(0.6초)가 왜 필요한지 실험: USB를 뽑고 로보독 반응 관찰</td>
+</tr>
+<tr>
+<td>4</td>
+<td><strong>변인 통제 실험</strong></td>
+<td>심화 패널에서 종류당 사진 5/10/20/40장 × 같은 시험 사진 → 정확도 그래프 (아래 실험 1)</td>
+</tr>
+<tr>
+<td>5</td>
+<td><strong>오류 비용 토의</strong></td>
+<td>신호등에서 &quot;빨강을 초록으로&quot;(위험)와 &quot;초록을 빨강으로&quot;(불편) 중 무엇이 더 나쁜가 → 확신 기준 정하기</td>
+</tr>
+<tr>
+<td>6</td>
+<td>프로젝트</td>
+<td><code>04_ai-team-template</code> + 상태·통신 설계서</td>
+</tr>
+</tbody></table></div>
+<p>너무 쉬운 부분 대체: 완성 코드 다운로드 → <strong>빈 프로젝트에서 직접 작성</strong>, 활동지 A 1&#126;2번 → 실험 1·2 보고서.</p>
+<h2>고등학교 (인공지능 기초·정보, 50분)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>주제</th>
+<th>활동</th>
+<th>도구</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>특징 벡터</td>
+<td>MobileNet이 만든 1,280차원 특징을 저장(.json)해 파이썬으로 열고 PCA 2D 시각화</td>
+<td>브리지 &#39;학습 데이터 저장&#39; + Python(numpy, scikit-learn)</td>
+</tr>
+<tr>
+<td>KNN 이해</td>
+<td>k를 1&#126;15로 바꿔 정확도 변화, 동점·불균형 데이터의 영향</td>
+<td>심화 패널 k 슬라이더</td>
+</tr>
+<tr>
+<td>평가</td>
+<td>학습/시험 분리, 혼동행렬·재현율, <strong>데이터 누출</strong>(연속 프레임을 학습·시험에 섞기) 실험</td>
+<td>심화 패널 정확도 실험 + CSV</td>
+</tr>
+<tr>
+<td>로봇 내장 AI와 비교</td>
+<td>파이썬 <code>kocoafab-robodog</code> 라이브러리로 로보독 자체 AI 카메라(색상·QR·얼굴 추적) 결과를 읽어 웹캠 KNN과 비교</td>
+<td>Thonny + <code>kocoafab-robodog</code>(0.2.0), USB 동글·C타입 케이블</td>
+</tr>
+<tr>
+<td>안전 설계</td>
+<td>페일세이프·워치독·지연 시간 측정(카드 제시 → 로보독 반응까지 시간)</td>
+<td>스톱워치/영상</td>
+</tr>
+<tr>
+<td>윤리</td>
+<td>얼굴인식의 위험, 데이터 치우침, 책임 소재 토론</td>
+<td></td>
+</tr>
+</tbody></table></div>
+<h2>실험 1 — 데이터 양과 정확도 (중·고 공통)</h2>
+<ol>
+<li>심화 패널에서 <strong>k 자동을 끄고 k=5로 고정</strong>한다(k가 바뀌면 변인 통제가 깨짐). 4종류의 <strong>시험 사진</strong>을 위치·조명을 바꿔 각 10장 모은다(학습 사진과 다른 장소).</li>
+<li>학습 사진을 종류당 5장 → [정확도 계산] → 기록. &#39;모두 지우기&#39; 후 10, 20, 40장으로 반복.
+(같은 조건 반복을 위해 &#39;학습 데이터 저장&#39;을 활용)</li>
+<li>그래프: 가로 = 종류당 사진 수, 세로 = 정확도. 혼동행렬에서 자주 헷갈리는 쌍을 찾는다.</li>
+<li>토의: 사진 수보다 <strong>다양성</strong>이 중요한 경우가 있는가?</li>
+</ol>
+<h2>실험 2 — 데이터 누출 (고)</h2>
+<ol>
+<li>학습 사진을 찍은 <strong>직후 같은 자세</strong>로 시험 사진을 모아 정확도를 잰다.</li>
+<li>시험 사진을 <strong>다른 장소·조명</strong>에서 다시 모아 정확도를 잰다.</li>
+<li>두 결과의 차이를 설명한다(연속 프레임은 거의 같은 사진이라 정확도가 부풀려짐).</li>
+</ol>
+<h2>장비·운영 차이</h2>
+<ul>
+<li>중·고는 개인 PC 1대 + 모둠 로보독 1대 구성이 현실적입니다. 브리지·USB 마이크로비트는 PC마다, 로보독은 모둠번호로 공유.</li>
+<li>파이썬 로보독 제어는 USB 동글(PC↔로봇 무선)을 씁니다. 동글과 마이크로비트 라디오 방식은 별개입니다.</li>
+</ul>
+</main></body></html>

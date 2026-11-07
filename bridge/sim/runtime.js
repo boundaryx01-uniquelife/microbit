@@ -430,6 +430,14 @@ export function makeRobodogApi(R, h) {
       getTof: () => R.tof(),
       getTilt: (what) => h.tilt(what),
       getRotation: () => { let h = ((Math.round(R.heading) % 360) + 360) % 360; if (h > 180) h -= 360; return h; },
+      // 무선 확장(kocoafab/robodog-radio)의 AI 카메라 블록: 시뮬레이터에는 카메라가 없어 '인식 없음' 값만 돌려줌
+      rfBand: (band) => { h.warnOnce('rfband', `무선 확장: 밴드 ${band} (시뮬레이터에서는 라디오 없이 바로 움직여요)`); },
+      aiDetection: () => { h.warnOnce('aicam', '로보독 AI 카메라(얼굴·색·QR)는 시뮬레이터에서 흉내만 내요. 값은 늘 "인식 없음"(0, "none")이에요. 실물에서 확인하세요.'); },
+      faceTracking: () => { h.warnOnce('aicam', '로보독 AI 카메라(얼굴·색·QR)는 시뮬레이터에서 흉내만 내요. 값은 늘 "인식 없음"(0, "none")이에요. 실물에서 확인하세요.'); },
+      getCameraAlive: () => true,
+      getFaceClass: () => 0, getFaceTracking: () => 0, getColorDetect: () => 0,
+      getQrCode: () => 'none',
+      getAiPosition: () => 0,
   };
 }
 
@@ -632,6 +640,9 @@ export class Runner {
       LedExpression: { SparklingEyes: 0, ILoveYou: 1, EyesClosed: 2, Thanks: 3, ThankYou: 4, Sparrow: 5, RollingEyes: 6, SharpEyes: 7, BlinkingSharpEyes: 8, Insect: 9, Blink: 10, SnakeEyes: 11, Pinwheel: 12, BigEyes: 13 },
       SoundEffect: { Bark: 1, Growl: 2, Angry: 3, Whine: 4, HeavyBreath: 5, Hello: 11, Wait: 12, MoveAside: 13, Start: 14, Laser: 21, MotorRotation: 22, DingDing: 23, AlienSignal: 24, Motion: 25, Collision: 26, Do: 31, Re: 32, Mi: 33, Fa: 34, Sol: 35, La: 36, Si: 37, SharpDo: 38 },
       SoundVolume: { Loud: 3, Medium: 2, Quiet: 1 },
+      AiPositionAxis: { X: 0, Y: 1 },
+      AiMode: { Camera: 0, FaceDetect: 1, FaceTracking: 2, ColorDetect: 3, QrCode: 4 },
+      AiClass: { Class1: 1, Class2: 2, Class3: 3, Class4: 4, Class5: 5 },
       constrain: clamp,
     };
     const images = warnProxy('images', { createImage: (s) => s });

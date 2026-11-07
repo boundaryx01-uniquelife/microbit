@@ -34,9 +34,9 @@ const call = async (body, ip = '1.1.1.1') => {
 
 let r = await call({ request: '앞으로 2초 걸어', classCode: '1234' });
 check('정상 응답 200 + 코드', r.status === 200 && r.body.code.includes('robodog.move'), JSON.stringify(r.body).slice(0, 80));
-check('모델 claude-opus-5-5', last.body.model === 'claude-opus-5-5');
+check('기본 모델 claude-sonnet-5-5', last.body.model === 'claude-sonnet-5-5');
 check('구조화 출력(json_schema)', last.body.output_config && last.body.output_config.format && last.body.output_config.format.type === 'json_schema');
-check('effort medium', last.body.output_config.effort === 'medium');
+check('effort low (함수 시간 제한 안에)', last.body.output_config.effort === 'low');
 check('거절 대비 fallbacks: "default" + 베타 헤더', last.body.fallbacks === 'default' && String(last.headers['anthropic-beta']).includes('server-side-fallback-2026-07-01'), String(last.headers['anthropic-beta']));
 check('시스템 프롬프트 캐시(cache_control)', Array.isArray(last.body.system) && last.body.system[0].cache_control && last.body.system[0].cache_control.type === 'ephemeral');
 check('키는 서버에서만 헤더로 전송', last.headers['x-api-key'] === 'test-key' || String(last.headers['authorization'] || '').includes('test-key'), Object.keys(last.headers).filter(k => /key|auth/i.test(k)).join(','));

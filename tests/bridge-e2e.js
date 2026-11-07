@@ -1,6 +1,7 @@
 // AI 브리지 종단 테스트: 가짜 카메라(색 조절) + 가짜 Web Serial
 const { chromium } = require('playwright');
-const BASE = process.argv[2] || 'http://127.0.0.1:8765/index.html';
+const BASE0 = process.argv[2] || 'http://127.0.0.1:8765/';
+const BASE = /\.html$/.test(BASE0) ? BASE0 : BASE0.replace(/\/?$/, '/') + 'ai.html';   // AI 브리지는 /ai.html (첫 화면은 소개 페이지)
 const results = [];
 const check = (name, ok, detail = '') => { results.push({ name, ok, detail }); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name} ${detail}`); };
 

@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>로보독 시뮬레이터</title>
+<title>로보독 시뮬레이터 (비공식)</title>
 <style>
   :root {
+    --field: #7a839b; --warnc: #8a5300;
     --bg: #f6f7fb; --card: #ffffff; --text: #1d2433; --muted: #5d6680; --line: #dde1ec;
     --accent: #2f6fe4; --accent-text: #fff; --stop: #d43c3c;
     --table: #e9d3ad; --table-edge: #8a6d45; --floor: #e3e7ee; --wall: #6b7686; --grid: rgba(0,0,0,.07);
@@ -15,6 +16,7 @@
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
+      --field: #6b7488; --warnc: #f0b24a;
       --bg: #12151c; --card: #1b2029; --text: #e8ebf2; --muted: #9aa3b8; --line: #2c3340; --accent: #5b8ff0; --accent-text: #0b0e14;
       --table: #5a4a33; --table-edge: #c9a26b; --floor: #2a313c; --wall: #9aa3b8; --grid: rgba(255,255,255,.07);
       --dog: #3a4452; --dog-edge: #8a95a5; --dog-head: #2a313b; --leg: #8a95a5; --leg2: #a7b0bc; --leg-far: #4a5360; --bubble: #2c3340;
@@ -38,10 +40,20 @@
   button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   textarea { width: 100%; height: 52vh; min-height: 280px; font: 13px/1.5 ui-monospace, Consolas, "D2Coding", monospace; padding: 10px;
     border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); resize: vertical; tab-size: 4; white-space: pre; }
-  .note { font-size: 12.5px; color: var(--muted); line-height: 1.6; margin: 6px 0; }
+  .note { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 6px 0; }
+  .stepno { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-size: 14px; font-weight: 800; margin-right: 6px; vertical-align: 1px; }
+  #runMsg { font-weight: 700; font-size: 15px; }
+  #runMsg.err { color: var(--stop); }
+  #runMsg.ok { color: #1f8a4c; }
+  .mcload { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-size: 17px; font-weight: 700; color: var(--muted); background: var(--card); border-radius: 10px; pointer-events: none; }
+  .mcload small { display: block; font-size: 14px; font-weight: 500; margin-top: 6px; }
+  .mcwrap .frame { position: relative; }
+  summary { min-height: 40px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
+  details > summary { list-style: none; } details > summary::before { content: '▸'; display: inline-block; width: 16px; transition: transform .15s; } details[open] > summary::before { transform: rotate(90deg); }
+  details > summary::-webkit-details-marker { display: none; }
   #log { font: 12px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; max-height: 150px; overflow: auto; background: var(--bg);
     border-radius: 8px; padding: 8px; margin-top: 8px; }
-  #log .warn { color: #c27c0e; } #log .error { color: #d43c3c; font-weight: 700; }
+  #log .warn { color: var(--warnc); } #log .error { color: #d43c3c; font-weight: 700; }
   .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
   .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
   #top2d { width: 100%; aspect-ratio: 3 / 2; max-height: 42vh; display: block; border-radius: 10px; background: var(--bg); }
@@ -57,18 +69,26 @@
   .mbbtn { width: 44px; height: 44px; border-radius: 50%; font-weight: 800; padding: 0; user-select: none; touch-action: none; }
   .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 13px; }
   .kv b { font-variant-numeric: tabular-nums; }
-  .radio button { min-width: 38px; padding: 6px 8px; }
+  .radio button { min-width: 44px; min-height: 44px; padding: 6px 8px; }
+  header a { display: inline-block; padding: 10px 4px; font-size: 15px; }
   label { font-size: 13px; }
-  input[type=range] { width: 120px; }
+  input[type=range] { width: 120px; accent-color: var(--accent); }
+  input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
   .hidden { display: none !important; }
   .codetabs { margin: 8px 0 6px; flex-wrap: wrap; }
   .mcwrap iframe { width: 100%; height: 74vh; min-height: 480px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
-  body.mc-mode main { grid-template-columns: minmax(0, 1fr) minmax(320px, 400px); max-width: 1900px; }
+  body.mc-mode main { grid-template-columns: minmax(0, 1fr) minmax(300px, 380px); max-width: 1900px; }
+  @media (min-width: 981px) {
+    body.mc-mode main > section:last-child { position: sticky; top: 8px; align-self: start; max-height: calc(100dvh - 16px); overflow: auto; }
+    body.mc-mode .mcwrap iframe { height: calc(100dvh - 120px); }
+    body.mc-mode .codehint { display: none; }
+  }
   body.mc-mode .panels .panel { padding: 8px; }
   body.mc-mode .panels .note { display: none; }
   body.mc-mode .panels { grid-template-columns: minmax(0, 1fr); }
   body.mc-mode #mbled { width: 84px; height: 84px; }
   @media (max-width: 980px) { body.mc-mode main { grid-template-columns: minmax(0, 1fr); } }
+  @media (max-width: 600px) { .assist textarea#askText { min-height: 70px; } .askbar #askBtn { width: 100%; min-height: 48px; } }
 
   .demo { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; margin-bottom: 10px; }
   .demo > summary, .fold > summary { cursor: pointer; font-weight: 700; list-style-position: inside; }
@@ -76,18 +96,28 @@
   .demo-head { margin-bottom: 8px; }
   .fold { margin-top: 10px; }
   .fold > summary { padding: 4px 0; }
-  .assist { border: 2px solid var(--accent); border-radius: 12px; padding: 8px 10px; margin: 8px 0; }
-  .assist > summary { cursor: pointer; font-weight: 800; }
-  .assist textarea#askText { height: auto; min-height: 0; white-space: pre-wrap; font: 15px/1.5 inherit; font-family: inherit; resize: vertical; }
+  .assist { border: 2px solid var(--accent); border-radius: 12px; padding: 8px 10px; margin: 0 0 8px; }
+  .askbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .asklabel { font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+  .assist textarea#askText { flex: 1 1 260px; height: auto; min-height: 44px; max-height: 120px; white-space: pre-wrap; font-size: 15px; line-height: 1.5; font-family: inherit; resize: none; padding: 9px 10px; border-color: var(--field); }
+  .askmore { gap: 4px 12px; margin-top: 4px; font-size: 14px; }
+  #askNote { font-size: 13px; }
+  body:not(.mc-mode) .mcopt { display: none; }
+  .askmore details summary { min-height: 32px; font-size: 14px; color: var(--accent); font-weight: 700; }
+  .askmore details[open] { flex-basis: 100%; }
+  .ans { position: relative; }
+  .ans .close { position: absolute; top: 4px; right: 0; min-width: 40px; min-height: 40px; padding: 0; }
+  .ans .expl { padding-right: 44px; }
   .badge { font-size: 12px; border-radius: 999px; padding: 2px 9px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-weight: 600; }
   .badge.ai { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
-  .chips { display: flex; flex-wrap: nowrap; overflow-x: auto; gap: 6px; margin: 6px 0; padding-bottom: 4px; }
-  .chips button { flex: none; }
+  .chips { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; margin: 4px 0 6px; }
+  .chips button { flex: none; max-width: 100%; text-align: left; white-space: normal; min-height: 36px; }
+  .chipshead { font-size: 13.5px; color: var(--muted); margin: 6px 0 0; }
   .chips button { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; }
   .ans { margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 8px; }
   .ans pre { max-height: 170px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 8px; font: 12.5px/1.45 ui-monospace, Consolas, monospace; margin: 6px 0; }
   .ans .expl { white-space: pre-wrap; font-size: 14px; line-height: 1.55; }
-  .ans ul { margin: 4px 0; padding-left: 20px; font-size: 13px; color: #b06a00; }
+  .ans ul { margin: 4px 0; padding-left: 20px; font-size: 14px; color: var(--warnc); }
   .demo-head #btnDemoStop { margin-left: auto; padding: 6px 10px; }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
   .cards button { text-align: left; padding: 8px 10px; line-height: 1.35; }
@@ -102,58 +132,58 @@
 </head>
 <body>
 <header>
-  <h1>🐶 로보독 시뮬레이터 <small style="font-weight:400;font-size:13px;color:var(--muted)">마이크로비트 MakeCode 코드로 움직임 미리 보기</small></h1>
-  <div class="row"><a href="../index.html" target="_blank" rel="noopener">AI 브리지 열기 ↗</a></div>
+  <h1><span aria-hidden="true">🐶</span> 로보독 시뮬레이터 <small style="font-weight:400;font-size:13px;color:var(--muted)">교사 제작 비공식 도구 · 실물과 다를 수 있음</small></h1>
+  <div class="row"><a href="../">처음 화면</a><a href="../docs/" target="_blank" rel="noopener">수업 자료 ↗</a><a href="../ai.html" target="_blank" rel="noopener">AI 브리지 열기 ↗</a></div>
 </header>
 
 <main>
   <section>
-    <h2>코드</h2>
-    <div class="row">
-      <select id="examples" aria-label="예제 고르기"></select>
-      <button id="btnRun" class="primary">▶ 실행</button>
-      <button id="btnStop" class="stop">■ 정지</button>
-      <button id="btnReset">↺ 처음으로</button>
-    </div>
-    <p class="note"><b>🧩 블록 코딩</b>에서 MakeCode 블록으로 만들면 오른쪽 로보독이 바로 움직여요.
-      인터넷이나 학교망 때문에 MakeCode가 안 열리면 <b>JavaScript</b> 탭에 코드를 붙여넣고 <b>▶ 실행</b>을 누르세요.</p>
-    <details class="assist" id="assist" open>
-      <summary>🤖 로보독 도우미 — 말로 시키면 코드를 만들어 줘요 <span id="askMode" class="badge">확인 중…</span></summary>
-      <div class="row" style="margin-top:8px;align-items:stretch">
-        <textarea id="askText" rows="2" maxlength="600" style="flex:1 1 260px" aria-label="로보독에게 시킬 일"
-          placeholder="예) A 버튼을 누르면 빨간 불을 켜고 멍멍 짖어, B 버튼을 누르면 앉아"></textarea>
-        <div class="row" style="flex-direction:column;align-items:stretch;gap:6px">
-          <button id="askBtn" class="primary">코드 만들기</button>
-          <label class="row" style="gap:4px"><input id="askFix" type="checkbox"> 지금 코드 고치기</label>
-        </div>
+    <div class="assist" id="assist">
+      <div class="askbar">
+        <label for="askText" class="asklabel"><span class="stepno">1</span>🤖 말로 만들기 <span id="askMode" class="badge">확인 중…</span></label>
+        <textarea id="askText" rows="1" maxlength="600" aria-label="로보독에게 시킬 일"
+          placeholder="예) A 버튼을 누르면 빨간 불을 켜고 멍멍 짖어"></textarea>
+        <button id="askBtn" class="primary">코드 만들기</button>
       </div>
-      <div class="chips" id="askChips" aria-label="이렇게 말해 보세요"></div>
-      <div id="askCodeRow" class="row hidden" style="gap:6px"><label for="askClass">수업 코드</label>
-        <input id="askClass" type="password" autocomplete="off" style="width:120px;font:inherit;padding:4px 8px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--text)">
-        <span class="note" style="margin:0">선생님이 알려 준 코드 (AI 도우미용)</span></div>
+      <div class="askmore row">
+        <details id="askEx"><summary>예시 문장</summary><div class="chips" id="askChips" aria-label="예시 문장(누르면 입력돼요)"></div></details>
+        <label class="row" style="gap:4px"><input id="askFix" type="checkbox"> 지금 코드 고치기</label>
+        <span id="askCodeRow" class="row hidden" style="gap:6px"><label for="askClass">수업 코드</label>
+          <input id="askClass" type="password" autocomplete="off" style="width:110px;font:inherit;padding:4px 8px;border:1px solid var(--field);border-radius:8px;background:var(--bg);color:var(--text)"></span>
+        <span class="note" id="askNote" style="margin:0"></span>
+      </div>
       <div id="askOut" class="ans hidden" aria-live="polite">
+        <button id="askClose" class="close" aria-label="도우미 결과 닫기">✕</button>
         <div id="askExpl" class="expl"></div>
         <ul id="askWarn"></ul>
         <div id="askSug" class="note"></div>
-        <pre id="askCode"></pre>
-        <div class="row">
+        <details id="askCodeBox"><summary>만든 코드 보기</summary><pre id="askCode"></pre></details>
+        <div class="row" id="askBtns">
           <button id="askRun" class="primary">▶ 시뮬레이터에서 실행</button>
           <button id="askUse">🧩 이 코드로 바꾸기 (블록 코딩에 넣기)</button>
         </div>
       </div>
-      <p class="note" id="askNote" style="margin-bottom:0"></p>
-    </details>
-    <div class="tabs codetabs" role="tablist">
+    </div>
+    <div class="row" style="margin-top:4px">
+      <b class="row" style="gap:0;font-size:15px"><span class="stepno">2</span>코드</b>
+      <select id="examples" aria-label="예제 고르기"></select>
+      <button id="btnRun" class="primary">▶ 실행</button>
+      <button id="btnStop" class="stop">■ 정지</button>
+      <button id="btnReset">↺ 처음으로</button>
+      <span id="runMsg" role="status"></span>
+    </div>
+    <p class="note codehint">블록 코딩 화면에서 블록을 고치면 로보독이 바로 움직여요. MakeCode가 안 열리면 <b>글자 코드</b> 탭에 코드를 붙여넣고 <b>▶ 실행</b>.</p>
+    <div class="row" style="justify-content:space-between;gap:6px">
+    <div class="tabs codetabs" role="tablist" aria-label="코드 보기">
       <button id="tabEditor" role="tab" aria-selected="true">🧩 블록 코딩 (MakeCode)</button>
-      <button id="tabJs" role="tab" aria-selected="false">JavaScript <small>(인터넷이 안 될 때)</small></button>
+      <button id="tabJs" role="tab" aria-selected="false">글자 코드 (JavaScript) <small>— 인터넷이 안 될 때</small></button>
+    </div>
+      <label class="row mcopt" style="gap:6px;font-size:14px"><input id="mcAutoRun" type="checkbox" checked> 블록을 고치면 바로 실행 <span id="mcStatus" class="note" style="margin:0">MakeCode를 여는 중…</span></label>
     </div>
     <textarea id="code" spellcheck="false" aria-label="MakeCode JavaScript 코드"></textarea>
     <div id="mcWrap" class="mcwrap hidden">
-      <div class="row" style="margin:0 0 6px">
-        <label class="row" style="gap:6px"><input id="mcAutoRun" type="checkbox" checked> 블록을 고치면 시뮬레이터에서 바로 실행</label>
-        <span id="mcStatus" class="note" style="margin:0 0 0 auto">MakeCode를 여는 중…</span>
-      </div>
-      <iframe id="mcFrame" title="MakeCode 편집기" allow="usb; clipboard-read; clipboard-write"></iframe>
+      <div class="frame"><iframe id="mcFrame" title="MakeCode 편집기" allow="usb; clipboard-read; clipboard-write"></iframe>
+        <div id="mcLoad" class="mcload">🧩 블록 편집기를 불러오는 중이에요…<small>처음에는 30초~1분 걸려요. 그동안 위 도우미에게 말해 보세요.</small></div></div>
       <p class="note">진짜 MakeCode 편집기예요(makecode.microbit.org). 로보독 확장이 미리 들어 있어요. 블록을 고치면 오른쪽 로보독이 그대로 움직여요.
         마이크로비트에 내려받기는 편집기 아래 [다운로드]를 쓰세요. 프로젝트는 이 화면의 코드 칸에 저장돼요.</p>
     </div>
@@ -172,11 +202,11 @@
       <div id="caption" class="caption hidden" style="flex:1;margin-top:0" aria-live="polite"></div>
       <button id="btnDemoStop" class="hidden" style="padding:4px 10px">시연<br>멈추기</button>
     </div>
-    <div class="tabs" role="tablist">
+    <div class="tabs" role="tablist" aria-label="로보독 보기">
       <button id="tab2d" role="tab" aria-selected="true">2D 보기</button>
       <button id="tab3d" role="tab" aria-selected="false">3D 보기</button>
-      <label class="row" style="margin-left:auto;gap:6px"><input id="follow" type="checkbox" checked> 3D 카메라 따라가기</label>
     </div>
+    <label class="row" style="gap:6px;margin:-4px 0 6px"><input id="follow" type="checkbox" checked> 3D 카메라 따라가기</label>
     <div id="pane2d">
       <canvas id="top2d" aria-label="위에서 본 책상과 로보독"></canvas>
       <div class="sub">
@@ -191,7 +221,7 @@
     </div>
 
     <details class="fold" id="ctrlBox" open>
-    <summary>버튼 · 라디오 · 센서 · 환경</summary>
+    <summary><span><span class="stepno">3</span>버튼 눌러 시험하기 · 라디오 · 센서 · 환경</span></summary>
     <div class="panels">
       <div class="panel">
         <h3>마이크로비트</h3>
@@ -205,7 +235,8 @@
       <div class="panel radio">
         <h3>라디오로 숫자 보내기</h3>
         <div class="row" id="radioBtns"></div>
-        <p class="note">AI 브리지 대신 숫자를 직접 보내요. 받는 그룹: <b id="radioGroup">-</b></p>
+        <label class="row" style="gap:6px"><input id="radioRepeat" type="checkbox"> 마지막 숫자 계속 보내기(0.5초마다)</label>
+        <p class="note">AI 브리지 대신 숫자를 직접 보내요. 한 번 누르면 한 번만 가요 — 예제 3처럼 2초 동안 신호가 없으면 멈추는 코드는 <b>계속 보내기</b>를 켜세요. 받는 그룹: <b id="radioGroup">-</b></p>
         <label class="row" style="gap:6px"><input id="bridgeLink" type="checkbox" checked> 같은 컴퓨터의 AI 브리지 결과 받기</label>
       </div>
       <div class="panel">
@@ -250,7 +281,11 @@ const $ = (id) => document.getElementById(id);
 const world = new World();
 const robot = new Robot(world);
 const logEl = $('log');
+function runMsg(text, kind) { const el = $('runMsg'); el.textContent = text; el.className = kind || ''; }
+const narrow = () => window.matchMedia('(max-width: 980px)').matches;
+function showRobot() { if (narrow()) (mode3d ? $('pane3d') : $('pane2d')).scrollIntoView({ behavior: 'smooth', block: 'start' }); }
 function log(msg, kind) {
+  if (kind === 'error') runMsg('⚠ ' + msg.slice(0, 90), 'err');
   const t = new Date().toLocaleTimeString('ko-KR', { hour12: false });
   const line = document.createElement('div');
   if (kind) line.className = kind;
@@ -283,12 +318,15 @@ $('code').addEventListener('keydown', (e) => {
   if (e.key === 'Tab') { e.preventDefault(); const ta = e.target, s = ta.selectionStart; ta.setRangeText('    ', s, ta.selectionEnd, 'end'); save(); }
 });
 
-$('btnRun').onclick = async () => {
+async function runCode(code, msg) {
   robot.reset(); runner.stop();
-  const ok = await runner.start($('code').value);
-  if (ok) log('실행 시작 — 마이크로비트 A/B 버튼과 라디오 숫자로 시험해 보세요');
-};
-$('btnStop').onclick = () => { runner.stop(); log('정지'); };
+  if (!code.trim()) { runMsg('코드가 비어 있어요. 도우미에게 말하거나 예제를 불러오세요.', 'err'); return false; }
+  const ok = await runner.start(code);
+  if (ok) { runMsg('▶ 실행 중 — A·B 버튼을 눌러 보세요', 'ok'); log(msg || '실행 시작 — 마이크로비트 A/B 버튼과 라디오 숫자로 시험해 보세요'); showRobot(); }
+  return ok;
+}
+$('btnRun').onclick = () => runCode($('code').value);
+$('btnStop').onclick = () => { runner.stop(); log('정지'); runMsg('■ 멈췄어요'); };
 $('btnReset').onclick = () => { stopDemo(); endDance(); runner.stop(); robot.reset(); runner.setDisplay(Array.from({ length: 5 }, () => [0, 0, 0, 0, 0])); log('처음 자리로'); };
 
 // ---------- 마이크로비트 버튼 ----------
@@ -304,9 +342,11 @@ $('btnRobot').onclick = () => runner.robotButton();
 $('battery').oninput = (e) => { runner.battery = Number(e.target.value); $('batVal').textContent = e.target.value; };
 
 // ---------- 라디오 ----------
+let lastRadio = null;
+setInterval(() => { if ($('radioRepeat').checked && lastRadio !== null) runner.radioReceive(lastRadio); }, 500);
 for (let n = 0; n <= 9; n++) {
   const b = document.createElement('button'); b.textContent = n;
-  b.onclick = () => { runner.radioReceive(n); log(`라디오 받음: ${n}`); };
+  b.onclick = () => { runner.radioReceive(n); lastRadio = n; log(`라디오 받음: ${n}`); };
   $('radioBtns').appendChild(b);
 }
 let lastBridge = null;
@@ -577,7 +617,8 @@ document.querySelectorAll('.mbbtn').forEach(b => b.addEventListener('pointerdown
 $('radioBtns').addEventListener('click', (e) => { if (e.isTrusted) stopDemo(); }, true);
 $('code').addEventListener('input', () => stopDemo('코드를 고쳤어요. ▶ 실행으로 직접 확인해 보세요'));
 // 처음 열면 '동작 둘러보기' 시연 자동 시작 (주소 끝에 ?demo=0 이면 끔)
-if (new URLSearchParams(location.search).get('demo') !== '0') setTimeout(() => playDemo(DEMOS[0]), 600);
+{ const q = new URLSearchParams(location.search);   // 블록 코딩 첫 화면에서는 자동 시연 안 함(헷갈림). ?demo=1 이면 켬, ?demo=0 이면 끔
+  if (q.get('demo') === '1' || (q.get('demo') !== '0' && q.get('tab') === 'js')) setTimeout(() => playDemo(DEMOS[0]), 600); }
 
 // 코드에 맞는 로보독 확장 고르기(무선 AI 블록이 있으면 robodog-radio)
 const blockPackage = (code) => {
@@ -632,6 +673,7 @@ function openEditor() {
   setTimeout(() => {
     if (mcReady) return;
     $('mcStatus').textContent = 'MakeCode를 열지 못했어요(인터넷·학교망에서 makecode.microbit.org 허용 확인).';
+    $('mcLoad').innerHTML = '블록 편집기를 열지 못했어요.<small>학교망에서 makecode.microbit.org 가 막혔을 수 있어요. 글자 코드 탭을 쓰세요.</small>';
     log('MakeCode 편집기를 열지 못해 JavaScript 탭으로 바꿨어요. 코드를 붙여넣고 ▶ 실행을 누르세요.', 'warn');
     if (!$('mcWrap').classList.contains('hidden')) showCodeTab('js');
   }, 60000);
@@ -646,8 +688,10 @@ window.addEventListener('message', (ev) => {
     return;
   }
   if (m.action === 'editorcontentloaded' && !mcReady) {
-    mcReady = true; $('mcStatus').textContent = '편집기 준비 완료';
+    mcReady = true; $('mcStatus').textContent = '편집기 준비 완료'; $('mcLoad').classList.add('hidden');
     setTimeout(() => mcPost({ type: 'pxteditor', action: 'switchblocks' }), 500);
+    // MakeCode 안의 작은 마이크로비트 시뮬레이터는 숨김(좁은 화면에서 블록을 가리고, 오른쪽 로보독 시뮬레이터와 중복)
+    setTimeout(() => mcPost({ type: 'pxteditor', action: 'hidesimulator' }), 800);
   }
   if (m.action === 'workspacesave' && m.project && m.project.text) {
     const code = m.project.text['main.ts'];
@@ -660,7 +704,7 @@ window.addEventListener('message', (ev) => {
       $('mcStatus').textContent = '저장됨 ' + new Date().toLocaleTimeString('ko-KR', { hour12: false });
       if ($('mcAutoRun').checked) {
         clearTimeout(mcRunTimer);
-        mcRunTimer = setTimeout(async () => { robot.reset(); await runner.start(code); log('MakeCode에서 고친 코드를 실행해요'); }, 1200);
+        mcRunTimer = setTimeout(() => runCode(code, 'MakeCode에서 고친 코드를 실행해요'), 1200);
       }
     }
   }
@@ -687,14 +731,18 @@ function setAskMode(on, why) {
   $('askMode').textContent = on ? 'AI 도우미 (Claude)' : '규칙 도우미';
   $('askMode').classList.toggle('ai', on);
   $('askNote').textContent = on
-    ? 'AI가 만든 코드도 틀릴 수 있어요. 시뮬레이터에서 먼저 확인하고, 실물에서는 낮은 속도로 시험하세요.'
-    : '규칙 도우미는 정해진 표현(버튼·라디오·가까우면 / 걷기·돌기·앉기·인사·불빛·소리·표정·춤)만 알아들어요.' + (why ? ' ' + why : '');
+    ? '🔒 여기 쓴 글은 AI 회사(Anthropic) 서버로 보내져요. 이름·학교·전화번호는 쓰지 마세요. AI 코드도 틀릴 수 있어요.'
+    : '정해진 표현(버튼·라디오·가까우면 / 걷기·돌기·앉기·인사·불빛·소리·표정·춤)을 알아들어요. 글은 이 컴퓨터 밖으로 나가지 않아요.' + (why ? ' ' + why : '');
 }
 setAskMode(false);
 checkAi().then(r => { setAskMode(r.available); $('askCodeRow').classList.toggle('hidden', !(r.available && r.needsCode)); });
-$('askChips').innerHTML = '<span class="note" style="margin:0 4px 0 0">이렇게 말해 보세요:</span>' + SAMPLE_REQUESTS.map((t, i) => `<button data-i="${i}">${esc(t)}</button>`).join('');
-$('askChips').querySelectorAll('button').forEach(b => b.onclick = () => { $('askText').value = SAMPLE_REQUESTS[b.dataset.i]; $('askText').focus(); });
-$('askText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); $('askBtn').click(); } });
+$('askChips').innerHTML = SAMPLE_REQUESTS.map((t, i) => `<button data-i="${i}">${esc(t)}</button>`).join('');
+$('askChips').querySelectorAll('button').forEach(b => b.onclick = () => { $('askText').value = SAMPLE_REQUESTS[b.dataset.i]; growAsk(); $('askEx').open = false; $('askText').focus(); });
+$('askText').addEventListener('input', () => { if (askResult) { $('askOut').classList.add('hidden'); askResult = null; } });
+$('askText').addEventListener('keydown', (e) => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); $('askBtn').click(); } });   // Enter = 만들기, Shift+Enter = 줄바꿈
+const growAsk = () => { const t = $('askText'); t.style.height = 'auto'; t.style.height = Math.min(120, t.scrollHeight + 2) + 'px'; };
+$('askText').addEventListener('input', growAsk);
+$('askClose').onclick = () => $('askOut').classList.add('hidden');
 function showAnswer(r, source) {
   askResult = r;
   $('askOut').classList.remove('hidden');
@@ -710,10 +758,11 @@ function showAnswer(r, source) {
   });
   $('askCode').textContent = r.code || '(만든 코드 없음)';
   $('askRun').disabled = $('askUse').disabled = !r.code;
+  $('askBtns').classList.toggle('hidden', !r.code); $('askCodeBox').classList.toggle('hidden', !r.code);
 }
 $('askBtn').onclick = async () => {
   const text = $('askText').value.trim();
-  if (!text) { $('askText').focus(); return; }
+  if (!text) { showAnswer({ code: '', explanation: '먼저 로보독에게 시킬 일을 한 줄 적어 주세요. 예: "앞으로 2초 걷고 인사해"', warnings: [] }, '✏️'); $('askText').focus(); return; }
   const btn = $('askBtn'); btn.disabled = true; btn.textContent = aiOn ? 'AI가 만드는 중…' : '만드는 중…';
   try {
     if (aiOn) {
@@ -735,14 +784,14 @@ $('askBtn').onclick = async () => {
 };
 $('askRun').onclick = async () => {
   if (!askResult || !askResult.code) return;
-  stopDemo('도우미가 만든 코드를 실행해요'); robot.reset(); runner.stop();
-  if (await runner.start(askResult.code)) log('도우미 코드 실행 — 버튼·라디오로 시험해 보세요');
+  stopDemo('도우미가 만든 코드를 실행해요');
+  await runCode(askResult.code, '도우미 코드 실행 — 버튼·라디오로 시험해 보세요');
 };
 $('askUse').onclick = () => {
   if (!askResult || !askResult.code) return;
   if ($('code').value.trim() && !confirm('지금 코드를 도우미가 만든 코드로 바꿀까요?')) return;
   stopDemo('도우미 코드로 바꿨어요'); $('code').value = askResult.code; save();
-  $('assist').open = false;   // 코딩 칸을 넓게
+  $('askOut').classList.add('hidden');   // 코딩 칸을 넓게
   ($('mcWrap').classList.contains('hidden') ? $('code') : $('mcWrap')).scrollIntoView({ behavior: 'smooth', block: 'start' });
   log($('mcWrap').classList.contains('hidden') ? 'JavaScript 칸에 넣었어요' : '블록 코딩 편집기로 보내는 중… (잠시 뒤 블록으로 보여요)');
 };

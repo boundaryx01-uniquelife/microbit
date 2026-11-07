@@ -3,7 +3,7 @@ const { chromium } = require('playwright');
 (async () => {
   const b = await chromium.launch();
   const p = await b.newPage();
-  await p.goto('http://127.0.0.1:8765/index.html');
+  await p.goto('http://127.0.0.1:8765/ai.html');
   await p.waitForFunction(() => /완료|실패/.test(document.getElementById('modelStatus').textContent), null, { timeout: 120000 });
   const r = await p.evaluate(async () => {
     const HUB = 'https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v2_050_224/classification/3/default/1';

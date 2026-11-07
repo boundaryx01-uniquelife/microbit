@@ -24,3 +24,9 @@
   for = "/lib/*"
   [headers.values]
     Cache-Control = "public, max-age=31536000, immutable"
+
+# 수업 자료의 MakeCode 예제(.ts)는 동영상 형식이 아니라 글자 파일로
+[[headers]]
+  for = "/docs/makecode/*"
+  [headers.values]
+    Content-Type = "text/plain; charset=utf-8"
