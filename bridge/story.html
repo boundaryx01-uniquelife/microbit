@@ -4,100 +4,52 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>로보독의 모험 (인트로 시안)</title>
-<meta name="description" content="복도의 문제를 로보독과 AI로 풀어 가는 이야기 — 로보독 AI 교실 새 인트로 시안">
+<meta name="description" content="복도의 문제를 로보독과 AI로 풀어 가는 3D 이야기 — 로보독 AI 교실 새 인트로 시안">
 <link rel="stylesheet" href="assets/brand.css">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
 <script type="importmap">{ "imports": { "three": "./sim/lib/three.module.min.js" } }</script>
-<noscript><style>.rv, .fi, .pop { opacity: 1 !important; transform: none !important; } .fo { opacity: 0 !important; } .bar-fill { transform: none !important; }</style></noscript>
 <style>
   :root {
-    --dog: #2b333f; --dog-edge: #0e1218; --leg: #3c4655; --eye-off: #1a2029; --eye-on: #e9f3ff;
-    --stage: #e8edf6; --table: #d9c29b; --wall: #dfe7f5; --sky: #bfe3ff; --floor: #cdb88f; --floor-edge: #b39f78; --kid-skin: #f4c9a0;
-    --pad: clamp(16px, 4vw, 40px);
+    --stage: #e8edf6; --table: #d9c29b; --wall: #dfe7f5; --sky: #bfe3ff; --floor: #cdb88f;
+    --hdr: 58px;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --dog: #3b4554; --dog-edge: #8d98aa; --leg: #8d98aa; --eye-off: #0b0e13; --stage: #141a24; --table: #4d4130;
-      --wall: #1a2230; --sky: #243a58; --floor: #4a4033; --floor-edge: #3a3227; --kid-skin: #d9a77c; }
+    :root:not([data-theme="light"]) { --stage: #141a24; --table: #4d4130; --wall: #1a2230; --sky: #243a58; --floor: #4a4033; }
   }
   body { --page-w: 1100px; }
   .wrap { width: 100%; max-width: 1100px; margin: 0 auto; padding: 0 16px; }
   .progress { position: fixed; top: 0; left: 0; height: 3px; width: 100%; transform-origin: left; transform: scaleX(0); background: var(--accent); z-index: 40; }
 
-  /* ---------- 표지 ---------- */
-  .cover { text-align: center; padding: clamp(32px, 8vh, 80px) 0 clamp(20px, 5vh, 48px); }
-  .cover .kick { display: inline-block; font-size: 13px; font-weight: 800; color: var(--accent); background: var(--accent-soft); padding: 3px 12px; border-radius: var(--r-pill); }
-  .cover h1 { margin: 14px 0 0; font-size: clamp(34px, 6.4vw, 66px); line-height: 1.12; letter-spacing: -0.03em; }
-  .cover h1 em { font-style: normal; color: var(--accent); }
-  .cover p { margin: 14px auto 0; max-width: 560px; color: var(--muted); font-size: clamp(15px, 2vw, 18px); }
-  .scroll-hint { margin-top: 22px; font-size: 14px; color: var(--muted); animation: nudge 1.6s ease-in-out infinite; }
-  @keyframes nudge { 50% { transform: translateY(6px); } }
-
-  /* ---------- 장(章) ---------- */
-  .chap { display: grid; grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr); gap: clamp(18px, 4vw, 44px); align-items: center; min-height: min(78vh, 620px); padding: clamp(18px, 4vh, 40px) 0; }
-  .chap.flip { grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); }
-  .chap.flip .art { order: 2; }
-  .art { border-radius: 24px; overflow: hidden; background: var(--stage); box-shadow: var(--shadow-md); border: 1px solid var(--line); }
-  .art svg { display: block; width: 100%; height: auto; }
-  .txt .no { font-size: 13px; font-weight: 800; color: var(--accent); letter-spacing: .02em; }
-  .txt h2 { margin: 6px 0 10px; font-size: clamp(24px, 3.6vw, 38px); }
-  .txt p { margin: 0 0 12px; font-size: clamp(15.5px, 1.9vw, 18px); color: var(--muted); line-height: 1.7; }
-  .txt p b { color: var(--ink); }
-  .learn { display: inline-flex; gap: 8px; align-items: flex-start; margin-top: 4px; padding: 10px 14px; border-radius: var(--r-lg); background: var(--accent-soft); color: var(--ink); font-size: 15px; font-weight: 650; line-height: 1.5; }
+  /* ---------- 고정 3D 무대 + 그 위로 지나가는 글 카드 ---------- */
+  .story { position: relative; }
+  .stage { position: sticky; top: var(--hdr); height: calc(100svh - var(--hdr)); background: var(--stage); overflow: hidden; z-index: 0; }
+  #stage3d { position: absolute; inset: 0; }
+  .loading, .nogl { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--muted); padding: 24px; font-weight: 650; pointer-events: none; }
+  .nogl { display: none; pointer-events: auto; }
+  .stage.ready .loading { display: none; }
+  .panels { position: relative; z-index: 1; margin-top: calc(-1 * (100svh - var(--hdr))); }
+  .panel { min-height: calc(100svh - var(--hdr)); display: flex; align-items: center; padding: 24px clamp(16px, 5vw, 56px); }
+  .card { width: min(430px, 100%); background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--line); border-radius: 22px; padding: 20px 22px 18px; box-shadow: var(--shadow-lg); opacity: 0; transform: translateY(26px); transition: opacity .6s var(--ease), transform .7s var(--ease); }
+  .panel.on .card { opacity: 1; transform: none; }
+  .no { font-size: 13px; font-weight: 800; color: var(--accent); letter-spacing: .02em; }
+  .card h2, .card h1 { margin: 6px 0 10px; }
+  .card h2 { font-size: clamp(24px, 3.4vw, 34px); }
+  .card h1 { font-size: clamp(30px, 5vw, 52px); line-height: 1.12; letter-spacing: -0.03em; }
+  .card h1 em { font-style: normal; color: var(--accent); }
+  .card p { margin: 0 0 10px; font-size: clamp(15.5px, 1.8vw, 17.5px); color: var(--muted); line-height: 1.7; }
+  .card p b { color: var(--ink); }
+  .learn { display: flex; gap: 8px; align-items: flex-start; margin-top: 6px; padding: 10px 14px; border-radius: var(--r-lg); background: var(--accent-soft); color: var(--ink); font-size: 14.5px; font-weight: 650; line-height: 1.5; }
   .learn i { font-style: normal; font-size: 18px; }
+  .hint { margin-top: 10px; font-size: 13.5px; color: var(--muted); }
+  .beats { display: grid; gap: 6px; margin: 8px 0 0; padding: 0; list-style: none; }
+  .beats li { font-weight: 800; font-size: 15px; padding: 7px 12px; border-radius: var(--r-md); background: var(--accent-soft); color: var(--ink); }
+  .beats li span { font-weight: 600; color: var(--muted); font-size: 13px; margin-left: 6px; }
+  .panel.right { justify-content: flex-end; }
 
-  /* 등장 효과: 장이 보일 때(.in) 시작, 벗어나면 되감김 */
-  .rv { opacity: 0; transform: translateY(16px); }
-  .chap.in .rv { animation: rise .7s var(--ease) forwards; animation-delay: var(--d, 0s); }
-  @keyframes rise { to { opacity: 1; transform: none; } }
-  .fi { opacity: 0; } .chap.in .fi { animation: fadein .35s ease forwards; animation-delay: var(--d, 0s); }
-  .fo { opacity: 1; } .chap.in .fo { animation: fadeout .3s ease forwards; animation-delay: var(--d, 0s); }
-  @keyframes fadein { to { opacity: 1; } } @keyframes fadeout { to { opacity: 0; } }
-  .pop { opacity: 0; transform-box: fill-box; transform-origin: 50% 100%; }
-  .chap.in .pop { animation: pop .45s cubic-bezier(.3,1.6,.5,1) forwards; animation-delay: var(--d, 0s); }
-  @keyframes pop { from { opacity: 0; transform: scale(.4); } to { opacity: 1; transform: scale(1); } }
-
-  /* 1장: 달리는 아이들, 잠든 로보독 */
-  .run { transform-box: view-box; }
-  .chap.in .run { animation: run var(--t, 3.4s) linear infinite; animation-delay: var(--dl, 0s); }
-  @keyframes run { from { transform: translateX(-140px); } to { transform: translateX(980px); } }
-  .kid { transform-box: fill-box; transform-origin: 50% 100%; }
-  .chap.in .kid { animation: hop .28s ease-in-out infinite alternate; }
-  @keyframes hop { to { transform: translateY(-9px) rotate(3deg); } }
-  .z { opacity: 0; font-weight: 800; fill: var(--muted); }
-  .chap.in .z { animation: zz 2.6s ease-in-out infinite; animation-delay: var(--d, 0s); }
-  @keyframes zz { 0% { opacity: 0; transform: translate(0, 8px); } 30% { opacity: .9; } 100% { opacity: 0; transform: translate(14px, -26px); } }
-  .dim { opacity: .5; }
-
-  /* 2장: 갸웃 → 다시 가르침 → 성공 */
-  .head { transform-box: fill-box; transform-origin: 40% 100%; }
-  .chap.in .head.t { animation: tilt 2.6s ease-in-out forwards; }
-  @keyframes tilt { 0% { transform: rotate(0); } 20% { transform: rotate(-9deg); } 45% { transform: rotate(7deg); } 70% { transform: rotate(-9deg); } 100% { transform: rotate(0); } }
-  .bar-fill { transform-box: fill-box; transform-origin: 0 50%; transform: scaleX(.12); }
-  .chap.in .bar-fill { animation: fill 2s ease-in-out forwards; animation-delay: .9s; }
-  @keyframes fill { to { transform: scaleX(1); } }
-  .scan { opacity: 0; } .chap.in .scan { animation: scan 1.1s linear 3.1s forwards; }
-  @keyframes scan { 0% { opacity: .9; transform: translateY(0); } 90% { opacity: .9; } 100% { opacity: 0; transform: translateY(150px); } }
-
-  /* 3장: 3D 시연 */
-  .demo { display: block; margin: 0; }
-  .demo .art { position: relative; }
-  #stage3d { width: 100%; height: clamp(240px, 44vh, 460px); background: var(--stage); }
-  .cap { position: absolute; left: 14px; top: 12px; max-width: min(62%, 440px); pointer-events: none; }
-  .cap > div { background: color-mix(in srgb, var(--card) 88%, transparent); backdrop-filter: blur(6px); border: 1px solid var(--line); border-radius: 16px; padding: 8px 16px 9px;
-    box-shadow: 0 6px 20px rgba(10,20,50,.12); transition: opacity .35s ease, transform .45s cubic-bezier(.2,.9,.25,1.25); }
-  .cap.swap > div { opacity: 0; transform: translateY(12px) scale(.96); }
-  .cap small { display: block; font-size: 12.5px; font-weight: 700; color: var(--accent); }
-  .cap b { display: block; font-size: clamp(16px, 2.6vw, 24px); line-height: 1.3; }
-  .nogl { display: none; padding: 28px 20px; text-align: center; color: var(--muted); }
-  .demo .txt { text-align: center; max-width: 720px; margin: 22px auto 0; }
-  .beats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
-  .beats li { text-align: center; font-weight: 800; font-size: clamp(14px, 2vw, 18px); padding: 10px 8px; border-radius: var(--r-lg); color: var(--muted); background: var(--card); border: 1px solid var(--line); opacity: .5; transition: all .35s ease; }
-  .beats li.on { opacity: 1; color: var(--ink); border-color: color-mix(in srgb, var(--accent) 55%, var(--line)); background: var(--accent-soft); }
-  .beats li span { display: block; font-size: 12px; font-weight: 600; margin-top: 2px; }
-
-  /* 끝: 이제 네 차례 */
-  .finale { text-align: center; padding: clamp(28px, 7vh, 72px) 0 12px; }
-  .finale h2 { margin: 6px 0 8px; font-size: clamp(26px, 4.4vw, 44px); }
+  /* ---------- 끝: 이제 네 차례 ---------- */
+  .finale { text-align: center; padding: clamp(36px, 8vh, 80px) 0 12px; }
+  .finale h2 { margin: 0 0 8px; font-size: clamp(26px, 4.4vw, 44px); }
   .finale > p { margin: 0 auto; max-width: 560px; color: var(--muted); font-size: clamp(15px, 2vw, 18px); }
   .cta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; margin: 24px 0 6px; text-align: left; }
   .cta a { display: flex; flex-direction: column; text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 16px 18px 14px;
@@ -114,18 +66,15 @@
   .foot { padding: 22px 0 28px; font-size: 13px; color: var(--muted); line-height: 1.6; text-align: center; }
   .foot .partner { display: inline-block; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: var(--r-pill); padding: 1px 9px; }
 
-  @media (max-width: 800px) {
-    .chap, .chap.flip { grid-template-columns: minmax(0, 1fr); min-height: 0; }
-    .chap.flip .art { order: 0; }
-    .cta { grid-template-columns: minmax(0, 1fr); }
-    .cap { right: 14px; max-width: none; top: auto; bottom: 12px; }
+  @media (max-width: 720px) {
+    :root { --hdr: 0px; }     /* 휴대폰: 머리 메뉴가 고정되지 않으므로 무대가 맨 위 */
+    .panel { align-items: flex-end; padding-bottom: 20px; }
+    .panel.right { justify-content: flex-start; }
+    .card { padding: 16px 18px 14px; }
     .beats li span { display: none; }
+    .cta { grid-template-columns: minmax(0, 1fr); }
   }
-  /* 움직임 줄이기: 모든 애니메이션을 끝 상태로 */
-  @media (prefers-reduced-motion: reduce) {
-    *, *::before, *::after { animation-duration: 0s !important; animation-delay: 0s !important; animation-iteration-count: 1 !important; transition: none !important; }
-    .scroll-hint { animation: none; }
-  }
+  @media (prefers-reduced-motion: reduce) { .card { transition: none; opacity: 1; transform: none; } }
 </style>
 </head>
 <body>
@@ -137,118 +86,50 @@
   <div class="slot"><span class="badge warn">인트로 시안</span></div>
 </div></header>
 
-<main class="wrap">
-  <section class="cover">
-    <span class="kick">로보독의 모험 · 시안</span>
-    <h1>복도의 문제,<br><em>로보독</em>이 풀어 볼까요?</h1>
-    <p>잠든 로보독을 깨워 학교의 불편한 일을 해결하는 이야기. 스크롤을 내려 보세요.</p>
-    <div class="scroll-hint" aria-hidden="true">▼</div>
-  </section>
+<div class="story" id="story">
+  <div class="stage" id="stage">
+    <div id="stage3d" role="img" aria-label="학교 복도에서 아이들이 뛰어다니고 잠든 로보독이 있다가, AI가 카드를 처음엔 못 알아보지만 사진을 더 모아 가르치면 알아보고, 마이크로비트를 거쳐 로보독이 깨어나 걷고 빨간 카드에서 멈추는 3D 이야기"></div>
+    <div class="loading" id="loading">로보독을 깨우는 중…</div>
+    <div class="nogl" id="nogl"><div>이 기기에서는 3D 장면을 켤 수 없어요.<br>글만 따라 읽어도 이야기를 알 수 있어요. <a href="./">기존 소개 화면</a>에서 2D 그림으로도 볼 수 있어요.</div></div>
+  </div>
 
-  <!-- 1화 -->
-  <section class="chap" data-chap>
-    <div class="art">
-      <svg viewBox="0 0 800 380" role="img" aria-labelledby="t1">
-        <title id="t1">쉬는 시간 복도에서 아이들이 뛰어다니고, 구석에서 잠든 로보독이 있는 그림</title>
-        <rect width="800" height="380" fill="var(--wall)"/>
-        <g fill="var(--sky)" stroke="var(--line-strong)" stroke-width="4">
-          <rect x="50" y="46" width="140" height="112" rx="10"/><rect x="250" y="46" width="140" height="112" rx="10"/><rect x="450" y="46" width="140" height="112" rx="10"/>
-        </g>
-        <g stroke="var(--line-strong)" stroke-width="4"><path d="M120 46v112M50 102h140M320 46v112M250 102h140M520 46v112M450 102h140"/></g>
-        <rect y="296" width="800" height="84" fill="var(--floor)"/><rect y="290" width="800" height="8" fill="var(--floor-edge)"/>
-        <g transform="translate(618 58)">
-          <rect width="152" height="66" rx="12" fill="var(--card)" stroke="var(--line-strong)" stroke-width="3"/>
-          <text x="76" y="28" text-anchor="middle" font-size="18" font-weight="800" fill="var(--ink)">복도에서는</text>
-          <text x="76" y="52" text-anchor="middle" font-size="18" font-weight="800" fill="var(--bad)">걸어요!</text>
-        </g>
-        <g id="runners"></g>
-        <g id="dog1"></g>
-        <g id="zzz" font-size="22"></g>
-        <!-- 아이디어 말풍선 -->
-        <g transform="translate(300 150)"><g class="pop" style="--d:2.4s">
-          <rect width="268" height="64" rx="20" fill="var(--card)" stroke="var(--line-strong)" stroke-width="3"/>
-          <path d="M240 62 L292 96 L262 60 Z" fill="var(--card)" stroke="var(--line-strong)" stroke-width="3" stroke-linejoin="round"/><path d="M243 61 L266 61" stroke="var(--card)" stroke-width="5"/>
-          <circle cx="36" cy="32" r="18" fill="var(--signal-yellow)"/><path d="M30 42h12M31 46h10" stroke="#fff" stroke-width="3" stroke-linecap="round"/><path d="M36 20a10 10 0 0 1 6 18" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" opacity=".0"/>
-          <text x="66" y="28" font-size="17" font-weight="800" fill="var(--ink)">로보독이</text>
-          <text x="66" y="50" font-size="17" font-weight="800" fill="var(--ink)">신호등이 되면?</text>
-        </g></g>
-      </svg>
-    </div>
-    <div class="txt">
-      <div class="no rv" style="--d:.1s">1화 · 복도의 문제</div>
-      <h2 class="rv" style="--d:.25s">쉬는 시간 복도는<br>달리기 대회장!</h2>
-      <p class="rv" style="--d:.5s">선생님이 아무리 말해도 소용이 없어요. 그때 구석에서 <b>잠든 로보독</b>이 눈에 들어왔어요.</p>
-      <p class="rv" style="--d:.8s">"로보독이 <b>초록 불이면 걷고, 빨간 불이면 멈추는</b> 신호등이 되면 어떨까?"</p>
-    </div>
-  </section>
+  <div class="panels">
+    <section class="panel" data-ch="0"><div class="card">
+      <div class="no">로보독의 모험</div>
+      <h1>복도의 문제,<br><em>로보독</em>이 풀어 볼까요?</h1>
+      <p>잠든 로보독을 깨워 학교의 불편한 일을 해결하는 이야기예요.</p>
+      <div class="hint" aria-hidden="true">▼ 스크롤해서 이야기를 따라가 보세요</div>
+    </div></section>
 
-  <!-- 2화 -->
-  <section class="chap flip" data-chap>
-    <div class="art">
-      <svg viewBox="0 0 800 380" role="img" aria-labelledby="t2">
-        <title id="t2">초록 카드를 보여 주자 AI가 처음에는 몰라 로보독이 고개를 갸웃하고, 사진을 더 모아 다시 가르치자 알아보는 그림</title>
-        <rect width="800" height="380" fill="var(--stage)"/>
-        <rect y="298" width="800" height="82" fill="color-mix(in srgb, var(--table) 55%, var(--stage))"/>
-        <!-- 카드 + 뷰파인더 -->
-        <g transform="translate(80 120)">
-          <rect width="130" height="170" rx="14" fill="var(--card)" stroke="var(--line)" stroke-width="3"/>
-          <circle cx="65" cy="78" r="40" fill="var(--signal-green)"/><rect x="30" y="134" width="70" height="12" rx="6" fill="var(--line)"/>
-          <g stroke="var(--accent)" stroke-width="7" fill="none" stroke-linecap="round"><path d="M-14 30 V-14"/><path d="M144 30 V-14"/><path d="M144 148 V184 H108"/><path d="M22 184 H-14 V148"/></g>
-          <rect class="scan" x="-8" y="6" width="146" height="4" rx="2" fill="var(--accent)"/>
-          <!-- AI 말: 처음에는 자신 없음 → 나중엔 찾았다 -->
-          <g class="fo" style="--d:2.7s" transform="translate(65 -46)">
-            <rect x="-96" y="-20" width="192" height="38" rx="19" fill="var(--signal-yellow)"/>
-            <text y="6" text-anchor="middle" font-size="17" font-weight="800" fill="#2b2100">음… 잘 모르겠어요</text>
-          </g>
-          <g transform="translate(65 -46)"><g class="pop" style="--d:3.2s">
-            <rect x="-86" y="-20" width="172" height="38" rx="19" fill="var(--accent)"/>
-            <text y="6" text-anchor="middle" font-size="18" font-weight="800" fill="var(--accent-ink)">초록! 찾았다</text>
-          </g></g>
-        </g>
-        <!-- 학습 사진 모으기 -->
-        <g transform="translate(400 34)">
-          <text x="0" y="-6" font-size="14" font-weight="800" fill="var(--muted)">AI에게 가르친 사진</text>
-          <rect width="320" height="22" rx="11" fill="var(--surface-2)" stroke="var(--line)" stroke-width="2"/>
-          <rect class="bar-fill" x="2" y="2" width="316" height="18" rx="9" fill="var(--signal-green)"/>
-        </g>
-        <g id="dog2"></g>
-        <!-- 로보독 말 -->
-        <g transform="translate(560 96)"><g class="pop" style="--d:3.6s">
-          <rect x="0" y="-30" width="116" height="44" rx="16" fill="var(--card)" stroke="var(--line-strong)" stroke-width="3"/>
-          <path d="M26 12 L18 30 L44 12 Z" fill="var(--card)" stroke="var(--line-strong)" stroke-width="3" stroke-linejoin="round"/><path d="M22 12 L46 12" stroke="var(--card)" stroke-width="5"/>
-          <text x="58" y="0" text-anchor="middle" font-size="20" font-weight="800" fill="var(--ink)">알겠어!</text>
-        </g></g>
-      </svg>
-    </div>
-    <div class="txt">
-      <div class="no rv" style="--d:.1s">2화 · 첫 시도는 실패!</div>
-      <h2 class="rv" style="--d:.25s">어라, 로보독이<br>못 알아봐요</h2>
-      <p class="rv" style="--d:.5s">초록 카드를 보여 줬는데 고개만 갸웃갸웃. AI는 <b>가르쳐 준 만큼만</b> 알아요.</p>
-      <p class="rv" style="--d:.8s">사진을 더 모아 다시 가르쳤더니…<br><b>"초록! 찾았다!"</b></p>
-      <div class="learn rv" style="--d:1.1s"><i>💡</i><span>실패해도 괜찮아요. 데이터를 더하고 다시 가르치면 돼요.</span></div>
-    </div>
-  </section>
+    <section class="panel right" data-ch="0"><div class="card">
+      <div class="no">1화 · 복도의 문제</div>
+      <h2>쉬는 시간 복도는<br>달리기 대회장!</h2>
+      <p>선생님이 아무리 말해도 소용이 없어요. 그때 구석에서 <b>잠든 로보독</b>이 눈에 들어왔어요.</p>
+      <p>"로보독이 <b>초록 불이면 걷고, 빨간 불이면 멈추는</b> 신호등이 되면 어떨까?"</p>
+    </div></section>
 
-  <!-- 3화: 3D 시연 -->
-  <section class="chap demo" data-chap id="demo">
-    <div class="art">
-      <div id="stage3d" role="img" aria-label="AI가 초록 카드를 보고 마이크로비트가 3을 보내면 잠든 로보독이 깨어나 걷고, 빨간 카드를 보면 멈춘 뒤 하트 눈으로 인사하는 3D 장면"></div>
-      <div class="cap" id="cap" aria-live="polite" hidden><div><small id="capSub"></small><b id="capText"></b></div></div>
-      <div class="nogl" id="nogl">이 기기에서는 3D 장면을 켤 수 없어요. <a href="./">기존 소개 화면</a>에서 2D 그림으로 볼 수 있어요.</div>
-    </div>
-    <div class="txt">
-      <div class="no rv" style="--d:.1s">3화 · 성공!</div>
-      <h2 class="rv" style="--d:.25s">내가 가르친 AI로<br>로보독이 움직여요</h2>
-      <p class="rv" style="--d:.5s">AI가 카드를 <b>보고</b>, 마이크로비트가 숫자로 <b>전하고</b>, 로보독이 규칙대로 <b>움직여요</b>.</p>
+    <section class="panel" data-ch="1"><div class="card">
+      <div class="no">2화 · 첫 시도는 실패!</div>
+      <h2>어라, 로보독이<br>못 알아봐요</h2>
+      <p>초록 카드를 보여 줬는데 눈만 두리번두리번. AI는 <b>가르쳐 준 만큼만</b> 알아요.</p>
+      <p>사진을 더 모아 다시 가르쳤더니… <b>"초록! 찾았다!"</b></p>
+      <div class="learn"><i>💡</i><span>실패해도 괜찮아요. 데이터를 더하고 다시 가르치면 돼요.</span></div>
+    </div></section>
+
+    <section class="panel right" data-ch="2"><div class="card">
+      <div class="no">3화 · 성공!</div>
+      <h2>내가 가르친 AI로<br>로보독이 움직여요</h2>
       <ol class="beats" aria-label="수업의 흐름">
         <li>① AI가 본다<span>웹캠으로 카드 인식</span></li>
         <li>② 마이크로비트가 전한다<span>결과를 라디오 숫자로</span></li>
         <li>③ 로보독이 움직인다<span>내가 만든 규칙대로</span></li>
       </ol>
-    </div>
-  </section>
+      <p style="margin-top:10px">초록이면 걷고, <b>빨강이면 멈춰요.</b> 이제 우리 학교의 문제를 풀 차례예요.</p>
+    </div></section>
+  </div>
+</div>
 
-  <!-- 끝 -->
+<main class="wrap">
   <section class="finale">
     <h2>이제 네 차례예요</h2>
     <p>로봇이 없어도 시뮬레이터로 시작할 수 있어요. 우리 학교의 문제는 무엇인가요?</p>
@@ -258,95 +139,43 @@
       <a href="docs/"><div class="step" style="color:var(--accent)">선생님께</div><b>수업 자료</b><span>2·4·8차시 수업안, 활동지·평가, 운영 가이드</span><em class="go">보기</em></a>
     </nav>
   </section>
-
-  <p class="foot"><span class="partner">코코아팹 협력</span> · 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다.<br>이야기 속 장면은 이해를 돕는 그림이며 실제 수업 결과와 다를 수 있어요.</p>
+  <p class="foot"><span class="partner">코코아팹 협력</span> · 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다.<br>이야기 속 장면은 이해를 돕는 그림이며 실제 수업 결과와 다를 수 있어요. 시뮬레이터의 걷는 속도·크기 등은 추정치예요.</p>
 </main>
 
-<script>
-// ---------- 그림 부품: 로보독(옆모습), 달리는 아이들 ----------
-const OPEN = ['.###.', '#####', '#####', '#####', '.###.'];
-const HEART = ['.#.#.', '#####', '#####', '.###.', '..#..'];
-const SLEEP = ['.....', '.....', '#####', '.....', '.....'];
-const QMARK = ['.###.', '#...#', '...#.', '..#..', '..#..'];
-const eyes = (rows, cls = '', style = '') => {
-  let s = '';
-  for (const ox of [180, 226]) {
-    s += `<g transform="translate(${ox} -34)">`;
-    rows.forEach((r, y) => [...r].forEach((c, x) => { if (c === '#') s += `<circle cx="${x * 8}" cy="${y * 8}" r="3.2" fill="var(--eye-on)"/>`; }));
-    s += '</g>';
-  }
-  return `<g class="${cls}" style="${style}">${s}</g>`;
-};
-const dog = ({ tx, ty, s, eyeSets, headCls = '' }) => `
-  <g transform="translate(${tx} ${ty}) scale(${s})">
-    <g opacity=".55"><rect x="22" y="56" width="16" height="60" rx="8" fill="var(--leg)"/><rect x="20" y="108" width="22" height="44" rx="9" fill="var(--leg)"/>
-      <rect x="150" y="56" width="16" height="60" rx="8" fill="var(--leg)"/><rect x="148" y="108" width="22" height="44" rx="9" fill="var(--leg)"/></g>
-    <rect x="0" y="22" width="200" height="56" rx="24" fill="var(--dog)" stroke="var(--dog-edge)" stroke-width="3"/>
-    <path d="M2 40 Q-26 22 -20 0" fill="none" stroke="var(--leg)" stroke-width="9" stroke-linecap="round"/>
-    <g class="head ${headCls}">
-      <rect x="176" y="8" width="18" height="26" rx="6" fill="var(--leg)"/>
-      <rect x="160" y="-52" width="118" height="68" rx="20" fill="var(--dog)" stroke="var(--dog-edge)" stroke-width="3"/>
-      <rect x="172" y="-42" width="94" height="48" rx="12" fill="var(--eye-off)"/>
-      ${eyeSets}
-    </g>
-    <rect x="30" y="58" width="18" height="62" rx="9" fill="var(--leg)" stroke="var(--dog-edge)" stroke-width="2"/><rect x="27" y="110" width="24" height="46" rx="10" fill="var(--leg)" stroke="var(--dog-edge)" stroke-width="2"/>
-    <rect x="158" y="58" width="18" height="62" rx="9" fill="var(--leg)" stroke="var(--dog-edge)" stroke-width="2"/><rect x="155" y="110" width="24" height="46" rx="10" fill="var(--leg)" stroke="var(--dog-edge)" stroke-width="2"/>
-  </g>`;
-const kid = (fill, n) => `
-  <g class="run" style="--t:${3 + n * 0.5}s;--dl:${-n * 1.1}s"><g transform="translate(0 ${288})"><g class="kid">
-    <path d="M-34 -50h16M-40 -36h20M-34 -22h14" stroke="var(--line-strong)" stroke-width="4" stroke-linecap="round"/>
-    <path d="M-6 -2 L-14 -22 M6 -2 L14 -22" stroke="var(--dog-edge)" stroke-width="7" stroke-linecap="round"/>
-    <rect x="-13" y="-62" width="26" height="42" rx="11" fill="${fill}"/>
-    <circle cx="0" cy="-76" r="13" fill="var(--kid-skin)"/><path d="M-13 -80 q13 -16 26 0" fill="var(--dog-edge)"/>
-  </g></g></g>`;
-document.getElementById('runners').innerHTML = kid('var(--signal-red)', 0) + kid('var(--signal-yellow)', 1) + kid('var(--accent)', 2);
-// 1화 로보독: 잠든 눈(희미하게) + zzz
-document.getElementById('dog1').innerHTML = dog({ tx: 566, ty: 216, s: .55, eyeSets: eyes(SLEEP, 'dim') });
-document.getElementById('zzz').innerHTML = [0, 1, 2].map(i => `<text class="z" style="--d:${i * .8}s" x="${712 + i * 12}" y="${176 - i * 14}">z</text>`).join('');
-// 2화 로보독: ? 눈 → 눈 뜸. 고개를 갸웃
-document.getElementById('dog2').innerHTML = dog({ tx: 440, ty: 168, s: .82, headCls: 't',
-  eyeSets: eyes(QMARK, 'fo', '--d:2.7s') + eyes(OPEN, 'fi', '--d:3s') });
-
-// ---------- 스크롤: 장이 보이면 시작, 완전히 벗어나면 처음으로 ----------
+<script type="module">
 const prog = document.getElementById('progress');
 const upd = () => { const h = document.documentElement; prog.style.transform = `scaleX(${Math.min(1, scrollY / Math.max(1, h.scrollHeight - innerHeight))})`; };
 addEventListener('scroll', upd, { passive: true }); upd();
-const chaps = [...document.querySelectorAll('[data-chap]')];
+
+const panels = [...document.querySelectorAll('.panel')];
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-if (reduce) chaps.forEach(c => c.classList.add('in'));
-else {
-  const io = new IntersectionObserver((es) => es.forEach(e => {
-    if (e.intersectionRatio >= 0.35) e.target.classList.add('in');
-    else if (e.intersectionRatio === 0) e.target.classList.remove('in');
-  }), { threshold: [0, 0.35] });
-  chaps.forEach(c => io.observe(c));
-}
-</script>
-<script type="module">
-// 3화: 시뮬레이터의 3D 로보독 장면(기존 인트로와 같은 부품). 보이기 시작할 때 한 번 시작
-const host = document.getElementById('stage3d');
+let engine = null, want = { k: 0, side: -1 };
+const mobile = matchMedia('(max-width: 720px)');
+const setCh = (k, side) => { want = { k, side }; if (engine) engine.goto(k, side, mobile.matches); };
+
+// 화면 가운데 띠에 들어온 글 카드가 현재 장
+const io = new IntersectionObserver((es) => es.forEach(e => {
+  if (!e.isIntersecting) return;
+  panels.forEach(p => p.classList.toggle('on', p === e.target));
+  setCh(+e.target.dataset.ch, e.target.classList.contains('right') ? 1 : -1);
+}), { rootMargin: '-45% 0px -45% 0px' });
+panels.forEach(p => io.observe(p));
+panels[0].classList.add('on');
+
+const stage = document.getElementById('stage');
+const fail = () => { document.getElementById('loading').style.display = 'none'; document.getElementById('nogl').style.display = 'grid'; panels.forEach(p => p.classList.add('on')); };
 const ok = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
-const fail = () => { host.hidden = true; document.getElementById('nogl').style.display = 'block'; };
 if (!ok) fail();
 else {
-  let started = false;
-  const start = async () => {
-    if (started) return; started = true;
-    try {
-      const { startIntro3D } = await import('./intro3d.js');
-      const cap = document.getElementById('cap'), beats = [...document.querySelectorAll('.beats li')];
-      let timer = 0; cap.hidden = false;
-      startIntro3D({
-        host, still: matchMedia('(prefers-reduced-motion: reduce)').matches,
-        onChapter: (i, c) => {
-          beats.forEach((b, k) => b.classList.toggle('on', k < c.beat));
-          clearTimeout(timer); cap.classList.add('swap');
-          timer = setTimeout(() => { document.getElementById('capSub').textContent = c.sub; document.getElementById('capText').textContent = c.text; cap.classList.remove('swap'); }, i ? 250 : 0);
-        },
-      });
-    } catch (e) { console.warn('3D 장면을 켜지 못했어요:', e); fail(); }
-  };
-  new IntersectionObserver((es, io) => { if (es.some(e => e.isIntersecting)) { io.disconnect(); start(); } }, { threshold: 0.4 }).observe(host);
+  try {
+    const { createStory } = await import('./story3d.js');
+    engine = createStory({ host: document.getElementById('stage3d'), still: reduce });
+    engine.goto(want.k, want.side, mobile.matches);
+    stage.classList.add('ready');
+    window.__story = engine;
+    // 이야기 구간이 화면 밖이면 그리기 멈춤(배터리·성능)
+    new IntersectionObserver((es) => es.forEach(e => (e.isIntersecting ? engine.play() : engine.pause()))).observe(document.getElementById('story'));
+  } catch (e) { console.warn('3D 장면을 켜지 못했어요:', e); fail(); }
 }
 </script>
 </body>
