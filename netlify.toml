@@ -6,7 +6,7 @@
 [[headers]]
   for = "/*"
   [headers.values]
-    Permissions-Policy = "camera=(self), serial=(self), microphone=()"
+    Permissions-Policy = "camera=(self), serial=(self), usb=(self \"https://makecode.microbit.org\"), microphone=()"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
 

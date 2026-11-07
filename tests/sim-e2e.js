@@ -230,6 +230,32 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   await p.click('#tabJs');
   check('JavaScript 탭으로 돌아옴', await p.isVisible('#code'));
 
+  // 11-5. MakeCode 편집기 삽입 (실제 makecode.microbit.org, 인터넷 필요)
+  await p.click('#btnReset'); await loadExample('05_motion-tour');
+  await p.click('#tabEditor');
+  let ready = false;
+  for (let i = 0; i < 180 && !ready; i++) { ready = (await p.evaluate(() => window.__sim.mcState().mcReady)); if (!ready) await p.waitForTimeout(500); }
+  check('MakeCode 편집기가 시뮬레이터 안에서 열림', ready && await p.evaluate(() => document.body.classList.contains('mc-mode')));
+  const mc = p.frameLocator('#mcFrame');
+  let blocksOk = false;
+  for (let i = 0; i < 60 && !blocksOk; i++) { blocksOk = (await mc.locator('.blocklyTreeLabel, .blocklyTreeRow').filter({ hasText: '로보독' }).count()) > 0 && (await mc.locator('.blocklyDraggable').count()) > 5; if (!blocksOk) await p.waitForTimeout(500); }
+  check('편집기에 로보독 확장 블록 + 예제 블록이 보임', blocksOk);
+  await p.screenshot({ path: path.join(OUT, 'sim_mc_editor.png') });
+  // 편집기 안에서 코드 고치기(JavaScript 탭 → 내용 교체) → 시뮬레이터에 반영·실행
+  await p.waitForTimeout(6500);   // 불러온 직후 무시 구간 지나기
+  await p.evaluate(() => document.getElementById('mcFrame').contentWindow.postMessage({ type: 'pxteditor', action: 'switchjavascript' }, 'https://makecode.microbit.org'));
+  await p.waitForTimeout(3000);
+  const edited = '// 편집기에서 고침\nrobodog.move(deflib.MoveDirection.Forward, 30)\nbasic.showIcon(IconNames.Heart)\n';
+  const mcFrame = p.frames().find(f => f.url().startsWith('https://makecode.microbit.org'));
+  await mcFrame.evaluate((c) => window.monaco.editor.getModels()[0].setValue(c), edited);
+  let synced = false;
+  for (let i = 0; i < 40 && !synced; i++) { synced = (await p.inputValue('#code')).includes('편집기에서 고침'); if (!synced) await p.waitForTimeout(500); }
+  check('편집기에서 고친 코드가 시뮬레이터 코드로 들어옴', synced);
+  await p.waitForTimeout(2500);
+  check('고친 코드가 바로 실행되어 로보독이 걸음(속도 30)', (await state()).vel === 30, `vel=${(await state()).vel}`);
+  await p.click('#tabJs');
+  check('JavaScript 탭으로 돌아오면 넓은 화면 해제', !(await p.evaluate(() => document.body.classList.contains('mc-mode'))));
+
   // 12. 좁은 화면
   await p.setViewportSize({ width: 390, height: 900 }); await p.waitForTimeout(400);
   const sw = await p.evaluate(() => document.documentElement.scrollWidth);

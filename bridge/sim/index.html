@@ -61,7 +61,10 @@
   label { font-size: 13px; }
   input[type=range] { width: 120px; }
   .hidden { display: none !important; }
-  .codetabs { margin: 8px 0 6px; }
+  .codetabs { margin: 8px 0 6px; flex-wrap: wrap; }
+  .mcwrap iframe { width: 100%; height: 74vh; min-height: 480px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
+  body.mc-mode main { grid-template-columns: minmax(0, 8fr) minmax(0, 5fr); max-width: 1800px; }
+  @media (max-width: 980px) { body.mc-mode main { grid-template-columns: minmax(0, 1fr); } }
   .blockview { height: 52vh; min-height: 280px; overflow: auto; border: 1px solid var(--line); border-radius: 10px; background: #f8f9fb; padding: 8px; }
   .blockview img { display: block; transform-origin: 0 0; }
   .demo { border: 1px solid var(--line); border-radius: 12px; padding: 10px; margin-bottom: 10px; }
@@ -98,6 +101,7 @@
     <div class="tabs codetabs" role="tablist">
       <button id="tabJs" role="tab" aria-selected="true">JavaScript</button>
       <button id="tabBlocks" role="tab" aria-selected="false">🧩 블록으로 보기</button>
+      <button id="tabEditor" role="tab" aria-selected="false">✏️ MakeCode 편집기</button>
       <span id="blockTools" class="row hidden" style="margin-left:auto;gap:6px">
         <button id="zoomOut" aria-label="블록 작게">－</button><button id="zoomIn" aria-label="블록 크게">＋</button>
         <button id="copyCode">코드 복사</button>
@@ -107,6 +111,15 @@
     <div id="blockView" class="blockview hidden" aria-live="polite">
       <div id="blockStatus" class="note" style="margin:6px 0">블록을 그리는 중…</div>
       <img id="blockImg" alt="MakeCode 블록으로 바꾼 코드">
+    </div>
+    <div id="mcWrap" class="mcwrap hidden">
+      <div class="row" style="margin:0 0 6px">
+        <label class="row" style="gap:6px"><input id="mcAutoRun" type="checkbox" checked> 블록을 고치면 시뮬레이터에서 바로 실행</label>
+        <span id="mcStatus" class="note" style="margin:0 0 0 auto">MakeCode를 여는 중…</span>
+      </div>
+      <iframe id="mcFrame" title="MakeCode 편집기" allow="usb; clipboard-read; clipboard-write"></iframe>
+      <p class="note">진짜 MakeCode 편집기예요(makecode.microbit.org). 로보독 확장이 미리 들어 있어요. 블록을 고치면 오른쪽 로보독이 그대로 움직여요.
+        마이크로비트에 내려받기는 편집기 아래 [다운로드]를 쓰세요. 프로젝트는 이 화면의 코드 칸에 저장돼요.</p>
     </div>
     <p id="blockNote" class="note hidden">블록 그림은 MakeCode(makecode.microbit.org) 공식 렌더링 서비스로 만들어요(코드가 그쪽으로 전달되며 인터넷이 필요해요).
       <b>보기 전용</b>이에요. 고치려면 JavaScript 탭에서 고치거나, [코드 복사] → MakeCode의 JavaScript 탭에 붙여넣고 블록 탭으로 바꾸세요.</p>
@@ -573,14 +586,22 @@ function renderBlocks() {
   const msg = { type: 'renderblocks', id: 'r' + (++renderSeq), code, options: pkg ? { package: pkg } : {} };
   if (renderReady) renderFrame.contentWindow.postMessage(msg, 'https://makecode.microbit.org'); else renderQueue = [msg];
 }
-function showCodeTab(blocks) {
-  $('tabJs').setAttribute('aria-selected', String(!blocks)); $('tabBlocks').setAttribute('aria-selected', String(blocks));
-  $('code').classList.toggle('hidden', blocks); $('blockView').classList.toggle('hidden', !blocks);
+function showCodeTab(which) {   // 'js' | 'blocks' | 'editor' (true/false는 이전 호환)
+  if (which === true) which = 'blocks'; if (which === false) which = 'js';
+  const blocks = which === 'blocks', editor = which === 'editor';
+  $('tabJs').setAttribute('aria-selected', String(which === 'js')); $('tabBlocks').setAttribute('aria-selected', String(blocks));
+  $('tabEditor').setAttribute('aria-selected', String(editor));
+  $('code').classList.toggle('hidden', which !== 'js'); $('blockView').classList.toggle('hidden', !blocks);
   $('blockTools').classList.toggle('hidden', !blocks); $('blockNote').classList.toggle('hidden', !blocks);
+  $('mcWrap').classList.toggle('hidden', !editor);
+  document.body.classList.toggle('mc-mode', editor);
+  ledDirty = true; if (view3d) setTimeout(() => view3d.resize(), 50);
   if (blocks) renderBlocks();
+  if (editor) openEditor();
 }
-$('tabJs').onclick = () => showCodeTab(false);
-$('tabBlocks').onclick = () => showCodeTab(true);
+$('tabJs').onclick = () => showCodeTab('js');
+$('tabBlocks').onclick = () => showCodeTab('blocks');
+$('tabEditor').onclick = () => showCodeTab('editor');
 const setZoom = (z) => { blockZoom = Math.max(0.3, Math.min(2, z)); const img = $('blockImg'); if (img.naturalWidth) img.style.width = ((blockW || img.naturalWidth / 4) * blockZoom) + 'px'; };
 $('zoomIn').onclick = () => setZoom(blockZoom + 0.1);
 $('zoomOut').onclick = () => setZoom(blockZoom - 0.1);
@@ -594,7 +615,79 @@ setInterval(() => {
   if ($('code').value !== lastRendered) { clearTimeout(renderTimer); renderTimer = setTimeout(renderBlocks, 600); }
 }, 500);
 
-window.__sim = { runner, robot, world, showTab, showCodeTab, playDemo: (i) => playDemo(DEMOS[i]), stopDemo, view3d: () => view3d };   // 자동 시험용
+
+// ---------- ✏️ MakeCode 편집기 삽입 (공식 controller 모드) ----------
+// 편집기가 workspacesync로 프로젝트를 요청하면 로보독 확장이 든 프로젝트를 주고,
+// 블록을 고칠 때마다 오는 workspacesave의 main.ts를 시뮬레이터에서 실행함.
+const MC_ORIGIN = 'https://makecode.microbit.org';
+const EXT_PIN = {   // 확인한 버전으로 고정
+  robodog: 'github:kocoafab/robodog#331dd39f0ea616c66ad627f8fe0b58cee45061c8',
+  'robodog-radio': 'github:kocoafab/robodog-radio#4a50d45d23f20776bb71f1d382fb13d6142ca3f0',
+};
+let mcLoaded = false, mcReady = false, mcFromEditor = null, mcSentToEditor = null, mcRunTimer = null, mcImportAt = 0;
+function mcProject(code) {
+  const now = Math.round(Date.now() / 1000), deps = { core: '*', radio: '*', microphone: '*' };
+  const pkg = blockPackage(code);
+  if (pkg) { const name = pkg.split('=')[0]; deps[name] = EXT_PIN[name]; }
+  return {
+    header: { id: 'robodog-sim-' + Date.now(), name: '로보독 시뮬레이터', meta: {}, editor: 'blocksprj', target: 'microbit', targetVersion: '9.0.0',
+      pubId: '', pubCurrent: false, recentUse: now, modificationTime: now, isDeleted: false, cloudVersion: null, cloudCurrent: false, cloudLastSyncTime: 0, _rev: null },
+    text: {
+      'pxt.json': JSON.stringify({ name: '로보독 시뮬레이터', dependencies: deps, files: ['main.blocks', 'main.ts', 'README.md'], preferredEditor: 'blocksprj' }),
+      'main.ts': code, 'main.blocks': '', 'README.md': ' ',
+    },
+  };
+}
+const mcPost = (msg) => { const f = $('mcFrame'); if (f.contentWindow) f.contentWindow.postMessage(msg, MC_ORIGIN); };
+function mcImport(code) {
+  mcSentToEditor = code; mcImportAt = Date.now();
+  mcPost({ type: 'pxteditor', action: 'importproject', project: mcProject(code), id: 'imp' + Date.now(), response: true });
+  setTimeout(() => mcPost({ type: 'pxteditor', action: 'switchblocks' }), 4000);
+}
+function openEditor() {
+  if (mcLoaded) return;
+  mcLoaded = true;
+  $('mcFrame').src = MC_ORIGIN + '/?controller=1&lang=ko#editor';
+  setTimeout(() => { if (!mcReady) $('mcStatus').textContent = 'MakeCode를 열지 못했어요(인터넷·학교망에서 makecode.microbit.org 허용 확인).'; }, 60000);
+}
+window.addEventListener('message', (ev) => {
+  if (ev.origin !== MC_ORIGIN || ev.source !== $('mcFrame').contentWindow) return;
+  const m = ev.data || {};
+  if (m.type !== 'pxthost') return;
+  if (m.action === 'workspacesync') {
+    mcSentToEditor = $('code').value; mcImportAt = Date.now();
+    mcPost({ type: 'pxthost', id: m.id, success: true, projects: [mcProject(mcSentToEditor)] });
+    return;
+  }
+  if (m.action === 'editorcontentloaded' && !mcReady) {
+    mcReady = true; $('mcStatus').textContent = '편집기 준비 완료';
+    setTimeout(() => mcPost({ type: 'pxteditor', action: 'switchblocks' }), 500);
+  }
+  if (m.action === 'workspacesave' && m.project && m.project.text) {
+    const code = m.project.text['main.ts'];
+    // 프로젝트를 보낸 직후 편집기가 스스로 다시 저장하는 것은 사용자의 수정이 아니므로 무시
+    if (Date.now() - mcImportAt < 6000) { mcFromEditor = code; if (m.response) mcPost({ type: 'pxthost', id: m.id, success: true }); return; }
+    if (typeof code === 'string' && code !== $('code').value) {
+      mcFromEditor = code;
+      stopDemo('MakeCode에서 고친 코드로 바꿨어요');
+      $('code').value = code; save();
+      $('mcStatus').textContent = '저장됨 ' + new Date().toLocaleTimeString('ko-KR', { hour12: false });
+      if ($('mcAutoRun').checked) {
+        clearTimeout(mcRunTimer);
+        mcRunTimer = setTimeout(async () => { robot.reset(); await runner.start(code); log('MakeCode에서 고친 코드를 실행해요'); }, 1200);
+      }
+    }
+  }
+  if (m.response && m.action !== 'workspacesync') mcPost({ type: 'pxthost', id: m.id, success: true });
+});
+// 예제·시연·직접 입력으로 코드가 바뀌면 편집기에도 보냄
+setInterval(() => {
+  if (!mcReady || $('mcWrap').classList.contains('hidden')) return;
+  const v = $('code').value;
+  if (v !== mcSentToEditor && v !== mcFromEditor) mcImport(v);
+}, 1500);
+
+window.__sim = { runner, robot, world, showTab, showCodeTab, mcState: () => ({ mcReady, mcFromEditor }), playDemo: (i) => playDemo(DEMOS[i]), stopDemo, view3d: () => view3d };   // 자동 시험용
 </script>
 </body>
 </html>
