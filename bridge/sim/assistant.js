@@ -330,10 +330,10 @@ export const SAMPLE_REQUESTS = [
 export async function checkAi() {
   try {
     const r = await fetch('/api/robodog-assistant', { method: 'GET', cache: 'no-store' });
-    if (!r.ok) return { available: false };
+    if (!r.ok) return { available: false, reason: 'offline' };
     const j = await r.json();
-    return { available: !!j.configured, needsCode: !!j.needsCode };
-  } catch (e) { return { available: false }; }
+    return { available: !!j.configured, needsCode: !!j.needsCode, reason: j.configured ? '' : 'not_configured' };
+  } catch (e) { return { available: false, reason: 'offline' }; }
 }
 export async function askAi(request, currentCode, classCode) {
   const r = await fetch('/api/robodog-assistant', {
