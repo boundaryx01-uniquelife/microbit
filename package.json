@@ -1,0 +1,7 @@
+{
+  "name": "robodog-microbit-ai",
+  "private": true,
+  "dependencies": {
+    "@anthropic-ai/sdk": "^1.6.0"
+  }
+}

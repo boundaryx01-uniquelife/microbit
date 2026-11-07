@@ -17,7 +17,7 @@
 
 **AI 브리지 주소: https://microbit-bridge.netlify.app** (학교망 허용 목록에는 `microbit-bridge.netlify.app` 하나만 추가하면 됩니다)
 
-**로보독 시뮬레이터: https://microbit-bridge.netlify.app/sim/** — MakeCode JavaScript 코드를 붙여넣으면 로보독 움직임을 2D·3D로 미리 봅니다. AI 브리지와 같은 컴퓨터에서 열면 로보독 없이도 AI 수업 연습이 됩니다. (`docs/08_시뮬레이터_안내.md`)
+**로보독 시뮬레이터: https://microbit-bridge.netlify.app/sim/** — MakeCode JavaScript 코드를 붙여넣으면 로보독 움직임을 2D·3D로 미리 봅니다. AI 브리지와 같은 컴퓨터에서 열면 로보독 없이도 AI 수업 연습이 됩니다. **🤖 로보독 도우미**에 "A 버튼을 누르면 인사해"처럼 말하면 코드를 만들어 줍니다(키 없이 규칙 도우미, Netlify에 `ANTHROPIC_API_KEY`를 넣으면 Claude AI 도우미). (`docs/08_시뮬레이터_안내.md`)
 
 ## 구성
 

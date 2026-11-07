@@ -12,6 +12,8 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 950 } });
   const p = await ctx.newPage();
+  // 로컬 정적 서버에는 도우미 서버 함수가 없으므로 '키 없음' 응답으로 대신함
+  await p.route('**/api/robodog-assistant', r => r.fulfill({ json: { ok: true, configured: false, needsCode: false } }));
   const errs = [];
   p.on('pageerror', e => errs.push(e.message));
   p.on('console', m => { if (m.type() === 'error') errs.push(m.text()); });
@@ -24,6 +26,8 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   const st0 = await p.evaluate(() => ({ mode: window.__sim.robot.mode, posture: window.__sim.robot.posture, code: document.getElementById('code').value.includes('동작 둘러보기') }));
   check('처음 열면 "동작 둘러보기" 자동 시연', st0.code && /A 버튼/.test(cap0) && st0.mode === 4, `${cap0.slice(0, 30)} mode=${st0.mode}`);
   await p.screenshot({ path: path.join(OUT, 'sim_demo_auto.png') });
+  check('편집기 화면에서는 시연 카드 접힘 + 자막은 보임', await p.evaluate(() => !document.getElementById('demoBox').open) && await p.isVisible('#caption'));
+  await p.click('#demoBox > summary');   // 시연 펼치기
   // 신호등 카드 → 라디오 자동 → 출발
   await p.click('#demoCards button[data-id="03_ai-traffic-dog"]');
   let walked = false;
@@ -35,8 +39,10 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   await p.screenshot({ path: path.join(OUT, 'sim_demo_traffic.png') });
   await p.click('#btnDemoStop');
   check('시연 멈추기', (await p.textContent('#caption')).includes('직접'));
-  // 이후 시험은 자동 시연 없이
-  await p.goto(BASE + 'sim/?demo=0');
+  check('처음 화면은 블록 코딩(MakeCode) 탭', await p.evaluate(() => document.getElementById('tabEditor').getAttribute('aria-selected') === 'true' && document.body.classList.contains('mc-mode')));
+  check('블록으로 보기 탭은 없음(편집기와 중복)', (await p.$$('#tabBlocks')).length === 0);
+  // 이후 시험은 자동 시연 없이, JavaScript 탭에서
+  await p.goto(BASE + 'sim/?demo=0&tab=js');
   await p.waitForFunction(() => window.__sim && window.Babel, null, { timeout: 30000 });
   const S = (fn, arg) => p.evaluate(fn, arg);
   const errorLogs = () => p.$$eval('#log .error', els => els.map(e => e.textContent));
@@ -204,31 +210,6 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   await p.screenshot({ path: path.join(OUT, 'sim_dance_2d.png') });
   await p.click('#btnDemoStop'); await p.waitForTimeout(300);
   check('군무 멈추면 1대로 돌아옴', (await p.evaluate(() => window.__sim.world.extra.length)) === 0);
-
-  // 11-4. 블록으로 보기 (MakeCode 공식 렌더링 서비스, 인터넷 필요)
-  const waitBlocks = async () => {
-    for (let i = 0; i < 120; i++) {
-      const st = await p.evaluate(() => ({ w: document.getElementById('blockImg').naturalWidth, msg: document.getElementById('blockStatus').textContent }));
-      if (st.w > 0 && !st.msg) return st;
-      if (/못했어요/.test(st.msg)) return st;
-      await p.waitForTimeout(500);
-    }
-    return { w: 0, msg: 'timeout' };
-  };
-  await p.click('#btnReset'); await loadExample('03_ai-traffic-dog');
-  await p.click('#tabBlocks');
-  let bv = await waitBlocks();
-  const shownW = await p.evaluate(() => document.getElementById('blockImg').getBoundingClientRect().width);
-  check('블록으로 보기: 로보독 예제가 MakeCode 블록 그림으로 바뀜', bv.w > 500 && !bv.msg && shownW < 3000, `그림 ${bv.w}px, 표시 ${Math.round(shownW)}px ${bv.msg}`);
-  await p.screenshot({ path: path.join(OUT, 'sim_blocks_view.png') });
-  await p.evaluate(() => { document.getElementById('blockImg').removeAttribute('src'); });
-  await p.click('#tabJs');
-  await p.fill('#code', 'robodog.rfBand(7)\nrobodog.aiDetection(deflib.AiMode.QrCode)\nbasic.forever(function () {\n    basic.showString(robodog.getQrCode())\n})');
-  await p.click('#tabBlocks');
-  bv = await waitBlocks();
-  check('블록으로 보기: 무선 확장(AI 블록) 코드도 바뀜', bv.w > 200 && !bv.msg, `width=${bv.w} ${bv.msg}`);
-  await p.click('#tabJs');
-  check('JavaScript 탭으로 돌아옴', await p.isVisible('#code'));
 
   // 11-5. MakeCode 편집기 삽입 (실제 makecode.microbit.org, 인터넷 필요)
   await p.click('#btnReset'); await loadExample('05_motion-tour');

@@ -7,7 +7,7 @@ const OUT = path.join(__dirname, 'mc');
   const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const p = await b.newPage({ viewport: { width: 1400, height: 950 } });
   p.on('pageerror', e => console.log('pageerror', e.message));
-  await p.goto(BASE + 'sim/?demo=0');
+  await p.goto(BASE + 'sim/?demo=0&tab=js');
   await p.waitForFunction(() => window.__sim && window.Babel);
   await p.click('#tab3d'); await p.waitForTimeout(1500);
   await p.click('#demoCards button[data-id="dance"]');

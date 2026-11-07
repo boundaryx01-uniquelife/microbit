@@ -1,7 +1,12 @@
-# Netlify: AI 브리지(bridge/)만 정적 사이트로 배포
+# Netlify: AI 브리지·시뮬레이터(bridge/)는 정적 사이트, 로보독 도우미는 서버 함수(netlify/functions)
 [build]
   publish = "bridge"
   command = ""
+
+# /api/robodog-assistant — Claude API 키(ANTHROPIC_API_KEY)는 Netlify 환경 변수에만 둠
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
 
 [[headers]]
   for = "/*"
