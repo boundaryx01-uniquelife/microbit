@@ -52,6 +52,15 @@
   <p class="muted" id="syncmsg" role="status"></p>
   <div class="dlgbtns"><button type="button" class="btn" id="syncstop">연결 끝내기</button><button type="button" class="btn primary" id="syncclose">닫기</button></div>
 </dialog>
+<dialog id="pindlg" class="syncdlg pindlg" aria-labelledby="pinttl">
+  <form id="pinform" autocomplete="off" novalidate>
+    <h2 id="pinttl">교사 모드</h2>
+    <p>교사 노트를 보려면 비밀번호를 넣으세요.</p>
+    <input id="pin" type="password" inputmode="numeric" aria-label="교사 모드 비밀번호" aria-describedby="pinmsg">
+    <p id="pinmsg" class="joinmsg" role="status"></p>
+    <div class="dlgbtns"><button type="button" class="btn" id="pincancel">취소</button><button type="submit" class="btn primary">확인</button></div>
+  </form>
+</dialog>
 <p id="err" class="lead" role="alert" hidden></p>
 <script src="viewer.js"></script>
 </body></html>

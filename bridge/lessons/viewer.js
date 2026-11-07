@@ -206,12 +206,37 @@
     };
     window.addEventListener('hashchange', function () { go(fromHash()); });
 
-    function teacher(on) {
+    // 교사 모드 비밀번호: 바꾸려면 새 번호의 SHA-256 값으로 TEACHER_PIN_HASH 를 바꿈(현재 0000)
+    // 정적 사이트라 학생이 노트를 못 보게 막는 '가림막'일 뿐, 보안 장치는 아님
+    var TEACHER_PIN_HASH = '9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0';
+    function unlocked() { return store.get('lessonTeacherOK') === TEACHER_PIN_HASH; }
+    function hashPin(t) {
+      if (!(window.crypto && crypto.subtle)) return Promise.reject(new Error('no crypto'));
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)).then(function (b) {
+        return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      });
+    }
+    function setTeacher(on) {
       document.body.classList.toggle('teacher', on);
       $('notes').hidden = !on; $('teacher').setAttribute('aria-pressed', on ? 'true' : 'false');
       $('teacher').classList.toggle('primary', on);
       store.set('lessonTeacher', on ? '1' : '0'); fit();
     }
+    function teacher(on) {
+      if (!on || unlocked()) { setTeacher(on); return; }
+      var d = $('pindlg'); $('pinmsg').textContent = ''; $('pin').value = '';
+      if (d.showModal && !d.open) d.showModal(); else d.setAttribute('open', '');
+      $('pin').focus();
+    }
+    function closePin() { var d = $('pindlg'); if (d.close) d.close(); else d.removeAttribute('open'); }
+    $('pinform').onsubmit = function (e) {
+      e.preventDefault();
+      hashPin($('pin').value.trim()).then(function (h) {
+        if (h === TEACHER_PIN_HASH) { store.set('lessonTeacherOK', h); closePin(); setTeacher(true); }
+        else { $('pinmsg').textContent = '비밀번호가 맞지 않아요.'; $('pin').select(); }
+      }, function () { $('pinmsg').textContent = '이 브라우저에서는 확인할 수 없어요(https 주소로 열어 주세요).'; });
+    };
+    $('pincancel').onclick = closePin;
     $('teacher').onclick = function () { teacher(!document.body.classList.contains('teacher')); };
     function fs() {
       if (document.fullscreenElement) { document.exitFullscreen(); return; }
@@ -318,7 +343,7 @@
     };
 
     cur = fromHash();
-    teacher(store.get('lessonTeacher') === '1');
+    setTeacher(store.get('lessonTeacher') === '1' && unlocked());
     var room = params.get('room');
     if (room && /^\d{4}$/.test(room)) { sync.room = room; }
     else { try { var hh = JSON.parse(store.get(HKEY) || 'null'); if (hh && hh.room && hh.key) { sync.host = hh; document.body.classList.add('hosting'); hostPill(); } } catch (e) {} }

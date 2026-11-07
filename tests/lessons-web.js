@@ -40,6 +40,10 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   check('#15 주소로 바로 15장', (await p2.textContent('#counter')).trim() === '15 / 24' && (await p2.textContent('.st')).includes('이렇게 연결돼요'));
   check('교사 모드는 처음엔 꺼짐(노트 숨김)', await p2.evaluate(() => document.getElementById('notes').hidden));
   await p2.keyboard.press('n');
+  check('N 키 → 비밀번호 창(노트는 아직 숨김)', await p2.isVisible('#pindlg') && await p2.evaluate(() => document.getElementById('notes').hidden));
+  await p2.fill('#pin', '1234'); await p2.click('#pinform button[type=submit]');
+  check('틀린 비밀번호는 거절', await p2.evaluate(() => document.getElementById('notes').hidden) && (await p2.textContent('#pinmsg')).includes('맞지 않'));
+  if (await p2.isVisible('#pindlg')) { await p2.fill('#pin', '0000'); await p2.click('#pinform button[type=submit]'); await p2.waitForSelector('#notes:not([hidden])'); }
   const nt = await p2.textContent('#notesbody');
   check('N 키 → 교사 노트가 보임', await p2.evaluate(() => !document.getElementById('notes').hidden) && nt.includes('초록 카드를 보면 AI가 3번이라고 정하고'), nt);
   await p2.reload(); await p2.waitForSelector('.slide');
