@@ -3,83 +3,141 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="importmap">{ "imports": { "three": "./sim/lib/three.module.min.js" } }</script>
 <title>로보독 피지컬 AI 교실</title>
 <meta name="description" content="AI가 보고, 마이크로비트가 전하고, 로보독이 움직인다 — 초·중·고 피지컬 AI 수업 자료와 시뮬레이터">
+<meta name="theme-color" content="#f3e2c7">
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="로보독 AI 교실">
+<meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="로보독의 모험 · 할아버지의 약">
+<meta property="og:description" content="AI에게 약통을 가르치면 로보독이 찾아 줘요. 35초 3D 이야기와 시뮬레이터로 시작하는 초등 피지컬 AI 수업.">
+<meta property="og:url" content="https://microbit-bridge.netlify.app/">
+<meta property="og:image" content="https://microbit-bridge.netlify.app/assets/intro/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="거실에서 로보독이 약통이 놓인 탁자 앞에 멈춰 선 3D 장면과 제목">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="로보독의 모험 · 할아버지의 약">
+<meta name="twitter:description" content="AI에게 약통을 가르치면 로보독이 찾아 줘요. 35초 3D 이야기와 시뮬레이터로 시작하는 초등 피지컬 AI 수업.">
+<meta name="twitter:image" content="https://microbit-bridge.netlify.app/assets/intro/og.png">
 <link rel="stylesheet" href="assets/brand.css">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<script type="importmap">{ "imports": { "three": "./sim/lib/three.module.min.js" } }</script>
+<link rel="preload" as="image" href="assets/intro/poster-wide.webp" media="(min-aspect-ratio: 1/1)" fetchpriority="high">
+<link rel="preload" as="image" href="assets/intro/poster-tall.webp" media="(max-aspect-ratio: 1/1)" fetchpriority="high">
+<link rel="modulepreload" href="./sim/lib/three.module.min.js">
+<link rel="modulepreload" href="./intro3d.js">
+<link rel="modulepreload" href="./sim/view3d.js">
+<link rel="modulepreload" href="./sim/runtime.js">
 <style>
   :root {
-    --stage: #e8edf6; --table: #d9c29b; --wall: #efe6d8; --sky: #bfe3ff; --floor: #c9a77c; --rug: #6f9a9a;
+    --stage: #f1e6d3; --table: #d9c29b; --wall: #f3e2c7; --sky: #bfe3ff; --floor: #c9a77c; --rug: #4f8f93;
     --hdr: 58px;
   }
   @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --stage: #141a24; --table: #4d4130; --wall: #2d2830; --sky: #243a58; --floor: #4a3a2a; --rug: #3f5f66; }
+    :root:not([data-theme="light"]) { --stage: #1b1620; --table: #4d4130; --wall: #4a3d36; --sky: #243a58; --floor: #6a4a32; --rug: #3f6f74; }
   }
   html, body { height: 100%; }
   body { --page-w: 1100px; display: flex; flex-direction: column; overflow: hidden; }
+  .sr { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; }
 
   /* ---------- 영상 무대: 열면 바로 재생. 스크롤 없음 ---------- */
   .stage { position: relative; flex: 1; min-height: 0; background: var(--stage); overflow: hidden; }
   #stage3d { position: absolute; inset: 0; }
-  .loading, .nogl { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--muted); padding: 24px; font-weight: 650; pointer-events: none; }
-  .nogl { display: none; pointer-events: auto; }
+  #stage3d canvas { display: block; }
+  /* 첫 화면(포스터): 3D가 준비되기 전에 바로 보임 */
+  .poster { position: absolute; inset: 0; z-index: 1; transition: opacity .5s ease; }
+  .poster img { width: 100%; height: 100%; object-fit: cover; object-position: 50% 45%; display: block; }
+  .stage.ready .poster { opacity: 0; pointer-events: none; }
+  .stage.gone .poster { display: none; }
+  .vig { position: absolute; inset: 0; z-index: 2; pointer-events: none; background: radial-gradient(ellipse 85% 80% at 50% 46%, transparent 58%, rgba(60, 30, 10, .26) 100%); }
+  .loading { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 3; pointer-events: none; font-weight: 800; font-size: 14px; color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 90%, transparent); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 7px 16px; box-shadow: var(--shadow-md); }
+  .loading::before { content: ""; display: inline-block; width: 10px; height: 10px; margin-right: 8px; border-radius: 50%; border: 2px solid var(--accent); border-right-color: transparent; vertical-align: -1px; animation: spin .9s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
   .stage.ready .loading { display: none; }
+  .nogl { position: absolute; inset: 0; z-index: 3; display: none; place-items: center; text-align: center; color: var(--ink); padding: 24px; font-weight: 650; background: color-mix(in srgb, var(--stage) 80%, transparent); }
 
-  .title { position: absolute; left: 16px; top: 14px; font-size: 13px; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px);
-    border: 1px solid var(--line); border-radius: var(--r-pill); padding: 4px 12px; pointer-events: none; }
-  .ctl { position: absolute; right: 14px; top: 12px; display: flex; gap: 8px; }
-  .ctl button { font-size: 14px; min-height: 36px; padding: 6px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(6px); }
-  .ctl button:focus-visible, .cta a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  /* 위쪽 줄: 제목 + 조절 버튼 */
+  .top { position: absolute; left: 12px; right: 12px; top: 10px; z-index: 4; display: flex; align-items: center; gap: 10px; pointer-events: none; }
+  .title { flex: 1 1 auto; min-width: 0; font-size: 13px; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border: 1px solid var(--line); border-radius: var(--r-pill); padding: 5px 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: max-content; }
+  .ctl { margin-left: auto; display: flex; gap: 6px; pointer-events: auto; flex: 0 0 auto; }
+  .ctl button { display: inline-flex; align-items: center; gap: 6px; font-size: 14px; font-weight: 700; min-height: 40px; min-width: 40px; justify-content: center; padding: 6px 12px; border-radius: var(--r-pill);
+    background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+  .ctl button svg { width: 18px; height: 18px; fill: currentColor; flex: 0 0 auto; }
+  .ctl button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  .ctl button[hidden] { display: none; }
+  .ctl button:focus-visible, .cta a:focus-visible, .segs button:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
+  .stage.ended #prevB, .stage.ended #playB { }
+  .stage.ended #skip { display: none; }
 
-  /* 자막 + 장면 진행 막대 */
-  .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 16px 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; transition: opacity .4s; }
-  .stage.ended .cap { opacity: 0; }
-  .cap b { max-width: min(92%, 760px); text-align: center; font-size: clamp(18px, 3vw, 30px); line-height: 1.35; padding: 10px 22px; border-radius: 18px; letter-spacing: -0.02em;
-    background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); box-shadow: var(--shadow-md);
+  /* 자막 + 장면 진행 막대(눌러서 장면 이동) */
+  .cap { position: absolute; left: 0; right: 0; bottom: 0; z-index: 4; padding: 0 16px 14px; display: flex; flex-direction: column; align-items: center; gap: 6px; pointer-events: none; transition: opacity .4s; }
+  .stage.ended .cap { opacity: 0; visibility: hidden; }
+  .cap b { max-width: min(94%, 800px); text-align: center; font-size: clamp(19px, 3.2vw, 32px); font-weight: 800; line-height: 1.35; padding: 10px 24px; border-radius: 20px; letter-spacing: -0.02em; color: var(--ink);
+    background: color-mix(in srgb, var(--surface) 93%, transparent); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border: 1px solid var(--line); box-shadow: var(--shadow-md);
     transition: opacity .3s ease, transform .4s cubic-bezier(.2,.9,.25,1.25); }
   .cap.swap b { opacity: 0; transform: translateY(10px) scale(.97); }
-  .segs { display: flex; gap: 5px; width: min(92%, 760px); }
-  .segs i { flex: 1; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--muted) 35%, transparent); overflow: hidden; }
+  .stage.nocap .cap b { display: none; }
+  .segs { display: flex; gap: 6px; width: min(94%, 800px); pointer-events: auto; }
+  .segs button { flex: 1; padding: 9px 0; background: none; border: 0; cursor: pointer; border-radius: 6px; min-height: 0; }
+  .segs i { display: block; height: 5px; border-radius: 3px; background: color-mix(in srgb, var(--ink) 22%, transparent); overflow: hidden; transition: transform .15s; }
+  .segs button:hover i { transform: scaleY(1.6); }
+  .segs button[aria-current="true"] i { background: color-mix(in srgb, var(--ink) 34%, transparent); }
   .segs i::after { content: ""; display: block; height: 100%; width: var(--p, 0%); background: var(--accent); }
 
-  /* 끝: 시작 카드 */
-  .end { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 16px 16px; display: flex; justify-content: center; opacity: 0; transform: translateY(24px); pointer-events: none;
-    transition: opacity .6s var(--ease), transform .7s var(--ease); }
-  .stage.ended .end { opacity: 1; transform: none; pointer-events: auto; }
-  .end-in { width: min(1000px, 100%); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--line); border-radius: 24px; padding: 18px 20px 12px; box-shadow: var(--shadow-lg); text-align: center; }
-  .end-in h1 { margin: 0; font-size: clamp(22px, 3.6vw, 38px); line-height: 1.2; letter-spacing: -0.03em; }
+  /* 끝: 시작 카드 (장면을 되도록 덜 가림) */
+  .end { position: absolute; left: 0; right: 0; bottom: 0; z-index: 5; padding: 0 14px 12px; display: flex; justify-content: center; opacity: 0; visibility: hidden; transform: translateY(24px); pointer-events: none;
+    transition: opacity .6s var(--ease), transform .7s var(--ease), visibility 0s .7s; }
+  .stage.ended .end { opacity: 1; visibility: visible; transform: none; pointer-events: auto; transition-delay: 0s; }
+  .end-in { width: min(1000px, 100%); background: color-mix(in srgb, var(--surface) 94%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
+    border: 1px solid var(--line); border-radius: 22px; padding: 14px 20px 10px; box-shadow: var(--shadow-lg); text-align: center; }
+  .end-in h1 { margin: 0; font-size: clamp(20px, 3vw, 32px); line-height: 1.2; letter-spacing: -0.03em; }
   .end-in h1 em { font-style: normal; color: var(--accent); }
-  .end-in > p { margin: 6px auto 0; max-width: 560px; color: var(--muted); font-size: clamp(14px, 1.8vw, 16.5px); }
-  .cta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 0 6px; text-align: left; }
-  .cta a { display: flex; flex-direction: column; text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 12px 16px 10px;
+  .end-in > p { margin: 5px auto 0; max-width: 560px; color: var(--muted); font-size: clamp(14px, 1.6vw, 16px); }
+  .cta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 10px 0 6px; text-align: left; }
+  .cta a { display: flex; flex-direction: column; text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 10px 16px 8px;
     box-shadow: var(--shadow-sm); transition: border-color .15s, transform .2s var(--ease), box-shadow .2s; }
   .cta a:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
   .cta a.main { background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #6a3df0)); color: var(--accent-ink); border-color: transparent; }
   .cta .step { font-size: 12px; font-weight: 800; opacity: .8; }
   .cta b { display: block; font-size: 17px; margin: 2px 0 2px; letter-spacing: -0.02em; }
-  .cta span { font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+  .cta span { font-size: 13.5px; line-height: 1.45; color: var(--muted); }
   .cta a.main span { color: inherit; opacity: .92; }
-  .cta .go { margin-top: auto; padding-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--accent); font-style: normal; }
+  .cta .go { margin-top: auto; padding-top: 4px; font-size: 13.5px; font-weight: 700; color: var(--accent); font-style: normal; }
   .cta a.main .go { color: inherit; }
   .cta .go::after { content: "→"; margin-left: 5px; }
-  .foot { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .foot { margin: 4px 0 0; font-size: 12.5px; color: var(--muted); line-height: 1.55; }
   .foot .partner { display: inline-block; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: var(--r-pill); padding: 0 8px; }
+  .foot .sh { display: none; }
 
+  @media (max-height: 820px) and (min-width: 721px) { .end-in > p:not(.foot) { display: none; } .cta span { display: none; } .cta .step { display: none; } }
   @media (max-width: 720px) {
     .gnb { position: static; }
-    .cta { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-    .cta span { display: none; }
-    .cta a { padding: 9px 14px 8px; flex-direction: row; align-items: center; gap: 10px; }
-    .cta .step { display: none; }
-    .cta b { margin: 0; font-size: 16px; }
+    .top { left: 8px; right: 8px; top: 8px; gap: 6px; }
+    .title { font-size: 12.5px; padding: 4px 10px; }
+    .ctl { gap: 4px; }
+    .ctl button { min-height: 38px; min-width: 38px; padding: 6px 9px; }
+    .ctl button .lb { display: none; }
+    .cap { padding-bottom: 8px; gap: 2px; }
+    .cap b { font-size: 18px; padding: 8px 16px; border-radius: 16px; }
+    .end { padding: 0 8px 8px; }
+    .end-in { padding: 10px 12px 8px; border-radius: 18px; }
+    .end-in h1 { font-size: 18px; }
+    .end-in > p:not(.foot) { display: none; }
+    .cta { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 8px 0 4px; }
+    .cta span, .cta .step { display: none; }
+    .cta a { padding: 8px 12px; flex-direction: row; align-items: center; gap: 8px; min-height: 44px; border-radius: 14px; }
+    .cta a.main { grid-column: 1 / -1; }
+    .cta b { margin: 0; font-size: 15.5px; }
     .cta .go { margin: 0 0 0 auto; padding: 0; }
-    .end-in { padding: 14px 14px 8px; }
-    .end-in > p { display: none; }
-    .ctl button { padding: 6px 10px; }
+    .foot { font-size: 12.5px; line-height: 1.5; }
+    .foot .lo { display: none; } .foot .sh { display: inline; }
   }
-  @media (prefers-reduced-motion: reduce) { .end, .cap b { transition: none; } }
+  @media (max-width: 360px) { .title { display: none; } }
+  @media (prefers-reduced-motion: reduce) { .end, .cap b, .poster { transition: none; } .loading::before { animation: none; } }
+.joinl{margin:6px 0 0;font-size:14.5px}.joinl a{color:var(--accent);font-weight:600;text-decoration:none;display:inline-block;padding:6px 0}.joinl a:hover{text-decoration:underline}
 </style>
 </head>
 <body>
@@ -90,68 +148,133 @@
 </div></header>
 
 <main class="stage" id="stage">
-  <div id="stage3d" role="img" aria-label="거실에서 할아버지가 약을 찾지 못해 로보독에게 약을 가져다 달라고 부탁하고, 로보독이 약통을 처음엔 몰라 갸웃하지만 약통 사진을 더 모아 가르치면 AI가 알아보고, 마이크로비트를 거쳐 로보독이 깨어나 걸어가 약통이 놓인 탁자 앞에서 멈춰 여기예요 하고 알려 주는 약 30초 3D 영상"></div>
-  <div class="loading" id="loading">로보독을 깨우는 중…</div>
+  <div id="stage3d" role="img" aria-label="거실에서 할아버지가 약을 찾지 못해 로보독에게 약을 가져다 달라고 부탁하고, 로보독이 약통을 처음엔 몰라 갸웃하지만 약통 사진을 더 모아 가르치면 AI가 알아보고, 마이크로비트를 거쳐 로보독이 걸어가 약통이 놓인 탁자 앞에서 멈춰 여기예요 하고 알려 주는 약 35초 3D 영상"></div>
+  <picture class="poster" id="poster">
+    <source media="(max-aspect-ratio: 1/1)" srcset="assets/intro/poster-tall.webp">
+    <img src="assets/intro/poster-wide.webp" alt="" width="1280" height="720" fetchpriority="high" decoding="async">
+  </picture>
+  <div class="vig" aria-hidden="true"></div>
+  <div class="loading" id="loading" role="status">로보독을 깨우는 중…</div>
   <div class="nogl" id="nogl"><div>이 기기에서는 3D 영상을 켤 수 없어요.<br>아래 버튼으로 바로 시작할 수 있어요. <a href="./">기존 소개 화면</a>에서 2D 그림으로도 볼 수 있어요.</div></div>
 
-  <div class="title">로보독의 모험 · 할아버지의 약</div>
-  <div class="ctl">
-    <button id="skip" type="button">건너뛰기 ⏭</button>
-    <button id="replay" type="button" hidden>↺ 다시 보기</button>
+  <div class="top">
+    <div class="title">로보독의 모험 · 할아버지의 약</div>
+    <div class="ctl" id="ctl" role="group" aria-label="영상 조절">
+      <button id="prevB" type="button" aria-label="이전 장면" title="이전 장면 (←)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 5h2.4v14H6zM20 5.6v12.8L10 12z"/></svg></button>
+      <button id="playB" type="button" aria-label="일시정지" title="일시정지 / 재생 (스페이스)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="pp" d="M6 5h4v14H6zM14 5h4v14h-4z"/></svg></button>
+      <button id="nextB" type="button" aria-label="다음 장면" title="다음 장면 (→)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.6 5H18v14h-2.4zM4 5.6v12.8L14 12z"/></svg></button>
+      <button id="ccB" type="button" aria-pressed="true" aria-label="자막" title="자막 켜기/끄기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2zm3.2 4.2a2.8 2.8 0 0 0 0 5.6c.9 0 1.6-.4 2.1-1l-1.1-.9c-.2.3-.6.5-1 .5a1.4 1.4 0 0 1 0-2.8c.4 0 .7.2 1 .5l1.1-.9c-.5-.6-1.200-1-2.100-1zm7.800 0a2.800 2.800 0 0 0 0 5.600c.9 0 1.600-.4 2.100-1l-1.100-.9c-.2.3-.6.5-1 .5a1.400 1.400 0 0 1 0-2.800c.4 0 .7.2 1 .5l1.100-.9c-.5-.6-1.200-1-2.100-1z"/></svg><span class="lb">자막</span></button>
+      <button id="sndB" type="button" aria-pressed="false" aria-label="소리 켜기" title="소리 켜기 (배경음·효과음·읽어 주기)"><svg viewBox="0 0 24 24" aria-hidden="true"><path class="sp" d="M3 9.5v5h3.6L11 18.5v-13L6.600 9.500zM14.500 9a4 4 0 0 1 0 6l-1.100-1.300a2.300 2.300 0 0 0 0-3.400zM17 6.500a7.500 7.500 0 0 1 0 11l-1.200-1.300a5.700 5.700 0 0 0 0-8.400z"/></svg><span class="lb" id="sndL">소리 켜기</span></button>
+      <button id="skip" type="button" aria-label="건너뛰기" title="끝으로 건너뛰기 (Esc)"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.600v12.800L12 12zM12 5.600v12.800L20 12z"/></svg><span class="lb">건너뛰기</span></button>
+      <button id="replay" type="button" hidden aria-label="다시 보기"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5V2L7 6.500 12 11V8a5 5 0 1 1-5 5H5a7 7 0 1 0 7-8z"/></svg><span class="lb">다시 보기</span></button>
+    </div>
   </div>
-  <div class="cap" id="cap" aria-live="polite"><b id="capText"></b><div class="segs" id="segs" aria-hidden="true"></div></div>
+  <div class="cap" id="cap"><b id="capText" aria-hidden="true">할아버지가 약을 찾지 못해요</b><div class="segs" id="segs" role="group" aria-label="장면 이동"></div></div>
+  <div class="sr" id="sr" role="status" aria-live="polite" aria-atomic="true"></div>
 
   <section class="end" id="end" aria-label="시작하기"><div class="end-in">
     <h1>내가 가르친 <em>AI</em>로 로보독이 약통을 찾아 줘요</h1>
     <p>로봇이 없어도 시뮬레이터로 시작할 수 있어요. 우리 학교의 문제는 무엇인가요?</p>
-    <nav class="cta">
+    <nav class="cta" aria-label="시작하기 메뉴">
       <a class="main" href="sim/"><div class="step">STEP 1</div><b>시뮬레이터에서 코딩</b><span>블록 코딩과 3D 로보독 미리 보기, 말로 시키면 코드를 만들어 주는 도우미</span><em class="go">시작하기</em></a>
       <a href="ai.html"><div class="step" style="color:var(--accent)">STEP 2</div><b>AI 브리지</b><span>웹캠으로 카드를 가르치고 결과를 마이크로비트로 보내요</span><em class="go">열기</em></a>
       <a href="docs/"><div class="step" style="color:var(--accent)">선생님께</div><b>수업 자료</b><span>2·4·8차시 수업안, 활동지·평가, 운영 가이드</span><em class="go">보기</em></a>
     </nav>
-    <p class="foot"><span class="partner">코코아팹 협력</span> 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. 영상은 이야기를 위한 상상이에요. 실물 로보독은 물건을 집지 못해서, 찾아가서 알려 주는 역할로 수업해요.</p>
+    <p class="joinl"><a href="lessons/">학생: 선생님이 알려 준 <b>수업 코드</b>로 슬라이드 함께 보기 →</a></p>
+    <p class="foot"><span class="partner">코코아팹 협력</span> <span class="lo">빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. 영상은 이야기를 위한 상상이에요. 실물 로보독은 물건을 집지 못해서, 찾아가서 알려 주는 역할로 수업해요.</span><span class="sh">로보독은 코코아팹 제품이에요. 영상은 상상이고, 실물 로보독은 찾아가서 알려 주는 역할이에요.</span></p>
   </div></section>
 </main>
 
 <script type="module">
-const stage = document.getElementById('stage'), cap = document.getElementById('cap'), capText = document.getElementById('capText');
-const segs = document.getElementById('segs'), skip = document.getElementById('skip'), replay = document.getElementById('replay');
+const $ = (id) => document.getElementById(id);
+const stage = $('stage'), cap = $('cap'), capText = $('capText'), sr = $('sr');
+const segs = $('segs'), skip = $('skip'), replay = $('replay'), playB = $('playB'), prevB = $('prevB'), nextB = $('nextB'), ccB = $('ccB'), sndB = $('sndB'), sndL = $('sndL');
+const top = document.querySelector('.top'), endCard = $('end');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const mobile = matchMedia('(max-width: 720px)');
-let engine = null, SC = null, END = 29, timer = 0;
+const PAUSE = 'M6 5h4v14H6zM14 5h4v14h-4z', PLAY = 'M7 4.5v15L19.500 12z';
+let engine = null, SC = null, END = 35, timer = 0, bars = [], lastScene = -1;
+const store = { get: (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, set: (k, v) => { try { localStorage.setItem(k, v); } catch (e) {} } };
 
-const showEnd = () => { stage.classList.add('ended'); skip.hidden = true; replay.hidden = false; };
-const fail = () => { document.getElementById('loading').style.display = 'none'; document.getElementById('nogl').style.display = 'grid'; showEnd(); };
+const showEnd = () => { stage.classList.add('ended'); replay.hidden = false; insets(); sync(); };
+const leaveEnd = () => { stage.classList.remove('ended'); replay.hidden = true; insets(); sync(); };
+const fail = () => { $('loading').style.display = 'none'; stage.classList.add('gone'); $('nogl').style.display = 'grid'; stage.classList.add('ended'); ctl.hidden = true; };
+const ctl = $('ctl');
 const ok = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
+
+// 자막·끝 카드가 가리는 만큼을 비율로 알려 주어, 장면이 그 밖에 꼭 들어오게 함
+function insets() {
+  if (!engine) return;
+  const H = stage.clientHeight || 1, sr0 = stage.getBoundingClientRect();
+  const topPx = Math.max(top.getBoundingClientRect().bottom - sr0.top, 0) + 6;
+  const botPx = stage.classList.contains('ended') ? endCard.firstElementChild.getBoundingClientRect().height + 14 : cap.getBoundingClientRect().height + 6;
+  engine.setInsets(topPx / H, botPx / H);
+}
+function sync() {   // 재생/일시정지 버튼 모양·이름
+  if (!engine) return;
+  const on = engine.playing && !stage.classList.contains('ended');
+  playB.querySelector('path').setAttribute('d', on ? PAUSE : PLAY);
+  playB.setAttribute('aria-label', on ? '일시정지' : '재생'); playB.title = on ? '일시정지 (스페이스)' : '재생 (스페이스)';
+}
+function setSound(on) {
+  const a = engine.audio;
+  if (on) { if (!a.enable()) { on = false; } else a.speak(SC[Math.max(0, lastScene)].text); } else a.disable();
+  sndB.setAttribute('aria-pressed', String(on)); sndB.setAttribute('aria-label', on ? '소리 끄기' : '소리 켜기'); sndL.textContent = on ? '소리 끄기' : '소리 켜기';
+  sndB.querySelector('.sp').style.opacity = on ? 1 : 0.55;
+}
+function setCaps(on) { stage.classList.toggle('nocap', !on); ccB.setAttribute('aria-pressed', String(on)); ccB.setAttribute('aria-label', on ? '자막 끄기' : '자막 켜기'); store.set('intro-cc', on ? '1' : '0'); setTimeout(insets, 30); }
+
 if (!ok) fail();
 else {
   try {
+    if (document.fonts && document.fonts.load) await Promise.race([document.fonts.load('900 40px "Pretendard Variable"'), new Promise(r => setTimeout(r, 1200))]).catch(() => {});
     const m = await import('./intro3d.js');
     SC = m.SCENES; END = m.END;
-    segs.innerHTML = SC.map(() => '<i></i>').join('');
-    const bars = [...segs.children];
-    const shifts = () => engine && engine.setShift(mobile.matches ? 0.1 : 0.07, mobile.matches ? 0.3 : 0.22);
+    segs.innerHTML = SC.map((s, i) => `<button type="button" aria-label="${i + 1}번 장면: ${s.text.replace(/"/g, '')}"><i></i></button>`).join('');
+    bars = [...segs.children];
+    bars.forEach((b, i) => { b.onclick = () => { engine.goScene(i, { still: reduce }); sync(); }; });
     engine = m.createStory({
-      host: document.getElementById('stage3d'), still: reduce,
+      host: $('stage3d'), still: reduce, adaptive: !/[?&]q=\d/.test(location.search),
       onScene: (i, s) => {
+        if (i === lastScene) return; lastScene = i;
+        bars.forEach((b, k) => b.setAttribute('aria-current', String(k === i)));
+        sr.textContent = (i + 1) + '번 장면. ' + s.text.replace(/"/g, '');   // 장면이 바뀔 때 한 번만 읽어 줌
         clearTimeout(timer); cap.classList.add('swap');
-        timer = setTimeout(() => { capText.textContent = s.text; cap.classList.remove('swap'); }, i ? 220 : 0);
+        timer = setTimeout(() => { capText.textContent = s.text; cap.classList.remove('swap'); setTimeout(insets, 40); }, i ? 200 : 0);
       },
       onTick: (t) => bars.forEach((b, i) => {
-        const a = SC[i].t, e = i + 1 < SC.length ? SC[i + 1].t : END;
-        b.style.setProperty('--p', Math.max(0, Math.min(1, (t - a) / (e - a))) * 100 + '%');
+        const a = SC[i].t, e = i + 1 < SC.length ? SC[i + 1].t : END, v = Math.round(Math.max(0, Math.min(1, (t - a) / (e - a))) * 1000) / 10 + '%';
+        if (b._v !== v) { b._v = v; b.firstChild.style.setProperty('--p', v); }
       }),
-      onEnd: showEnd,
+      onEnd: showEnd, onLeaveEnd: leaveEnd,
     });
-    shifts(); mobile.addEventListener('change', shifts);
-    stage.classList.add('ready');
-    window.__story = engine;
-    skip.onclick = () => engine.finish();
-    replay.onclick = () => { stage.classList.remove('ended'); replay.hidden = true; skip.hidden = false; engine.replay(); };
-    engine.replay();      // 열면 바로 재생
-    // 같은 탭에서 다시 오면 영상은 건너뛰고 바로 시작 카드(처음 한 번만 재생)
-    try { if (sessionStorage.getItem('intro-seen')) engine.finish(); sessionStorage.setItem('intro-seen', '1'); } catch (e) {}
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !stage.classList.contains('ended')) engine.finish(); });
+    window.__intro = window.__story = engine;
+    if (!engine.audio.supported) { sndB.hidden = true; }
+    // 이미 본 탭이면 영상은 건너뛰고 시작 카드부터(처음 한 번만 재생)
+    let seen = false; try { seen = !!sessionStorage.getItem('intro-seen'); sessionStorage.setItem('intro-seen', '1'); } catch (e) {}
+    setCaps(store.get('intro-cc') !== '0');
+    if (reduce) { playB.hidden = true; skip.querySelector('.lb').textContent = '시작 카드'; }
+    new ResizeObserver(insets).observe(stage); insets();
+    await engine.firstFrame();                 // 실제로 한 프레임을 그린 뒤에만 포스터를 걷고 시간을 흐르게 함
+    stage.classList.add('ready'); setTimeout(() => stage.classList.add('gone'), 700);
+    insets();
+    if (seen) engine.finish(); else if (!reduce) engine.play();
+    sync();
+
+    playB.onclick = () => { engine.playing && !stage.classList.contains('ended') ? engine.pause() : engine.play(); sync(); };
+    prevB.onclick = () => { engine.prev(); sync(); };
+    nextB.onclick = () => { engine.next(); sync(); };
+    ccB.onclick = () => setCaps(!stage.classList.contains('nocap') ? false : true);
+    sndB.onclick = () => setSound(!engine.audio.on);
+    skip.onclick = () => { engine.finish(); sync(); };
+    replay.onclick = () => { leaveEnd(); engine.replay(); sync(); };
+    document.addEventListener('keydown', (e) => {
+      if (e.altKey || e.ctrlKey || e.metaKey) return;
+      const tag = (e.target.tagName || '').toLowerCase(), inBtn = tag === 'button' || tag === 'a' || tag === 'input';
+      if (e.key === 'Escape' && !stage.classList.contains('ended')) { engine.finish(); sync(); }
+      else if (e.key === 'ArrowRight' && !inBtn) { engine.next(); sync(); }
+      else if (e.key === 'ArrowLeft' && !inBtn) { engine.prev(); sync(); }
+      else if (e.key === ' ' && !inBtn && !reduce) { e.preventDefault(); playB.click(); }
+    });
   } catch (e) { console.warn('3D 영상을 켜지 못했어요:', e); fail(); }
 }
 </script>

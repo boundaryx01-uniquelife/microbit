@@ -325,6 +325,18 @@ export class World {
 // 코드 변환: TypeScript 타입 제거 + 협동 스케줄링(await) 삽입
 // ------------------------------------------------------------
 const ASYNC_NS = new Set(['basic', 'input', 'radio', 'loops', 'control', 'serial', 'robodog', 'pins', 'music', 'led', 'game']);
+// Babel(약 2.8MB)은 처음 실행할 때 또는 화면이 한가할 때 불러옴(첫 화면을 막지 않음)
+let babelP = null;
+export function ensureBabel() {
+  if (window.Babel) return Promise.resolve();
+  if (!babelP) babelP = new Promise((res, rej) => {
+    const el = document.createElement('script');
+    el.src = new URL('./lib/babel.min.js', import.meta.url).href;
+    el.onload = () => res(); el.onerror = () => { babelP = null; rej(new Error('Babel 로드 실패')); };
+    document.head.appendChild(el);
+  });
+  return babelP;
+}
 export function compile(src) {
   const wrapped = `async function __main() {\n${src}\n}`;
   const plugin = ({ types: t }) => {
@@ -495,6 +507,7 @@ export class Runner {
     this.setDisplay(Array.from({ length: 5 }, () => new Array(5).fill(0)));
     let mainFactory;
     try {
+      await ensureBabel();
       const code = compile(src);
       const env = this.buildEnv();
       const names = Object.keys(env);

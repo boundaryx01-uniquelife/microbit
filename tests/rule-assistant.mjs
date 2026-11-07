@@ -19,6 +19,7 @@ check('계속 걷기는 10초 뒤 자동 멈춤', /runningTime\(\) - 시작시�
 check('켜자마자 걷지 않음', !r.code.split('input.onButtonPressed')[0].includes('robodog.move('));
 r = R('버튼이 눌리면 앉아'); check('어느 버튼인지 모르면 코드 안 만듦', !r.code && /어느 버튼/.test(r.explanation));
 r = R('로보독 버튼을 누르면 멍멍'); check('로보독 버튼 → getButton 사용', /robodog\.getButton\(\)/.test(r.code) && /이전버튼/.test(r.code));
+r = R('본체 버튼을 누르면 멍멍'); check('본체 버튼 → getButton 사용', /robodog\.getButton\(\)/.test(r.code));
 r = R('장애물이 가까우면 멈추고 비켜라고 말해, 아니면 천천히 앞으로 걸어');
 check('거리 0이면 멈춤', /거리 == 0[\s\S]*?robodog\.stop\(\)/.test(r.code), r.code);
 check('상태가 바뀔 때만 명령(소리 반복 없음)', /상태 != 1/.test(r.code) && /상태 != 2/.test(r.code));
@@ -37,7 +38,7 @@ r = R('일어서'); check('일어서 = 준비 자세', /Posture\.Ready/.test(r.c
 r = R('앞으로 계속 걸어'); check('앞으로 계속 걸어 → 켜자마자 걷지 않음(걷는중일 때만)', r.code.indexOf('robodog.move(') > r.code.indexOf('if (걷는중)') && r.code.indexOf('if (걷는중)') > 0, r.code);
 check('앞으로 계속 걸어 → 본체 버튼으로 켜고 끔', /robodog\.getButton\(\)/.test(r.code) && !/input\.onButtonPressed/.test(r.code), r.code);
 r = R('A 버튼 누르면 멍멍 짖어'); check('A·B 버튼 코드는 "꽂으면 가려짐" 경고', r.warnings.some(w => /가려져/.test(w)));
-r = R('로보독 버튼 누르면 인사해'); check('본체 버튼 코드는 가려짐 경고 없음', !r.warnings.some(w => /가려져/.test(w)));
+r = R('본체 버튼 누르면 인사해'); check('본체 버튼 코드는 가려짐 경고 없음', !r.warnings.some(w => /가려져/.test(w)));
 r = R('속도 80으로 걸어'); check('조사: 30으로, 80은', /속도 30으로/.test(r.explanation) && /80은/.test(r.explanation), r.explanation);
 r = R('하늘을 날아'); check('모르는 말 → 코드 없음 + 할 수 있는 말 안내', !r.code && /할 수 있는 말/.test(r.explanation));
 r = R(''); check('빈 입력 안내', !r.code && /적어/.test(r.explanation));

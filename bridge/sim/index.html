@@ -73,8 +73,10 @@
   .radio button { min-width: 44px; min-height: 44px; padding: 6px 8px; }
   header a { display: inline-block; padding: 10px 4px; font-size: 15px; }
   label { font-size: 13px; }
+  label:has(> input[type=checkbox]) { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 6px 2px 0; cursor: pointer; }
+  .site-foot a { display: inline-block; padding: 10px 6px; }
   input[type=range] { width: 120px; accent-color: var(--accent); }
-  input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+  input[type=checkbox] { width: 24px; height: 24px; flex: none; margin: 0; accent-color: var(--accent); }
   .hidden { display: none !important; }
   .codetabs { margin: 8px 0 6px; flex-wrap: wrap; }
   .mcwrap iframe { width: 100%; height: 74vh; min-height: 480px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
@@ -139,7 +141,6 @@
   .panel.auto { outline: 3px solid var(--accent); outline-offset: 2px; }
   .mbbtn.auto, .radio button.auto { background: var(--accent); color: var(--accent-text); }
 </style>
-<script src="lib/babel.min.js"></script>
 <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
 </head>
 <body>
@@ -156,7 +157,7 @@
       <div class="askbar">
         <label for="askText" class="asklabel"><span class="stepno">1</span>🤖 말로 만들기 <span id="askMode" class="badge">확인 중…</span></label>
         <textarea id="askText" rows="1" maxlength="600" aria-label="로보독에게 시킬 일"
-          placeholder="예) A 버튼 누르면 멍멍 짖어"></textarea>
+          placeholder="예) 본체 버튼 누르면 멍멍 짖어"></textarea>
         <button id="askBtn" class="primary">코드 만들기</button>
       </div>
       <div class="askmore row">
@@ -293,7 +294,7 @@
 <footer class="site-foot">빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. · <a href="../docs/">수업 자료</a> · <a href="../NOTICE.md">오픈소스·출처 고지</a></footer>
 
 <script type="module">
-import { Robot, World, Runner, EXPRESSIONS, makeRobodogApi, compile } from './runtime.js';
+import { Robot, World, Runner, EXPRESSIONS, makeRobodogApi, compile, ensureBabel } from './runtime.js';
 import { ruleAssistant, SAMPLE_REQUESTS, checkAi, askAi } from './assistant.js';
 import { View2D, drawEyes } from './view2d.js';
 import { EXAMPLES } from './examples.js';
@@ -679,6 +680,8 @@ const blockPackage = (code) => {
   if (/robodog\.|deflib\./.test(code)) return 'robodog=github:kocoafab/robodog';
   return undefined;
 };
+// Babel(2.8MB)은 head에서 막지 않고 바로 비동기로 불러옴(실행·도우미가 먼저 필요하면 같은 요청을 기다림)
+ensureBabel().catch(() => {});
 function showCodeTab(which) {   // 'editor' | 'js'
   const editor = which === 'editor';
   $('tabEditor').setAttribute('aria-selected', String(editor)); $('tabJs').setAttribute('aria-selected', String(!editor));
@@ -686,7 +689,7 @@ function showCodeTab(which) {   // 'editor' | 'js'
   document.body.classList.toggle('mc-mode', editor);
   $('demoBox').open = !editor;
   ledDirty = true; if (view3d) setTimeout(() => view3d.resize(), 50);
-  if (editor) openEditor();
+  if (editor) openEditor();   // 블록 탭이 처음 화면이므로 열자마자 불러옴(다른 탭 ?tab=js 로 열면 불러오지 않음)
 }
 $('tabJs').onclick = () => showCodeTab('js');
 $('tabEditor').onclick = () => showCodeTab('editor');
@@ -804,8 +807,8 @@ function showAnswer(r, source) {
   $('askOut').classList.remove('hidden');
   $('askExpl').innerHTML = `<b>${source}</b> ` + esc(r.explanation || '');
   let warns = (r.warnings || []).slice();
-  if (r.code) { try { compile(r.code); } catch (e) { warns.unshift('코드에 문법 오류가 있어요: ' + e.message.split('\n')[0]); } }
   $('askWarn').innerHTML = warns.map(w => `<li>${esc(w)}</li>`).join('');
+  if (r.code) ensureBabel().then(() => { try { compile(r.code); } catch (e) { $('askWarn').insertAdjacentHTML('afterbegin', `<li>${esc('코드에 문법 오류가 있어요: ' + e.message.split('\n')[0])}</li>`); } }).catch(() => {});
   $('askSug').innerHTML = (r.suggestions && r.suggestions.length) ? '비슷한 예제: ' + r.suggestions.map(s => `<a href="#" data-ex="${s.id}">${esc(s.title)}</a> <small>(${esc(s.why)})</small>`).join(' · ') : '';
   $('askSug').querySelectorAll('a').forEach(a => a.onclick = (e) => {
     e.preventDefault();

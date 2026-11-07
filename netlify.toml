@@ -14,6 +14,9 @@
     Permissions-Policy = "camera=(self), serial=(self), usb=(self \"https://makecode.microbit.org\"), microphone=()"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "no-referrer"
+    # 보고만 하는(Report-Only) 정책: 막지 않으므로 수업이 깨지지 않음. 브라우저 콘솔의 위반 보고를 보고 다듬은 뒤 Content-Security-Policy 로 바꿀 것
+    # MakeCode 편집기(iframe)는 makecode.microbit.org 가 자체 스크립트·확장(github)을 불러옴. 모델·three.js·tf.js는 이 사이트에 포함
+    Content-Security-Policy-Report-Only = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' 'wasm-unsafe-eval' blob:; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob:; media-src 'self' blob: data:; font-src 'self' data:; connect-src 'self' blob: data: https://makecode.microbit.org https://tfhub.dev https://www.kaggle.com https://storage.googleapis.com; frame-src https://makecode.microbit.org https://makecode.com https://*.makecode.com; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
 
 [[headers]]
   for = "/model/*"
