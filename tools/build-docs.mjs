@@ -95,6 +95,19 @@ for (const [g, ids] of GROUPS) {
   idx += `<h2>${g}</h2><div class="cards">` + ids.map(id => docs.find(d => d.slug === id)).filter(Boolean)
     .map(d => `<a href="${d.slug}.html"><b>${esc(SHORT[d.slug] || d.title)}</b><span>${esc(d.title)}</span><span>${esc(blurb(d.md))}</span></a>`).join('') + '</div>';
 }
+// 수업 꾸러미(슬라이드·활동지·진행표·준비물) 복사 + 목록
+const PKG = path.join(ROOT, 'materials');
+const pkgs = fs.existsSync(PKG) ? fs.readdirSync(PKG).filter(d => fs.statSync(path.join(PKG, d)).isDirectory()) : [];
+if (pkgs.length) {
+  idx += `<h2>바로 쓰는 수업 꾸러미</h2><p class="note">수업 슬라이드(발표자 노트에 교사 대본), 학생 활동지, 교사용 진행표, 인쇄용 준비물(색 카드는 컬러 인쇄). 한글·파워포인트에서 열립니다.</p>`;
+  for (const d of pkgs) {
+    const files = fs.readdirSync(path.join(PKG, d)).filter(f => /\.(pptx|docx|pdf)$/.test(f)).sort((a, b) => (/pptx$/.test(b) - /pptx$/.test(a)) || a.localeCompare(b));
+    if (!files.length) continue;
+    fs.mkdirSync(path.join(OUT, 'materials', d), { recursive: true });
+    files.forEach(f => fs.copyFileSync(path.join(PKG, d, f), path.join(OUT, 'materials', d, f)));
+    idx += `<h3>${esc(d.replace(/_/g, ' '))}</h3><ul class="dl">` + files.map(f => `<li><a href="materials/${encodeURIComponent(d)}/${encodeURIComponent(f)}" download>${esc(f)}</a></li>`).join('') + '</ul>';
+  }
+}
 idx += `<h2>MakeCode 예제 내려받기</h2><p class="note">파일을 내려받아 makecode.microbit.org → 가져오기, 또는 JavaScript 탭에 붙여넣으세요. 로보독 확장(kocoafab/robodog)이 필요합니다. 06~08은 무선 확장(kocoafab/robodog-radio)용입니다.</p><ul class="dl">`
   + tsFiles.map(f => { const first = (fs.readFileSync(path.join(ROOT, 'makecode', f), 'utf8').match(/^\/\/\s*(.+)$/m) || [, ''])[1]; return `<li><a href="makecode/${f}" download>${f}</a> <span class="note">${esc(first.slice(0, 60))}</span></li>`; }).join('') + '</ul>';
 fs.writeFileSync(path.join(OUT, 'index.html'), page('수업 자료', 'index', idx));
