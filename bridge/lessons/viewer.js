@@ -79,7 +79,7 @@
     flow: function (s) {
       var n = s.nodes.length;
       var nodes = s.nodes.map(function (nd, i) {
-        return (i ? '<span class="arr" aria-hidden="true">→</span>' : '') + '<div class="nd c-' + cc(nd.color) + '">' + (nd.tag ? '<em>' + esc(nd.tag) + '</em>' : '') + '<b>' + esc(nd.label) + '</b>' + (nd.sub ? '<small>' + esc(nd.sub) + '</small>' : '') + '</div>';
+        return (i ? '<span class="arr" aria-hidden="true">→</span>' : '') + '<div class="nd c-' + cc(nd.color) + (nd.icon ? ' has-icon' : '') + '">' + (nd.icon ? img(nd.icon, nd.label, 'nicon') : '') + (nd.tag ? '<em>' + esc(nd.tag) + '</em>' : '') + '<b>' + esc(nd.label) + '</b>' + (nd.sub ? '<small>' + esc(nd.sub) + '</small>' : '') + '</div>';
       }).join('');
       var loop = s.loop ? '<div class="loop" style="width:' + ((n - 1) / n * 100 - 2).toFixed(1) + '%" aria-hidden="true"></div>' : '';
       var strip = s.strip && s.strip.length ? '<div class="strip">' + s.strip.map(esc).join(' <i aria-hidden="true">→</i> ') + '</div>' : '';
@@ -118,13 +118,22 @@
     }
   };
 
-  function slideHTML(s, i, total) {
+  // 바닥글·머리표: "2차시 소개형 · 1교시", 머리표 "1교시 · 3/12"
+  function shortTitle(d) { return String(d.title || '').split(' — ')[0]; }
+  function chapterPos(slides) {
+    var cnt = {}, seen = {};
+    slides.forEach(function (s) { cnt[s.ch] = (cnt[s.ch] || 0) + 1; });
+    return slides.map(function (s) { seen[s.ch] = (seen[s.ch] || 0) + 1; return { n: seen[s.ch], of: cnt[s.ch] }; });
+  }
+  function slideHTML(s, i, total, ctx) {
     var fn = R[s.type] || R.points;
     var plain = (s.type === 'cover');
     var head = plain ? '' : '<h2 class="st">' + esc(s.title) + '</h2>';
-    return '<div class="slide t-' + esc(s.type) + '" data-type="' + esc(s.type) + '">' + head +
+    var pos = ctx.pos[i];
+    var chip = plain ? '' : '<span class="chip">' + esc(s.ch) + '교시 · ' + pos.n + '/' + pos.of + '</span>';
+    return '<div class="slide t-' + esc(s.type) + '" data-type="' + esc(s.type) + '">' + chip + head +
       '<div class="sbody">' + (R[s.type] ? fn(s) : '') + '</div>' +
-      '<div class="sf"><span>피지컬 AI 교실 · ' + esc(s.ch) + '차시</span><span>' + (i + 1) + '</span></div></div>';
+      '<div class="sf"><span>' + esc(ctx.short) + ' · ' + esc(s.ch) + '교시</span><span>' + (i + 1) + '</span></div></div>';
   }
 
   /* 교사 노트: "/" 로 나눈 항목을 줄로, 앞 이름은 굵게 */
@@ -142,19 +151,20 @@
   /* ---------- 뷰어 ---------- */
   function showViewer(d) {
     var slides = d.slides, total = slides.length, cur = 0;
+    var ctx = { short: shortTitle(d), pos: chapterPos(slides) };
     document.title = d.title + ' · 수업 슬라이드';
     $('viewer').hidden = false;
     document.body.classList.add('is-viewer');
 
     var sel = $('chsel');
-    sel.innerHTML = (d.chapters || []).map(function (c) { return '<option value="' + c.n + '">' + c.n + '차시 · ' + esc(c.title) + '</option>'; }).join('');
+    sel.innerHTML = (d.chapters || []).map(function (c) { return '<option value="' + c.n + '">' + c.n + '교시 · ' + esc(c.title) + '</option>'; }).join('');
     if (!(d.chapters || []).length) sel.hidden = true;
 
     function fromHash() { var n = parseInt((location.hash || '').replace('#', ''), 10); return n >= 1 && n <= total ? n - 1 : 0; }
 
     function render() {
       var s = slides[cur];
-      $('stage').innerHTML = slideHTML(s, cur, total);
+      $('stage').innerHTML = slideHTML(s, cur, total, ctx);
       $('counter').textContent = (cur + 1) + ' / ' + total;
       $('prev').disabled = cur === 0; $('next').disabled = cur === total - 1;
       var pr = document.querySelector('.progress');
@@ -200,6 +210,7 @@
     if (window.ResizeObserver) new ResizeObserver(fit).observe($('stagewrap'));
     document.addEventListener('fullscreenchange', function () { document.body.classList.toggle('is-fs', !!document.fullscreenElement); setTimeout(fit, 50); });
 
+    $('more').onclick = function () { var b = $('bar'), on = !b.classList.contains('open'); b.classList.toggle('open', on); $('more').setAttribute('aria-expanded', on ? 'true' : 'false'); };
     $('prev').onclick = function () { go(cur - 1); };
     $('next').onclick = function () { go(cur + 1); };
     sel.onchange = function () {

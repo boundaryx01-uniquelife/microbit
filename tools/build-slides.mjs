@@ -94,13 +94,16 @@ function build(data) {
   const clean = (o) => (typeof o === 'string' ? o.replace(/\*\*/g, '') : Array.isArray(o) ? o.map(clean) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, clean(v)])) : o);
   const slides = clean(data.slides || []);
   const chs = [...new Set(slides.map((s) => s.ch || 1))].sort((a, b) => a - b);
+  const short = String(data.title || data.id).split(' — ')[0]; // 예: "2차시 소개형"
+  const chCount = {}, chSeen = [];
+  slides.forEach((s) => { const c = s.ch || 1; chCount[c] = (chCount[c] || 0) + 1; chSeen.push(chCount[c]); });
   for (const n of chs) {
-    const ft = `피지컬 AI 교실 · ${n}차시`;
+    const ft = `${short} · ${n}교시`; // 패키지 이름 + 교시(웹 뷰어 바닥글과 같음)
     for (const [style, bg, fc] of [['light', WH, SUB], ['cover', P, WH], ['dark', INK, 'C9D1E3']]) {
       pres.defineSlideMaster({
         title: `${style}${n}`, background: { color: bg },
-        objects: [{ text: { text: ft, options: { x: 0.6, y: 6.98, w: 6, h: 0.32, fontFace: F, fontSize: 14, color: fc, margin: 0, valign: 'middle' } } }],
-        slideNumber: { x: 11.73, y: 6.98, w: 1.0, h: 0.32, fontFace: F, fontSize: 14, color: fc, align: 'right' },
+        objects: [{ text: { text: ft, options: { x: 0.6, y: 6.98, w: 6, h: 0.32, fontFace: F, fontSize: 16, color: fc, margin: 0, valign: 'middle' } } }],
+        slideNumber: { x: 11.73, y: 6.98, w: 1.0, h: 0.32, fontFace: F, fontSize: 16, color: fc, align: 'right' },
       });
     }
   }
@@ -284,6 +287,10 @@ function build(data) {
       const x = x0 + i * (nw + g), c = col(nd.color, i);
       s.addShape(SH.roundRect, { x, y: ny, w: nw, h: nh, fill: { color: BG }, line: { color: c, width: 3 }, rectRadius: 0.15 });
       let y = ny + 0.2;
+      if (nd.icon) {
+        const di = imgSize(nd.icon);
+        if (di) { const ih = n >= 4 ? 0.8 : extras ? (nd.tag ? 0.6 : 0.95) : 1.25, iw = Math.min(nw - 0.4, ih * di.w / di.h); s.addImage({ path: di.f, x: x + (nw - iw) / 2, y, w: iw, h: ih, altText: nd.label }); y += ih + 0.1; }
+      }
       if (nd.tag) {
         const tw = Math.min(nw - 0.3, 2.2);
         const bw = badge(s, nd.tag, x + (nw - Math.min(nw - 0.3, Math.max(0.9, textW(nd.tag, 22, true) + 0.4))) / 2, y, 0.55, c, 22, nw - 0.3);
@@ -450,6 +457,12 @@ function build(data) {
     const s = pres.addSlide({ masterName: `${style}${ch}` });
     s.addNotes(d.notes || '');
     r(s, d);
+    if (type !== 'cover') { // 머리표: "2교시 · 3/12" (제목 위 오른쪽)
+      s.addText(`${ch}교시 · ${chSeen[idx]}/${chCount[ch]}`, {
+        shape: SH.roundRect, rectRadius: 0.16, x: 10.9, y: 0.08, w: 1.8, h: 0.34, fill: { color: type === 'core' ? '3A4560' : TINT }, line: { color: type === 'core' ? '3A4560' : TINT, width: 0 },
+        fontFace: F, fontSize: 20, bold: true, color: type === 'core' ? WH : P, align: 'center', valign: 'middle', margin: 0, isTextBox: true, wrap: false,
+      });
+    }
   });
   return pres;
 }

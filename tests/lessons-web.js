@@ -33,7 +33,9 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   check('[다음] 버튼', (await p.textContent('#counter')).trim() === '3 / 25');
   await p.selectOption('#chsel', '2');
   check('차시 메뉴로 2차시 첫 장(12)', new URL(p.url()).hash === '#12');
-  check('바닥글에 "피지컬 AI 교실 · 2차시"', (await p.textContent('.sf')).includes('피지컬 AI 교실 · 2차시'));
+  check('바닥글 "2차시 소개형 · 2교시"(패키지 이름 + 교시)', (await p.textContent('.sf')).includes('2차시 소개형 · 2교시'), await p.textContent('.sf'));
+  check('머리표 "2교시 · 1/14" (장 처음에서 지금 위치)', await p.evaluate(() => { const c = document.querySelector('.slide .chip'); return !c || /^2교시 · \d+\/14$/.test(c.textContent.trim()); }));
+  check('차시 메뉴 글이 "N교시 · …"', (await p.$eval('#chsel', e => e.options[1].textContent)).startsWith('2교시 · '));
 
   const p2 = await ctx.newPage();
   await p2.goto(L + '?l=2차시#16'); await p2.waitForSelector('.slide');
@@ -65,6 +67,11 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   });
   check('왼쪽으로 밀면 다음 장(휴대폰)', new URL(tp.url()).hash === '#6', tp.url());
 
+  // 휴대폰 조작 막대: 한 줄(화면 높이의 10% 이하), 차시 메뉴는 ⋯ 안에
+  { const m = await tp.evaluate(() => ({ bar: document.getElementById('bar').getBoundingClientRect().height, sel: getComputedStyle(document.getElementById('chsel')).display, more: getComputedStyle(document.getElementById('more')).display }));
+    check('휴대폰: 조작 막대가 한 줄(높이 ≤ 84px)이고 차시 메뉴는 접혀 있음', m.bar <= 84 && m.sel === 'none' && m.more !== 'none', JSON.stringify(m));
+    await tp.click('#more'); const o = await tp.evaluate(() => getComputedStyle(document.getElementById('chsel')).display);
+    check('휴대폰: ⋯ 를 누르면 차시 메뉴·교사 모드·전체 화면이 펼쳐짐', o !== 'none', o); await tp.click('#more'); }
   // 모든 장 넘침 검사: 1280x720 과 휴대폰 390x844
   async function sweep(page, label) {
     const bad = [];
@@ -131,23 +138,47 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
       await q.waitForFunction(() => [...document.querySelectorAll('.slide img')].every(im => im.complete), null, { timeout: 8000 }).catch(() => {});
       const r = await q.evaluate(() => {
         let min = 99, who = '';
-        const w = document.createTreeWalker(document.querySelector('.sbody'), NodeFilter.SHOW_TEXT);
-        for (let t; (t = w.nextNode());) { if (!t.textContent.trim()) continue; const fs = parseFloat(getComputedStyle(t.parentElement).fontSize); if (fs < min) { min = fs; who = t.textContent.trim().slice(0, 14); } }
+        // 무대 좌표(1280x720) 기준 계산된 글자 크기: 장 전체(머리표·바닥글 포함)에서 보이는 글자 모두
+        const w = document.createTreeWalker(document.querySelector('.slide'), NodeFilter.SHOW_TEXT);
+        for (let t; (t = w.nextNode());) {
+          if (!t.textContent.trim()) continue; const el = t.parentElement, cs = getComputedStyle(el), bb = el.getBoundingClientRect();
+          if (cs.display === 'none' || cs.visibility === 'hidden' || !bb.width || !bb.height) continue;
+          const fs = parseFloat(cs.fontSize); if (fs < min) { min = fs; who = el.className + ':' + t.textContent.trim().slice(0, 14); }
+        }
         const sb = document.querySelector('.sbody'), sf = document.querySelector('.sf span');
         return { min, who, shrink: parseFloat(sb.style.fontSize) || 1, foot: parseFloat(getComputedStyle(sf).fontSize), imgs: [...document.querySelectorAll('.slide img')].filter(im => !(im.complete && im.naturalWidth > 0)).length };
       });
-      if (r.min < 20 && !(document && false)) small.push(`${i}:${r.min}px(${r.who})`);
+      if (r.min < 19.95) small.push(`${i}:${r.min}px(${r.who})`);
       if (r.shrink < 0.85) shrunk.push(`${i}:${r.shrink}`);
-      if (r.imgs || r.foot < 13) broken.push(`${i}:img${r.imgs}/foot${r.foot}`);
+      if (r.imgs || r.foot < 20) broken.push(`${i}:img${r.imgs}/foot${r.foot}`);
     }
-    check(`${id}: ${n}장(기대 ${EXPECT[id]}), 본문 글자 모두 20px 이상`, n === EXPECT[id] && small.length === 0, small.join(' '));
+    check(`${id}: ${n}장(기대 ${EXPECT[id]}), 머리표·바닥글 포함 모든 글자 20px 이상(무대 좌표)`, n === EXPECT[id] && small.length === 0, small.join(' '));
     check(`${id}: 자동 축소 0.85 미만 장 없음`, shrunk.length === 0, shrunk.join(' '));
-    check(`${id}: 그림 모두 그려짐·바닥글 13px 이상`, broken.length === 0, broken.join(' '));
-    const refs = await q.evaluate(async (name) => { const d = await (await fetch('data/' + name + '.json')).json(); return { imgs: [...new Set(d.slides.flatMap(s => [s.image, ...(s.cards || []).map(c => c.icon)]).filter(Boolean))], noteBad: d.slides.map((s, i) => /^\[[^\]]+\] 발문: .* \/ 예상 답: .* \/ 진행: .* \/ 주의: /.test(s.notes || '') ? 0 : i + 1).filter(Boolean), mins: d.slides.reduce((a, s) => { const m = (s.notes || '').match(/^\[[^\]]*?(\d+)분[^\]]*\]/); return a + (m ? +m[1] : 0); }, 0) }; }, id);
+    check(`${id}: 그림 모두 그려짐·바닥글 20px 이상`, broken.length === 0, broken.join(' '));
+    const refs = await q.evaluate(async (name) => {
+      const d = await (await fetch('data/' + name + '.json')).json();
+      const GENERIC = [/가장 중요한 한 가지/, /화면을 따라 읽는 속도/, /\(자유롭게/, /\(보이는 것을/, /\(단계를 순서대로/, /\(공통점과 차이/, /\(왼쪽과 오른쪽/, /\(목표를/, /\(자기 말로/, /\(항목을 하나씩/, /이어서\]/, /그림에서 무엇이 보이나요/, /어떤 순서로 하면 될까요/, /표를 보고 알 수 있는/, /여러분은 어떻게 생각하나요/, /예상 답: \(/, /오늘 가장 기억에 남는/, /빠뜨린 것은 없는지/, /오늘은 무엇을 배우고/, /오늘 수업이 끝나면/];
+      const qs = {}; d.slides.forEach((s, i) => { const m = (s.notes || '').match(/발문: (.*?) \/ 예상 답/); const k = m ? m[1].replace(/"/g, '') : '?'; (qs[k] = qs[k] || []).push(i + 1); });
+      const mins = {}; d.slides.forEach((s) => { const m = (s.notes || '').match(/^\[[^\]]*?(\d+)분[^\]]*\]/); mins[s.ch] = (mins[s.ch] || 0) + (m ? +m[1] : 0); });
+      return {
+        imgs: [...new Set(d.slides.flatMap(s => [s.image, ...(s.cards || []).map(c => c.icon), ...(s.nodes || []).map(n => n.icon)]).filter(Boolean))],
+        noteBad: d.slides.map((s, i) => /^\[[^\]]*\d+분[^\]]*\] 발문: .+ \/ 예상 답: .+ \/ 진행: .+ \/ 주의: .+$/.test(s.notes || '') ? 0 : i + 1).filter(Boolean),
+        generic: d.slides.map((s, i) => GENERIC.some(r => r.test(s.notes || '')) ? i + 1 : 0).filter(Boolean),
+        dupQ: Object.entries(qs).filter(([, v]) => v.length > 1).map(([k, v]) => v.join(',') + ':' + k.slice(0, 16)),
+        dupNote: (() => { const m = {}; d.slides.forEach((s, i) => { const k = (s.notes || '').replace(/^\[[^\]]*\]\s*/, ''); (m[k] = m[k] || []).push(i + 1); }); return Object.values(m).filter(v => v.length > 1).map(v => v.join(',')); })(),
+        badTitle: d.slides.map((s, i) => /^(먼저 보세요|생각해 봐요|문제 찾기|생각 나누기|지난 시간 이어서|디버깅|한계 토의|윤리 토의 \d|아이디어 발산)$/.test(s.title) ? i + 1 : 0).filter(Boolean),
+        covers: d.slides.filter(s => s.type === 'cover').map(s => s.sub),
+        mins,
+      };
+    }, id);
     let miss = 0; for (const nm of refs.imgs) { const r = await p.request.get(L + 'assets/' + encodeURIComponent(nm) + '.png'); if (!r.ok()) { miss++; console.log('  missing', nm); } }
     check(`${id}: 참조한 그림 ${refs.imgs.length}개 모두 있음`, miss === 0);
-    check(`${id}: 모든 장의 노트가 [시간] 발문/예상 답/진행/주의 형식`, refs.noteBad.length === 0, '형식 아닌 장: ' + refs.noteBad.join(','));
-    if (id === '4차시') check('4차시: 노트 시간 합계 160분 이하', refs.mins <= 160, String(refs.mins));
+    check(`${id}: 모든 장의 노트가 [시간] 발문/예상 답/진행/주의 형식(시간·빈 칸 없음)`, refs.noteBad.length === 0, '형식 아닌 장: ' + refs.noteBad.join(','));
+    check(`${id}: 틀에 박힌 노트("가장 중요한 한 가지" 등 일반 발문·빈 예상 답) 없음`, refs.generic.length === 0, '장: ' + refs.generic.join(','));
+    check(`${id}: 같은 발문·같은 노트가 두 장 이상 쓰이지 않음`, refs.dupQ.length === 0 && refs.dupNote.length === 0, refs.dupQ.join(' ; ') + ' | ' + refs.dupNote.join(' ; '));
+    check(`${id}: 물음 장 제목이 "먼저 보세요" 같은 일반 말이 아님`, refs.badTitle.length === 0, '장: ' + refs.badTitle.join(','));
+    check(`${id}: 표지 줄이 "<패키지> · N교시"`, refs.covers.length > 0 && refs.covers.every(t => /^\d+차시 .+ · \d+교시$/.test(t)), refs.covers.join(' / '));
+    check(`${id}: 교시마다 노트 시간 합계 40분`, Object.values(refs.mins).every(m => m === 40) && Object.keys(refs.mins).length === { '2차시': 2, '4차시': 4, '8차시': 8 }[id], JSON.stringify(refs.mins));
     await q.close();
   }
   // 전체 화면: 화면을 꽉 채움

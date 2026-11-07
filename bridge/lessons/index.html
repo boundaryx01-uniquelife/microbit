@@ -33,12 +33,13 @@
   </div>
   <aside class="notes" id="notes" hidden aria-label="교사 노트"><h2>교사 노트</h2><div id="notesbody"></div></aside>
   <div class="bar" id="bar" role="toolbar" aria-label="슬라이드 조작">
-    <button id="prev" type="button" aria-label="이전 슬라이드">◀ 이전</button>
+    <button id="prev" type="button" aria-label="이전 슬라이드"><span aria-hidden="true">◀</span><span class="tx"> 이전</span></button>
     <span id="counter" class="counter" aria-label="현재 슬라이드">1 / 1</span>
-    <button id="next" type="button" class="primary" aria-label="다음 슬라이드">다음 ▶</button>
+    <button id="next" type="button" class="primary" aria-label="다음 슬라이드"><span class="tx">다음 </span><span aria-hidden="true">▶</span></button>
     <select id="chsel" aria-label="차시 바로가기"></select>
     <span class="keyhint" aria-hidden="true">← → 키로 넘겨요</span>
     <span class="grow"></span>
+    <button id="more" type="button" class="morebtn" aria-label="더 보기 (차시 이동·교사 모드·전체 화면)" aria-expanded="false" aria-controls="bar">⋯</button>
     <button id="syncpill" type="button" class="syncpill" hidden></button>
     <button id="syncbtn" type="button" class="syncbtn" aria-haspopup="dialog">학생 연결</button>
     <button id="teacher" type="button" aria-pressed="false" aria-label="교사 모드 (N)">교사 모드</button>
