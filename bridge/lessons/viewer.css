@@ -83,6 +83,13 @@ body.is-viewer { height: 100vh; height: 100dvh; display: flex; flex-direction: c
 .cds { display: grid; gap: 22px; grid-template-columns: repeat(var(--n, 3), minmax(0, 1fr)); align-items: stretch; }
 .cds.n2 { --n: 2; } .cds.n3 { --n: 3; } .cds.n4 { --n: 4; }
 .cd { border: 3px solid var(--c); border-radius: 20px; background: var(--surface); overflow: hidden; display: flex; flex-direction: column; }
+/* 같은 줄 카드는 머리(제목) 높이를 맞춰 본문이 같은 선에서 시작(제목이 두 줄인 카드가 있어도) */
+@supports (grid-template-rows: subgrid) {
+  .cds { row-gap: 0; }
+  .cd { display: grid; grid-row: span 2; grid-template-rows: subgrid; }
+  .cd.has-icon { grid-row: span 3; }
+  .cd h3 { align-self: stretch; }
+}
 .cd h3 { margin: 0; background: var(--c); color: var(--on); font-size: 1.7em; padding: .6em .8em; display: flex; align-items: center; gap: .5em; line-height: 1.25; }
 .cd h3 .dot { background: var(--on); color: var(--c); font-size: .85em; }
 .cd ul { margin: 0; padding: .8em 1em 1em 1.6em; font-size: 1.45em; line-height: 1.55; font-weight: 600; flex: 1; }

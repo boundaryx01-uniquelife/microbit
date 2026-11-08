@@ -240,6 +240,13 @@ function build(data) {
     const cs = d.cards || [], n = cs.length;
     const footH = d.footer ? 0.85 : 0, ch = BOT - TOP - footH + 0 - 0.05, gap = 0.3;
     const cw = (W - gap * (n - 1)) / n;
+    // 같은 줄 카드는 머리 높이를 가장 큰 것에 맞춤(제목이 두 줄인 카드가 있어도 본문이 같은 선에서 시작)
+    const headOf = (c) => { const hb = !c.icon && c.badge !== undefined && c.badge !== ''; return Math.max(0.85, Math.min(hb ? 1.05 : 1.3, lineCount(c.head, 30, true, cw - 0.6) * 30 * 1.22 / 72 + 0.3)); };
+    const HH = Math.max(...cs.map(headOf));
+    // 본문 글자 크기도 같은 줄에서 가장 작은 것에 맞춤(카드마다 글자 크기가 달라 보이지 않게)
+    const headMax = Math.min(36, ...cs.map((c) => fit([{ t: c.head, bold: true }], cw - 0.6, HH, 36, MIN_BODY, true).s));   // 머리 글자 크기도 통일
+    let BM = null;
+    const bodyMax = (lh) => BM || (BM = Math.min(28, ...cs.filter((c) => (c.lines || []).length).map((c) => fit(c.lines.map((t) => ({ t, gap: 8 })), cw - 0.5, lh, 28, MIN_BODY, true).s)));
     cs.forEach((c, i) => {
       const x = X0 + i * (cw + gap), cl = col(c.color, i);
       card(s, x, TOP, cw, ch, BG);
@@ -249,23 +256,22 @@ function build(data) {
         if (di) { const ih = 1.0, iw = Math.min(cw - 0.6, ih * di.w / di.h); s.addImage({ path: di.f, x: x + (cw - iw) / 2, y, w: iw, h: ih, altText: c.head }); y += ih + 0.1; }
       }
       if (!c.icon && c.badge !== undefined && c.badge !== '') {
-        const bd = 0.8, bw = badge(s, c.badge, x + (cw - bd) / 2, y, bd, cl, 30, cw - 0.4);
+        const bd = n >= 4 ? 0.66 : 0.8, bw = badge(s, c.badge, x + (cw - bd) / 2, y, bd, cl, n >= 4 ? 26 : 30, cw - 0.4);   // 네 칸일 때는 번호 원을 조금 작게(본문 자리 확보)
         // 알약이면 가운데 다시 맞춤
         if (bw > bd) { /* 위에서 x 고정 — 필요 시 좌측 정렬 */ }
         y += bd + 0.15;
       }
       const hasB = !c.icon && c.badge !== undefined && c.badge !== '';
-      const need = lineCount(c.head, 30, true, cw - 0.6) * 30 * 1.22 / 72 + 0.3;
-      const headH = Math.max(0.85, Math.min(hasB ? 1.05 : 1.3, need));
+      const headH = HH;
       s.addShape(SH.roundRect, { x: x + 0.2, y, w: cw - 0.4, h: headH, fill: { color: cl }, line: { color: cl, width: 0 }, rectRadius: 0.15 });
-      T(s, [{ t: c.head, bold: true }], x + 0.3, y, cw - 0.6, headH, { max: 36, color: onCol(cl), align: 'center' });
-      y += headH + 0.2;
+      T(s, [{ t: c.head, bold: true }], x + 0.3, y, cw - 0.6, headH, { max: headMax, color: onCol(cl), align: 'center' });
+      y += headH + (HH > 0.9 ? 0.12 : 0.2);   // 머리를 맞춰 높아졌으면 본문 자리를 조금 돌려받음
       const lines = c.lines || [];
       if (lines.length) {
         const ly = y, lh = TOP + ch - 0.2 - ly;
         const gp = 8;
         const parts = lines.map((t) => ({ t, gap: gp }));
-        T(s, parts, x + 0.25, ly, cw - 0.5, lh, { max: 28, valign: 'top', align: cw < 3.2 ? 'left' : 'center' });
+        T(s, parts, x + 0.25, ly, cw - 0.5, lh, { max: bodyMax(lh), valign: 'top', align: cw < 3.2 ? 'left' : 'center' });
       }
     });
     if (d.footer) {
