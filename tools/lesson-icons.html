@@ -14,7 +14,7 @@
 </head>
 <body>
 <script>
-// 수업 슬라이드 아이콘(bridge/lessons/assets/icon_*.png) 생성기 — 한 가지 그림체로 통일
+// 수업 슬라이드 도식 아이콘(글자·숫자가 들어간 6개) 생성기 — 사물 아이콘 8개는 Canva 생성(tools/prep-canva-icons.py)
 // 그림체: 둥근 파스텔 배경 원 + 바닥 그림자, 평면 색 + 셀 음영 한 단계(아래쪽 어둡게) + 위쪽 하이라이트, 외곽선 없음.
 // 로보독은 엔딩·로고와 같은 '알약형 검은 머리 + 8×8 LED 도트 눈'. 글자는 Pretendard.
 // 미리 보기: tools/lesson-icons.html (전체) / ?icon=이름 (한 장, 800×600 투명) — PNG 내보내기는 tools/render-icons.js
@@ -150,24 +150,24 @@ const ICONS = {
     `<g fill="${C.led}" filter="url(#glow)"><circle cx="330" cy="352" r="7"/><circle cx="470" cy="352" r="7"/></g>` +
     [[150, 420], [640, 424], [610, 200], [190, 214]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${7 + i % 2 * 4}" fill="${C.blueM}"/>`).join(''),
   // 숫자를 바꾸면? 속도 30 → 15
-  icon_change: () => stage(C.paper, { r: 270 }) +
+  icon_change: () => stage('#fff1c0', { r: 270 }) +
     tile(250, 290, 220, 230, '30', C.blueL, C.blue) + label('속도', 250, 450, 34) +
     arrow(380, 290, 440, C.navy, 18) +
     tile(560, 290, 220, 230, '15', C.yellow, C.navy) + label('속도', 560, 450, 34) +
     [0, 1, 2].map((i) => `<path d="M${118 - i * 6} ${250 + i * 34}h-${50 - i * 12}" stroke="${C.blue}" stroke-width="10" stroke-linecap="round" opacity=".55"/>`).join(''),
   // 번호가 같아야 짝: 컴퓨터 쪽 3 = 로보독 쪽 3
-  icon_samenum: () => stage(C.paper, { r: 270 }) +
+  icon_samenum: () => stage('#fde3cf', { r: 270 }) +
     solid(rr(90, 160, 240, 166, 22), C.navy) + `<rect x="108" y="178" width="204" height="130" rx="12" fill="${C.orangeL}"/>` + text('3', 210, 288, 118, C.orangeD) +
     `<path d="M66 346h288l-26 26H92Z" fill="${C.gray}"/>` + label('컴퓨터 쪽', 210, 440, 34) +
     text('=', 394, 300, 100, C.navy) +
     head(588, 262, 260, ['three', 'three']) + label('로보독 쪽', 588, 440, 34),
   // 받은 번호를 로보독 눈에 보이기
-  icon_numshow: () => stage(C.paper, { r: 270 }) +
+  icon_numshow: () => stage('#d7efe3', { r: 270 }) +
     tile(210, 270, 170, 180, '3', C.orangeL, C.navy, C.orange) + label('받은 번호', 210, 420, 32) +
     arrow(320, 270, 400, C.navy, 16) +
     head(570, 270, 300, ['three', 'three']) + label('눈에 번호 보이기', 570, 420, 32),
   // 우리 모둠 카드 1~4(4는 빈 책상)
-  icon_teachcards: () => stage(C.paper, { r: 280 }) +
+  icon_teachcards: () => stage('#d2e7fb', { r: 280 }) +
     [[C.red, C.redL, '1'], [C.yellow, C.yellowL, '2'], [C.green, C.greenL, '3'], [C.gray, '#ffffff', '4']].map(([c, l, n], i) => {
       const x = 118 + i * 150, y = 140, rot = [-5, -2, 2, 5][i], empty = i === 3;
       return `<g transform="rotate(${rot} ${x + 60} ${y + 110})">` +
@@ -177,14 +177,14 @@ const ICONS = {
         `</g><circle cx="${x + 60}" cy="${y + 238}" r="24" fill="${empty ? C.grayD : c}"/>` + text(n, x + 60, y + 248, 28, '#fff');
     }).join('') + label('우리 모둠 카드', 328, 460, 32) + label('빈 책상', 628, 460, 32),
   // 안전하게 내려받기 → 꽂기 → 켜기
-  icon_flash: () => stage(C.paper, { r: 280 }) +
+  icon_flash: () => stage('#d2e7fb', { r: 280 }) +
     solid(rr(70, 170, 190, 130, 18), C.navy) + `<rect x="84" y="184" width="162" height="102" rx="10" fill="${C.blueL}"/>` +
     `<path d="M165 200v52M141 232l24 24 24-24" fill="none" stroke="${C.blue}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/><rect x="135" y="300" width="60" height="16" fill="${C.navy}"/><rect x="110" y="314" width="110" height="12" rx="6" fill="${C.navy}"/>` +
     label('내려받기', 165, 400, 30) + arrow(282, 240, 330, C.grayD, 12) +
     microbit(410, 240, 140, '.....,.#.#.,.....,#...#,.###.') + label('꽂기', 410, 400, 30) + arrow(492, 240, 540, C.grayD, 12) +
     head(640, 240, 200, ['happy', 'happy']) + label('켜기', 640, 400, 30),
   // AI가 틀린 걸까, 코드가 틀린 걸까?
-  icon_debug: () => stage(C.blueL) +
+  icon_debug: () => stage('#d2e7fb') +
     solid(`<path d="M150 230h190a28 28 0 0 1 28 28v100a28 28 0 0 1-28 28H220l-40 36v-36h-30a28 28 0 0 1-28-28V258a28 28 0 0 1 28-28Z" FILL/>`, C.blue) + text('AI?', 245, 335, 78, '#fff') +
     solid(`<path d="M430 260h200a28 28 0 0 1 28 28v100a28 28 0 0 1-28 28h-30v36l-40-36H430a28 28 0 0 1-28-28V288a28 28 0 0 1 28-28Z" FILL/>`, C.orange) + text('코드?', 530, 365, 70, '#fff') +
     `<circle cx="470" cy="190" r="62" fill="#fff" fill-opacity=".55" stroke="${C.navy}" stroke-width="20"/><circle cx="452" cy="172" r="14" fill="#fff"/><path d="M516 236l62 62" stroke="${C.navy}" stroke-width="30" stroke-linecap="round"/>`,
@@ -205,7 +205,9 @@ const svg = (name) => `<svg xmlns="http://www.w3.org/2000/svg" width="800" heigh
 const q = new URLSearchParams(location.search).get('icon');
 if (q) document.body.innerHTML = svg(q);
 else { document.body.className = 'sheet'; document.body.innerHTML = Object.keys(ICONS).map((n) => `<figure>${svg(n).replace('width="800" height="600"', 'width="400" height="300"')}<figcaption>${n}</figcaption></figure>`).join(''); }
-window.__icons = Object.keys(ICONS);
+// 사물 아이콘 8개는 Canva로 만들어 씀(tools/prep-canva-icons.py) — 여기 그림은 참고용으로만 두고 내보내지 않음
+const CANVA = ['icon_vacuum', 'icon_car', 'icon_delivery', 'icon_body', 'icon_eye', 'icon_brain', 'icon_think', 'icon_guide'];
+window.__icons = Object.keys(ICONS).filter((n) => !CANVA.includes(n));
 window.__ready = document.fonts ? document.fonts.ready.then(() => true) : Promise.resolve(true);
 </script>
 </body>
