@@ -8,3 +8,6 @@ node_modules/
 
 # 인트로 그림(Canva 생성)은 저장소에 포함
 !bridge/assets/story/*.png
+
+# 공유 미리보기 그림(og:image)
+!bridge/assets/intro/og.png

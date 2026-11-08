@@ -897,8 +897,8 @@ setAskMode(false);
 // 수업 코드 칸은 늘 보임. AI가 서버에 켜져 있지 않으면 칸을 잠그고 이유를 알려 줌(어디에 넣는지 몰라 헤매지 않게)
 checkAi().then(r => {
   setAskMode(r.available, r.available ? '' : (r.reason === 'not_configured'
-    ? '🔑 AI 도우미는 관리자가 서버에서 수업 코드(와 AI 키)를 설정해야 켜져요. 지금은 규칙 도우미만 쓸 수 있어요.'
-    : '이 주소에서는 AI 서버에 연결되지 않아 규칙 도우미만 쓸 수 있어요.'));
+    ? '🔑 AI 도우미는 관리자 설정 뒤 켜져요. 지금은 규칙 도우미로 써요.'
+    : 'AI 서버에 연결되지 않아 규칙 도우미로 써요.'));
   $('askClass').disabled = !r.available;
   $('askClass').placeholder = r.available ? '코드 입력' : '관리자 설정 필요';
 });
