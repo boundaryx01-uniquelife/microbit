@@ -28,8 +28,7 @@ export class View3D {
     this.controls.maxPolarAngle = Math.PI * 0.49;
     scene.add(new THREE.HemisphereLight(0xffffff, 0x8899aa, 1.1));
     const sun = new THREE.DirectionalLight(0xffffff, 1.6); sun.position.set(40, 120, 60); sun.castShadow = true;
-    sun.shadow.camera.left = -100; sun.shadow.camera.right = 100; sun.shadow.camera.top = 100; sun.shadow.camera.bottom = -100;
-    sun.shadow.mapSize.set(1024, 1024); scene.add(sun);
+    sun.shadow.mapSize.set(1024, 1024); scene.add(sun); scene.add(sun.target); this.sun = sun;
     // 책상
     this.tableGroup = new THREE.Group(); scene.add(this.tableGroup);
     this.buildTable();
@@ -47,18 +46,28 @@ export class View3D {
   }
   buildTable() {
     const W = this.world, g = this.tableGroup;
+    // 그림자·조명을 공간 크기에 맞춤
+    const half = Math.max(W.table.w, W.table.h) * 0.75, sc = this.sun.shadow.camera;
+    this.sun.target.position.set(W.table.w / 2, 0, W.table.h / 2);
+    this.sun.position.set(W.table.w / 2 - 20, 120 + half * 0.3, W.table.h / 2 + 20);
+    sc.left = -half; sc.right = half; sc.top = half; sc.bottom = -half; sc.far = 400 + half; sc.updateProjectionMatrix();
     while (g.children.length) g.remove(g.children[0]);
     const top = new THREE.Mesh(new THREE.BoxGeometry(W.table.w, 3, W.table.h),
       new THREE.MeshStandardMaterial({ color: W.useTable ? 0xc9a26b : 0xbfc7d2 }));
     top.position.set(W.table.w / 2, -1.5, W.table.h / 2); top.receiveShadow = true; g.add(top);
-    const grid = new THREE.GridHelper(Math.max(W.table.w, W.table.h), Math.max(W.table.w, W.table.h) / 10, 0x8a6d45, 0x9e8257);
-    grid.position.set(W.table.w / 2, 0.05, W.table.h / 2); grid.material.opacity = 0.35; grid.material.transparent = true; g.add(grid);
+    // 10cm 칸 격자(공간 크기에 딱 맞게)
+    const pts = [];
+    for (let x = 0; x <= W.table.w; x += 10) pts.push(x, 0, 0, x, 0, W.table.h);
+    for (let z = 0; z <= W.table.h; z += 10) pts.push(0, 0, z, W.table.w, 0, z);
+    const gg = new THREE.BufferGeometry(); gg.setAttribute('position', new THREE.Float32BufferAttribute(pts, 3));
+    const grid = new THREE.LineSegments(gg, new THREE.LineBasicMaterial({ color: 0x8a6d45, transparent: true, opacity: 0.35 }));
+    grid.position.y = 0.05; g.add(grid);
     if (W.useTable) {
       const legMat = new THREE.MeshStandardMaterial({ color: 0x7a5a35 });
       [[4, 4], [W.table.w - 4, 4], [4, W.table.h - 4], [W.table.w - 4, W.table.h - 4]].forEach(([x, z]) => {
         const l = new THREE.Mesh(new THREE.BoxGeometry(4, 70, 4), legMat); l.position.set(x, -38, z); g.add(l);
       });
-      const floor = new THREE.Mesh(new THREE.PlaneGeometry(600, 600), new THREE.MeshStandardMaterial({ color: 0xaab4c0 }));
+      const floor = new THREE.Mesh(new THREE.PlaneGeometry(W.table.w + 600, W.table.h + 600), new THREE.MeshStandardMaterial({ color: 0xaab4c0 }));
       floor.rotation.x = -Math.PI / 2; floor.position.set(W.table.w / 2, -73, W.table.h / 2); floor.receiveShadow = true; g.add(floor);
     } else {
       const wallMat = new THREE.MeshStandardMaterial({ color: 0x8892a0 });
@@ -69,8 +78,9 @@ export class View3D {
         const m = new THREE.Mesh(new THREE.BoxGeometry(2, 8, W.table.h + 4), wallMat); m.position.set(x, 4, z); g.add(m);
       });
     }
-    this.tableKey = W.useTable;
+    this.tableKey = this.tableSig();
   }
+  tableSig() { const W = this.world; return `${W.useTable}|${W.table.w}x${W.table.h}`; }
   makeDog() {
     const P = {};
     const dog = P.dog = new THREE.Group();
@@ -257,7 +267,7 @@ export class View3D {
   draw(eyeFrames) {
     if (!this.ready) return;
     const R = this.robot, W = this.world;
-    if (this.tableKey !== W.useTable) this.buildTable();
+    if (this.tableKey !== this.tableSig()) this.buildTable();
     const key = JSON.stringify(W.obstacles);
     if (key !== this.obsKey) {
       this.obsKey = key;

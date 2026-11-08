@@ -282,6 +282,13 @@
           <button id="btnTable" class="on">책상(떨어짐 있음)</button>
           <button id="btnFloor">바닥(벽 있음)</button>
         </div>
+        <label class="row" style="gap:6px;margin-top:6px">공간 크기
+          <select id="spaceSize">
+            <option value="120x80">작게 120×80cm (교실 책상)</option>
+            <option value="200x140" selected>보통 2×1.4m</option>
+            <option value="300x200">넓게 3×2m (교실 바닥)</option>
+          </select>
+        </label>
         <div class="row" style="margin-top:6px">
           <button id="btnPlace">장애물 놓기</button>
           <button id="btnClearObs">장애물 지우기</button>
@@ -346,12 +353,13 @@ $('code').addEventListener('keydown', (e) => {
 
 // ---------- 코드에 필요한 장치를 장면·패널에 함께 ----------
 let curDevs = [];
-const FRONT_OBSTACLE = { x: 55, y: 12, w: 10, h: 6 };   // 처음 자리 앞 약 37cm
+// 처음 자리 앞 약 37cm (공간 크기가 바뀌어도 로보독 기준으로)
+const frontObstacle = () => ({ x: world.start.x - 5, y: world.start.y - 43, w: 10, h: 6 });
 function applyDevices(code, opts = {}) {
   const devs = curDevs = detectDevices(code);
   world.devices = devs; world.radioLast = null;
   if (devs.includes('tof') && !world.obstacles.length && !opts.keepScene) {
-    world.obstacles.push({ ...FRONT_OBSTACLE });
+    world.obstacles.push(frontObstacle());
     log('거리센서를 쓰는 코드라 로보독 앞에 장애물을 놓았어요');
   }
   const box = $('needs');
@@ -416,6 +424,24 @@ try {
 const setTable = (on) => { world.useTable = on; $('btnTable').classList.toggle('on', on); $('btnFloor').classList.toggle('on', !on); };
 $('btnTable').onclick = () => setTable(true);
 $('btnFloor').onclick = () => setTable(false);
+// 공간 크기: 바꾸면 로보독을 새 공간의 처음 자리로, 장애물은 지움
+let spaceSize = '200x140';
+try { const v = localStorage.getItem('sim-space'); if (v && $('spaceSize').querySelector(`option[value="${v}"]`)) spaceSize = v; } catch (e) {}
+function applySpace(v, { moveCam = true } = {}) {
+  const [w, h] = v.split('x').map(Number);
+  world.setSize(w, h); world.obstacles.length = 0; robot.reset();
+  if (moveCam && view3d && view3d.ready) {
+    view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y);
+  }
+}
+$('spaceSize').value = spaceSize; applySpace(spaceSize, { moveCam: false });
+$('spaceSize').onchange = (e) => {
+  stopDemo(); endDance(); runner.stop();
+  spaceSize = e.target.value; try { localStorage.setItem('sim-space', spaceSize); } catch (err) {}
+  applySpace(spaceSize);
+  if (curDevs.includes('tof')) world.obstacles.push(frontObstacle());
+  log(`공간 크기: ${$('spaceSize').selectedOptions[0].textContent}`);
+};
 $('btnPlace').onclick = () => { view2d.placing = !view2d.placing; $('btnPlace').classList.toggle('on', view2d.placing); if (mode3d && view2d.placing) showTab(false); };
 $('btnClearObs').onclick = () => { world.obstacles.length = 0; };
 // 눈 LED 색 (홍보 영상에 흰색·파란색 두 가지가 나옴)
@@ -542,7 +568,7 @@ async function playDemo(demo) {
     for (let round = 0; ; round++) {
       // 준비
       runner.stop(); world.obstacles.length = 0; setTable(true);
-      if (demo.setup === 'obstacle') world.obstacles.push({ x: 55, y: 12, w: 10, h: 6 });
+      if (demo.setup === 'obstacle') world.obstacles.push(frontObstacle());
       robot.reset(); applyDevices(ex.code, { keepScene: true });
       await runner.start(ex.code);
       const n = demo.steps.filter(s => s[0] !== 'wait' || s[2]).length;
@@ -596,7 +622,7 @@ function endDance() {
   if (!danceOn) return;
   danceOn = false;
   world.extra = [];
-  robot.reset(); setTable(true);
+  setTable(true); applySpace(spaceSize, { moveCam: false });
   if (view3d && view3d.ready) {
     view3d.follow = $('follow').checked;
     view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y);
@@ -604,6 +630,7 @@ function endDance() {
 }
 function setupDance() {
   runner.stop(); world.obstacles.length = 0; setTable(false);
+  world.setSize(120, 80);   // 군무 자리는 120×80 기준
   robot.reset(); world.extra = [];
   const xs = [22.5, 47.5, 72.5, 97.5], ys = [30, 62];
   let k = 0;

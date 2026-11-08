@@ -107,7 +107,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
 
   // 5. 거리센서: 앞에 장애물 → 멈춤
   await p.click('#btnStop'); await p.click('#btnReset');
-  await S(() => { const w = window.__sim.world; w.obstacles.length = 0; w.obstacles.push({ x: 55, y: 15, w: 10, h: 6 }); });
+  await S(() => { const w = window.__sim.world; w.obstacles.length = 0; w.obstacles.push({ x: w.start.x - 5, y: w.start.y - 40, w: 10, h: 6 }); });
   await loadExample('02_distance-rule'); await run(); await p.waitForTimeout(300);
   check('02: 켜자마자 걷지 않음', (await state()).vel === 0);
   await pressRobot(); await p.waitForTimeout(800);
@@ -121,6 +121,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
 
   // 6. 책상에서 떨어짐 감지
   await p.click('#btnStop'); await p.click('#btnReset');
+  await p.selectOption('#spaceSize', '120x80');   // 작은 책상에서 떨어짐 시험
   await S(() => { window.__sim.world.obstacles.length = 0; });
   await p.fill('#code', 'robodog.move(deflib.MoveDirection.Forward, 100)\nbasic.forever(function () {\n    basic.showIcon(IconNames.Happy)\n})');
   await run(); await p.waitForTimeout(4500);

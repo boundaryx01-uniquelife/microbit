@@ -299,11 +299,15 @@ export class Robot {
 // ------------------------------------------------------------
 export class World {
   constructor() {
-    this.table = { w: 120, h: 80 };   // cm
     this.useTable = true;
     this.extra = [];                   // 군무용 추가 로봇들
     this.obstacles = [];               // {x,y,w,h}
-    this.start = { x: 60, y: 55, heading: 0 };
+    this.setSize(120, 80);
+  }
+  // 공간 크기(cm). 처음 자리는 가운데에서 조금 아래(앞쪽으로 걸을 공간 확보)
+  setSize(w, h) {
+    this.table = { w, h };
+    this.start = { x: w / 2, y: h / 2 + 15, heading: 0 };
   }
   offTable(x, y) { return this.useTable && (x < 0 || y < 0 || x > this.table.w || y > this.table.h); }
   collides(x, y, r) {

@@ -46,7 +46,7 @@ export class View2D {
     ctx.strokeStyle = css('--grid'); ctx.lineWidth = 1;
     for (let x = 10; x < W.table.w; x += 10) { ctx.beginPath(); ctx.moveTo(ox + x * s, oy); ctx.lineTo(ox + x * s, oy + W.table.h * s); ctx.stroke(); }
     for (let y = 10; y < W.table.h; y += 10) { ctx.beginPath(); ctx.moveTo(ox, oy + y * s); ctx.lineTo(ox + W.table.w * s, oy + y * s); ctx.stroke(); }
-    ctx.fillStyle = css('--muted'); ctx.font = '11px system-ui'; ctx.fillText(W.useTable ? '책상 120×80cm (칸 10cm)' : '바닥(벽 있음) 칸 10cm', ox + 6, oy + 14);
+    ctx.fillStyle = css('--muted'); ctx.font = '11px system-ui'; ctx.fillText(`${W.useTable ? '책상' : '바닥(벽 있음)'} ${W.table.w}×${W.table.h}cm (칸 10cm)`, ox + 6, oy + 14);
     // 장애물
     ctx.fillStyle = css('--obstacle');
     W.obstacles.forEach(o => ctx.fillRect(ox + o.x * s, oy + o.y * s, o.w * s, o.h * s));
