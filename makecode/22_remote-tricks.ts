@@ -9,9 +9,9 @@
 // 걷지 않아서 책상 위에서도 안전하게 해 볼 수 있어요.
 // =============================================================
 
-let 그룹 = 1
+let 모둠번호 = 1
 let 앉음 = false
-radio.setGroup(그룹)
+radio.setGroup(모둠번호)
 robodog.gesture(deflib.Posture.Ready)
 
 radio.onReceivedNumber(function (receivedNumber) {

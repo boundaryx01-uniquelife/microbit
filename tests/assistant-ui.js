@@ -43,7 +43,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   check('문법 오류 실행 → 빨간 안내', (await p.getAttribute('#runMsg', 'class')) === 'err');
   await p.fill('#askText', '하늘을 날아');
   await p.click('#askBtn');
-  check('모르는 말은 안내 + 실행 버튼 꺼짐', (await p.textContent('#askWarn')).includes('이해하지 못한') && await p.isDisabled('#askRun'));
+  check('모르는 말은 안내 + 실행 버튼 꺼짐', (await p.textContent('#askWarn')).includes('알아듣지 못했어요') && await p.isDisabled('#askRun'));
   await p.fill('#askText', '장애물이 가까우면 멈추고 비켜라고 말해');
   await p.click('#askBtn');
   check('비슷한 예제 추천(거리)', (await p.textContent('#askSug')).includes('규칙으로 반응하기'));

@@ -55,6 +55,13 @@ for (const t of ['라디오A 버튼을 누르면 멍멍 짓어', '라디오 A �
 r = R('라디오 B 버튼을 누르면 앉아'); check('라디오 B 버튼 → 라디오 2', /신호 == 2/.test(r.code) && /SitDown/.test(r.code));
 r = R('A 버튼을 누르면 멍멍 짖어'); check('그냥 A 버튼은 그대로 버튼 이벤트', /input\.onButtonPressed\(Button\.A/.test(r.code) && !/radio/.test(r.code));
 r = R('라디오 3을 받으면 인사해'); check('라디오 숫자 규칙은 그대로', /신호 == 3/.test(r.code));
+r = R('빨간 카드 보면 멈추고 초록 보면 걸어');
+check('카드·색 → AI 카메라 안내 + 엉뚱한 코드 없음', !r.code && r.warnings.some(w => /AI 카메라/.test(w) && /AI 신호등 안내견/.test(w)), JSON.stringify(r));
+r = R('리모컨으로 조종하다 장애물 있으면 멈춰');
+check('리모컨 → 21·20 예제 안내(거리 규칙은 유지)', r.warnings.some(w => /리모컨은 예제/.test(w) && /21/.test(w) && /20/.test(w)) && /getTof/.test(r.code), JSON.stringify(r.warnings));
+r = R('라디오 3을 받으면 앉아'); check('라디오 규칙이 되면 리모컨 안내 없음', !r.warnings.some(w => /리모컨은 예제/.test(w)));
+r = R('하늘을 날고 앞으로 걸어');
+check('못 알아들은 조각 → "이 부분은 알아듣지 못했어요"', r.warnings.some(w => /이 부분은 알아듣지 못했어요: .*하늘/.test(w)), JSON.stringify(r.warnings));
 const fail = results.filter(x => !x).length;
 console.log(`\n${results.length - fail}/${results.length} PASS`);
 process.exit(fail ? 1 : 0);

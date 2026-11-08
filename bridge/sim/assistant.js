@@ -134,6 +134,12 @@ export function ruleAssistant(text) {
   if (!src) return { code: '', explanation: '하고 싶은 동작을 적어 주세요. 예: "본체 버튼을 누르면 인사하고 멍멍 짖어"', warnings, suggestions: [] };
   if (src.length > 300) return { code: '', explanation: '말이 너무 길어요(300자까지). 한 번에 한두 가지씩 나눠서 말해 주세요.', warnings, suggestions: [] };
 
+  // 카드·색·AI 카메라는 시뮬레이터 규칙으로 만들 수 없음 → 엉뚱한 코드 대신 안내
+  if (/카드|카메라|인공\s*지능|(?<![A-Za-z])AI(?![A-Za-z])|에이\s*아이|(빨강|빨간|초록|노랑|노란|파랑|파란|색깔?)\s*(을|를|이|가|은|는)?\s*(보|인식|알아|구분|찾|감지)/i.test(src)) {
+    const msg = "카드·색 알아보기는 AI 카메라가 필요해요 → 예제 '④ AI 신호등 안내견'(03)에서 시작하세요";
+    return { code: '', explanation: msg, warnings: [msg], suggestions: suggestExamples(src) };
+  }
+
   // 1) 언제(트리거) 위치 찾기 → 구간 나누기
   const marks = [];
   for (const t of TRIGGERS) {
@@ -148,6 +154,7 @@ export function ruleAssistant(text) {
     const prev = clean.slice(0, i).reverse().find(c => c.kind !== 'forever');
     if (prev) { prev.always = true; clean.splice(i, 1); }
   }
+  if (/리모컨|리모콘|라디오|무선/.test(src) && !clean.some(c => c.kind === 'radio')) warnings.push("리모컨은 예제 '② 리모컨으로 움직이기'(21)에서 시작하세요. 손에 드는 리모컨 쪽은 '① 리모컨 쪽 코드'(20)예요.");
   const segs = [{ kind: 'start', text: src.slice(0, clean.length ? clean[0].at : src.length) }];
   clean.forEach((m, i) => segs.push({ kind: m.kind, arg: m.arg, always: m.always, text: src.slice(m.end, i + 1 < clean.length ? clean[i + 1].at : src.length) }));
   // '앞으로 계속 걸어'처럼 '계속' 앞뒤가 한 동작이면 앞부분을 '계속' 쪽으로 합침(켜자마자 1초 걷는 코드가 따로 생기지 않게)
@@ -293,7 +300,7 @@ export function ruleAssistant(text) {
   }
   code.push(...tail);
   if (code.some(l => l.includes('input.onButtonPressed'))) warnings.push('로보독 등에 꽂은 마이크로비트의 A·B 버튼은 가려져서 누를 수 없어요. 실물 로보독에서는 "본체 버튼 누르면"으로 말하거나, 리모컨 마이크로비트(라디오)를 쓰세요. A·B는 시뮬레이터와 손에 든 마이크로비트에서만 눌러요.');
-  if (unknown.length) warnings.push('이해하지 못한 말: ' + unknown.map(u => `"${u}"`).join(', ') + ' — 아래 "이렇게 말해 보세요" 표현을 참고하세요.');
+  if (unknown.length) warnings.push('이 부분은 알아듣지 못했어요: ' + unknown.map(u => `"${u}"`).join(', ') + ' — 아래 "이렇게 말해 보세요" 표현을 참고하세요.');
 
   const body = code.filter((l, i, a) => !(l === '' && a[i - 1] === ''));
   const meaningful = body.slice(1).some(l => l);   // 맨 앞 준비 자세 말고 실제 동작이 있는지

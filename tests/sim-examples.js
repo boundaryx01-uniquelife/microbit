@@ -16,7 +16,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   const groups = await p.$$eval('#examples optgroup', gs => gs.map(g => ({ label: g.label, n: g.querySelectorAll('option').length, ids: [...g.querySelectorAll('option')].map(o => o.value) })));
   check('예제가 3묶음(본체 버튼 / 라디오 리모컨 / 점검)', groups.length === 3 && groups[0].label.includes('본체 버튼') && groups[1].label.includes('라디오 리모컨'), JSON.stringify(groups));
   check('본체 버튼 묶음 4개, 첫 예제는 가장 쉬운 것', groups[0].n === 4 && groups[0].ids[0] === '10_button-bark');
-  check('라디오 묶음 5개, 첫 예제는 리모컨 쪽 코드', groups[1].n === 5 && groups[1].ids[0] === '20_remote-sender');
+  check('라디오 묶음 6개, 첫 예제는 리모컨 쪽 코드', groups[1].n === 6 && groups[1].ids[0] === '20_remote-sender');
 
   const S = (f) => p.evaluate(f);
   const st = () => S(() => { const r = window.__sim.robot; return { h: r.heading, vel: r.vel, posture: r.posture, expr: r.expr, headMode: r.headMode, led: r.bodyLed.join(), bubble: r.bubble }; });
@@ -75,6 +75,15 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   await p.click('#qRobot'); await p.waitForTimeout(300);
   check('빠른 조작 [본체 버튼] → 멈춤', (await st()).vel === 0);
   await p.check('#qRepeat'); check('[계속 보내기]가 라디오 패널과 같이 켜짐', await p.isChecked('#radioRepeat')); await p.uncheck('#qRepeat');
+
+  // 라디오 ⑥: 리모컨 + 장애물 자동 멈춤
+  await load('23_remote-safe-dog'); await run();
+  await S(() => { const w = window.__sim.world, s = w.start; w.obstacles.push({ x: s.x - 10, y: s.y - 45, w: 20, h: 6 }); });
+  await radio(1); const s1 = await st();
+  check('⑥ 1 → 걷기·초록', s1.vel === 25 && s1.led === '0,255,0', JSON.stringify(s1));
+  await p.waitForTimeout(4000); const s2 = await st();
+  check('⑥ 장애물 앞에서 스스로 멈춤·주황', s2.vel === 0 && s2.led === '255,120,0', JSON.stringify(s2));
+  await radio(2); check('⑥ 2 → 멈춤·빨강', (await st()).led === '255,0,0');
 
   // 라디오 ③: 재주
   await load('22_remote-tricks'); await run();

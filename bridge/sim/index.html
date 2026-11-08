@@ -30,7 +30,7 @@
   select { font: inherit; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: var(--r-sm); padding: 8px 12px; cursor: pointer; }
   button { min-height: 38px; padding: 7px 13px; font-size: 14.5px; }
   button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 700; }
-  button.stop { background: var(--stop); color: #fff; border-color: var(--stop); }
+  button.stop { background: var(--stop); color: var(--stop-text); border-color: var(--stop); }
   button.on { outline: 3px solid var(--accent); }
   button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   textarea { width: 100%; height: 52vh; min-height: 280px; font: 13px/1.5 ui-monospace, Consolas, "D2Coding", monospace; padding: 10px;
@@ -292,7 +292,7 @@
         <h2 class="ph">라디오로 숫자 보내기</h2>
         <div class="row" id="radioBtns"></div>
         <label class="row" style="gap:6px"><input id="radioRepeat" type="checkbox"> 마지막 숫자 계속 보내기(0.5초마다)</label>
-        <p class="note">AI 브리지 대신 숫자를 직접 보내요. 한 번 누르면 한 번만 가요 — 예제 3처럼 2초 동안 신호가 없으면 멈추는 코드는 <b>계속 보내기</b>를 켜세요. 받는 그룹: <b id="radioGroup">-</b></p>
+        <p class="note">AI 브리지 대신 숫자를 직접 보내요. 한 번 누르면 한 번만 가요 — <b>AI 신호등 안내견</b>처럼 2초 동안 신호가 없으면 멈추는 코드는 <b>계속 보내기</b>를 켜세요. 받는 그룹: <b id="radioGroup">-</b></p>
         <label class="row" style="gap:6px"><input id="bridgeLink" type="checkbox" checked> 같은 컴퓨터의 AI 브리지 결과 받기</label>
       </div>
       <div class="panel" id="pSensor">
@@ -304,7 +304,7 @@
           <span>이동 속도</span><b id="sVel">-</b>
         </div>
         <div class="row" style="margin-top:6px">
-          <button id="btnRobot" title="실물: 본체 아래쪽 전원 스위치 옆 버튼">로보독 본체 버튼 누르기</button>
+          <button id="btnRobot" title="실물: 본체 아래쪽 전원 스위치 옆 버튼">본체 버튼 누르기</button>
         </div>
         <label class="row" style="gap:6px;margin-top:6px">배터리 <input id="battery" type="range" min="0" max="100" value="100"> <b id="batVal">100</b>%</label>
       </div>
