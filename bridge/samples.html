@@ -1,0 +1,98 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>3초 영상 시안 5개</title>
+<meta name="description" content="로보독 AI 교실 인트로 영상 시안 — 3초짜리 5가지 연출">
+<link rel="stylesheet" href="assets/brand.css">
+<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<script type="importmap">{ "imports": { "three": "./sim/lib/three.module.min.js" } }</script>
+<style>
+  :root { --stage: #0e1522; }
+  body { --page-w: 1100px; }
+  .wrap { width: 100%; max-width: 1100px; margin: 0 auto; padding: 14px 16px 28px; }
+  .top { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: baseline; margin: 6px 0 12px; }
+  .top h1 { margin: 0; font-size: clamp(20px, 3vw, 28px); letter-spacing: -0.02em; }
+  .top p { margin: 0; color: var(--muted); font-size: 14.5px; }
+  .player { position: relative; aspect-ratio: 16 / 9; max-height: 64vh; width: 100%; background: var(--stage); border-radius: 20px; overflow: hidden; box-shadow: var(--shadow-lg); border: 1px solid var(--line); }
+  #stage3d { position: absolute; inset: 0; }
+  .loading, .nogl { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #9ba5b9; padding: 24px; font-weight: 650; }
+  .nogl { display: none; } .player.ready .loading { display: none; }
+  .badge3 { position: absolute; left: 14px; top: 12px; font-size: 13px; font-weight: 800; color: #fff; background: rgba(10,16,30,.55); backdrop-filter: blur(6px); border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 4px 12px; pointer-events: none; }
+  .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 14px 14px; display: flex; flex-direction: column; align-items: center; gap: 8px; pointer-events: none; }
+  .cap b { font-size: clamp(16px, 2.6vw, 26px); color: #fff; text-shadow: 0 2px 14px rgba(0,0,0,.6); letter-spacing: -0.02em; text-align: center; }
+  .bar { width: min(92%, 520px); height: 4px; border-radius: 2px; background: rgba(255,255,255,.25); overflow: hidden; }
+  .bar i { display: block; height: 100%; width: var(--p, 0%); background: #fff; }
+  /* 5번 영상: 왼쪽 블록 코드 */
+  .code { position: absolute; left: 4%; top: 50%; transform: translateY(-50%); width: min(40%, 380px); display: none; flex-direction: column; gap: 6px; pointer-events: none; }
+  .player.is-split .code { display: flex; }
+  .blk { font-weight: 800; font-size: clamp(13px, 1.8vw, 18px); padding: 9px 14px; border-radius: 10px; color: rgba(255,255,255,.55); background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.12); transition: all .18s; opacity: .55; }
+  .blk.hat { border-radius: 16px 16px 10px 10px; }
+  .blk.on { opacity: 1; color: #fff; background: #2f6fe4; border-color: #8fb0ff; box-shadow: 0 0 18px rgba(80,140,255,.65); transform: translateX(6px); }
+  .blk.now { background: #3f86ff; box-shadow: 0 0 26px rgba(110,170,255,.95); }
+  .cards { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 10px; margin: 14px 0 0; padding: 0; list-style: none; }
+  .cards button { width: 100%; height: 100%; text-align: left; display: flex; flex-direction: column; gap: 4px; padding: 12px 12px 10px; border-radius: var(--r-lg); background: var(--surface); border: 2px solid var(--line); box-shadow: var(--shadow-sm); }
+  .cards button[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .cards .no { font-size: 12px; font-weight: 800; color: var(--accent); }
+  .cards b { font-size: 16px; letter-spacing: -0.02em; line-height: 1.25; }
+  .cards .sub { font-size: 13px; color: var(--muted); line-height: 1.4; }
+  .cards .tech { font-size: 12px; color: var(--muted); border-top: 1px dashed var(--line); padding-top: 6px; margin-top: auto; line-height: 1.45; }
+  .actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; align-items: center; }
+  .actions .hint { font-size: 13px; color: var(--muted); }
+  @media (max-width: 860px) { .cards { grid-template-columns: repeat(2, minmax(0, 1fr)); } .code { width: 46%; } }
+  @media (max-width: 520px) { .cards { grid-template-columns: minmax(0, 1fr); } .player { max-height: none; } }
+</style>
+</head>
+<body>
+<header class="gnb"><div class="gnb-in">
+  <a class="brand" href="./"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#2456e5"/><rect x="4.5" y="10.5" width="23" height="13" rx="6.5" fill="#fff"/><rect x="8" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><rect x="17.4" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/></svg>
+<span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
+  <nav aria-label="주 메뉴"><a href="./">처음</a><a href="sim/">시뮬레이터</a><a href="ai.html">AI 브리지</a><a href="docs/">수업 자료</a></nav>
+  <div class="slot"><span class="badge warn">영상 시안</span></div>
+</div></header>
+<main class="wrap">
+  <div class="top"><h1>3초 영상 시안 5개</h1><p>카드를 누르면 그 영상이 3초 동안 재생돼요. 5개를 이어서 보려면 [이어 보기].</p></div>
+  <div class="player" id="player">
+    <div id="stage3d" role="img" aria-label="로보독 인트로 영상 시안을 재생하는 3D 화면"></div>
+    <div class="loading" id="loading">영상을 준비하는 중…</div>
+    <div class="nogl" id="nogl"><div>이 기기에서는 3D 영상을 켤 수 없어요.<br>그래픽 가속이 되는 컴퓨터에서 열어 주세요.</div></div>
+    <div class="badge3" id="badge">—</div>
+    <div class="code" id="code" aria-hidden="true"></div>
+    <div class="cap"><b id="capText"></b><div class="bar" aria-hidden="true"><i id="barFill"></i></div></div>
+  </div>
+  <div class="actions"><button id="playAll" class="primary" type="button">▶ 5개 이어 보기 (15초)</button><button id="replay" type="button">↺ 다시 재생</button><span class="hint">영상은 모두 같은 3D 로보독을 씁니다.</span></div>
+  <ol class="cards" id="cards" aria-label="영상 시안 5개"></ol>
+</main>
+<script type="module">
+const player = document.getElementById('player'), cardsEl = document.getElementById('cards'), badge = document.getElementById('badge');
+const capText = document.getElementById('capText'), barFill = document.getElementById('barFill'), codeEl = document.getElementById('code');
+const ok = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
+let eng = null, sel = 0;
+const m = await import('./samples3d.js');
+const { CLIPS, CODE_STEPS, DUR } = m;
+cardsEl.innerHTML = CLIPS.map((c, i) => `<li><button type="button" data-i="${i}" aria-pressed="false"><span class="no">시안 ${i + 1} · 3초</span><b>${c.title}</b><span class="sub">${c.sub}</span><span class="tech">${c.tech}</span></button></li>`).join('');
+codeEl.innerHTML = CODE_STEPS.map(s => `<div class="blk ${s.cls}">${s.text}</div>`).join('');
+const blks = [...codeEl.children], btns = [...cardsEl.querySelectorAll('button')];
+const mark = (i) => { sel = i; btns.forEach((b, k) => b.setAttribute('aria-pressed', String(k === i))); badge.textContent = `${i + 1}/5  ${CLIPS[i].title}`; capText.textContent = CLIPS[i].sub; player.classList.toggle('is-split', CLIPS[i].id === 'split'); };
+if (!ok) { document.getElementById('loading').style.display = 'none'; document.getElementById('nogl').style.display = 'grid'; }
+else {
+  try {
+    eng = await m.createSamples({
+      host: document.getElementById('stage3d'),
+      onClip: (i) => mark(i),
+      onFrame: (i, t) => {
+        barFill.style.setProperty('--p', (t / DUR * 100) + '%');
+        if (CLIPS[i].id === 'split') blks.forEach((b, k) => { const on = t >= CODE_STEPS[k].t, next = k + 1 < CODE_STEPS.length ? CODE_STEPS[k + 1].t : 99; b.classList.toggle('on', on); b.classList.toggle('now', on && t < next); });
+      },
+    });
+    player.classList.add('ready'); window.__samples = eng;
+    btns.forEach(b => b.onclick = () => eng.play(+b.dataset.i));
+    document.getElementById('playAll').onclick = () => eng.playAll();
+    document.getElementById('replay').onclick = () => eng.play(sel);
+    eng.playAll();    // 열면 5개를 이어서 한 번 보여 줌
+  } catch (e) { console.warn('영상을 켜지 못했어요:', e); document.getElementById('loading').style.display = 'none'; document.getElementById('nogl').style.display = 'grid'; }
+}
+</script>
+</body>
+</html>
