@@ -22,7 +22,7 @@
 <meta name="twitter:image" content="https://microbit-bridge.netlify.app/assets/intro/og.png">
 <link rel="stylesheet" href="assets/brand.css">
 <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<script type="importmap">{ "imports": { "three": "./sim/lib/three.module.min.js" } }</script>
+<link rel="preload" as="video" href="assets/intro/intro.mp4" type="video/mp4">
 <style>
   :root {
     --stage: #e8edf6; --table: #d9c29b; --wall: #efe6d8; --sky: #bfe3ff; --floor: #c9a77c; --rug: #6f9a9a;
@@ -36,13 +36,16 @@
 
   /* ---------- 영상 무대: 열면 바로 재생. 스크롤 없음 ---------- */
   .stage { position: relative; flex: 1; min-height: 0; background: var(--stage); overflow: hidden; }
-  #stage3d { position: absolute; inset: 0; }
+  /* 인트로 영상(intro.mp4 = 첫 산책 30초 + 엔딩 8.2초를 한 파일로). 가로는 꽉 채움, 세로(휴대폰)는 잘리지 않게 전체를 보여 줌 */
+  .stage { background: #0a2342; }
+  #film { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #0a2342; }
+  @media (max-aspect-ratio: 1/1) { #film { object-fit: contain; } }
+  .stage.tail .cap { opacity: 0; }
   /* 엔딩 모션(ending.js): 영상이 끝나면 마지막 화면을 이어받아 재생, 시작 카드 뒤 배경으로 남음 */
   #outro { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; pointer-events: none; transition: opacity .3s; }
   .stage.outro #outro { opacity: 1; }
   .stage.outro .cap { opacity: 0; }
-  .loading, .nogl { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: var(--muted); padding: 24px; font-weight: 650; pointer-events: none; }
-  .nogl { display: none; pointer-events: auto; }
+  .loading { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #dbe5f5; padding: 24px; font-weight: 650; pointer-events: none; }
   .stage.ready .loading { display: none; }
 
   .title { position: absolute; left: 16px; top: 14px; font-size: 13px; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px);
@@ -113,10 +116,9 @@
 </div></header>
 
 <main class="stage" id="stage">
-  <div id="stage3d" role="img" aria-label="달빛이 비치는 밤, 방 안에서 로보독이 처음 눈을 뜨고, 아이가 초록 카드를 내밀자 함께 달빛 언덕길로 산책을 나가요. 언덕 끝에서 아이가 빨간 카드를 들자 로보독이 가르친 대로 딱 멈추고, 팔을 벌린 아이에게 돌아가는 약 30초 영상"></div>
+  <video id="film" src="assets/intro/intro.mp4" muted playsinline preload="auto" aria-label="달빛이 비치는 밤, 방 안에서 로보독이 처음 눈을 뜨고, 아이가 초록 카드를 내밀자 함께 달빛 언덕길로 산책을 나가요. 언덕 끝에서 아이가 빨간 카드를 들자 로보독이 가르친 대로 딱 멈추고, 팔을 벌린 아이에게 돌아가요. 이어서 카메라가 보름달로 올라가고 별들이 모여 로보독의 LED 눈이 되며, 로보독이 웃는 눈을 짓고 제목 빅아이 로보독이 나와요. 약 38초 영상"></video>
   <canvas id="outro" aria-hidden="true"></canvas>
   <div class="loading" id="loading">로보독을 깨우는 중…</div>
-  <div class="nogl" id="nogl"><div>이 기기에서는 3D 영상을 켤 수 없어요.<br>아래 버튼으로 바로 시작할 수 있어요. <a href="./">기존 소개 화면</a>에서 2D 그림으로도 볼 수 있어요.</div></div>
 
   <div class="title">로보독의 모험 · 첫 산책</div>
   <div class="ctl">
@@ -139,70 +141,61 @@
 </main>
 
 <script type="module">
-const stage = document.getElementById('stage'), cap = document.getElementById('cap'), capText = document.getElementById('capText');
-const segs = document.getElementById('segs'), skip = document.getElementById('skip'), replay = document.getElementById('replay');
+// 첫 화면: 인트로 영상 한 편(intro.mp4 = '로보독의 첫 산책' 30초 + 엔딩 '별이 모여 눈이 되다' 8.2초)을 바로 재생.
+// 영상이 끝나면 엔딩 마지막 장면(ending.js, 같은 그림)이 이어받아 달·로보독이 위로 물러나고 시작 카드가 올라옴.
+// 영상은 tools/render-intro.mjs 로 다시 만들 수 있음(3D 합성·엔딩을 프레임 단위로 렌더 → ffmpeg).
+import { createEnding } from './ending.js';
+const $ = (id) => document.getElementById(id);
+const stage = $('stage'), film = $('film'), cap = $('cap'), capText = $('capText'), segs = $('segs'), skip = $('skip'), replay = $('replay');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-let engine = null, timer = 0, lastI = -1;
-// 장면별 자막 [시각(초), 글] — 영상(Gemini Omni) 3장면 × 10초
+// 장면별 자막 [시각(초), 글] — 첫 산책 30초 구간
 const SC = [{ t: 0, text: '달빛이 비치는 밤…' }, { t: 3.0, text: '로보독이 처음 눈을 떴어요' }, { t: 6.0, text: "'같이 산책 갈래?' 초록 카드는 '가자!'" }, { t: 10, text: '달빛 언덕길, 우리의 첫 산책' },
   { t: 20, text: '언덕 끝, 그 앞은 위험해요' }, { t: 22.2, text: '빨간 카드 — 멈춰!' }, { t: 24.6, text: '내가 가르친 대로, 딱 멈췄어요' }, { t: 26.6, text: '이리 와! 우리의 첫 산책 끝' }];
-const END = 30;
+const STORY = 30;
+segs.innerHTML = SC.map(() => '<i></i>').join('');
+const bars = [...segs.children];
+let lastI = -1, timer = 0, raf = 0;
+
+const endIn = document.querySelector('.end-in');
+let outro = null;
+try { outro = createEnding($('outro'), { inset: () => { const r = endIn.getBoundingClientRect(), sr = stage.getBoundingClientRect(); return sr.height ? (sr.bottom - r.top + 12) / sr.height : 0; } }); }
+catch (e) { console.warn('엔딩 화면을 켜지 못했어요:', e); }
+new ResizeObserver(() => { if (outro && stage.classList.contains('outro')) outro.resize(); }).observe(stage);
 
 const showEnd = () => { stage.classList.add('ended'); skip.hidden = true; replay.hidden = false; };
-// 엔딩 모션: 영상 마지막 화면을 그대로 이어받아 '별이 모여 눈이 되다'를 재생하고, 끝나면 시작 카드 뒤 배경으로 남음
-let outro = null, skipping = false;
-try {
-  const E = await import('./ending.js');
-  const endIn = document.querySelector('.end-in');
-  outro = E.createEnding(document.getElementById('outro'), { inset: () => { const r = endIn.getBoundingClientRect(), sr = stage.getBoundingClientRect(); return sr.height ? (sr.bottom - r.top + 12) / sr.height : 0; } });
-  new ResizeObserver(() => { if (stage.classList.contains('outro')) outro.resize(); }).observe(stage);
-} catch (e) { console.warn('엔딩 모션을 켜지 못했어요:', e); }
 const outroStill = () => { if (!outro) return; outro.stop(); outro.setFrom(null); outro.seek(outro.DUR + outro.OUT); stage.classList.add('outro'); };
-const snapshot = () => {   // 3D 화면은 그린 직후(같은 작업 안)에만 읽을 수 있음 — onSeqEnd는 마지막 프레임을 그린 바로 뒤에 불림
-  const s = document.querySelector('#stage3d canvas'); if (!s || !s.width) return null;
-  const c = document.createElement('canvas'); c.width = s.width; c.height = s.height; c.getContext('2d').drawImage(s, 0, 0); return c;
-};
-const onSeqEnd = () => {
-  if (!outro) return showEnd();
-  if (skipping || reduce) { skipping = false; outroStill(); showEnd(); return; }
-  outro.setFrom(snapshot()); stage.classList.add('outro'); skip.hidden = false;
-  outro.play(showEnd);
-};
-const skipAll = () => {
-  if (stage.classList.contains('ended')) return;
-  if (stage.classList.contains('outro')) { outroStill(); showEnd(); }
-  else if (engine) { skipping = true; engine.finish(); }
-};
-const fail = () => { document.getElementById('loading').style.display = 'none'; document.getElementById('nogl').style.display = 'grid'; outroStill(); showEnd(); };
-const ok = (() => { try { const c = document.createElement('canvas'); return !!(c.getContext('webgl2') || c.getContext('webgl')); } catch (e) { return false; } })();
-if (!ok) fail();
-else {
-  try {
-    const m = await import('./samples3d.js');
-    segs.innerHTML = SC.map(() => '<i></i>').join('');
-    const bars = [...segs.children];
-    engine = await m.createSamples({
-      host: document.getElementById('stage3d'), sequence: ['veo'],
-      onFrame: (_, t) => {
-        let i = 0; while (i + 1 < SC.length && t >= SC[i + 1].t) i++;
-        if (i !== lastI) { const first = lastI < 0; lastI = i; clearTimeout(timer); cap.classList.add('swap');
-          timer = setTimeout(() => { capText.textContent = SC[i].text; cap.classList.remove('swap'); }, first ? 0 : 220); }
-        bars.forEach((b, k) => { const a = SC[k].t, e = k + 1 < SC.length ? SC[k + 1].t : END; b.style.setProperty('--p', Math.max(0, Math.min(1, (t - a) / (e - a))) * 100 + '%'); });
-      },
-      onSeqEnd,
-    });
-    stage.classList.add('ready');
-    window.__story = engine;
-    const play = () => { lastI = -1; if (outro) outro.stop(); stage.classList.remove('ended', 'outro'); replay.hidden = true; skip.hidden = false; engine.playAll(); };
-    skip.onclick = skipAll;
-    replay.onclick = play;
-    play();      // 열면 바로 재생
-    // 움직임 줄이기 설정이거나, 같은 탭에서 다시 오면 영상은 건너뛰고 바로 시작 카드
-    try { if (reduce || sessionStorage.getItem('intro-seen')) skipAll(); sessionStorage.setItem('intro-seen', '1'); } catch (e) { if (reduce) skipAll(); }
-    document.addEventListener('keydown', (e) => { if (e.key === 'Escape') skipAll(); });
-    window.__outro = { api: outro, endNow: onSeqEnd };   // 시험용
-  } catch (e) { console.warn('영상을 켜지 못했어요:', e); fail(); }
+const skipAll = () => { if (stage.classList.contains('ended')) return; cancelAnimationFrame(raf); film.pause(); outroStill(); showEnd(); };
+
+function tick() {   // 자막·진행 막대(영상 시계를 따름)
+  const t = film.currentTime || 0;
+  stage.classList.toggle('tail', t >= STORY);
+  let i = 0; while (i + 1 < SC.length && t >= SC[i + 1].t) i++;
+  if (i !== lastI) { const first = lastI < 0; lastI = i; clearTimeout(timer); cap.classList.add('swap');
+    timer = setTimeout(() => { capText.textContent = SC[i].text; cap.classList.remove('swap'); }, first ? 0 : 220); }
+  bars.forEach((b, k) => { const a = SC[k].t, e = k + 1 < SC.length ? SC[k + 1].t : STORY; b.style.setProperty('--p', Math.max(0, Math.min(1, (t - a) / (e - a))) * 100 + '%'); });
+  if (!film.paused && !film.ended) raf = requestAnimationFrame(tick);
 }
+film.addEventListener('playing', () => { stage.classList.add('ready'); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); });
+film.addEventListener('ended', () => {   // 영상 마지막 장면 = 엔딩 본편 끝. 같은 그림에서 카드 자리로 정리
+  cancelAnimationFrame(raf);
+  if (!outro) return showEnd();
+  outro.setFrom(null); outro.seek(outro.DUR); stage.classList.add('outro');
+  outro.play(null, { card: true, from: outro.DUR }); showEnd();
+});
+film.addEventListener('error', () => { $('loading').style.display = 'none'; skipAll(); replay.hidden = true; });
+const play = () => {
+  lastI = -1; if (outro) outro.stop(); stage.classList.remove('ended', 'outro', 'tail'); replay.hidden = true; skip.hidden = false;
+  film.currentTime = 0;
+  const pr = film.play(); if (pr && pr.catch) pr.catch(() => skipAll());   // 자동 재생이 막히면 시작 카드부터([다시 보기]로 재생)
+};
+skip.onclick = skipAll;
+replay.onclick = play;
+document.addEventListener('keydown', (e) => { if (e.key === 'Escape') skipAll(); });
+window.__intro = { film, outro, skipAll, play };   // 시험용
+
+// 움직임 줄이기 설정이거나 같은 탭에서 다시 오면 영상은 건너뛰고 바로 시작 카드
+let seen = false; try { seen = !!sessionStorage.getItem('intro-seen'); sessionStorage.setItem('intro-seen', '1'); } catch (e) {}
+if (reduce || seen) { stage.classList.add('ready'); skipAll(); } else play();
 </script>
 </body>
 </html>

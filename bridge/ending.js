@@ -2,7 +2,8 @@
 // 1) 마지막 화면(언덕·보름달)에서 카메라가 달로 올라가며 같은 붓결의 그림책 하늘로 녹아듦
 // 2) 별들이 소용돌이치며 날아와 8×8 LED 눈 두 개가 됨  3) 달 앞에 알약형 머리(실제 빅아이 로보독)가 역광 실루엣으로
 // 4) 눈이 켜지고 두리번·깜빡·^^  5) 제목  6) (카드 모드) 달·로보독이 위로 올라가 아래 시작 카드에 자리를 내줌
-// 시간 t의 순수 함수라 seek(초)로 어느 시각이든 같은 장면. 쓰는 곳: index.html(영상 끝에 이어 재생), intro-logo.html(단독 미리 보기)
+// 시간 t의 순수 함수라 seek(초)로 어느 시각이든 같은 장면. 쓰는 곳: intro-logo.html(본편 렌더·미리 보기),
+// index.html(인트로 영상 intro.mp4에는 본편까지 구워 넣고, 영상이 끝나면 여기서 카드 자리로 정리 + 시작 카드 뒤 배경)
 export const DUR = 8.2, OUT = 0.9;
 
 const FONT = '"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif';
@@ -245,7 +246,7 @@ export function createEnding(canvas, { inset = () => 0 } = {}) {
   const api = {
     DUR, OUT,
     setFrom,
-    play(done, { card = true } = {}) { cancelAnimationFrame(raf); onDone = done || null; stopAt = card ? DUR + OUT : DUR; running = true; t0 = performance.now(); fit(); raf = requestAnimationFrame(loop); },
+    play(done, { card = true, from = 0 } = {}) { cancelAnimationFrame(raf); onDone = done || null; stopAt = card ? DUR + OUT : DUR; running = true; t0 = performance.now() - from * 1000; fit(); raf = requestAnimationFrame(loop); },   // from: 그 시각부터(예: DUR → 카드 자리로 정리만)
     seek(s) { cancelAnimationFrame(raf); running = false; cur = s; fit(); render(s); },
     stop() { cancelAnimationFrame(raf); running = false; onDone = null; },
     resize() { fit(); render(cur); },
