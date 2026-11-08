@@ -62,7 +62,9 @@ function canvasTex(w, h, paint) {
 const softDot = () => canvasTex(64, 64, (c) => { const g = c.createRadialGradient(32, 32, 0, 32, 32, 32); g.addColorStop(0, 'rgba(255,255,255,1)'); g.addColorStop(0.35, 'rgba(255,255,255,.45)'); g.addColorStop(1, 'rgba(255,255,255,0)'); c.fillStyle = g; c.fillRect(0, 0, 64, 64); });
 const F = '"Pretendard Variable","Pretendard","Noto Sans KR","Apple SD Gothic Neo","Malgun Gothic",system-ui,sans-serif';
 
-export async function createSamples({ host, onClip = () => {}, onFrame = () => {}, onEnd = () => {} }) {
+// 옵션: sequence(재생 순서, 영상 id 배열), durations(영상별 길이 초 — 3초 영상을 그 길이로 천천히 늘려 재생), playShift/endShift(자막·끝 카드 자리만큼 장면을 위로 올림),
+//       onEnd(영상 하나가 끝날 때), onSeqEnd(이어 보기가 모두 끝날 때)
+export async function createSamples({ host, sequence = null, durations = {}, playShift = 0, endShift = 0, onClip = () => {}, onFrame = () => {}, onEnd = () => {}, onSeqEnd = () => {} }) {
   try { await Promise.race([document.fonts.load('900 120px "Pretendard Variable"', '보고전하움직인다약통'), new Promise(r => setTimeout(r, 1500))]); } catch (e) { /* 글꼴이 늦으면 기본 글꼴 */ }
 
   const world = new World(); world.useTable = false; world.start = { x: 60, y: 72, heading: 0 };
@@ -251,11 +253,11 @@ export async function createSamples({ host, onClip = () => {}, onFrame = () => {
       this.words.forEach((m, i) => {
         const [a, b] = T[i], inn = fade(t, a, a + 0.28), out = fade(t, b, b + 0.14);
         const k = Math.max(0.01, back(inn)); m.material.opacity = Math.min(1, inn * 3) * (1 - out);
-        m.scale.setScalar(k * (1 + out * 0.5)); m.rotation.z = lerp(-0.35, 0, ease(inn)) + out * 0.25; m.position.set(lerp(-26, 0, ease(inn)) - out * 40, 6 + Math.sin(t * 2 + i) * 0.4, 0);
+        m.scale.setScalar(k * (1 + out * 0.5)); m.rotation.z = lerp(-0.35, 0, ease(inn)) + out * 0.25; m.position.set(lerp(-26, 0, ease(inn)) - out * 40, 7 + Math.sin(t * 2 + i) * 0.4, 0);
         if (t >= a && t < a + 0.35) pulse = Math.max(pulse, 1 - (t - a) / 0.35);
       });
       grade.uniforms.aberr.value = 0.001 + 0.012 * pulse; bloom.strength = 0.25 + 0.45 * pulse;
-      rig.position.set(lerp(-62, -8, ease(fade(t, 1.95, 3))) + 72 * 0.55, -13.5, -60 * 0.55);   // 글자 아래를 오른쪽으로 걸어 들어옴
+      rig.position.set(lerp(-62, -8, ease(fade(t, 1.95, 3))) + 72 * 0.55, -7.5, -60 * 0.55);   // 글자 아래를 오른쪽으로 걸어 들어옴
     },
   };
 
@@ -323,38 +325,46 @@ export async function createSamples({ host, onClip = () => {}, onFrame = () => {
   };
 
   // ---------- 재생 ----------
-  let cur = -1, t = 0, playing = false, chain = false, raf = 0, last = performance.now(), shTX = 0;
-  const idOf = (i) => CLIPS[i].id;
+  const ids = sequence || CLIPS.map(c => c.id), meta = ids.map(id => CLIPS.find(c => c.id === id));
+  let cur = -1, t = 0, playing = false, chain = false, ended = false, raf = 0, last = performance.now(), shTX = 0, shY = 0, shTY = playShift;
+  const dur = (i) => durations[ids[i]] || DUR;
+  const tau = () => t * DUR / dur(cur);   // 실제 시간 → 영상 안의 시간(3초 기준)
   const start = (i) => {
     cur = i; t = 0; clearClip(); rig.visible = true; resetSim(); pin = null; events = [];
     camera.fov = 45; bloom.strength = 0.8;
-    clips[idOf(i)].setup(); shTX = idOf(i) === 'split' ? -0.2 : 0;
-    onClip(i, CLIPS[i]);
+    clips[ids[i]].setup(); shTX = ids[i] === 'split' ? -0.2 : 0;
+    onClip(i, meta[i]);
   };
   const draw = (dt = 0.016) => {
-    const c = clips[idOf(cur)];
-    simTo(t); c.update(t);
+    const c = clips[ids[cur]], tt = tau();
+    simTo(tt); c.update(tt);
     grade.uniforms.time.value = (performance.now() % 1000) / 1000 + t;
     const W = host.clientWidth || 1, H = host.clientHeight || 1;
-    if (shTX) camera.setViewOffset(W, H, shTX * W, 0, W, H); else camera.clearViewOffset();
+    shY += (shTY - shY) * (1 - Math.exp(-dt * 3));
+    if (Math.abs(shTX) > 1e-3 || Math.abs(shY) > 1e-3) camera.setViewOffset(W, H, shTX * W, shY * H, W, H); else camera.clearViewOffset();
     view.draw(robot.headFrame());
-    onFrame(cur, t);
+    onFrame(cur, t, dur(cur));
   };
+  const finishSeq = () => { if (ended) return; ended = true; chain = false; shTY = endShift; onSeqEnd(); };
   const frame = (now) => {
     const dt = Math.min(0.05, (now - last) / 1000); last = now;
     if (!document.hidden) {
-      if (playing) { t += dt; if (t >= DUR) { t = DUR; playing = false; draw(dt); onEnd(cur); if (chain && cur < CLIPS.length - 1) { start(cur + 1); playing = true; } else chain = false; } }
+      if (playing) {
+        t += dt;
+        if (t >= dur(cur)) { t = dur(cur); draw(dt); onEnd(cur); if (chain && cur < ids.length - 1) { start(cur + 1); } else { playing = false; if (chain) finishSeq(); } }
+      }
       if (cur >= 0) draw(dt);
     }
     raf = requestAnimationFrame(frame);
   };
   raf = requestAnimationFrame(frame);
   return {
-    play(i) { chain = false; start(i); playing = true; },
-    playAll() { chain = true; start(0); playing = true; },
-    seek(i, tt) { chain = false; playing = false; if (cur !== i) start(i); t = Math.min(DUR, Math.max(0, tt)); draw(); },
+    play(i) { chain = false; ended = false; shTY = playShift; start(i); playing = true; },
+    playAll() { chain = true; ended = false; shTY = playShift; start(0); playing = true; },
+    finish() { chain = false; playing = false; start(ids.length - 1); t = dur(cur); shY = shTY = endShift; ended = true; draw(); onSeqEnd(); },   // 건너뛰기: 마지막 장면 + 끝
+    seek(i, tt) { chain = false; playing = false; if (cur !== i) start(i); t = Math.min(dur(cur), Math.max(0, tt)); draw(); },
     pause() { playing = false; cancelAnimationFrame(raf); },
     resume() { last = performance.now(); raf = requestAnimationFrame(frame); },
-    state: () => ({ cur, t, playing, chain }),
+    state: () => ({ cur, t, playing, chain, ended, dur: dur(Math.max(0, cur)) }),
   };
 }
