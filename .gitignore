@@ -5,3 +5,6 @@ node_modules/
 # 수업 슬라이드·꾸러미 그림은 사이트·문서에 필요하므로 올림
 !bridge/lessons/assets/*.png
 !materials/**/*.png
+
+# 인트로 그림(Canva 생성)은 저장소에 포함
+!bridge/assets/story/*.png
