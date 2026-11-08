@@ -6,6 +6,9 @@ import { marked } from 'marked';
 
 const ROOT = path.resolve(path.dirname(new URL(import.meta.url).pathname), '..');
 const SRC = path.join(ROOT, 'docs'), OUT = path.join(ROOT, 'bridge', 'docs');
+// 예전에 만든 파일이 남지 않게(이름이 바뀐 슬라이드 등) 복사 대상 폴더는 비우고 다시 만듦
+fs.rmSync(path.join(OUT, 'makecode'), { recursive: true, force: true });
+fs.rmSync(path.join(OUT, 'materials'), { recursive: true, force: true });
 fs.mkdirSync(path.join(OUT, 'makecode'), { recursive: true });
 
 const files = fs.readdirSync(SRC).filter(f => /^\d\d_.+\.md$/.test(f)).sort();
@@ -21,10 +24,10 @@ for (const f of tsFiles) fs.copyFileSync(path.join(ROOT, 'makecode', f), path.jo
 const esc = (s) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const GROUPS = [
   ['수업안', ['01', '02', '03', '06']],
-  ['수업 준비·평가', ['04', '05', '08']],
+  ['수업 준비·평가', ['04', '05', '08', '09']],
   ['배경·검증', ['00', '07']],
 ];
-const SHORT = { '00': '교안 분석', '01': '2차시 소개형', '02': '4차시 기본형', '03': '8차시 전체형', '04': '활동지·평가', '05': '운영 가이드', '06': '중·고 확장', '07': '검증 보고서', '08': '시뮬레이터 안내' };
+const SHORT = { '00': '교안 분석', '01': '2차시 소개형', '02': '4차시 기본형', '03': '8차시 전체형', '04': '활동지·평가', '05': '운영 가이드', '06': '중·고 확장', '07': '검증 보고서', '08': '시뮬레이터 안내', '09': '예제 따라 하기' };
 
 function linkify(html) {
   // `docs/05_xxx.md`, `05_xxx.md` → 문서 링크 / `makecode/xx.ts` → 예제 내려받기
@@ -90,6 +93,16 @@ for (const d of docs) {
 if (badLinks) process.exitCode = 1;
 
 const blurb = (md) => { const t = md.replace(/^#.*$/m, '').split('\n').map(l => l.replace(/^[-*>\s]+/, '').replace(/[*`#|]/g, '').trim()).filter(l => l && !/^-+$/.test(l))[0] || ''; return t.length > 90 ? t.slice(0, 88) + '…' : t; };
+// 예제 설명: 첫 번째 '실제 글자가 있는' 주석 줄(=====, ----- 같은 장식 줄은 건너뜀), [..] 꼬리표는 떼고 번호 제목만
+const firstComment = (src) => {
+  for (const line of src.split('\n')) {
+    const m = line.match(/^\/\/\s*(.*)$/); if (!m) continue;
+    const t = m[1].trim();
+    if (!t || !/[가-힣A-Za-z0-9]/.test(t)) continue;
+    return t.replace(/^\[(?:로보독 마이크로비트|무선 확장)\]\s*/, '').replace(/^\[([^\]]*)\]\s*/, '$1 · ');
+  }
+  return '';
+};
 let idx = `<h1>수업 자료</h1><p class="note">로보독 + 마이크로비트 피지컬 AI 수업안·활동지·운영 가이드입니다. 각 문서는 [🖨 인쇄]로 종이나 PDF로 저장할 수 있어요.</p><div class="cards"><a href="../lessons/"><b>웹 슬라이드로 보기 →</b><span>수업 슬라이드를 브라우저에서 바로 보여 줘요 (교사 모드: 대본 표시)</span></a></div>`;
 for (const [g, ids] of GROUPS) {
   idx += `<h2>${g}</h2><div class="cards">` + ids.map(id => docs.find(d => d.slug === id)).filter(Boolean)
@@ -109,6 +122,6 @@ if (pkgs.length) {
   }
 }
 idx += `<h2>MakeCode 예제 내려받기</h2><p class="note">파일을 내려받아 makecode.microbit.org → 가져오기, 또는 JavaScript 탭에 붙여넣으세요. 로보독 확장(kocoafab/robodog)이 필요합니다. 06~08은 무선 확장(kocoafab/robodog-radio)용입니다.</p><ul class="dl">`
-  + tsFiles.map(f => { const first = (fs.readFileSync(path.join(ROOT, 'makecode', f), 'utf8').match(/^\/\/\s*(.+)$/m) || [, ''])[1]; return `<li><a href="makecode/${f}" download>${f}</a> <span class="note">${esc(first.slice(0, 60))}</span></li>`; }).join('') + '</ul>';
+  + tsFiles.map(f => { const first = firstComment(fs.readFileSync(path.join(ROOT, 'makecode', f), 'utf8')); return `<li><a href="makecode/${f}" download>${f}</a> <span class="note">${esc(first.slice(0, 60))}</span></li>`; }).join('') + '</ul>';
 fs.writeFileSync(path.join(OUT, 'index.html'), page('수업 자료', 'index', idx));
 console.log(`docs ${docs.length}개, 예제 ${tsFiles.length}개 → bridge/docs/`);

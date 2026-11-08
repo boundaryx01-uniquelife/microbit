@@ -91,15 +91,19 @@ function build(data) {
   pres.title = data.title || data.id;
   const SH = pres.ShapeType;
 
-  const slides = data.slides || [];
+  const clean = (o) => (typeof o === 'string' ? o.replace(/\*\*/g, '') : Array.isArray(o) ? o.map(clean) : o && typeof o === 'object' ? Object.fromEntries(Object.entries(o).map(([k, v]) => [k, clean(v)])) : o);
+  const slides = clean(data.slides || []);
   const chs = [...new Set(slides.map((s) => s.ch || 1))].sort((a, b) => a - b);
+  const short = String(data.title || data.id).split(' — ')[0]; // 예: "2차시 소개형"
+  const chCount = {}, chSeen = [];
+  slides.forEach((s) => { const c = s.ch || 1; chCount[c] = (chCount[c] || 0) + 1; chSeen.push(chCount[c]); });
   for (const n of chs) {
-    const ft = `피지컬 AI 교실 · ${n}차시`;
+    const ft = `${short} · ${n}교시`; // 패키지 이름 + 교시(웹 뷰어 바닥글과 같음)
     for (const [style, bg, fc] of [['light', WH, SUB], ['cover', P, WH], ['dark', INK, 'C9D1E3']]) {
       pres.defineSlideMaster({
         title: `${style}${n}`, background: { color: bg },
-        objects: [{ text: { text: ft, options: { x: 0.6, y: 6.98, w: 6, h: 0.32, fontFace: F, fontSize: 14, color: fc, margin: 0, valign: 'middle' } } }],
-        slideNumber: { x: 11.73, y: 6.98, w: 1.0, h: 0.32, fontFace: F, fontSize: 14, color: fc, align: 'right' },
+        objects: [{ text: { text: ft, options: { x: 0.6, y: 6.98, w: 6, h: 0.32, fontFace: F, fontSize: 16, color: fc, margin: 0, valign: 'middle' } } }],
+        slideNumber: { x: 11.73, y: 6.98, w: 1.0, h: 0.32, fontFace: F, fontSize: 16, color: fc, align: 'right' },
       });
     }
   }
@@ -116,7 +120,7 @@ function build(data) {
       },
     }));
     s.addText(runs, {
-      x, y, w, h, fontFace: F, isTextBox: true, margin: 0, valign: o.valign || 'middle', align: o.align || 'left', fit: 'none',
+      x, y, w, h, fontFace: F, lang: 'ko-KR', isTextBox: true, margin: 0, valign: o.valign || 'middle', align: o.align || 'left', fit: 'none',
     });
     return f.s;
   }
@@ -148,7 +152,7 @@ function build(data) {
     const round = w > d + 0.01;
     s.addText(t, {
       shape: round ? SH.roundRect : SH.ellipse, rectRadius: d / 2, x, y, w, h: d, fill: { color: fill }, line: { color: fill, width: 0 },
-      fontFace: F, fontSize: sz, bold: true, color: tc, align: 'center', valign: 'middle', margin: 0, isTextBox: true, wrap: false,
+      fontFace: F, lang: 'ko-KR', fontSize: sz, bold: true, color: tc, align: 'center', valign: 'middle', margin: 0, isTextBox: true, wrap: false,
     });
     return w;
   }
@@ -240,13 +244,17 @@ function build(data) {
       const x = X0 + i * (cw + gap), cl = col(c.color, i);
       card(s, x, TOP, cw, ch, BG);
       let y = TOP + 0.2;
-      if (c.badge !== undefined && c.badge !== '') {
+      if (c.icon) {
+        const di = imgSize(c.icon);
+        if (di) { const ih = 1.0, iw = Math.min(cw - 0.6, ih * di.w / di.h); s.addImage({ path: di.f, x: x + (cw - iw) / 2, y, w: iw, h: ih, altText: c.head }); y += ih + 0.1; }
+      }
+      if (!c.icon && c.badge !== undefined && c.badge !== '') {
         const bd = 0.8, bw = badge(s, c.badge, x + (cw - bd) / 2, y, bd, cl, 30, cw - 0.4);
         // 알약이면 가운데 다시 맞춤
         if (bw > bd) { /* 위에서 x 고정 — 필요 시 좌측 정렬 */ }
         y += bd + 0.15;
       }
-      const hasB = c.badge !== undefined && c.badge !== '';
+      const hasB = !c.icon && c.badge !== undefined && c.badge !== '';
       const need = lineCount(c.head, 30, true, cw - 0.6) * 30 * 1.22 / 72 + 0.3;
       const headH = Math.max(0.85, Math.min(hasB ? 1.05 : 1.3, need));
       s.addShape(SH.roundRect, { x: x + 0.2, y, w: cw - 0.4, h: headH, fill: { color: cl }, line: { color: cl, width: 0 }, rectRadius: 0.15 });
@@ -279,6 +287,10 @@ function build(data) {
       const x = x0 + i * (nw + g), c = col(nd.color, i);
       s.addShape(SH.roundRect, { x, y: ny, w: nw, h: nh, fill: { color: BG }, line: { color: c, width: 3 }, rectRadius: 0.15 });
       let y = ny + 0.2;
+      if (nd.icon) {
+        const di = imgSize(nd.icon);
+        if (di) { const ih = n >= 4 ? 0.8 : extras ? (nd.tag ? 0.6 : 0.95) : 1.25, iw = Math.min(nw - 0.4, ih * di.w / di.h); s.addImage({ path: di.f, x: x + (nw - iw) / 2, y, w: iw, h: ih, altText: nd.label }); y += ih + 0.1; }
+      }
       if (nd.tag) {
         const tw = Math.min(nw - 0.3, 2.2);
         const bw = badge(s, nd.tag, x + (nw - Math.min(nw - 0.3, Math.max(0.9, textW(nd.tag, 22, true) + 0.4))) / 2, y, 0.55, c, 22, nw - 0.3);
@@ -322,12 +334,23 @@ function build(data) {
     const subH = d.sub ? Math.min(1.1, bh * 0.3) : 0;
     T(s, [{ t: d.big, bold: true }], X0 + 0.4, by, cw - 0.8, bh - subH - (subH ? 0.1 : 0), { max: bigOnly ? 200 : hasImg ? 48 : 54, min: 28, color: WH, align: 'center' });
     if (d.sub) T(s, [{ t: d.sub }], X0 + 0.4, TOP + ch - 0.3 - subH, cw - 0.8, subH, { max: 26, color: 'DCE6FF', align: 'center' });
-    if (hasImg) img(s, d.image, X0 + cw + 0.4, TOP, W - cw - 0.4, ch, 'center');
+    if (hasImg) {
+      const r = img(s, d.image, X0 + cw + 0.4, TOP, W - cw - 0.4, ch, 'center');
+      if (r && d.caption) {
+        const cy = r.Y + r.H - 1.15;
+        s.addText(d.caption, { shape: SH.roundRect, rectRadius: 0.12, x: r.X + 0.2, y: cy, w: r.W - 0.4, h: 0.95, fill: { color: INK }, line: { color: INK, width: 0 }, fontFace: F, lang: 'ko-KR', fontSize: 24, bold: true, color: WH, align: 'center', valign: 'middle', margin: 0.05, isTextBox: true });
+      }
+    }
   };
 
   R.image = (s, d) => {
     title(s, d.title);
-    const pts = d.points || [], hasSide = pts.length > 0 || !!d.callout, ah = BOT - TOP - 0.05;
+    const pts = d.points || [], hasSide = pts.length > 0 || !!d.callout;
+    const TOP = d.url ? 2.85 : 1.7, ah = BOT - TOP - 0.05;
+    if (d.url) { // 주소 한 줄(크게)
+      card(s, X0, 1.7, W, 1.0, TINT, { line: P });
+      T(s, [{ t: d.url, bold: true }], X0 + 0.2, 1.75, W - 0.4, 0.9, { max: 44, min: 30, color: P, align: 'center' });
+    }
     if (!hasSide) { img(s, d.image, X0, TOP, W, ah, 'center'); return; }
     const many = pts.length >= 5, gap = many ? 0.12 : 0.2;
     const iw = many ? 5.0 : pts.length >= 4 ? 5.2 : pts.length >= 3 ? 6.0 : 7.5, sx = X0 + iw + 0.4, sw = W - iw - 0.4;
@@ -417,15 +440,17 @@ function build(data) {
   R.checklist = (s, d) => {
     title(s, d.title);
     const items = d.items || [], n = items.length;
-    const grid = n >= 4, cols = grid ? 2 : 1, rowsN = Math.ceil(n / cols), gx = 0.3, gy = grid ? 0.3 : 0.25;
-    const cw = (W - gx * (cols - 1)) / cols, avail = grid ? 5.0 : 5.0;
-    const h = Math.min(grid ? 2.3 : 1.5, (avail - gy * (rowsN - 1)) / rowsN);
+    // 웹과 같게: 짧은 4개만 2×2, 나머지는 칸을 글 길이에 맞춘 줄 목록(글자 크게)
+    const grid = n === 4 && items.every((t) => String(t).length <= 12), cols = grid ? 2 : 1, rowsN = Math.ceil(n / cols), gx = 0.3, gy = grid ? 0.3 : 0.2;
+    const cw = grid ? (W - gx) / 2 : Math.min(W, 10.6), avail = 5.0;
+    const h = Math.min(grid ? 2.0 : n <= 3 ? 1.35 : 1.1, (avail - gy * (rowsN - 1)) / rowsN);
+    const totalH = rowsN * h + (rowsN - 1) * gy, y0 = 1.75 + Math.max(0, (avail - totalH) / 2), x0 = grid ? X0 : X0 + (W - cw) / 2;
     items.forEach((t, i) => {
-      const x = X0 + (i % cols) * (cw + gx), y = 1.75 + Math.floor(i / cols) * (h + gy);
+      const x = x0 + (i % cols) * (cw + gx), y = y0 + Math.floor(i / cols) * (h + gy);
       card(s, x, y, cw, h, BG);
-      const cd = Math.min(0.8, h - 0.4);
+      const cd = Math.min(0.6, h - 0.4);
       checkbox(s, x + 0.35, y + (h - cd) / 2, cd, P);
-      T(s, [{ t, bold: true }], x + 0.35 + cd + 0.35, y + 0.08, cw - cd - 1.0, h - 0.16, { max: 30 });
+      T(s, [{ t, bold: true }], x + 0.35 + cd + 0.35, y + 0.06, cw - cd - 1.0, h - 0.12, { max: 34 });
     });
   };
 
@@ -439,6 +464,12 @@ function build(data) {
     const s = pres.addSlide({ masterName: `${style}${ch}` });
     s.addNotes(d.notes || '');
     r(s, d);
+    if (type !== 'cover') { // 머리표: "2교시 · 3/12" (제목 위 오른쪽)
+      s.addText(`${ch}교시 · ${chSeen[idx]}/${chCount[ch]}`, {
+        shape: SH.roundRect, rectRadius: 0.16, x: 10.9, y: 0.08, w: 1.8, h: 0.34, fill: { color: type === 'core' ? '3A4560' : TINT }, line: { color: type === 'core' ? '3A4560' : TINT, width: 0 },
+        fontFace: F, fontSize: 20, bold: true, color: type === 'core' ? WH : P, align: 'center', valign: 'middle', margin: 0, isTextBox: true, wrap: false,
+      });
+    }
   });
   return pres;
 }

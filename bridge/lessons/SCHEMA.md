@@ -18,7 +18,7 @@
 ```
 
 ## 공통 필드 (모든 슬라이드)
-- `ch` (숫자): 몇 번째 차시인지. 바닥글 "피지컬 AI 교실 · {ch}차시"
+- `ch` (숫자): 패키지 안에서 몇 교시인지. 바닥글 "{패키지 짧은 이름} · {ch}교시"(예: "2차시 소개형 · 1교시", 제목의 " — " 앞부분), 제목 위 오른쪽 머리표 "{ch}교시 · 장 안 순서/장 전체"(cover 제외). cover 의 `sub` 는 "2차시 소개형 · 1교시" 형식
 - `type`: 아래 형식 중 하나
 - `title`: 화면 제목 (cover 는 큰 제목)
 - `notes`: 교사 대본. 형식 `[시간] 발문: … / 예상 답: … / 진행: … / 주의: …` (웹 교사 모드·PPT 발표자 노트)
@@ -32,9 +32,9 @@
 | `cover` | `title`, `sub`, `image` | 파란 바탕 표지, 오른쪽 그림 |
 | `goals` | `title`(기본 "오늘의 목표"), `items`: [문장] | 번호 붙은 큰 줄 2~4개 |
 | `points` | `title`, `items`: [{`text`, `sub`?, `badge`?, `color`?}], `image`?, `imageSide`?("left"/"right", 기본 right), `footer`? | 번호(또는 badge 글자) 원 + 굵은 글 + 작은 설명. 그림이 있으면 옆에 |
-| `cards` | `title`, `cards`: [{`head`, `color`?, `badge`?, `lines`: [문장]}], `footer`? | 2~4개 카드 가로 배치 |
-| `flow` | `title`, `nodes`: [{`label`, `sub`?, `tag`?, `color`?}], `strip`?: [문장], `image`? | 상자 → 화살표 → 상자. `strip` 은 아래 작은 띠(→로 이어짐). `loop`: true 면 마지막→처음 돌아가는 화살표 |
-| `question` | `title`, `big`(큰 질문), `sub`?, `image`? | 큰 물음표 또는 큰 글 + 그림 |
+| `cards` | `title`, `cards`: [{`head`, `color`?, `badge`?, `icon`?(그림 이름, 카드 위쪽 작은 그림·있으면 badge 는 생략), `lines`: [문장]}], `footer`? | 2~4개 카드 가로 배치 |
+| `flow` | `title`, `nodes`: [{`label`, `sub`?, `tag`?, `color`?, `icon`?(그림 이름, 노드 위쪽)}], `strip`?: [문장], `image`? | 상자 → 화살표 → 상자. `strip` 은 아래 작은 띠(→로 이어짐). `loop`: true 면 마지막→처음 돌아가는 화살표 |
+| `question` | `title`, `big`(큰 질문), `sub`?, `image`?, `caption`?(그림 위에 얹는 글) | 큰 물음표 또는 큰 글 + 그림 |
 | `image` | `title`, `image`, `points`?: [문장], `callout`?(강조 상자 글) | 큰 그림 + 옆 짧은 설명 |
 | `table` | `title`, `rows`: [{`badge`?, `color`?, `left`, `right`}], `image`? | 왼쪽 → 오른쪽 짝(예: 카드 → 로보독 행동) |
 | `code` | `title`, `steps`: [{`text`, `sub`?}], `image`?, `tip`? | 블록 코딩 따라 하기 단계(번호) + 화면 그림 |
@@ -49,6 +49,14 @@
   "notes": "[시험 7'] 진행: [USB 마이크로비트 연결] → \"BBC micro:bit\" 선택 → 카드 보여 주기 / 주의: 로보독은 바닥이나 울타리 안에서" }
 ```
 
+## 글자 강조
+`image` 형식의 `points`·`callout` 안에서 `**낱말**` 로 감싸면 웹은 노란 형광펜, PPT 는 그냥 글자(표시 `**` 는 자동 제거).
+
+## 글자 크기 규칙 (시험이 검사함)
+웹 1280×720 무대 좌표 기준 머리표·바닥글 포함 보이는 글자 모두 20px 이상. 글이 길어 자동 축소(viewer.js shrink)가 0.85 아래로 내려가면 안 됨 →
+코딩(`code`) 장은 단계 3개 이하·짧은 문장, 자세한 설명은 `notes` 의 진행에 넣기.
+
 ## 쓸 수 있는 그림 (bridge/lessons/assets)
-story_hello(하트 눈 인사) · story_card(AI가 초록 카드를 봄) · story_microbit(마이크로비트 숫자 3 + 전파) · story_walk(걷는 로보독) · story_stop(빨간 카드 앞 멈춤) · sim_robodog3d(로보독 3D) · sim_page(시뮬레이터 화면) · ai_start(AI 브리지 첫 화면) · ai_green(초록 → 3. 초록 카드 100%) · ai_orange(주황 → 노랑 100%, 자신 있게 틀림)
-새 그림이 꼭 필요하면 파일 이름과 무엇을 찍을지를 보고서에 적으세요(직접 만들지 말 것).
+story_hello · story_card · story_microbit · story_walk · story_stop · sim_robodog3d · sim_page(시뮬레이터 전체, 작게 보임) · ai_start · ai_green · ai_orange(AI 전체 화면, 작게 보임)
+확대본(권장): ai_start_crop(사진 모으기 칸 2개) · ai_green_crop · ai_orange_crop(카메라 + '노랑 100%' 결과) · sim_examples · sim_controls(실행·정지 줄) · robodog_eyes_3(로보독 눈에 모둠번호 3, 시뮬레이터 3D 캡처)
+그림 아이콘(직접 그린 평면 그림, 말 통일: 눈=파랑 icon_eye · 뇌=주황 icon_brain · 몸=초록 icon_body, 연결 USB=회색): icon_vacuum · icon_car · icon_delivery · icon_guide(안내견+신호등) · icon_think(물음표) · icon_change(속도 30→15) · icon_samenum(번호 3=3) · icon_teachcards(모둠 카드 1·2·3+빈 책상) · icon_numshow(눈에 번호 보이기) · icon_flash(다운로드→꽂기→켜기) · icon_debug(AI? 코드?) · sim_run(시뮬레이터 실행 화면 캡처)

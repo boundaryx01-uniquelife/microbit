@@ -114,7 +114,7 @@ function splitPhrases(text) {
 }
 
 const TRIGGERS = [
-  { re: /(로보독|등|몸통|로봇)\s*(의\s*)?(버튼|단추)\s*(을|를|이|가)?\s*(누르면|누를\s*때|눌렀을\s*때|눌리면)/, kind: 'robotbtn' },
+  { re: /(로보독|본체|등|몸통|로봇)\s*(의\s*)?(버튼|단추)\s*(을|를|이|가)?\s*(누르면|누를\s*때|눌렀을\s*때|눌리면)/, kind: 'robotbtn' },
   { re: /(A\s*\+\s*B|AB|에이\s*비|에이비|A\s*(와|랑|하고)\s*B|두\s*버튼)\s*(버튼)?\s*(을|를)?\s*(같이|함께|동시에)?\s*(누르면|누를\s*때|눌렀을\s*때)/i, kind: 'btn', arg: 'AB' },
   { re: /(?<![A-Za-z가-힣])(A|에이)\s*(버튼|단추)?\s*(을|를|이|가)?\s*(누르면|누를\s*때|눌렀을\s*때|눌리면)/i, kind: 'btn', arg: 'A' },
   { re: /(?<![A-Za-z가-힣])(B|비)\s*(버튼|단추)?\s*(을|를|이|가)?\s*(누르면|누를\s*때|눌렀을\s*때|눌리면)/i, kind: 'btn', arg: 'B' },
@@ -131,7 +131,7 @@ export const CAN_DO = '앞으로·뒤로 걷기, 오른쪽·왼쪽 돌기, 한 �
 export function ruleAssistant(text) {
   const src = String(text || '').trim();
   const warnings = [], unknown = [];
-  if (!src) return { code: '', explanation: '하고 싶은 동작을 적어 주세요. 예: "A 버튼을 누르면 인사하고 멍멍 짖어"', warnings, suggestions: [] };
+  if (!src) return { code: '', explanation: '하고 싶은 동작을 적어 주세요. 예: "본체 버튼을 누르면 인사하고 멍멍 짖어"', warnings, suggestions: [] };
   if (src.length > 300) return { code: '', explanation: '말이 너무 길어요(300자까지). 한 번에 한두 가지씩 나눠서 말해 주세요.', warnings, suggestions: [] };
 
   // 1) 언제(트리거) 위치 찾기 → 구간 나누기
@@ -177,7 +177,7 @@ export function ruleAssistant(text) {
   // 어느 버튼인지 모르는 '누르면'은 만들지 않음
   const pressAt = [...src.matchAll(/(누르면|눌리면|누를\s*때|눌렀을\s*때)/g)].map(m => m.index);
   if (pressAt.some(i => !clean.some(c => i >= c.at && i < c.end))) {
-    return { code: '', explanation: '어느 버튼인지 알려 주세요: "A 버튼을 누르면", "B 버튼을 누르면", "A+B 버튼을 누르면", "로보독 버튼을 누르면"', warnings, suggestions: suggestExamples(src) };
+    return { code: '', explanation: '어느 버튼인지 알려 주세요: "A 버튼을 누르면", "B 버튼을 누르면", "A+B 버튼을 누르면", "본체 버튼을 누르면"', warnings, suggestions: suggestExamples(src) };
   }
 
   const startPart = build(segs[0].text);
@@ -243,7 +243,7 @@ export function ruleAssistant(text) {
     if (!r.lines.length) continue;
     code.splice(1, 0, 'let 이전버튼 = false');
     tail.push('', 'basic.forever(function () {', '    let 눌림 = robodog.getButton()', '    if (눌림 && !(이전버튼)) {', ...indent(r.lines, 2), '    }', '    이전버튼 = 눌림', '    basic.pause(50)', '})');
-    expl.push('로보독 버튼을 누를 때: ' + r.desc.join(' → '));
+    expl.push('본체 버튼을 누를 때: ' + r.desc.join(' → '));
   }
 
   if (radioCases.length) {
@@ -292,7 +292,7 @@ export function ruleAssistant(text) {
     expl.push('계속 반복: ' + f.desc.join(' → '));
   }
   code.push(...tail);
-  if (code.some(l => l.includes('input.onButtonPressed'))) warnings.push('로보독 등에 꽂은 마이크로비트의 A·B 버튼은 가려져서 누를 수 없어요. 실물 로보독에서는 "로보독 버튼 누르면"으로 말하거나, 리모컨 마이크로비트(라디오)를 쓰세요. A·B는 시뮬레이터와 손에 든 마이크로비트에서만 눌러요.');
+  if (code.some(l => l.includes('input.onButtonPressed'))) warnings.push('로보독 등에 꽂은 마이크로비트의 A·B 버튼은 가려져서 누를 수 없어요. 실물 로보독에서는 "본체 버튼 누르면"으로 말하거나, 리모컨 마이크로비트(라디오)를 쓰세요. A·B는 시뮬레이터와 손에 든 마이크로비트에서만 눌러요.');
   if (unknown.length) warnings.push('이해하지 못한 말: ' + unknown.map(u => `"${u}"`).join(', ') + ' — 아래 "이렇게 말해 보세요" 표현을 참고하세요.');
 
   const body = code.filter((l, i, a) => !(l === '' && a[i - 1] === ''));
@@ -320,7 +320,7 @@ export function suggestExamples(text) {
 
 export const SAMPLE_REQUESTS = [
   '앞으로 2초 걷고 오른쪽으로 90도 돌아서 인사해',
-  'A 버튼을 누르면 빨간 불을 켜고 멍멍 짖어, B 버튼을 누르면 앉아',
+  '본체 버튼을 누르면 빨간 불을 켜고 멍멍 짖어, 라디오 2를 받으면 앉아',
   '장애물이 가까우면 멈추고 비켜라고 말해, 아니면 천천히 앞으로 걸어',
   '라디오 1을 받으면 멈춰, 라디오 3을 받으면 초록 불 켜고 앞으로 걸어',
   '웃는 눈으로 3번 반복해서 춤춰',

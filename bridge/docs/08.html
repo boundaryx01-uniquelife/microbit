@@ -32,7 +32,7 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
 <nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
 </div></header>
-<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html" aria-current="page">시뮬레이터 안내</a></nav>
+<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html" aria-current="page">시뮬레이터 안내</a><a href="09.html">예제 따라 하기</a></nav>
 <button onclick="print()">🖨 인쇄</button></div></div>
 <main><h1>로보독 시뮬레이터 안내</h1>
 <p>주소: <strong><a href="https://microbit-bridge.netlify.app/sim/">https://microbit-bridge.netlify.app/sim/</a></strong></p>
@@ -63,7 +63,7 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <li><strong>2D 보기</strong>: 위에서 본 책상(경로·거리센서 빔·장애물) + 옆모습(다리 자세) + 눈 LED / <strong>3D 보기</strong>: 마우스로 돌려 보기·확대.</li>
 <li><strong>↺ 처음으로</strong>: 로보독을 처음 자리로. <strong>■ 정지</strong>: 코드 멈춤.</li>
 </ol>
-<p>예제 목록에서 수업 예제 1&#126;5와 &#39;동작 둘러보기&#39;를 불러올 수 있습니다(시연 카드에는 8대 군무가 하나 더 있음). 무선 예제 06&#126;08은 수업 자료 페이지에서 내려받아 붙여넣으면 실행됩니다(카메라 AI 값은 늘 &quot;인식 없음&quot;).</p>
+<p>[예제 고르기]는 <strong>🔘 본체 버튼 / 📡 라디오 리모컨 / 🛠 점검</strong> 세 묶음으로 나뉘어 있고, 예제를 고르면 바로 아래에 <strong>따라 하기</strong> 상자(시뮬레이터 순서 + 실물 순서)가 나옵니다. 처음 하는 분용 자세한 안내는 <a href="09.html"><code>예제 따라 하기</code></a>를 보세요(시연 카드에는 8대 군무가 하나 더 있음). 무선 예제 06&#126;08은 수업 자료 페이지에서 내려받아 붙여넣으면 실행됩니다(카메라 AI 값은 늘 &quot;인식 없음&quot;).</p>
 <h2>로보독 도우미 (말로 코드 만들기)</h2>
 <div class="tbl"><table>
 <thead>
@@ -91,7 +91,7 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 </tbody></table></div>
 <p><strong>규칙 도우미가 알아듣는 표현</strong></p>
 <ul>
-<li>언제: <code>A 버튼을 누르면</code>(<code>a누르면</code>도 됨), <code>B 버튼을 누르면</code>, <code>A+B 버튼을 누르면</code>, <code>로보독 버튼을 누르면</code>(실물의 본체 버튼, 계속 걷기 켜기/끄기와 멈춤 잠금도 이 버튼 사용), <code>라디오 3을 받으면</code>, <code>장애물이 가까우면 … 아니면 …</code>, <code>계속</code>, <code>3번 반복</code>
+<li>언제: <code>A 버튼을 누르면</code>(<code>a누르면</code>도 됨), <code>B 버튼을 누르면</code>, <code>A+B 버튼을 누르면</code>, <code>본체 버튼을 누르면</code>(말로 <code>로보독 버튼을 누르면</code>이라고 해도 같은 뜻으로 알아들음. 실물 로보독의 본체 버튼, 계속 걷기 켜기/끄기와 멈춤 잠금도 이 버튼 사용), <code>라디오 3을 받으면</code>, <code>장애물이 가까우면 … 아니면 …</code>, <code>계속</code>, <code>3번 반복</code>
 (어느 버튼인지 없으면 코드를 만들지 않고 다시 물어봅니다. &quot;A 버튼&quot;이라고 말하면 A로 만들되, 실물 로보독에서는 A·B가 가려진다는 경고를 함께 보여 줍니다)</li>
 <li>무엇을: <code>앞으로/뒤로 2초 (천천히·빠르게·속도 20)</code>, <code>오른쪽/왼쪽으로 90도 돌아</code>, <code>오른쪽으로 걸어</code>(돌고 걷기), <code>한 바퀴</code>, <code>뒤로 돌아</code>(180°), <code>앉아·누워·인사·손 흔들어·물구나무·기지개·일어서</code>, <code>몸을 낮게/높게</code>, <code>점프</code>(흉내), <code>멈춰</code>, <code>춤춰</code></li>
 <li>소리: <code>멍멍 짖어</code>, <code>으르렁</code>, <code>&quot;안녕/기다려/비켜/출발&quot;이라고 말해</code>, <code>도레미 노래</code> / 불빛: <code>빨간·초록·파란… 불 켜</code>, <code>불 꺼</code>, <code>무지개</code></li>

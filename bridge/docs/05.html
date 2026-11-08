@@ -32,7 +32,7 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
 <nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
 </div></header>
-<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html" aria-current="page">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a></nav>
+<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html" aria-current="page">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a><a href="09.html">예제 따라 하기</a></nav>
 <button onclick="print()">🖨 인쇄</button></div></div>
 <main><h1>교사용 운영 가이드 — AI 개념, 학교 PC 점검, 문제 해결</h1>
 <h2>1. 교사가 알아야 할 AI 개념 (AI 브리지 동작 원리)</h2>
@@ -132,6 +132,56 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 </tr>
 </tbody></table></div>
 <p>※ 파일을 더블클릭해서 열면(file://) 모델을 인터넷(tfhub/kaggle)에서 받아 옵니다. 학교망에서 막힐 수 있으니 <strong>배포 주소로 여는 것을 권장</strong>합니다.</p>
+<h3>수업 전 미리 열어 두기 (PC마다 1회, 수업 전날이나 아침)</h3>
+<p>수업 시작 직후 30명이 한꺼번에 불러오면 학교망이 느려집니다. <strong>수업에 쓸 PC마다</strong> 미리 한 번씩 열어 두면 브라우저가 파일을 저장해 두어 수업 중에는 훨씬 빨리 열립니다. (같은 크롬·엣지 프로필로 쓰고, 복원 프로그램이 있으면 복원 뒤에 다시 열어야 합니다.)</p>
+<ol>
+<li>시뮬레이터 <code>https://microbit-bridge.netlify.app/sim/</code> 를 열고 <strong>블록 편집기가 나타날 때까지</strong> 기다리기(처음 30초&#126;1분).</li>
+<li>시뮬레이터에서 <strong>▶ 실행</strong>을 한 번 눌러 보기(3D 로보독이 움직이는지).</li>
+<li>AI 브리지 <code>https://microbit-bridge.netlify.app/ai.html</code> 를 열고 <strong>&quot;AI 준비 완료&quot;</strong> 확인(모델 약 8MB). 카메라는 [카메라 켜기] → <strong>허용</strong>까지 눌러 두기.</li>
+<li>수업 슬라이드를 쓰면 <code>https://microbit-bridge.netlify.app/lessons/</code> 도 한 번 열기.</li>
+</ol>
+<h3>방화벽(허용 목록) 요청 도메인</h3>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>도메인</th>
+<th>용도</th>
+</tr>
+</thead>
+<tbody><tr>
+<td><code>microbit-bridge.netlify.app</code></td>
+<td>시뮬레이터·AI 브리지·수업 자료·AI 모델(전부 이 주소에서 받음)</td>
+</tr>
+<tr>
+<td><code>makecode.microbit.org</code></td>
+<td>블록 편집기(시뮬레이터 안에 들어감, 코드에서 확인된 주소)</td>
+</tr>
+<tr>
+<td><code>makecode.com</code> 과 <code>*.makecode.com</code> (예: <code>cdn.makecode.com</code>)</td>
+<td>MakeCode가 쓰는 파일·번역</td>
+</tr>
+<tr>
+<td><code>github.com</code>, <code>api.github.com</code>, <code>raw.githubusercontent.com</code></td>
+<td>로보독 확장(<code>kocoafab/robodog</code>)을 받을 때</td>
+</tr>
+</tbody></table></div>
+<p>위 도메인 중 <code>makecode.microbit.org</code> 와 <code>microbit-bridge.netlify.app</code> 외에는 MakeCode 편집기가 내부에서 쓰는 주소라, 학교 환경에 따라 더 필요할 수 있습니다. 막히면 브라우저 개발자 도구(F12) → Network 탭에서 빨간 줄로 막힌 주소를 정보부에 전달하세요. 막혀도 <strong>글자 코드(JavaScript) 탭</strong>은 인터넷 없이(시뮬레이터가 열리면) 쓸 수 있습니다. (<code>file://</code>로 열면 모델을 <code>tfhub.dev</code> 에서 받으므로 배포 주소 사용을 권장합니다.)</p>
+<h3>보안 정책(CSP)은 지금 &quot;보고만&quot; 모드</h3>
+<p>사이트는 <code>Content-Security-Policy-Report-Only</code>(netlify.toml)로 동작합니다. 위반이 있어도 <strong>막지 않고 브라우저 콘솔에만 기록</strong>하므로 수업이 깨지지 않습니다. 차단(enforcing)으로 바꾸는 시점과 방법은 다음과 같습니다.</p>
+<ol>
+<li>수업에 쓰는 화면(시뮬레이터, AI 브리지, MakeCode, 수업 자료)을 한 번씩 열어 F12 콘솔에 <code>Content Security Policy</code> 위반 경고가 없는지 봅니다.</li>
+<li>경고가 있으면 그 주소를 허용 목록에 추가하거나 불필요한 불러오기를 없앱니다. 학교 PC 두세 곳에서 한 학기 동안 경고가 없을 때 전환합니다.</li>
+<li>전환은 netlify.toml에서 <code>Content-Security-Policy-Report-Only</code> 줄의 이름을 <code>Content-Security-Policy</code>로 바꾸면 됩니다. 문제가 생기면 다시 <code>-Report-Only</code>로 되돌립니다.</li>
+</ol>
+<h3>교사 모드(대본 보기) 비밀번호</h3>
+<ul>
+<li>지금 비밀번호는 <strong>0000</strong> 이고, 이것은 <strong>학생이 실수로 대본을 펼치지 않게 하는 가림막</strong>일 뿐 보안 장치가 아닙니다(학생이 개발자 도구로 볼 수 있습니다). 정말 숨겨야 하는 내용은 슬라이드에 넣지 마세요.</li>
+<li>바꾸려면 새 번호의 SHA-256 값을 구해 <code>bridge/lessons/viewer.js</code> 의 <code>TEACHER_PIN_HASH</code> 값으로 바꾸고 다시 배포합니다.</li>
+</ul>
+<pre tabindex="0"><code>node -e &quot;console.log(require(&#39;crypto&#39;).createHash(&#39;sha256&#39;).update(&#39;새번호&#39;).digest(&#39;hex&#39;))&quot;
+</code></pre>
+<h3>반 코드(방 코드 4자리)는 알아맞힐 수 있나요</h3>
+<p>4자리라서 학생이 아무 숫자나 넣어 다른 반 방에 들어올 수는 있습니다. 하지만 들어와도 <strong>보기만 가능</strong>하고(슬라이드를 넘길 수 없음. 열쇠가 있어야 넘길 수 있음), 방을 바꾸는 열쇠는 방을 만든 교사 브라우저에만 있습니다. 수업마다 새 방(새 코드)을 만들어 쓰세요.</p>
 <h2>3. 안전 장치 정리</h2>
 <div class="tbl"><table>
 <thead>

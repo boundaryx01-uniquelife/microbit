@@ -10,6 +10,8 @@
   body { --page-w: 1100px; }
   a, a:visited { color: var(--accent); }
   input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+  label:has(> input[type=checkbox]), label:has(> input[type=file]) { display: inline-flex; align-items: center; min-height: 32px; cursor: pointer; }
+  .site-foot a { display: inline-block; padding: 8px 6px; }
   input[type=range] { height: 28px; accent-color: var(--accent); }
   .camwrap { position: relative; }
   .camwrap:not(.live)::after { content: '📷 [카메라 켜기]를 누르면 여기에 보여요'; position: absolute; inset: 0; display: grid; place-items: center; color: #d6dbe6; font-size: 17px; font-weight: 700; text-align: center; padding: 16px; pointer-events: none; }
@@ -27,6 +29,8 @@
   button:disabled { opacity: .45; cursor: not-allowed; }
   button:focus-visible, input:focus-visible, select:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
   #btnStop { background: var(--stop); color: var(--stop-text); border-color: var(--stop); font-weight: 800; }
+  /* 휴대폰: 머리 메뉴의 흐림 효과가 fixed 기준을 머리 메뉴로 바꿔 멈춤 버튼이 메뉴를 덮었음 → 효과를 끔 */
+  @media (max-width: 720px) { .gnb { backdrop-filter: none; -webkit-backdrop-filter: none; } .gnb .slot { margin-left: 0; flex-basis: 100%; } .status { font-size: 13px; } main { padding-bottom: 96px; } }
   @media (max-width: 720px) { #btnStop { position: fixed; right: 14px; bottom: 14px; z-index: 30; min-height: 52px; padding: 12px 20px; box-shadow: var(--shadow-lg); } }
   #btnStop.latched { outline: 4px solid var(--stop); outline-offset: 3px; animation: pulse 1.2s infinite; }
   @keyframes pulse { 50% { outline-color: transparent; } }
@@ -63,18 +67,23 @@
   table { border-collapse: collapse; font-size: 14px; margin-top: 8px; }
   th, td { border: 1px solid var(--line); padding: 4px 8px; text-align: center; }
   .scroll { overflow-x: auto; }
+  #notice { position: fixed; left: 50%; transform: translateX(-50%); bottom: 16px; z-index: 40; max-width: min(640px, calc(100vw - 24px)); display: flex; gap: 12px; align-items: center;
+    background: var(--ink, #1c2430); color: #fff; padding: 12px 14px; border-radius: 12px; box-shadow: var(--shadow-lg); font-size: 15px; line-height: 1.5; }
+  #notice[hidden] { display: none; } #notice.bad { background: #8f1d1d; } #notice button { flex: none; min-height: 36px; padding: 4px 12px; }
+  @media (max-width: 720px) { #notice { bottom: 84px; } }
 </style>
 </head>
 <body>
 <header class="gnb"><div class="gnb-in">
   <a class="brand" href="./"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#2456e5"/><path d="M22.2 5.6a5.6 5.6 0 0 1 4.3 3.4" stroke="#fff" stroke-width="1.8" fill="none" stroke-linecap="round" opacity=".85"/><rect x="4.5" y="10.5" width="23" height="13" rx="6.5" fill="#fff"/><rect x="8" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><rect x="17.4" y="13.2" width="6.6" height="7.6" rx="2.2" fill="#111827"/><circle cx="11.3" cy="17" r="1.6" fill="#8fd8ff"/><circle cx="20.7" cy="17" r="1.6" fill="#8fd8ff"/></svg>
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
-  <nav aria-label="주 메뉴"><a href="./">처음</a><a href="sim/" target="_blank" rel="noopener" title="새 탭에서 열기">시뮬레이터 <span aria-hidden="true">↗</span></a><a href="ai.html" aria-current="page">AI 브리지</a><a href="docs/" target="_blank" rel="noopener" title="새 탭에서 열기">수업 자료 <span aria-hidden="true">↗</span></a></nav>
+  <nav aria-label="주 메뉴"><a href="./">처음</a><a href="sim/">시뮬레이터</a><a href="ai.html" aria-current="page">AI 브리지</a><a href="docs/">수업 자료</a></nav>
   <div class="slot"><span id="modelStatus" class="status off">AI 준비 중…</span>
     <span id="serialStatus" class="status off">마이크로비트 연결 안 됨</span>
     <button id="btnStop" title="키보드 Esc 키로도 멈출 수 있어요">■ 멈춤</button></div>
 </div></header>
 
+<div id="notice" role="status" aria-live="polite" hidden></div>
 <main>
   <section>
     <h2><span class="step">1</span>카메라 켜기</h2>
@@ -177,6 +186,31 @@
   let classes = [];             // {name, count}
   let holding = -1, holdTimer = null;
   let port = null, writer = null, writeChain = Promise.resolve();
+  // 안내 메시지(alert 대신): 화면 안에 보이고, 화면 읽기 프로그램에도 읽힘
+  let noticeTimer = 0;
+  function notify(msg, kind, ms) {
+    const el = $('notice'); el.textContent = '';
+    const span = document.createElement('span'); span.textContent = msg;
+    const x = document.createElement('button'); x.type = 'button'; x.textContent = '닫기'; x.onclick = () => { el.hidden = true; };
+    el.append(span, x); el.className = kind === 'bad' ? 'bad' : ''; el.hidden = false;
+    clearTimeout(noticeTimer); if (ms !== 0) noticeTimer = setTimeout(() => { el.hidden = true; }, ms || 9000);
+  }
+  function camError(e) {
+    switch (e && e.name) {
+      case 'NotAllowedError': case 'SecurityError': return "카메라 사용을 '허용'해 주세요 (주소창 왼쪽 자물쇠 → 카메라 → 허용)";
+      case 'NotFoundError': case 'OverconstrainedError': case 'DevicesNotFoundError': return '카메라를 찾지 못했어요. 연결을 확인하세요';
+      case 'NotReadableError': case 'AbortError': return '다른 프로그램이 카메라를 쓰고 있어요. 그 프로그램을 닫고 다시 시도하세요';
+      default: return '카메라를 켤 수 없어요. 카메라 연결을 확인하고 다시 눌러 보세요.';
+    }
+  }
+  function serialError(e) {
+    switch (e && e.name) {
+      case 'SecurityError': return "USB 사용이 막혀 있어요. 주소창 왼쪽 자물쇠 → 사이트 설정에서 '시리얼 포트'를 허용해 주세요.";
+      case 'InvalidStateError': return '이미 연결되어 있어요. 연결 끊기를 누른 뒤 다시 해 보세요.';
+      case 'NetworkError': return '마이크로비트와 연결하지 못했어요. 데이터가 되는 USB 선인지(충전 전용 선 X) 확인하고, MakeCode 등 다른 탭의 연결을 끊거나 닫은 뒤 다시 해 보세요.';
+      default: return '연결하지 못했어요. MakeCode 등 다른 탭이 마이크로비트를 쓰고 있으면 그 탭의 연결을 끊거나 닫고, 데이터 USB 선인지 확인한 뒤 다시 해 보세요.';
+    }
+  }
   let estop = false;            // 멈춤 잠금
   let lastTop = -1, stableCount = 0, unsureCount = 0;
   let aiTarget = 0, aiValidAt = 0;
@@ -218,8 +252,8 @@
   }
 
   function canCapture() {
-    if (!modelReady) { alert('AI가 아직 준비 중이에요. 위쪽에 "AI 준비 완료"가 뜰 때까지 기다려 주세요.'); return false; }
-    if (!stream) { alert('카메라를 먼저 켜 주세요.'); return false; }
+    if (!modelReady) { notify('AI가 아직 준비 중이에요. 위쪽에 "AI 준비 완료"가 뜰 때까지 기다려 주세요.'); return false; }
+    if (!stream) { notify('카메라를 먼저 켜 주세요.'); return false; }
     return true;
   }
   function startHold(i, hb) {
@@ -344,8 +378,8 @@
     await listCams();
     log('카메라 켜짐');
   }
-  $('btnCam').onclick = () => startCam($('camSelect').value).catch(e => { alert('카메라를 켤 수 없어요: ' + e.message); log('카메라 오류: ' + e.message); });
-  $('camSelect').onchange = (e) => startCam(e.target.value).catch(err => log('카메라 오류: ' + err.message));
+  $('btnCam').onclick = () => startCam($('camSelect').value).catch(e => { notify(camError(e), 'bad'); log('카메라 오류: ' + e.name + ' ' + e.message); });
+  $('camSelect').onchange = (e) => startCam(e.target.value).catch(err => { notify(camError(err), 'bad'); log('카메라 오류: ' + err.name + ' ' + err.message); });
 
   // ---------------- 마이크로비트(Web Serial) ----------------
   function setSerialUI(on) {
@@ -355,7 +389,7 @@
   }
   async function connectSerial() {
     if (!('serial' in navigator)) {
-      alert('이 브라우저는 USB 연결을 지원하지 않아요.\nPC(윈도우·맥)의 크롬이나 엣지에서 https 주소로 열어 주세요.');
+      notify('이 브라우저는 USB 연결을 지원하지 않아요. PC(윈도우·맥)의 크롬이나 엣지에서 https 주소로 열어 주세요.', 'bad');
       return;
     }
     let p = null;
@@ -372,8 +406,8 @@
       try { if (p && p.readable) await p.close(); } catch (_) {}
       port = null; writer = null; setSerialUI(false);
       if (e.name !== 'NotFoundError') {
-        log('연결 실패: ' + e.message);
-        alert('연결하지 못했어요. MakeCode 등 다른 탭이 마이크로비트를 쓰고 있으면 그 탭의 연결을 끊거나 닫은 뒤 다시 해 보세요.');
+        log('연결 실패: ' + e.name + ' ' + e.message);
+        notify(serialError(e), 'bad');
       }
     }
   }
@@ -452,7 +486,7 @@
       $('modelStatus').textContent = 'AI 불러오기 실패';
       $('result').textContent = 'AI를 불러오지 못했어요';
       log('AI 모델 오류: ' + e.message);
-      alert('AI를 불러오지 못했어요.\n① 인터넷 연결 확인 ② 파일을 더블클릭해 연 경우 선생님이 안내한 웹 주소로 열기 ③ 새로고침(F5)');
+      notify('AI를 불러오지 못했어요. ① 인터넷 연결 확인 ② 파일을 더블클릭해 연 경우 선생님이 안내한 웹 주소로 열기 ③ 새로고침(F5)', 'bad', 0);
     }
   }
 
@@ -520,7 +554,7 @@
   $('btnEval').onclick = async () => {
     const trained = classes.filter(c => c.count > 0).length;
     const valid = testSet.filter(t => t.label < classes.length);
-    if (trained < 2 || !valid.length) { alert('학습 사진(2종류 이상)과 시험 사진이 필요해요.'); return; }
+    if (trained < 2 || !valid.length) { notify('학습 사진(2종류 이상)과 시험 사진이 필요해요.'); return; }
     const untrainedTest = [...new Set(valid.filter(t => classes[t.label].count === 0).map(t => t.label + 1))];
     const n = classes.length;
     const mat = Array.from({ length: n }, () => new Array(n).fill(0));
@@ -579,7 +613,7 @@
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
   $('btnSave').onclick = () => {
-    if (!knn || !knn.getNumClasses()) { alert('저장할 학습 데이터가 없어요.'); return; }
+    if (!knn || !knn.getNumClasses()) { notify('저장할 학습 데이터가 없어요.'); return; }
     const ds = knn.getClassifierDataset();
     const data = {};
     Object.keys(ds).forEach(k => { data[k] = { shape: ds[k].shape, values: Array.from(ds[k].dataSync()) }; });
@@ -590,7 +624,7 @@
     const f = e.target.files[0];
     e.target.value = '';
     if (!f) return;
-    if (!modelReady) { alert('AI가 준비된 뒤에 불러와 주세요.'); return; }
+    if (!modelReady) { notify('AI가 준비된 뒤에 불러와 주세요.'); return; }
     const ds = {};
     try {
       const obj = JSON.parse(await f.text());
@@ -617,7 +651,7 @@
       log('학습 데이터 불러옴');
     } catch (err) {
       Object.values(ds).forEach(t => { try { t.dispose(); } catch (_) {} });
-      alert('불러오기 실패: ' + err.message);
+      notify('불러오기에 실패했어요. 이 프로그램에서 저장한 파일(.json)이 맞는지 확인하세요. (' + err.message + ')', 'bad');
     }
   };
 

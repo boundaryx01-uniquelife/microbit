@@ -299,11 +299,15 @@ export class Robot {
 // ------------------------------------------------------------
 export class World {
   constructor() {
-    this.table = { w: 120, h: 80 };   // cm
     this.useTable = true;
     this.extra = [];                   // 군무용 추가 로봇들
     this.obstacles = [];               // {x,y,w,h}
-    this.start = { x: 60, y: 55, heading: 0 };
+    this.setSize(120, 80);
+  }
+  // 공간 크기(cm). 처음 자리는 가운데에서 조금 아래(앞쪽으로 걸을 공간 확보)
+  setSize(w, h) {
+    this.table = { w, h };
+    this.start = { x: w / 2, y: h / 2 + 15, heading: 0 };
   }
   offTable(x, y) { return this.useTable && (x < 0 || y < 0 || x > this.table.w || y > this.table.h); }
   collides(x, y, r) {
@@ -325,6 +329,18 @@ export class World {
 // 코드 변환: TypeScript 타입 제거 + 협동 스케줄링(await) 삽입
 // ------------------------------------------------------------
 const ASYNC_NS = new Set(['basic', 'input', 'radio', 'loops', 'control', 'serial', 'robodog', 'pins', 'music', 'led', 'game']);
+// Babel(약 2.8MB)은 처음 실행할 때 또는 화면이 한가할 때 불러옴(첫 화면을 막지 않음)
+let babelP = null;
+export function ensureBabel() {
+  if (window.Babel) return Promise.resolve();
+  if (!babelP) babelP = new Promise((res, rej) => {
+    const el = document.createElement('script');
+    el.src = new URL('./lib/babel.min.js', import.meta.url).href;
+    el.onload = () => res(); el.onerror = () => { babelP = null; rej(new Error('Babel 로드 실패')); };
+    document.head.appendChild(el);
+  });
+  return babelP;
+}
 export function compile(src) {
   const wrapped = `async function __main() {\n${src}\n}`;
   const plugin = ({ types: t }) => {
@@ -495,6 +511,7 @@ export class Runner {
     this.setDisplay(Array.from({ length: 5 }, () => new Array(5).fill(0)));
     let mainFactory;
     try {
+      await ensureBabel();
       const code = compile(src);
       const env = this.buildEnv();
       const names = Object.keys(env);
@@ -519,10 +536,11 @@ export class Runner {
   }
   setButton(btn, down) { this.buttons[btn] = down; }
   radioReceive(n) {
+    if (this.robot.world) this.robot.world.radioLast = { n, t: performance.now() };   // 장면의 AI 신호 카드 표시용
     if (!this.running) return;
     (this.handlers.radioNum || []).forEach(h => this.spawn(h, n));
   }
-  robotButton() { this.robotBtnUntil = performance.now() + 300; }
+  robotButton() { this.robotBtnUntil = performance.now() + 300; if (this.robot.world) this.robot.world.btnT = performance.now(); }
 
   // ---- 환경(전역 이름들) ----
   buildEnv() {

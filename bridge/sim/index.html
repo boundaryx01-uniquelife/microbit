@@ -26,6 +26,7 @@
   section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px; min-width: 0; box-shadow: var(--shadow-sm); }
   h2 { margin: 0 0 8px; font-size: 16px; }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  #examples { max-width: min(100%, 360px); min-width: 0; text-overflow: ellipsis; }
   select { font: inherit; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: var(--r-sm); padding: 8px 12px; cursor: pointer; }
   button { min-height: 38px; padding: 7px 13px; font-size: 14.5px; }
   button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 700; }
@@ -54,10 +55,33 @@
   .sub { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 8px; margin-top: 8px; }
   #side2d { width: 100%; height: 130px; display: block; border-radius: 10px; background: var(--bg); }
   #eyes { width: 100%; height: 130px; display: block; border-radius: 10px; }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 0 0 8px; padding: 8px 10px; border-radius: 12px; border: 2px solid var(--accent); background: var(--accent-soft); }
+  .quick[hidden], .quick .qgrp[hidden] { display: none; }
+  .quick .qgrp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .quick .qlab { font-weight: 700; font-size: 13.5px; white-space: nowrap; }
+  .quick button { min-width: 44px; min-height: 44px; padding: 6px 10px; font-weight: 700; }
+  .quick #qNums { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .quick #qNums button.last { outline: 3px solid var(--accent); }
+  .quick .qrep { display: inline-flex; gap: 4px; align-items: center; font-size: 13px; white-space: nowrap; min-height: 32px; }
   #view3d { width: 100%; aspect-ratio: 3 / 2; max-height: 52vh; border-radius: 10px; overflow: hidden; background: #dfe6f0; }
   .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px; }
   .panel { border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
   .panel h2.ph { margin: 0 0 6px; font-size: 14px; }
+  .howto { margin-top: 8px; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--accent); background: var(--accent-soft); }
+  .howto-head { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+  .howto-head .close { margin-left: auto; min-height: 32px; padding: 2px 10px; }
+  .howto .lvl { white-space: nowrap; flex: none; font-size: 12.5px; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-text); font-weight: 700; }
+  .howto p.note { margin: 4px 0 6px; }
+  .howto-sub { font-size: 14.5px; }
+  .howto ol { margin: 4px 0 6px; padding-left: 24px; font-size: 14.5px; line-height: 1.6; }
+  .howto summary { cursor: pointer; font-weight: 700; font-size: 14.5px; min-height: 28px; }
+  .needs { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin-top: 10px; padding: 10px; border-radius: 12px; background: var(--accent-soft); }
+  .needs > b { width: 100%; font-size: 14px; }
+  .needs .need { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; max-width: 300px; font-weight: 700; }
+  .needs .need small { font-weight: 400; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+  .needs .need.warn { border-color: var(--warn); }
+  .panel.need-on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+  .panel.need-off { opacity: .6; } .panel.need-off:hover, .panel.need-off:focus-within { opacity: 1; }
   .mb { display: grid; grid-template-columns: auto auto auto; gap: 8px; align-items: center; justify-content: start; }
   #mbled { width: 110px; height: 110px; background: #111; border-radius: 8px; }
   .mbbtn { width: 44px; height: 44px; border-radius: 50%; font-weight: 800; padding: 0; user-select: none; touch-action: none; }
@@ -66,8 +90,12 @@
   .radio button { min-width: 44px; min-height: 44px; padding: 6px 8px; }
   header a { display: inline-block; padding: 10px 4px; font-size: 15px; }
   label { font-size: 13px; }
+  label:has(> input[type=checkbox]) { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 6px 2px 0; cursor: pointer; }
+  .site-foot a { display: inline-block; padding: 10px 6px; }
+  #battery { height: 28px; }
+  label:has(> #battery) { min-height: 36px; align-items: center; }
   input[type=range] { width: 120px; accent-color: var(--accent); }
-  input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
+  input[type=checkbox] { width: 24px; height: 24px; flex: none; margin: 0; accent-color: var(--accent); }
   .hidden { display: none !important; }
   .codetabs { margin: 8px 0 6px; flex-wrap: wrap; }
   .mcwrap iframe { width: 100%; height: 74vh; min-height: 480px; border: 1px solid var(--line); border-radius: 10px; background: #fff; }
@@ -75,9 +103,10 @@
   /* 코드 칸 ↔ 로보독 칸 폭 조절 손잡이 (끌기·화살표 키, 두 번 누르면 원래대로) */
   main.sized, body.mc-mode main.sized { grid-template-columns: minmax(0, 1fr) 12px var(--rw); }
   .splitter { cursor: col-resize; border-radius: 6px; position: relative; touch-action: none; align-self: stretch; }
-  .splitter::before { content: ""; position: absolute; left: 4px; width: 4px; top: 0; bottom: 0; border-radius: 2px; background: var(--line); }
+  .splitter { --bar: var(--line); }
+  .splitter::before { content: ""; position: absolute; left: -6px; width: 24px; top: 0; bottom: 0; background: linear-gradient(to right, transparent 10px, var(--bar) 10px, var(--bar) 14px, transparent 14px); }
   .splitter::after { content: "⋮"; position: sticky; top: 45vh; display: block; text-align: center; font-weight: 900; color: var(--muted); line-height: 1; }
-  .splitter:hover::before, .splitter:focus-visible::before, body.resizing .splitter::before { background: var(--accent); }
+  .splitter:hover, .splitter:focus-visible, body.resizing .splitter { --bar: var(--accent); }
   .splitter:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   body.resizing { cursor: col-resize; user-select: none; }
   body.resizing iframe { pointer-events: none; }
@@ -129,9 +158,9 @@
   .cards button.playing { border-color: var(--accent); outline: 3px solid var(--accent); }
   .caption { margin-top: 8px; padding: 8px 12px; border-radius: 10px; background: var(--bg); font-size: 15px; font-weight: 700; min-height: 40px; }
   .caption .step { display: inline-block; background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; font-size: 12px; margin-right: 8px; vertical-align: 2px; }
+  .panel.auto { outline: 3px solid var(--accent); outline-offset: 2px; }
   .mbbtn.auto, .radio button.auto { background: var(--accent); color: var(--accent-text); }
 </style>
-<script src="lib/babel.min.js"></script>
 <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
 </head>
 <body>
@@ -148,7 +177,7 @@
       <div class="askbar">
         <label for="askText" class="asklabel"><span class="stepno">1</span>🤖 말로 만들기 <span id="askMode" class="badge">확인 중…</span></label>
         <textarea id="askText" rows="1" maxlength="600" aria-label="로보독에게 시킬 일"
-          placeholder="예) A 버튼 누르면 멍멍 짖어"></textarea>
+          placeholder="예) 본체 버튼 누르면 멍멍 짖어"></textarea>
         <button id="askBtn" class="primary">코드 만들기</button>
       </div>
       <div class="askmore row">
@@ -178,6 +207,14 @@
       <button id="btnReset">↺ 처음으로</button>
       <span id="runMsg" role="status"></span>
     </div>
+    <section id="howto" class="howto" hidden aria-live="polite">
+      <div class="howto-head"><b id="howtoTitle"></b> <span id="howtoLevel" class="lvl"></span>
+        <button id="howtoClose" class="close" aria-label="따라 하기 안내 닫기">✕</button></div>
+      <p id="howtoGroup" class="note"></p>
+      <b class="howto-sub">💻 시뮬레이터에서 따라 하기</b>
+      <ol id="howtoSim"></ol>
+      <details><summary>🐕 실물 로보독으로 해 보기</summary><ol id="howtoReal"></ol></details>
+    </section>
     <p class="note codehint">블록 코딩 화면에서 블록을 고치면 로보독이 바로 움직여요. MakeCode가 안 열리면 <b>글자 코드</b> 탭에 코드를 붙여넣고 <b>▶ 실행</b>.</p>
     <div class="row" style="justify-content:space-between;gap:6px">
     <div class="tabs codetabs" role="tablist" aria-label="코드 보기">
@@ -217,6 +254,13 @@
       <button id="tab2d" role="tab" aria-selected="false">2D 보기 (가벼움)</button>
     </div>
     <label class="row" style="gap:6px;margin:-4px 0 6px"><input id="follow" type="checkbox" checked> 3D 카메라 따라가기</label>
+    <!-- 빠른 조작: 코드에 필요한 버튼만 로보독 화면 바로 위에(스크롤 없이 누르고 바로 보기) -->
+    <div id="quick" class="quick" hidden aria-label="빠른 조작">
+      <div class="qgrp" id="qBody"><span class="qlab">🔘 본체</span><button id="qRobot" class="primary">본체 버튼 누르기</button></div>
+      <div class="qgrp" id="qRadio"><span class="qlab">📡 리모컨</span><span id="qNums"></span>
+        <label class="qrep"><input id="qRepeat" type="checkbox"> 계속 보내기</label></div>
+      <div class="qgrp" id="qMb"><span class="qlab">🅰 마이크로비트</span><button data-q="A">A</button><button data-q="B">B</button><button data-q="AB">A+B</button></div>
+    </div>
     <div id="pane2d" class="hidden">
       <canvas id="top2d" aria-label="위에서 본 책상과 로보독"></canvas>
       <div class="sub">
@@ -232,8 +276,9 @@
 
     <details class="fold" id="ctrlBox" open>
     <summary><span><span class="stepno">3</span>버튼 눌러 시험하기 · 라디오 · 센서 · 환경</span></summary>
+    <div id="needs" class="needs" hidden aria-live="polite"></div>
     <div class="panels">
-      <div class="panel">
+      <div class="panel" id="pMb">
         <h2 class="ph">마이크로비트</h2>
         <div class="mb">
           <button class="mbbtn" data-btn="A" aria-label="A 버튼">A</button>
@@ -243,14 +288,14 @@
         <div class="row" style="margin-top:8px"><button id="btnAB">A+B 함께</button></div>
         <p class="note keep" style="margin:6px 0 0">⚠ 실물에서는 로보독 등에 꽂으면 A·B 버튼이 <b>가려져요</b>. 로보독 코드에서는 오른쪽 <b>로보독 본체 버튼</b>이나 라디오를 쓰세요.</p>
       </div>
-      <div class="panel radio">
+      <div class="panel radio" id="pRadio">
         <h2 class="ph">라디오로 숫자 보내기</h2>
         <div class="row" id="radioBtns"></div>
         <label class="row" style="gap:6px"><input id="radioRepeat" type="checkbox"> 마지막 숫자 계속 보내기(0.5초마다)</label>
         <p class="note">AI 브리지 대신 숫자를 직접 보내요. 한 번 누르면 한 번만 가요 — 예제 3처럼 2초 동안 신호가 없으면 멈추는 코드는 <b>계속 보내기</b>를 켜세요. 받는 그룹: <b id="radioGroup">-</b></p>
         <label class="row" style="gap:6px"><input id="bridgeLink" type="checkbox" checked> 같은 컴퓨터의 AI 브리지 결과 받기</label>
       </div>
-      <div class="panel">
+      <div class="panel" id="pSensor">
         <h2 class="ph">로보독 센서</h2>
         <div class="kv">
           <span>거리센서</span><b id="sTof">-</b>
@@ -263,12 +308,19 @@
         </div>
         <label class="row" style="gap:6px;margin-top:6px">배터리 <input id="battery" type="range" min="0" max="100" value="100"> <b id="batVal">100</b>%</label>
       </div>
-      <div class="panel">
+      <div class="panel" id="pEnv">
         <h2 class="ph">환경</h2>
         <div class="row">
           <button id="btnTable" class="on">책상(떨어짐 있음)</button>
           <button id="btnFloor">바닥(벽 있음)</button>
         </div>
+        <label class="row" style="gap:6px;margin-top:6px">공간 크기
+          <select id="spaceSize">
+            <option value="120x80">작게 120×80cm (교실 책상)</option>
+            <option value="200x140" selected>보통 2×1.4m</option>
+            <option value="300x200">넓게 3×2m (교실 바닥)</option>
+          </select>
+        </label>
         <div class="row" style="margin-top:6px">
           <button id="btnPlace">장애물 놓기</button>
           <button id="btnClearObs">장애물 지우기</button>
@@ -284,10 +336,11 @@
 <footer class="site-foot">빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. · <a href="../docs/">수업 자료</a> · <a href="../NOTICE.md">오픈소스·출처 고지</a></footer>
 
 <script type="module">
-import { Robot, World, Runner, EXPRESSIONS, makeRobodogApi, compile } from './runtime.js';
+import { Robot, World, Runner, EXPRESSIONS, makeRobodogApi, compile, ensureBabel } from './runtime.js';
 import { ruleAssistant, SAMPLE_REQUESTS, checkAi, askAi } from './assistant.js';
 import { View2D, drawEyes } from './view2d.js';
-import { EXAMPLES } from './examples.js';
+import { EXAMPLES, GROUPS } from './examples.js';
+import { detectDevices, DEVICE_INFO, runHint } from './devices.js';
 
 const $ = (id) => document.getElementById(id);
 const world = new World();
@@ -316,10 +369,24 @@ let view3d = null, mode3d = true;   // 기본 3D 보기(?view=2d 이면 2D)
 
 // ---------- 예제 / 코드 ----------
 const sel = $('examples');
-sel.innerHTML = '<option value="">예제 불러오기…</option>' + EXAMPLES.map(e => `<option value="${e.id}">${e.title}</option>`).join('');
+// 예제는 '본체 버튼' / '라디오 리모컨' / '점검'으로 나눠 보여 줌
+const escH = (t) => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+sel.innerHTML = '<option value="">예제 고르기 (본체 버튼 / 라디오 리모컨)…</option>' + GROUPS.map(g =>
+  `<optgroup label="${escH(g.title)}">` + EXAMPLES.filter(e => e.group === g.id).map(e => `<option value="${e.id}">${escH(e.title)} · ${escH(e.level)}</option>`).join('') + '</optgroup>').join('');
+function showHowto(ex) {
+  if (!ex) { $('howto').hidden = true; return; }
+  const g = GROUPS.find(x => x.id === ex.group) || {};
+  $('howtoTitle').textContent = `${g.title ? g.title.split(' ')[0] + ' ' : ''}${ex.title}`;
+  $('howtoLevel').textContent = ex.level || '';
+  $('howtoGroup').textContent = g.note || '';
+  $('howtoSim').innerHTML = (ex.sim || []).map(t => `<li>${escH(t)}</li>`).join('');
+  $('howtoReal').innerHTML = (ex.real || []).map(t => `<li>${escH(t)}</li>`).join('');
+  $('howto').hidden = false;
+}
+$('howtoClose').onclick = () => { $('howto').hidden = true; };
 sel.onchange = () => {
   const ex = EXAMPLES.find(e => e.id === sel.value);
-  if (ex && (!$('code').value.trim() || confirm('지금 코드를 예제로 바꿀까요?'))) { $('code').value = ex.code; save(); }
+  if (ex && (!$('code').value.trim() || confirm('지금 코드를 예제로 바꿀까요?'))) { $('code').value = ex.code; save(); applyDevices(ex.code); showHowto(ex); }
   sel.value = '';
 };
 function save() { try { localStorage.setItem('robodog-sim-code', $('code').value); } catch (e) {} }
@@ -330,11 +397,40 @@ $('code').addEventListener('keydown', (e) => {
   if (e.key === 'Tab') { e.preventDefault(); const ta = e.target, s = ta.selectionStart; ta.setRangeText('    ', s, ta.selectionEnd, 'end'); save(); }
 });
 
+// ---------- 코드에 필요한 장치를 장면·패널에 함께 ----------
+let curDevs = [];
+// 처음 자리 앞 약 37cm (공간 크기가 바뀌어도 로보독 기준으로)
+const frontObstacle = () => ({ x: world.start.x - 5, y: world.start.y - 43, w: 10, h: 6 });
+function applyDevices(code, opts = {}) {
+  const devs = curDevs = detectDevices(code);
+  world.devices = devs; world.radioLast = null;
+  if (devs.includes('tof') && !world.obstacles.length && !opts.keepScene) {
+    world.obstacles.push(frontObstacle());
+    log('거리센서를 쓰는 코드라 로보독 앞에 장애물을 놓았어요');
+  }
+  updateQuick(devs);
+  const box = $('needs');
+  box.hidden = !devs.length;
+  box.innerHTML = devs.length ? '<b>이 코드에 필요한 장치</b>' + devs.map(d => {
+    const i = DEVICE_INFO[d];
+    return `<button type="button" class="need${i.warn ? ' warn' : ''}" data-panel="${i.panel}" title="${i.how}"><span aria-hidden="true">${i.icon}</span> ${i.label}<small>${i.how}</small></button>`;
+  }).join('') : '';
+  const used = new Set(devs.map(d => DEVICE_INFO[d].panel));
+  document.querySelectorAll('.panels .panel').forEach(p => { p.classList.toggle('need-on', used.has(p.id)); p.classList.toggle('need-off', devs.length > 0 && !used.has(p.id)); });
+  if (devs.length) $('ctrlBox').open = true;
+  return devs;
+}
+$('needs').addEventListener('click', (e) => {
+  const b = e.target.closest('button[data-panel]'); if (!b) return;
+  const p = $(b.dataset.panel); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); flash(p);
+});
+
 async function runCode(code, msg) {
   robot.reset(); runner.stop();
   if (!code.trim()) { runMsg('코드가 비어 있어요. 도우미에게 말하거나 예제를 불러오세요.', 'err'); return false; }
+  const devs = applyDevices(code, { keepScene: !!demoActive });
   const ok = await runner.start(code);
-  if (ok) { runMsg('▶ 실행 중 — A·B 버튼을 눌러 보세요', 'ok'); log(msg || '실행 시작 — 마이크로비트 A/B 버튼과 라디오 숫자로 시험해 보세요'); showRobot(); }
+  if (ok) { runMsg('▶ 실행 중 — ' + runHint(devs), 'ok'); log(msg || '실행 시작 — ' + runHint(devs)); showRobot(); }
   return ok;
 }
 $('btnRun').onclick = () => runCode($('code').value);
@@ -350,6 +446,29 @@ document.querySelectorAll('.mbbtn').forEach(b => {
   b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); runner.press(btn); } });
 });
 $('btnAB').onclick = () => runner.press('AB');
+// ---------- 빠른 조작(로보독 화면 바로 위) ----------
+for (let n = 0; n <= 4; n++) {
+  const b = document.createElement('button'); b.textContent = n; b.dataset.n = n;
+  b.title = n === 0 ? '0 보내기' : `${n} 보내기 (리모컨 ${['', 'A', 'B', 'A+B', ''][n] || '숫자 ' + n})`;
+  b.setAttribute('aria-label', `라디오 숫자 ${n} 보내기`);
+  $('qNums').appendChild(b);
+}
+$('qNums').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (e.isTrusted) stopDemo();
+  const n = Number(b.dataset.n);
+  runner.radioReceive(n); lastRadio = n; log(`라디오 받음: ${n}`);
+  $('qNums').querySelectorAll('button').forEach(x => x.classList.toggle('last', x === b));
+});
+$('qRepeat').onchange = (e) => { $('radioRepeat').checked = e.target.checked; };
+$('radioRepeat').addEventListener('change', (e) => { $('qRepeat').checked = e.target.checked; });
+$('qRobot').onclick = (e) => { if (e.isTrusted) stopDemo(); flash($('qRobot')); runner.robotButton(); };
+document.querySelectorAll('#qMb button').forEach(b => b.onclick = (e) => { if (e.isTrusted) stopDemo(); runner.press(b.dataset.q); });
+function updateQuick(devs) {
+  const body = devs.includes('button'), radio = devs.includes('radio'), mb = devs.includes('mbBtn');
+  $('qBody').hidden = !body; $('qRadio').hidden = !radio; $('qMb').hidden = !mb;
+  $('quick').hidden = !(body || radio || mb);
+}
 $('btnRobot').onclick = () => runner.robotButton();
 $('battery').oninput = (e) => { runner.battery = Number(e.target.value); $('batVal').textContent = e.target.value; };
 
@@ -375,6 +494,24 @@ try {
 const setTable = (on) => { world.useTable = on; $('btnTable').classList.toggle('on', on); $('btnFloor').classList.toggle('on', !on); };
 $('btnTable').onclick = () => setTable(true);
 $('btnFloor').onclick = () => setTable(false);
+// 공간 크기: 바꾸면 로보독을 새 공간의 처음 자리로, 장애물은 지움
+let spaceSize = '200x140';
+try { const v = localStorage.getItem('sim-space'); if (v && $('spaceSize').querySelector(`option[value="${v}"]`)) spaceSize = v; } catch (e) {}
+function applySpace(v, { moveCam = true } = {}) {
+  const [w, h] = v.split('x').map(Number);
+  world.setSize(w, h); world.obstacles.length = 0; robot.reset();
+  if (moveCam && view3d && view3d.ready) {
+    view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y);
+  }
+}
+$('spaceSize').value = spaceSize; applySpace(spaceSize, { moveCam: false });
+$('spaceSize').onchange = (e) => {
+  stopDemo(); endDance(); runner.stop();
+  spaceSize = e.target.value; try { localStorage.setItem('sim-space', spaceSize); } catch (err) {}
+  applySpace(spaceSize);
+  if (curDevs.includes('tof')) world.obstacles.push(frontObstacle());
+  log(`공간 크기: ${$('spaceSize').selectedOptions[0].textContent}`);
+};
 $('btnPlace').onclick = () => { view2d.placing = !view2d.placing; $('btnPlace').classList.toggle('on', view2d.placing); if (mode3d && view2d.placing) showTab(false); };
 $('btnClearObs').onclick = () => { world.obstacles.length = 0; };
 // 눈 LED 색 (홍보 영상에 흰색·파란색 두 가지가 나옴)
@@ -501,8 +638,8 @@ async function playDemo(demo) {
     for (let round = 0; ; round++) {
       // 준비
       runner.stop(); world.obstacles.length = 0; setTable(true);
-      if (demo.setup === 'obstacle') world.obstacles.push({ x: 55, y: 12, w: 10, h: 6 });
-      robot.reset();
+      if (demo.setup === 'obstacle') world.obstacles.push(frontObstacle());
+      robot.reset(); applyDevices(ex.code, { keepScene: true });
       await runner.start(ex.code);
       const n = demo.steps.filter(s => s[0] !== 'wait' || s[2]).length;
       let k = 0;
@@ -555,7 +692,7 @@ function endDance() {
   if (!danceOn) return;
   danceOn = false;
   world.extra = [];
-  robot.reset(); setTable(true);
+  setTable(true); applySpace(spaceSize, { moveCam: false });
   if (view3d && view3d.ready) {
     view3d.follow = $('follow').checked;
     view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y);
@@ -563,6 +700,7 @@ function endDance() {
 }
 function setupDance() {
   runner.stop(); world.obstacles.length = 0; setTable(false);
+  world.setSize(120, 80);   // 군무 자리는 120×80 기준
   robot.reset(); world.extra = [];
   const xs = [22.5, 47.5, 72.5, 97.5], ys = [30, 62];
   let k = 0;
@@ -642,6 +780,8 @@ const blockPackage = (code) => {
   if (/robodog\.|deflib\./.test(code)) return 'robodog=github:kocoafab/robodog';
   return undefined;
 };
+// Babel(2.8MB)은 head에서 막지 않고 바로 비동기로 불러옴(실행·도우미가 먼저 필요하면 같은 요청을 기다림)
+ensureBabel().catch(() => {});
 function showCodeTab(which) {   // 'editor' | 'js'
   const editor = which === 'editor';
   $('tabEditor').setAttribute('aria-selected', String(editor)); $('tabJs').setAttribute('aria-selected', String(!editor));
@@ -649,7 +789,7 @@ function showCodeTab(which) {   // 'editor' | 'js'
   document.body.classList.toggle('mc-mode', editor);
   $('demoBox').open = !editor;
   ledDirty = true; if (view3d) setTimeout(() => view3d.resize(), 50);
-  if (editor) openEditor();
+  if (editor) openEditor();   // 블록 탭이 처음 화면이므로 열자마자 불러옴(다른 탭 ?tab=js 로 열면 불러오지 않음)
 }
 $('tabJs').onclick = () => showCodeTab('js');
 $('tabEditor').onclick = () => showCodeTab('editor');
@@ -774,8 +914,8 @@ function showAnswer(r, source) {
   $('askOut').classList.remove('hidden');
   $('askExpl').innerHTML = `<b>${source}</b> ` + esc(r.explanation || '');
   let warns = (r.warnings || []).slice();
-  if (r.code) { try { compile(r.code); } catch (e) { warns.unshift('코드에 문법 오류가 있어요: ' + e.message.split('\n')[0]); } }
   $('askWarn').innerHTML = warns.map(w => `<li>${esc(w)}</li>`).join('');
+  if (r.code) ensureBabel().then(() => { try { compile(r.code); } catch (e) { $('askWarn').insertAdjacentHTML('afterbegin', `<li>${esc('코드에 문법 오류가 있어요: ' + e.message.split('\n')[0])}</li>`); } }).catch(() => {});
   $('askSug').innerHTML = (r.suggestions && r.suggestions.length) ? '비슷한 예제: ' + r.suggestions.map(s => `<a href="#" data-ex="${s.id}">${esc(s.title)}</a> <small>(${esc(s.why)})</small>`).join(' · ') : '';
   $('askSug').querySelectorAll('a').forEach(a => a.onclick = (e) => {
     e.preventDefault();

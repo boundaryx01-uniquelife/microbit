@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<!-- 공유 미리보기 그림(og.png)의 원본 틀. 1200x630, 배경은 3D 장면(og-bg.webp)을 캡처한 것. 만드는 법: 이 파일을 1200x630(배율 2)으로 캡처한 뒤 1200x630 PNG로 줄임 -->
+<link rel="stylesheet" href="../brand.css">
+<style>
+  html, body { margin: 0; width: 1200px; height: 630px; overflow: hidden; font-family: var(--font); }
+  .bg { position: absolute; inset: 0; background: url(og-bg.webp) center / cover; }
+  .shade { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(40,20,8,0) 38%, rgba(40,20,8,.78) 100%), radial-gradient(ellipse 90% 90% at 50% 40%, transparent 60%, rgba(60,30,10,.3) 100%); }
+  .chip { position: absolute; left: 56px; top: 44px; background: rgba(255,255,255,.94); color: #2456e5; font-weight: 800; font-size: 26px; padding: 8px 22px; border-radius: 99px; box-shadow: 0 6px 20px rgba(0,0,0,.18); }
+  .t { position: absolute; left: 56px; bottom: 52px; right: 56px; color: #fff; text-shadow: 0 4px 22px rgba(30,12,0,.55); }
+  .t h1 { margin: 0; font-size: 118px; line-height: 1.04; font-weight: 900; letter-spacing: -0.04em; }
+  .t em { font-style: normal; color: #ffd54a; font-weight: 900; }
+  .t p { margin: 10px 0 0; font-size: 38px; font-weight: 700; letter-spacing: -0.02em; opacity: .96; }
+</style></head>
+<body>
+  <div class="bg"></div><div class="shade"></div>
+  <div class="chip">로보독 AI 교실 · 코코아팹 협력</div>
+  <div class="t"><h1>로보독의 모험</h1><p><em>할아버지의 약</em> · AI에게 약통을 가르치면 로보독이 찾아 줘요</p></div>
+</body></html>

@@ -29,6 +29,7 @@ const waitFor = async (fn, ms = 9000) => { const t = Date.now(); while (Date.now
   await t.goto(L + '?l=2차시#3'); await t.waitForSelector('.slide');
   check('학생 모드에서는 [학생 연결] 숨김', !(await t.isVisible('#syncbtn')));
   await t.keyboard.press('n');
+  if (await t.isVisible('#pindlg')) { await t.fill('#pin', '0000'); await t.click('#pinform button[type=submit]'); await t.waitForSelector('#notes:not([hidden])'); }
   check('교사 모드에서 [학생 연결] 보임', await t.isVisible('#syncbtn'));
   await t.click('#syncbtn');
   check('코드 창에 숫자 4개', await waitFor(async () => /^\d{4}$/.test((await t.textContent('#synccode')).trim())));

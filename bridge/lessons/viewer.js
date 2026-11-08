@@ -52,6 +52,7 @@
   function cc(c, d) { return COLORS[c] ? c : (d || 'blue'); }
   function img(name, alt, cls) { return name ? '<img class="pic ' + (cls || '') + '" src="assets/' + encodeURIComponent(name) + '.png" alt="' + esc(alt) + '">' : ''; }
   function circle(text, color) { return '<span class="dot c-' + cc(color) + '">' + esc(text) + '</span>'; }
+  function hl(t) { return esc(t).replace(/\*\*(.+?)\*\*/g, '<em>$1</em>'); }
   function foot(s) { return s.footer ? '<p class="sfoot">' + esc(s.footer) + '</p>' : ''; }
 
   var R = {
@@ -71,29 +72,31 @@
     },
     cards: function (s) {
       return '<div class="cds n' + s.cards.length + '">' + s.cards.map(function (c) {
-        return '<div class="cd c-' + cc(c.color) + '"><h3>' + (c.badge ? circle(c.badge, c.color) : '') + '<span>' + esc(c.head) + '</span></h3><ul>' +
+        return '<div class="cd c-' + cc(c.color) + (c.icon ? ' has-icon' : '') + '">' + (c.icon ? img(c.icon, c.head, 'cicon') : '') + '<h3>' + (c.badge ? circle(c.badge, c.color) : '') + '<span>' + esc(c.head) + '</span></h3><ul>' +
           c.lines.map(function (l) { return '<li>' + esc(l) + '</li>'; }).join('') + '</ul></div>';
       }).join('') + '</div>' + foot(s);
     },
     flow: function (s) {
       var n = s.nodes.length;
       var nodes = s.nodes.map(function (nd, i) {
-        return (i ? '<span class="arr" aria-hidden="true">→</span>' : '') + '<div class="nd c-' + cc(nd.color) + '">' + (nd.tag ? '<em>' + esc(nd.tag) + '</em>' : '') + '<b>' + esc(nd.label) + '</b>' + (nd.sub ? '<small>' + esc(nd.sub) + '</small>' : '') + '</div>';
+        return (i ? '<span class="arr" aria-hidden="true">→</span>' : '') + '<div class="nd c-' + cc(nd.color) + (nd.icon ? ' has-icon' : '') + '">' + (nd.icon ? img(nd.icon, nd.label, 'nicon') : '') + (nd.tag ? '<em>' + esc(nd.tag) + '</em>' : '') + '<b>' + esc(nd.label) + '</b>' + (nd.sub ? '<small>' + esc(nd.sub) + '</small>' : '') + '</div>';
       }).join('');
-      var loop = s.loop ? '<svg class="loop" viewBox="0 0 100 20" preserveAspectRatio="none" aria-hidden="true"><path d="M92 0 V12 H8 V2" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke" stroke-dasharray="6 5"/><path d="M4 5 L8 0 L12 5" fill="none" stroke="currentColor" stroke-width="1.6" vector-effect="non-scaling-stroke"/></svg>' : '';
+      var loop = s.loop ? '<div class="loop" style="width:' + ((n - 1) / n * 100 - 2).toFixed(1) + '%" aria-hidden="true"></div>' : '';
       var strip = s.strip && s.strip.length ? '<div class="strip">' + s.strip.map(esc).join(' <i aria-hidden="true">→</i> ') + '</div>' : '';
       var low = (s.image || strip) ? '<div class="low">' + img(s.image, s.title) + strip + '</div>' : '';
       return '<div class="flowwrap"><div class="flow n' + n + '">' + nodes + '</div>' + loop + low + '</div>';
     },
     question: function (s) {
       var big = s.big === '?' ? '<div class="q q-mark" aria-hidden="true">?</div>' : '<div class="q q-text">' + esc(s.big) + '</div>';
-      return '<div class="qa ' + (s.image ? 'has-img' : '') + '"><div class="qt">' + big + (s.sub ? '<p>' + esc(s.sub) + '</p>' : '') + '</div>' + img(s.image, s.title) + '</div>';
+      var pic = s.image && s.caption ? '<div class="capwrap">' + img(s.image, s.title) + '<div class="cap">' + esc(s.caption) + '</div></div>' : img(s.image, s.title);
+      return '<div class="qa ' + (s.image ? 'has-img' : '') + '"><div class="qt">' + big + (s.sub ? '<p>' + esc(s.sub) + '</p>' : '') + '</div>' + pic + '</div>';
     },
     image: function (s) {
       var side = '';
-      if (s.points && s.points.length) side += '<ul class="bul">' + s.points.map(function (p) { return '<li>' + esc(p) + '</li>'; }).join('') + '</ul>';
-      if (s.callout) side += '<div class="callout">' + esc(s.callout) + '</div>';
-      return '<div class="imgs">' + img(s.image, s.title) + '<div class="side">' + side + '</div></div>';
+      if (s.points && s.points.length) side += '<ul class="bul">' + s.points.map(function (p) { return '<li>' + hl(p) + '</li>'; }).join('') + '</ul>';
+      if (s.callout) side += '<div class="callout">' + hl(s.callout) + '</div>';
+      var url = s.url ? '<p class="urlline"><span aria-hidden="true">🌐</span> ' + esc(s.url) + '</p>' : '';
+      return url + '<div class="imgs' + (s.url ? ' has-url' : '') + '">' + img(s.image, s.title) + '<div class="side">' + side + '</div></div>';
     },
     table: function (s) {
       var rows = '<ul class="rows">' + s.rows.map(function (r, i) {
@@ -106,23 +109,33 @@
         return '<li>' + circle(i + 1, 'blue') + '<div><b>' + esc(st.text) + '</b>' + (st.sub ? '<small>' + esc(st.sub) + '</small>' : '') + '</div></li>';
       }).join('') + '</ol>';
       var tip = s.tip ? '<div class="callout">' + esc(s.tip) + '</div>' : '';
-      return '<div class="split code ' + (s.image ? 'has-img' : '') + '"><div class="stepcol">' + steps + tip + '</div>' + img(s.image, s.title) + '</div>';
+      return '<div class="split code ' + (s.image ? 'has-img' : '') + '"><div class="stepcol">' + steps + '</div>' + img(s.image, s.title) + '</div>' + tip;
     },
     core: function (s) {
       return '<ol class="core">' + s.items.map(function (t, i) { return '<li>' + circle(i + 1, 'yellow') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ol>';
     },
     checklist: function (s) {
-      return '<ul class="chk">' + s.items.map(function (t) { return '<li><span class="box" aria-hidden="true"></span><span>' + esc(t) + '</span></li>'; }).join('') + '</ul>';
+      var n = s.items.length, grid = n === 4 && s.items.every(function (t) { return String(t).length <= 12; });
+      return '<ul class="chk ' + (grid ? 'grid' : 'list') + ' n' + n + '">' + s.items.map(function (t) { return '<li><span class="box" aria-hidden="true"></span><span>' + esc(t) + '</span></li>'; }).join('') + '</ul>';
     }
   };
 
-  function slideHTML(s, i, total) {
+  // 바닥글·머리표: "2차시 소개형 · 1교시", 머리표 "1교시 · 3/12"
+  function shortTitle(d) { return String(d.title || '').split(' — ')[0]; }
+  function chapterPos(slides) {
+    var cnt = {}, seen = {};
+    slides.forEach(function (s) { cnt[s.ch] = (cnt[s.ch] || 0) + 1; });
+    return slides.map(function (s) { seen[s.ch] = (seen[s.ch] || 0) + 1; return { n: seen[s.ch], of: cnt[s.ch] }; });
+  }
+  function slideHTML(s, i, total, ctx) {
     var fn = R[s.type] || R.points;
     var plain = (s.type === 'cover');
     var head = plain ? '' : '<h2 class="st">' + esc(s.title) + '</h2>';
-    return '<div class="slide t-' + esc(s.type) + '" data-type="' + esc(s.type) + '">' + head +
+    var pos = ctx.pos[i];
+    var chip = plain ? '' : '<span class="chip">' + esc(s.ch) + '교시 · ' + pos.n + '/' + pos.of + '</span>';
+    return '<div class="slide t-' + esc(s.type) + '" data-type="' + esc(s.type) + '">' + chip + head +
       '<div class="sbody">' + (R[s.type] ? fn(s) : '') + '</div>' +
-      '<div class="sf"><span>피지컬 AI 교실 · ' + esc(s.ch) + '차시</span><span>' + (i + 1) + '</span></div></div>';
+      '<div class="sf"><span>' + esc(ctx.short) + ' · ' + esc(s.ch) + '교시</span><span>' + (i + 1) + '</span></div></div>';
   }
 
   /* 교사 노트: "/" 로 나눈 항목을 줄로, 앞 이름은 굵게 */
@@ -140,19 +153,20 @@
   /* ---------- 뷰어 ---------- */
   function showViewer(d) {
     var slides = d.slides, total = slides.length, cur = 0;
+    var ctx = { short: shortTitle(d), pos: chapterPos(slides) };
     document.title = d.title + ' · 수업 슬라이드';
     $('viewer').hidden = false;
     document.body.classList.add('is-viewer');
 
     var sel = $('chsel');
-    sel.innerHTML = (d.chapters || []).map(function (c) { return '<option value="' + c.n + '">' + c.n + '차시 · ' + esc(c.title) + '</option>'; }).join('');
+    sel.innerHTML = (d.chapters || []).map(function (c) { return '<option value="' + c.n + '">' + c.n + '교시 · ' + esc(c.title) + '</option>'; }).join('');
     if (!(d.chapters || []).length) sel.hidden = true;
 
     function fromHash() { var n = parseInt((location.hash || '').replace('#', ''), 10); return n >= 1 && n <= total ? n - 1 : 0; }
 
     function render() {
       var s = slides[cur];
-      $('stage').innerHTML = slideHTML(s, cur, total);
+      $('stage').innerHTML = slideHTML(s, cur, total, ctx);
       $('counter').textContent = (cur + 1) + ' / ' + total;
       $('prev').disabled = cur === 0; $('next').disabled = cur === total - 1;
       var pr = document.querySelector('.progress');
@@ -198,6 +212,28 @@
     if (window.ResizeObserver) new ResizeObserver(fit).observe($('stagewrap'));
     document.addEventListener('fullscreenchange', function () { document.body.classList.toggle('is-fs', !!document.fullscreenElement); setTimeout(fit, 50); });
 
+    $('more').onclick = function () { var b = $('bar'), on = !b.classList.contains('open'); b.classList.toggle('open', on); $('more').setAttribute('aria-expanded', on ? 'true' : 'false'); };
+    /* 슬라이드 목록(G): 교시별로 묶은 제목 격자, 눌러서 바로 가기 */
+    var ov = $('ovdlg');
+    function ovOpen() {
+      var html = '', by = {};
+      slides.forEach(function (s, i) { (by[s.ch] = by[s.ch] || []).push(i); });
+      var chs = (d.chapters && d.chapters.length) ? d.chapters : Object.keys(by).map(function (n) { return { n: +n, title: '' }; });
+      chs.forEach(function (c) {
+        if (!by[c.n]) return;
+        html += '<section class="ovch"><h3>' + c.n + '교시' + (c.title ? ' · ' + esc(c.title) : '') + '</h3><ol class="ovgrid">' + by[c.n].map(function (i) {
+          return '<li><button type="button" data-i="' + i + '"' + (i === cur ? ' aria-current="true"' : '') + '><b>' + (i + 1) + '</b><span>' + esc(slides[i].title) + '</span></button></li>';
+        }).join('') + '</ol></section>';
+      });
+      $('ovbody').innerHTML = html;
+      if (ov.showModal && !ov.open) ov.showModal(); else ov.setAttribute('open', '');
+      var c = $('ovbody').querySelector('[aria-current]'); if (c) { c.focus(); c.scrollIntoView({ block: 'center' }); }
+    }
+    function ovClose() { if (ov.close) ov.close(); else ov.removeAttribute('open'); }
+    $('ovbtn').onclick = ovOpen;
+    $('ovclose').onclick = ovClose;
+    $('ovbody').onclick = function (e) { var b = e.target.closest('button[data-i]'); if (b) { ovClose(); go(+b.getAttribute('data-i')); } };
+    ov.addEventListener('click', function (e) { if (e.target === ov) ovClose(); });
     $('prev').onclick = function () { go(cur - 1); };
     $('next').onclick = function () { go(cur + 1); };
     sel.onchange = function () {
@@ -206,12 +242,37 @@
     };
     window.addEventListener('hashchange', function () { go(fromHash()); });
 
-    function teacher(on) {
+    // 교사 모드 비밀번호: 바꾸려면 새 번호의 SHA-256 값으로 TEACHER_PIN_HASH 를 바꿈(현재 0000)
+    // 정적 사이트라 학생이 노트를 못 보게 막는 '가림막'일 뿐, 보안 장치는 아님
+    var TEACHER_PIN_HASH = '9af15b336e6a9619928537df30b2e6a2376569fcf9d7e773eccede65606529a0';
+    function unlocked() { return store.get('lessonTeacherOK') === TEACHER_PIN_HASH; }
+    function hashPin(t) {
+      if (!(window.crypto && crypto.subtle)) return Promise.reject(new Error('no crypto'));
+      return crypto.subtle.digest('SHA-256', new TextEncoder().encode(t)).then(function (b) {
+        return Array.prototype.map.call(new Uint8Array(b), function (x) { return ('0' + x.toString(16)).slice(-2); }).join('');
+      });
+    }
+    function setTeacher(on) {
       document.body.classList.toggle('teacher', on);
       $('notes').hidden = !on; $('teacher').setAttribute('aria-pressed', on ? 'true' : 'false');
       $('teacher').classList.toggle('primary', on);
       store.set('lessonTeacher', on ? '1' : '0'); fit();
     }
+    function teacher(on) {
+      if (!on || unlocked()) { setTeacher(on); return; }
+      var d = $('pindlg'); $('pinmsg').textContent = ''; $('pin').value = '';
+      if (d.showModal && !d.open) d.showModal(); else d.setAttribute('open', '');
+      $('pin').focus();
+    }
+    function closePin() { var d = $('pindlg'); if (d.close) d.close(); else d.removeAttribute('open'); }
+    $('pinform').onsubmit = function (e) {
+      e.preventDefault();
+      hashPin($('pin').value.trim()).then(function (h) {
+        if (h === TEACHER_PIN_HASH) { store.set('lessonTeacherOK', h); closePin(); setTeacher(true); }
+        else { $('pinmsg').textContent = '비밀번호가 맞지 않아요.'; $('pin').select(); }
+      }, function () { $('pinmsg').textContent = '이 브라우저에서는 확인할 수 없어요(https 주소로 열어 주세요).'; });
+    };
+    $('pincancel').onclick = closePin;
     $('teacher').onclick = function () { teacher(!document.body.classList.contains('teacher')); };
     function fs() {
       if (document.fullscreenElement) { document.exitFullscreen(); return; }
@@ -231,6 +292,7 @@
       else if (k === 'End') { e.preventDefault(); go(total - 1); }
       else if (k === 'f' || k === 'F') { fs(); }
       else if (k === 'n' || k === 'N') { $('teacher').click(); }
+      else if (k === 'g' || k === 'G') { if (ov.open) ovClose(); else ovOpen(); }
     });
 
     var sx = 0, sy = 0, st0 = 0;
@@ -318,7 +380,7 @@
     };
 
     cur = fromHash();
-    teacher(store.get('lessonTeacher') === '1');
+    setTeacher(store.get('lessonTeacher') === '1' && unlocked());
     var room = params.get('room');
     if (room && /^\d{4}$/.test(room)) { sync.room = room; }
     else { try { var hh = JSON.parse(store.get(HKEY) || 'null'); if (hh && hh.room && hh.key) { sync.host = hh; document.body.classList.add('hosting'); hostPill(); } } catch (e) {} }
