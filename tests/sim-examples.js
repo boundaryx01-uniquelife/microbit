@@ -64,6 +64,18 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   await radio(1); await p.click('#btnRobot'); await p.waitForTimeout(300);
   check('② 본체 버튼 → 언제든 멈춤', (await st()).vel === 0);
 
+  // 빠른 조작: 로보독 화면 바로 위에 코드에 맞는 버튼만
+  await S(() => document.getElementById('quick').scrollIntoView({ block: 'start' }));
+  const q = await S(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); const qb = r('quick'), vb = r('view3d');
+    return { gap: vb.top - qb.bottom, vis: !document.getElementById('quick').hidden, radio: !document.getElementById('qRadio').hidden, body: !document.getElementById('qBody').hidden, mb: !document.getElementById('qMb').hidden, both: qb.top >= 0 && vb.bottom <= innerHeight, qt: qb.top, vb: vb.bottom, ih: innerHeight, sy: scrollY }; });
+  check('빠른 조작: 리모컨·본체 버튼만 보임(A·B 없음)', q.vis && q.radio && q.body && !q.mb, JSON.stringify(q));
+  check('빠른 조작이 3D 화면 바로 위(스크롤 없이 함께 보임)', q.gap >= 0 && q.gap < 30 && q.both, JSON.stringify(q));
+  await p.click('#qNums button:nth-child(2)'); await p.waitForTimeout(400);
+  check('빠른 조작 [1] → 걷기', (await st()).vel === 25);
+  await p.click('#qRobot'); await p.waitForTimeout(300);
+  check('빠른 조작 [본체 버튼] → 멈춤', (await st()).vel === 0);
+  await p.check('#qRepeat'); check('[계속 보내기]가 라디오 패널과 같이 켜짐', await p.isChecked('#radioRepeat')); await p.uncheck('#qRepeat');
+
   // 라디오 ③: 재주
   await load('22_remote-tricks'); await run();
   await radio(2); await p.waitForTimeout(300);

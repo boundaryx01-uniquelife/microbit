@@ -210,7 +210,7 @@ export class View3D {
         x.fillStyle = 'rgba(255,255,255,.96)'; x.beginPath(); x.roundRect(2, 2, w - 4, h - 4, 24); x.fill();
         x.strokeStyle = fresh ? '#2456e5' : '#c9d1dd'; x.lineWidth = fresh ? 10 : 4; x.stroke();
         x.fillStyle = '#4b5565'; x.font = 'bold 30px system-ui'; x.textAlign = 'center'; x.textBaseline = 'middle';
-        x.fillText('AI가 본 카드', w / 2, 36);
+        x.fillText('받은 숫자', w / 2, 36);
         if (rl) {
           const cd = radioCard(rl.n);
           x.fillStyle = cd.color; x.beginPath(); x.roundRect(40, 66, w - 80, 150, 18); x.fill();

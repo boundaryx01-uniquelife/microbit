@@ -127,8 +127,8 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   check('움직임 줄이기: 슬라이드 애니메이션 없음', await dp.evaluate(() => getComputedStyle(document.querySelector('.slide')).animationName === 'none'));
 
   // 모든 수업·모든 장: 본문 글자 20px 이상, 자동 축소 0.85 이상, 바닥글 13px 이상, 그림 불러오기
-  const EXPECT = { '2차시': 25, '4차시': 48, '8차시': 91 };
-  for (const id of ['2차시', '4차시', '8차시']) {
+  const EXPECT = { '2차시': 25, '4차시': 48, '8차시': 91, '예제': 18 };
+  for (const id of ['2차시', '4차시', '8차시', '예제']) {
     const q = await ctx.newPage(); q.on('pageerror', e => errs.push(id + ': ' + e.message));
     await q.goto(L + '?l=' + encodeURIComponent(id)); await q.waitForSelector('.slide');
     const n = await q.evaluate(() => window.__lesson.total);
@@ -177,8 +177,8 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
     check(`${id}: 틀에 박힌 노트("가장 중요한 한 가지" 등 일반 발문·빈 예상 답) 없음`, refs.generic.length === 0, '장: ' + refs.generic.join(','));
     check(`${id}: 같은 발문·같은 노트가 두 장 이상 쓰이지 않음`, refs.dupQ.length === 0 && refs.dupNote.length === 0, refs.dupQ.join(' ; ') + ' | ' + refs.dupNote.join(' ; '));
     check(`${id}: 물음 장 제목이 "먼저 보세요" 같은 일반 말이 아님`, refs.badTitle.length === 0, '장: ' + refs.badTitle.join(','));
-    check(`${id}: 표지 줄이 "<패키지> · N교시"`, refs.covers.length > 0 && refs.covers.every(t => /^\d+차시 .+ · \d+교시$/.test(t)), refs.covers.join(' / '));
-    check(`${id}: 교시마다 노트 시간 합계 40분`, Object.values(refs.mins).every(m => m === 40) && Object.keys(refs.mins).length === { '2차시': 2, '4차시': 4, '8차시': 8 }[id], JSON.stringify(refs.mins));
+    check(`${id}: 표지 줄이 "<패키지> · N교시"`, refs.covers.length > 0 && refs.covers.every(t => /^(\d+차시 .+|예제 따라 하기) · \d+교시$/.test(t)), refs.covers.join(' / '));
+    check(`${id}: 교시마다 노트 시간 합계 40분`, Object.values(refs.mins).every(m => m === 40) && Object.keys(refs.mins).length === { '2차시': 2, '4차시': 4, '8차시': 8, '예제': 2 }[id], JSON.stringify(refs.mins));
     await q.close();
   }
   // 전체 화면: 화면을 꽉 채움

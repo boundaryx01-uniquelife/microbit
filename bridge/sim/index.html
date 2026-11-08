@@ -55,6 +55,14 @@
   .sub { display: grid; grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); gap: 8px; margin-top: 8px; }
   #side2d { width: 100%; height: 130px; display: block; border-radius: 10px; background: var(--bg); }
   #eyes { width: 100%; height: 130px; display: block; border-radius: 10px; }
+  .quick { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 0 0 8px; padding: 8px 10px; border-radius: 12px; border: 2px solid var(--accent); background: var(--accent-soft); }
+  .quick[hidden], .quick .qgrp[hidden] { display: none; }
+  .quick .qgrp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .quick .qlab { font-weight: 700; font-size: 13.5px; white-space: nowrap; }
+  .quick button { min-width: 44px; min-height: 44px; padding: 6px 10px; font-weight: 700; }
+  .quick #qNums { display: inline-flex; gap: 6px; flex-wrap: wrap; }
+  .quick #qNums button.last { outline: 3px solid var(--accent); }
+  .quick .qrep { display: inline-flex; gap: 4px; align-items: center; font-size: 13px; white-space: nowrap; min-height: 32px; }
   #view3d { width: 100%; aspect-ratio: 3 / 2; max-height: 52vh; border-radius: 10px; overflow: hidden; background: #dfe6f0; }
   .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px; }
   .panel { border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
@@ -246,6 +254,13 @@
       <button id="tab2d" role="tab" aria-selected="false">2D 보기 (가벼움)</button>
     </div>
     <label class="row" style="gap:6px;margin:-4px 0 6px"><input id="follow" type="checkbox" checked> 3D 카메라 따라가기</label>
+    <!-- 빠른 조작: 코드에 필요한 버튼만 로보독 화면 바로 위에(스크롤 없이 누르고 바로 보기) -->
+    <div id="quick" class="quick" hidden aria-label="빠른 조작">
+      <div class="qgrp" id="qBody"><span class="qlab">🔘 본체</span><button id="qRobot" class="primary">본체 버튼 누르기</button></div>
+      <div class="qgrp" id="qRadio"><span class="qlab">📡 리모컨</span><span id="qNums"></span>
+        <label class="qrep"><input id="qRepeat" type="checkbox"> 계속 보내기</label></div>
+      <div class="qgrp" id="qMb"><span class="qlab">🅰 마이크로비트</span><button data-q="A">A</button><button data-q="B">B</button><button data-q="AB">A+B</button></div>
+    </div>
     <div id="pane2d" class="hidden">
       <canvas id="top2d" aria-label="위에서 본 책상과 로보독"></canvas>
       <div class="sub">
@@ -393,6 +408,7 @@ function applyDevices(code, opts = {}) {
     world.obstacles.push(frontObstacle());
     log('거리센서를 쓰는 코드라 로보독 앞에 장애물을 놓았어요');
   }
+  updateQuick(devs);
   const box = $('needs');
   box.hidden = !devs.length;
   box.innerHTML = devs.length ? '<b>이 코드에 필요한 장치</b>' + devs.map(d => {
@@ -430,6 +446,29 @@ document.querySelectorAll('.mbbtn').forEach(b => {
   b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); runner.press(btn); } });
 });
 $('btnAB').onclick = () => runner.press('AB');
+// ---------- 빠른 조작(로보독 화면 바로 위) ----------
+for (let n = 0; n <= 4; n++) {
+  const b = document.createElement('button'); b.textContent = n; b.dataset.n = n;
+  b.title = n === 0 ? '0 보내기' : `${n} 보내기 (리모컨 ${['', 'A', 'B', 'A+B', ''][n] || '숫자 ' + n})`;
+  b.setAttribute('aria-label', `라디오 숫자 ${n} 보내기`);
+  $('qNums').appendChild(b);
+}
+$('qNums').addEventListener('click', (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (e.isTrusted) stopDemo();
+  const n = Number(b.dataset.n);
+  runner.radioReceive(n); lastRadio = n; log(`라디오 받음: ${n}`);
+  $('qNums').querySelectorAll('button').forEach(x => x.classList.toggle('last', x === b));
+});
+$('qRepeat').onchange = (e) => { $('radioRepeat').checked = e.target.checked; };
+$('radioRepeat').addEventListener('change', (e) => { $('qRepeat').checked = e.target.checked; });
+$('qRobot').onclick = (e) => { if (e.isTrusted) stopDemo(); flash($('qRobot')); runner.robotButton(); };
+document.querySelectorAll('#qMb button').forEach(b => b.onclick = (e) => { if (e.isTrusted) stopDemo(); runner.press(b.dataset.q); });
+function updateQuick(devs) {
+  const body = devs.includes('button'), radio = devs.includes('radio'), mb = devs.includes('mbBtn');
+  $('qBody').hidden = !body; $('qRadio').hidden = !radio; $('qMb').hidden = !mb;
+  $('quick').hidden = !(body || radio || mb);
+}
 $('btnRobot').onclick = () => runner.robotButton();
 $('battery').oninput = (e) => { runner.battery = Number(e.target.value); $('batVal').textContent = e.target.value; };
 
