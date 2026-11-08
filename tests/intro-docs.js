@@ -1,4 +1,4 @@
-// 첫 화면(첫 산책 영상 + 엔딩 모션)·수업 자료 페이지 시험: node tests/intro-docs.js [기본주소]
+// 첫 화면(인트로 영상 intro.mp4 + 시작 카드)·수업 자료 페이지 시험: node tests/intro-docs.js [기본주소]
 const { chromium } = require('playwright');
 const BASE = (process.argv[2] || 'http://127.0.0.1:8765/').replace(/\/?$/, '/');
 const results = [];
@@ -13,25 +13,27 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
   const ctx = await b.newContext({ viewport: { width: 1366, height: 768 } });
   const p = await ctx.newPage(); watch(p);
   const cls = (q, c) => q.evaluate((c) => document.getElementById('stage').classList.contains(c), c);
-  // ----- 첫 화면: '로보독의 첫 산책' 영상이 열자마자 재생 -----
+  // ----- 첫 화면: 인트로 영상 한 편(intro.mp4)이 열자마자 재생 -----
   await p.goto(BASE);
-  await p.waitForFunction(() => window.__story && window.__outro && document.getElementById('stage').classList.contains('ready'), null, { timeout: 120000 });
-  await p.waitForFunction(() => document.getElementById('capText').textContent.length > 0, null, { timeout: 60000 });
-  check('열면 바로 자막이 나옴(자동 재생)', (await p.textContent('#capText')).length > 3);
-  check('3D 무대가 켜짐(그래픽 가속)', await p.evaluate(() => !!document.querySelector('#stage3d canvas')));
+  await p.waitForFunction(() => window.__intro && window.__intro.film.currentTime > 0.3, null, { timeout: 60000 });
+  const fm = await p.evaluate(() => { const f = window.__intro.film; return { d: f.duration, w: f.videoWidth, h: f.videoHeight, muted: f.muted }; });
+  check('인트로 영상(첫 산책 30초 + 엔딩 8.2초) 한 편이 자동 재생', fm.d > 37 && fm.d < 39.5 && fm.w === 1280 && fm.h === 720 && fm.muted, JSON.stringify(fm));
+  check('3D 엔진 없이 재생(가벼운 첫 화면)', await p.evaluate(() => !document.querySelector('#stage3d') && !document.querySelector('script[type="importmap"]')));
+  await p.waitForFunction(() => document.getElementById('capText').textContent.length > 0, null, { timeout: 10000 });
+  check('자막이 영상 시간에 맞춰 나옴', (await p.textContent('#capText')).includes('달빛'));
   check('자막 진행 막대 8개', (await p.$$('#segs i')).length === 8);
-  check('재생 중에는 시작 카드·엔딩이 숨어 있음', !(await cls(p, 'ended')) && !(await cls(p, 'outro')));
+  check('재생 중에는 시작 카드·엔딩 캔버스가 숨어 있음', !(await cls(p, 'ended')) && !(await cls(p, 'outro')));
   check('스크롤 없는 한 화면', await p.evaluate(() => document.documentElement.scrollHeight <= innerHeight + 1 && document.documentElement.scrollWidth <= innerWidth));
+  await p.evaluate(() => { window.__intro.film.currentTime = 23; });
+  check('영상 시간을 옮기면 자막도 따라감', await p.waitForFunction(() => document.getElementById('capText').textContent.includes('멈춰'), null, { timeout: 5000 }).then(() => true, () => false));
+  await p.evaluate(() => { window.__intro.film.currentTime = 31; });
+  check('엔딩 구간(30초 뒤)에서는 자막이 물러남', await p.waitForFunction(() => document.getElementById('stage').classList.contains('tail'), null, { timeout: 5000 }).then(() => true, () => false));
 
-  // ----- 영상이 끝나면 엔딩 모션이 마지막 화면을 이어받아 재생 → 시작 카드 -----
-  await p.evaluate(() => { window.__story.seek(0, 29.95); window.__outro.endNow(); });   // 마지막 프레임을 그린 직후 끝 처리(실제 끝과 같은 순서)
-  check('영상이 끝나면 엔딩 모션이 시작되고 자막은 물러남', await cls(p, 'outro') && !(await cls(p, 'ended')) && await p.evaluate(() => window.__outro.api.running));
-  check('엔딩 중에도 [건너뛰기]가 보임', await p.isVisible('#skip'));
-  const px0 = await p.evaluate(() => { const c = document.getElementById('outro'), x = c.getContext('2d').getImageData(c.width >> 1, c.height >> 2, 1, 1).data; return x[0] + x[1] + x[2]; });
-  check('엔딩 첫 화면은 비어 있지 않음(마지막 화면을 이어받음)', px0 > 30, String(px0));
-  await p.waitForFunction(() => document.getElementById('stage').classList.contains('ended'), null, { timeout: 30000 });
-  check('엔딩 본편(8.2초)이 끝나면 시작 카드가 나옴', await p.evaluate(() => window.__outro.api.time >= 8.2));
-  await p.waitForTimeout(1500);
+  // ----- 영상이 끝나면 같은 그림에서 시작 카드로 -----
+  await p.evaluate(() => { const f = window.__intro.film; f.currentTime = f.duration - 0.3; });
+  await p.waitForFunction(() => document.getElementById('stage').classList.contains('ended'), null, { timeout: 15000 });
+  check('영상이 끝나면 엔딩 캔버스가 이어받고 시작 카드가 나옴', await cls(p, 'outro') && await cls(p, 'ended'));
+  await p.waitForTimeout(1600);
   const fin = await p.evaluate(() => [...document.querySelectorAll('.cta a')].map(a => ({ bottom: a.getBoundingClientRect().bottom, w: a.getBoundingClientRect().width })));
   check('시작 카드 링크 3개가 보임', fin.length === 3 && fin.every(f => f.w > 50), JSON.stringify(fin));
   check('노트북(768) 한 화면 안에 버튼', fin.every(f => f.bottom <= 768), JSON.stringify(fin));
@@ -41,16 +43,19 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
     return { bright, edge: row[0] + row[1] + row[2] }; });   // 가운데 줄: 머리 양옆으로 달이 보이고, 가장자리는 밤하늘
   check('카드 위 빈자리에 보름달 + 로보독(엔딩이 카드 뒤 배경으로 남음)', moon.bright > 20 && moon.edge < 400, JSON.stringify(moon));
   const hrefs = await p.$$eval('.cta a', as => as.map(a => a.href));
-  check('[다시 보기] → 처음부터 다시 재생, 엔딩 닫힘', await p.evaluate(() => { document.getElementById('replay').click(); return !document.getElementById('stage').classList.contains('ended') && !document.getElementById('stage').classList.contains('outro') && window.__story.state().t < 3; }));
+  await p.click('#replay');
+  check('[다시 보기] → 처음부터 다시 재생, 엔딩 닫힘', await p.waitForFunction(() => { const f = window.__intro.film, s = document.getElementById('stage').classList; return !f.paused && f.currentTime > 0.1 && f.currentTime < 5 && !s.contains('ended') && !s.contains('outro'); }, null, { timeout: 10000 }).then(() => true, () => false));
   await p.click('#skip'); await p.waitForTimeout(600);
-  check('[건너뛰기] → 엔딩 정지 화면 + 시작 카드', await cls(p, 'ended') && await cls(p, 'outro') && !(await p.evaluate(() => window.__outro.api.running)));
-  await p.reload(); await p.waitForFunction(() => window.__story && document.getElementById('stage').classList.contains('ended'), null, { timeout: 120000 });
+  check('[건너뛰기] → 영상 멈춤 + 엔딩 정지 화면 + 시작 카드', await cls(p, 'ended') && await cls(p, 'outro') && await p.evaluate(() => window.__intro.film.paused));
+  await p.reload(); await p.waitForFunction(() => window.__intro && document.getElementById('stage').classList.contains('ended'), null, { timeout: 30000 });
   check('같은 탭에서 새로고침하면 영상을 건너뛰고 시작 카드', await cls(p, 'ended') && await cls(p, 'outro'));
 
-  // ----- 화면 크기별 시작 카드 -----
+  // ----- 화면 크기별 -----
   for (const [w, h] of [[390, 844], [1280, 720], [1920, 800]]) {
     const c2 = await b.newContext({ viewport: { width: w, height: h } }); const q = await c2.newPage(); watch(q);
-    await q.goto(BASE); await q.waitForFunction(() => window.__story && document.getElementById('stage').classList.contains('ready'), null, { timeout: 120000 });
+    await q.goto(BASE); await q.waitForFunction(() => window.__intro && window.__intro.film.readyState >= 2, null, { timeout: 60000 });
+    const fit = await q.evaluate(() => { const f = window.__intro.film, r = f.getBoundingClientRect(); return { fit: getComputedStyle(f).objectFit, w: r.width, h: r.height }; });
+    check(`${w}x${h}: 영상 맞춤(${fit.fit}) — 세로 화면은 잘리지 않게 전체`, w < h ? fit.fit === 'contain' : fit.fit === 'cover', JSON.stringify(fit));
     await q.click('#skip'); await q.waitForTimeout(1200);
     check(`${w}x${h}: 가로 스크롤 없음`, await q.evaluate(() => document.documentElement.scrollWidth <= innerWidth && document.body.scrollWidth <= innerWidth));
     check(`${w}x${h}: 조절 버튼이 화면 안`, await q.evaluate(() => [...document.querySelectorAll('.ctl button')].filter(x => !x.hidden).every(x => { const r = x.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 36; })));
@@ -60,24 +65,23 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
     await c2.close();
   }
 
-  // ----- 움직임 줄이기: 영상 없이 엔딩 정지 화면 + 시작 카드 -----
+  // ----- 움직임 줄이기 / 영상을 못 받을 때 -----
   const rm = await b.newContext({ reducedMotion: 'reduce', viewport: { width: 1280, height: 720 } });
   const p3 = await rm.newPage(); watch(p3); await p3.goto(BASE);
-  await p3.waitForFunction(() => window.__story && document.getElementById('stage').classList.contains('ended'), null, { timeout: 120000 });
-  check('움직임 줄이기: 바로 시작 카드(엔딩 정지 화면)', await cls(p3, 'ended') && await cls(p3, 'outro') && !(await p3.evaluate(() => window.__outro.api.running)));
+  await p3.waitForFunction(() => window.__intro && document.getElementById('stage').classList.contains('ended'), null, { timeout: 30000 });
+  check('움직임 줄이기: 영상 없이 바로 시작 카드(엔딩 정지 화면)', await cls(p3, 'ended') && await cls(p3, 'outro') && await p3.evaluate(() => window.__intro.film.paused));
+  const nov = await b.newContext({ viewport: { width: 1366, height: 768 } });
+  await nov.route('**/assets/intro/intro.mp4', (r) => r.abort());
+  const p4 = await nov.newPage(); await p4.goto(BASE); await p4.waitForTimeout(2500);
+  check('영상을 못 받아도 시작 카드가 보임', await cls(p4, 'ended') && await cls(p4, 'outro'));
 
-  const nogl = await b.newContext({ viewport: { width: 1366, height: 768 } });
-  await nogl.addInitScript(() => { HTMLCanvasElement.prototype.getContext = () => null; });
-  const p4 = await nogl.newPage(); await p4.goto(BASE); await p4.waitForTimeout(1500);
-  check('그래픽 가속이 없어도 안내 문구와 시작 카드가 보임', await p4.evaluate(() => getComputedStyle(document.getElementById('nogl')).display !== 'none' && document.getElementById('stage').classList.contains('ended')));
-
-  // ----- 머리말(공유 미리보기) 와 그림 파일 -----
+  // ----- 머리말(공유 미리보기) 와 그림·영상 파일 -----
   const meta = await p.evaluate(() => { const g = (s) => (document.querySelector(s) || {}).content || ''; return { ogt: g('meta[property="og:title"]'), ogd: g('meta[property="og:description"]'), ogi: g('meta[property="og:image"]'), tc: g('meta[name="twitter:card"]'), th: g('meta[name="theme-color"]'), ti: g('meta[name="twitter:image"]') }; });
   check('og:title·og:description·og:image·twitter:card·theme-color 있음', meta.ogt && meta.ogd && /^https:\/\/.+\/assets\/intro\/og\.png$/.test(meta.ogi) && meta.tc === 'summary_large_image' && /^#[0-9a-f]{6}$/i.test(meta.th) && meta.ti === meta.ogi, JSON.stringify(meta));
   const ogb = fs.readFileSync(require('path').join(__dirname, '../bridge/assets/intro/og.png'));
   check('og.png는 1200x630 PNG', ogb.readUInt32BE(16) === 1200 && ogb.readUInt32BE(20) === 630 && ogb.slice(1, 4).toString() === 'PNG', ogb.length + 'B');
-  const lf = fs.statSync(require('path').join(__dirname, '../bridge/assets/intro/veo-last.webp')).size;
-  check('엔딩 미리 보기 시작 그림이 150KB 이하', lf > 1000 && lf <= 150 * 1024, String(lf));
+  const mp = fs.statSync(require('path').join(__dirname, '../bridge/assets/intro/intro.mp4')).size;
+  check('인트로 영상이 12MB 이하', mp > 1e6 && mp <= 12e6, (mp / 1e6).toFixed(1) + 'MB');
 
   for (const h of hrefs) { const r = await p.request.get(h); check('링크 열림: ' + h.replace(BASE, '/'), r.ok(), r.status()); }
 
