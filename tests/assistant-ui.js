@@ -20,6 +20,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   // 1) 키 없음 → 규칙 도우미 (실제 사이트에서도 AI를 부르지 않도록 응답을 대신함)
   let p = await open(r => r.request().method() === 'GET' ? r.fulfill({ json: { ok: true, configured: false, needsCode: false } }) : r.fulfill({ status: 503, json: { error: 'not_configured' } }));
   check('키 없으면 규칙 도우미 표시', (await p.textContent('#askMode')).includes('규칙'));
+  check('AI가 꺼져 있어도 수업 코드 칸은 보임(잠김) + 이유 안내', await p.isVisible('#askClass') && await p.isDisabled('#askClass') && (await p.textContent('#askNote')).includes('관리자'));
   await p.fill('#askText', 'A 버튼을 누르면 빨간 불을 켜고 멍멍 짖어, B 버튼을 누르면 앉아');
   await p.click('#askBtn');
   const code = await p.textContent('#askCode');

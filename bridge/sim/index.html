@@ -183,7 +183,7 @@
       <div class="askmore row">
         <details id="askEx"><summary>예시 문장</summary><div class="chips" id="askChips" aria-label="예시 문장(누르면 입력돼요)"></div></details>
         <label class="row" style="gap:4px"><input id="askFix" type="checkbox"> 지금 코드 고치기</label>
-        <span id="askCodeRow" class="row hidden" style="gap:6px"><label for="askClass">수업 코드 <span class="note" style="margin:0">(AI 도우미용)</span></label>
+        <span id="askCodeRow" class="row" style="gap:6px"><label for="askClass">수업 코드 <span class="note" style="margin:0">(AI 도우미용)</span></label>
           <input id="askClass" type="password" autocomplete="off" style="width:110px;font:inherit;padding:4px 8px;border:1px solid var(--field);border-radius:8px;background:var(--bg);color:var(--text)"></span>
         <span class="note" id="askNote" style="margin:0"></span>
       </div>
@@ -894,7 +894,14 @@ function setAskMode(avail, why) {
 }
 $('askClass').addEventListener('input', () => { try { sessionStorage.setItem('robodog-class-code', $('askClass').value); } catch (e) {} setAskMode(aiAvail); });
 setAskMode(false);
-checkAi().then(r => { setAskMode(r.available); $('askCodeRow').classList.toggle('hidden', !r.available); });
+// 수업 코드 칸은 늘 보임. AI가 서버에 켜져 있지 않으면 칸을 잠그고 이유를 알려 줌(어디에 넣는지 몰라 헤매지 않게)
+checkAi().then(r => {
+  setAskMode(r.available, r.available ? '' : (r.reason === 'not_configured'
+    ? '🔑 AI 도우미는 관리자가 서버에서 수업 코드(와 AI 키)를 설정해야 켜져요. 지금은 규칙 도우미만 쓸 수 있어요.'
+    : '이 주소에서는 AI 서버에 연결되지 않아 규칙 도우미만 쓸 수 있어요.'));
+  $('askClass').disabled = !r.available;
+  $('askClass').placeholder = r.available ? '코드 입력' : '관리자 설정 필요';
+});
 $('askChips').innerHTML = SAMPLE_REQUESTS.map((t, i) => `<button data-i="${i}">${esc(t)}</button>`).join('');
 $('askChips').querySelectorAll('button').forEach(b => b.onclick = () => { $('askText').value = SAMPLE_REQUESTS[b.dataset.i]; growAsk(); $('askEx').open = false; $('askText').focus(); });
 $('askText').addEventListener('input', () => { if (askResult) { $('askOut').classList.add('hidden'); askResult = null; } });
