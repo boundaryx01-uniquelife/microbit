@@ -757,7 +757,7 @@ export async function createSamples({ host, sequence = null, durations = {}, pla
       const i = t < 10 ? 0 : t < 20 ? 1 : 2, sh = VEO_SHOTS[i], lt = t - sh.t0;
       grade.uniforms.fade.value = Math.min(1, fade(t, 0, 0.6), Math.abs(t - 10) / 0.25, Math.abs(t - 20) / 0.25);
       this.syncVideo(i, lt);
-      TEX[sh.src].userData.draw(); this.frame(TEX[sh.src], sh.vH, 40, 1.02); this.aim(0.5, 0.5, 1);
+      TEX[sh.src].userData.draw(); this.frame(TEX[sh.src], sh.vH, 40, 1.07);
       if (!this.S[i]) { const [u, v, h, r] = sh.ref; this.S[i] = this.sizeAt(this.ground(u, v), h * r) / 15; }
       const S = this.S[i];
       let p, th;
@@ -777,6 +777,11 @@ export async function createSamples({ host, sequence = null, durations = {}, pla
         this.lights(p, V(-120, 260, -380), V(120, 60, 200)); this.fill.color.set(0xa8c0ff); this.fill.intensity = 1.1; this.key.intensity = 2.6;
       }
       this.placeDog(p, th, S);
+      // 세로 화면(휴대폰)에선 영상 양옆이 잘리므로, 이야기의 중심(로보독·아이)을 따라 시선을 옮김
+      const focus = i === 0 ? lerp(0.47, 0.64, ease(fade(lt, 4.5, 8.5))) : i === 1 ? boyAt(lt)[0] - 0.08 : lerp(0.5, 0.7, ease(fade(lt, 0.5, 2.5)));
+      const vis = Math.min(1, camera.aspect / (this.view.W / this.view.H)), k = Math.max(0, Math.min(1, (1.5 - camera.aspect) / 0.7));
+      const fu = 0.5 + Math.max(-(1 - vis) / 2, Math.min((1 - vis) / 2, (focus - 0.5) * k));
+      this.aim(fu, 0.5, 1);
       bloom.strength = 0.35 + 0.4 * Math.sin(Math.PI * fade(lt, 2.8, 3.6)) * (i === 0 ? 1 : 0) + 0.4 * Math.sin(Math.PI * fade(t, 22.2, 23.0));
     },
   });

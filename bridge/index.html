@@ -90,11 +90,11 @@
 </div></header>
 
 <main class="stage" id="stage">
-  <div id="stage3d" role="img" aria-label="거실에서 할아버지가 약을 찾지 못해 로보독에게 약을 가져다 달라고 부탁하고, 로보독이 약통을 처음엔 몰라 갸웃하지만 약통 사진을 더 모아 가르치면 AI가 알아보고, 마이크로비트를 거쳐 로보독이 깨어나 걸어가 약통이 놓인 탁자 앞에서 멈춰 여기예요 하고 알려 주는 약 30초 3D 영상"></div>
+  <div id="stage3d" role="img" aria-label="달빛이 비치는 밤, 방 안에서 로보독이 처음 눈을 뜨고, 아이가 초록 카드를 내밀자 함께 달빛 언덕길로 산책을 나가요. 언덕 끝에서 아이가 빨간 카드를 들자 로보독이 가르친 대로 딱 멈추고, 팔을 벌린 아이에게 돌아가는 약 30초 영상"></div>
   <div class="loading" id="loading">로보독을 깨우는 중…</div>
   <div class="nogl" id="nogl"><div>이 기기에서는 3D 영상을 켤 수 없어요.<br>아래 버튼으로 바로 시작할 수 있어요. <a href="./">기존 소개 화면</a>에서 2D 그림으로도 볼 수 있어요.</div></div>
 
-  <div class="title">로보독의 모험 · 할아버지의 약</div>
+  <div class="title">로보독의 모험 · 첫 산책</div>
   <div class="ctl">
     <button id="skip" type="button">건너뛰기 ⏭</button>
     <button id="replay" type="button" hidden>↺ 다시 보기</button>
@@ -102,14 +102,14 @@
   <div class="cap" id="cap" aria-live="polite"><b id="capText"></b><div class="segs" id="segs" aria-hidden="true"></div></div>
 
   <section class="end" id="end" aria-label="시작하기"><div class="end-in">
-    <h1>내가 가르친 <em>AI</em>로 로보독이 약통을 찾아 줘요</h1>
+    <h1>내가 가르친 <em>AI</em>로 로보독이 카드를 알아보고 멈춰요</h1>
     <p>로봇이 없어도 시뮬레이터로 시작할 수 있어요. 우리 학교의 문제는 무엇인가요?</p>
     <nav class="cta">
       <a class="main" href="sim/"><div class="step">STEP 1</div><b>시뮬레이터에서 코딩</b><span>블록 코딩과 3D 로보독 미리 보기, 말로 시키면 코드를 만들어 주는 도우미</span><em class="go">시작하기</em></a>
       <a href="ai.html"><div class="step" style="color:var(--accent)">STEP 2</div><b>AI 브리지</b><span>웹캠으로 카드를 가르치고 결과를 마이크로비트로 보내요</span><em class="go">열기</em></a>
       <a href="docs/"><div class="step" style="color:var(--accent)">선생님께</div><b>수업 자료</b><span>2·4·8차시 수업안, 활동지·평가, 운영 가이드</span><em class="go">보기</em></a>
     </nav>
-    <p class="foot"><span class="partner">코코아팹 협력</span> 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. 영상은 이야기를 위한 상상이에요. 실물 로보독은 물건을 집지 못해서, 찾아가서 알려 주는 역할로 수업해요.</p>
+    <p class="foot"><span class="partner">코코아팹 협력</span> 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. 영상 속 아이와 배경은 Gemini로 만든 상상 장면이고, 로보독은 시뮬레이터와 같은 3D 모델이에요. 수업에서는 웹캠이 카드를 알아보고 마이크로비트를 거쳐 로보독을 움직여요.</p>
   </div></section>
 </main>
 
@@ -117,8 +117,11 @@
 const stage = document.getElementById('stage'), cap = document.getElementById('cap'), capText = document.getElementById('capText');
 const segs = document.getElementById('segs'), skip = document.getElementById('skip'), replay = document.getElementById('replay');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const mobile = matchMedia('(max-width: 720px)');
-let engine = null, SC = null, END = 29, timer = 0;
+let engine = null, timer = 0, lastI = -1;
+// 장면별 자막 [시각(초), 글] — 영상(Gemini Omni) 3장면 × 10초
+const SC = [{ t: 0, text: '달빛이 비치는 밤…' }, { t: 3.0, text: '로보독이 처음 눈을 떴어요' }, { t: 6.0, text: "'같이 산책 갈래?' 초록 카드는 '가자!'" }, { t: 10, text: '달빛 언덕길, 우리의 첫 산책' },
+  { t: 20, text: '언덕 끝, 그 앞은 위험해요' }, { t: 22.2, text: '빨간 카드 — 멈춰!' }, { t: 24.6, text: '내가 가르친 대로, 딱 멈췄어요' }, { t: 26.6, text: '이리 와! 우리의 첫 산책 끝' }];
+const END = 30;
 
 const showEnd = () => { stage.classList.add('ended'); skip.hidden = true; replay.hidden = false; };
 const fail = () => { document.getElementById('loading').style.display = 'none'; document.getElementById('nogl').style.display = 'grid'; showEnd(); };
@@ -126,33 +129,29 @@ const ok = (() => { try { const c = document.createElement('canvas'); return !!(
 if (!ok) fail();
 else {
   try {
-    const m = await import('./intro3d.js');
-    SC = m.SCENES; END = m.END;
+    const m = await import('./samples3d.js');
     segs.innerHTML = SC.map(() => '<i></i>').join('');
     const bars = [...segs.children];
-    const shifts = () => engine && engine.setShift(mobile.matches ? 0.1 : 0.07, mobile.matches ? 0.3 : 0.22);
-    engine = m.createStory({
-      host: document.getElementById('stage3d'), still: reduce,
-      onScene: (i, s) => {
-        clearTimeout(timer); cap.classList.add('swap');
-        timer = setTimeout(() => { capText.textContent = s.text; cap.classList.remove('swap'); }, i ? 220 : 0);
+    engine = await m.createSamples({
+      host: document.getElementById('stage3d'), sequence: ['veo'],
+      onFrame: (_, t) => {
+        let i = 0; while (i + 1 < SC.length && t >= SC[i + 1].t) i++;
+        if (i !== lastI) { const first = lastI < 0; lastI = i; clearTimeout(timer); cap.classList.add('swap');
+          timer = setTimeout(() => { capText.textContent = SC[i].text; cap.classList.remove('swap'); }, first ? 0 : 220); }
+        bars.forEach((b, k) => { const a = SC[k].t, e = k + 1 < SC.length ? SC[k + 1].t : END; b.style.setProperty('--p', Math.max(0, Math.min(1, (t - a) / (e - a))) * 100 + '%'); });
       },
-      onTick: (t) => bars.forEach((b, i) => {
-        const a = SC[i].t, e = i + 1 < SC.length ? SC[i + 1].t : END;
-        b.style.setProperty('--p', Math.max(0, Math.min(1, (t - a) / (e - a))) * 100 + '%');
-      }),
-      onEnd: showEnd,
+      onSeqEnd: showEnd,
     });
-    shifts(); mobile.addEventListener('change', shifts);
     stage.classList.add('ready');
     window.__story = engine;
+    const play = () => { lastI = -1; stage.classList.remove('ended'); replay.hidden = true; skip.hidden = false; engine.playAll(); };
     skip.onclick = () => engine.finish();
-    replay.onclick = () => { stage.classList.remove('ended'); replay.hidden = true; skip.hidden = false; engine.replay(); };
-    engine.replay();      // 열면 바로 재생
-    // 같은 탭에서 다시 오면 영상은 건너뛰고 바로 시작 카드(처음 한 번만 재생)
-    try { if (sessionStorage.getItem('intro-seen')) engine.finish(); sessionStorage.setItem('intro-seen', '1'); } catch (e) {}
+    replay.onclick = play;
+    play();      // 열면 바로 재생
+    // 움직임 줄이기 설정이거나, 같은 탭에서 다시 오면 영상은 건너뛰고 바로 시작 카드
+    try { if (reduce || sessionStorage.getItem('intro-seen')) engine.finish(); sessionStorage.setItem('intro-seen', '1'); } catch (e) { if (reduce) engine.finish(); }
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && !stage.classList.contains('ended')) engine.finish(); });
-  } catch (e) { console.warn('3D 영상을 켜지 못했어요:', e); fail(); }
+  } catch (e) { console.warn('영상을 켜지 못했어요:', e); fail(); }
 }
 </script>
 </body>
