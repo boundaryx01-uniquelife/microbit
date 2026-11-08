@@ -24,6 +24,7 @@ export const STORIES = [
   { id: 'walk', len: 7, title: '로보독의 첫 산책', sub: '실루엣 그림자극', tech: '달빛 역광, 안개로 겹친 언덕, 빛나는 것은 LED 눈과 카드뿐. 상자 속에서 깨어남 → 초록 카드로 산책 → 빨간 카드로 낭떠러지 앞 정지' },
   { id: 'explore', len: 7, title: '로보독 탐험대: 사라진 열쇠', sub: '로보독 눈높이 매크로', tech: '얕은 피사계 심도(초점 이동), 따뜻한 햇빛과 먼지, 책 더미 협곡과 소파 동굴. 두리번 → 탐험 → 열쇠 발견' },
   { id: 'pb', len: 12, title: '로보독의 첫 산책 (그림책)', sub: 'Canva 일러스트 + 3D 로보독', tech: '배경·아이는 Canva로 그린 그림책 일러스트, 로보독만 시뮬레이터 3D 모델. 그림 속 길 위를 3D 로보독이 걷도록 카메라·바닥을 그림에 맞춤' },
+  { id: 'veo', len: 30, title: '로보독의 첫 산책 (영상 합성)', sub: 'Gemini Omni 영상 + 3D 로보독', tech: '아이와 배경은 Gemini Omni Flash로 만든 영상(그림책 그림을 첫 장면으로), 로보독은 시뮬레이터 3D 모델을 영상 속 바닥에 합성' },
   { id: 'seasons', len: 6, title: '할아버지와 로보독의 사계절', sub: '동화책 툰 · 종이 질감', tech: '셀 음영 + 외곽선, 파스텔 색, 종이 결. 봄 꽃잎 → 여름 → 가을 낙엽 → 겨울 눈, 로보독이 할아버지 곁에서' },
 ];
 export const CODE_STEPS = [   // 5번 영상의 블록 코드(시작 시각)
@@ -85,7 +86,18 @@ export async function createSamples({ host, sequence = null, durations = {}, pla
 
   const TEX = {}, PB = { room: 'assets/story/room.jpg', hill: 'assets/story/hill.jpg', walk: 'assets/story/kid-walk.png', stop: 'assets/story/kid-stop.png' };
   const loadTex = (url) => new Promise((res) => new THREE.TextureLoader().load(url, (tx) => { tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 8; TEX[url] = tx; res(tx); }, undefined, () => res(null)));
-  if ((sequence || []).includes('pb')) await Promise.all(Object.values(PB).map(loadTex));
+  const loadVideo = (url) => new Promise((res) => {   // 영상 배경(소리 없음, 화면 안에서 재생)
+    const v = document.createElement('video'); v.src = url; v.muted = true; v.playsInline = true; v.preload = 'auto'; v.crossOrigin = 'anonymous';
+    const done = () => {   // 영상 프레임을 캔버스에 옮겨 그려 텍스처로 씀(재생·탐색 모두 확실히 갱신)
+      const c = document.createElement('canvas'); c.width = v.videoWidth; c.height = v.videoHeight; const g = c.getContext('2d');
+      const tx = new THREE.CanvasTexture(c); tx.colorSpace = THREE.SRGBColorSpace; tx.userData.video = v;
+      tx.userData.draw = () => { if (v.readyState >= 2) { g.drawImage(v, 0, 0, c.width, c.height); tx.needsUpdate = true; } };
+      tx.userData.draw(); TEX[url] = tx; res(tx); };
+    v.addEventListener('loadeddata', done, { once: true }); v.addEventListener('error', () => res(null), { once: true }); v.load();
+  });
+  if ((sequence || []).some(id => id === 'pb' || id === 'veo')) await Promise.all(Object.values(PB).map(loadTex));
+  if ((sequence || []).includes('veo')) await Promise.all(['assets/story/veo1.mp4', 'assets/story/veo3.mp4', 'assets/story/veo4.mp4'].map(loadVideo));
+  window.__veoTex = TEX;   // 시험용: 영상 요소 확인
   const world = new World(); world.useTable = false; world.start = { x: 60, y: 72, heading: 0 };
   const robot = new Robot(world);
   const api = makeRobodogApi(robot, { warnOnce() {}, sleep: () => Promise.resolve(), soundOn: () => false });
@@ -635,10 +647,10 @@ export async function createSamples({ host, sequence = null, durations = {}, pla
       this.C = V(0, 60, 0); this.D = 1500; this.Sroom = this.Shill = this.path = null;
     },
     // 그림판 배치: 카메라가 vH(그림 속 지평선 높이)를 수평으로 보도록 기울이고, 그림이 기본 화면을 꽉 채우게
-    frame(tex, vH, F) {
-      const A = camera.aspect, a = tex.image.width / tex.image.height, D = this.D;
+    frame(tex, vH, F, M = 1.2) {
+      const A = camera.aspect, a = (tex.image.videoWidth || tex.image.width) / (tex.image.videoHeight || tex.image.height), D = this.D;
       const H0 = 2 * D * Math.tan(THREE.MathUtils.degToRad(F / 2)), W0 = H0 * A;
-      let W, H; if (W0 / H0 > a) { W = W0 * 1.2; H = W / a; } else { H = H0 * 1.2; W = H * a; }   // 시선을 옮겨도 가장자리가 비지 않게 여유
+      let W, H; if (W0 / H0 > a) { W = W0 * M; H = W / a; } else { H = H0 * M; W = H * a; }   // 시선을 옮겨도 가장자리가 비지 않게 여유
       const p = Math.atan((0.5 - vH) * H / D);
       const f = V(0, -Math.sin(p), -Math.cos(p)), u = V(0, Math.cos(p), -Math.sin(p)), r = V(1, 0, 0);
       const center = this.C.clone().addScaledVector(f, D);
@@ -712,6 +724,63 @@ export async function createSamples({ host, sequence = null, durations = {}, pla
     },
   };
 
+  // ================= Gemini Omni 영상(아이·배경) + 시뮬레이터 3D 로보독 합성 =================
+  // 영상 3개는 카메라가 고정된 장면이라, 그림책(pb)과 같은 방법으로 영상 속 바닥과 3D 바닥을 맞춰 로보독을 올림
+  const VEO_SHOTS = [   // vH: 영상 속 지평선 높이(0=위, 1=아래), S: 아이 키 기준(u, 발 v, 키 비율)으로 로보독 크기 계산
+    { src: 'assets/story/veo1.mp4', t0: 0, len: 10, vH: 0.47, ref: [0.69, 0.856, 0.68, 0.28] },
+    { src: 'assets/story/veo3.mp4', t0: 10, len: 10, vH: 0.45, ref: [0.53, 0.923, 0.534, 0.3] },
+    { src: 'assets/story/veo4.mp4', t0: 20, len: 10, vH: 0.333, ref: [0.714, 0.894, 0.58, 0.3] },
+  ];
+  const BOY3 = [[0.2, 0.955, 0.879], [0.6, 0.924, 0.885], [1.0, 0.863, 0.888], [1.4, 0.799, 0.891], [1.8, 0.738, 0.898], [2.2, 0.683, 0.908], [2.6, 0.64, 0.917], [3.0, 0.608, 0.919], [3.4, 0.582, 0.922], [3.8, 0.553, 0.924], [4.2, 0.53, 0.923], [4.6, 0.519, 0.922], [5.0, 0.512, 0.919], [5.4, 0.505, 0.917], [5.8, 0.498, 0.908], [6.2, 0.484, 0.897], [6.6, 0.471, 0.886], [7.0, 0.458, 0.861], [7.4, 0.444, 0.838], [7.8, 0.426, 0.813], [8.2, 0.409, 0.792], [8.6, 0.391, 0.771], [9.0, 0.377, 0.766], [9.4, 0.365, 0.748], [9.8, 0.361, 0.739]];   // 언덕 영상 속 아이 발 위치(시각, u, v)
+  const boyAt = (lt) => { const A = BOY3; if (lt <= A[0][0]) return [A[0][1], A[0][2]]; for (let i = 1; i < A.length; i++) if (lt <= A[i][0]) { const k = (lt - A[i - 1][0]) / (A[i][0] - A[i - 1][0]); return [lerp(A[i - 1][1], A[i][1], k), lerp(A[i - 1][2], A[i][2], k)]; } const n = A.length; const k = (lt - A[n - 1][0]) / (A[n - 1][0] - A[n - 2][0]); return [A[n - 1][1] + (A[n - 1][1] - A[n - 2][1]) * k, A[n - 1][2] + (A[n - 1][2] - A[n - 2][2]) * k]; };
+  clips.veo = Object.assign(Object.create(clips.pb), {
+    len: 30,
+    setup() {
+      clips.pb.setup.call(this);
+      this.kid.visible = false; this.cardFace.visible = false; this.cardGlow.visible = false; this.dustPts.visible = false;
+      this.S = [null, null, null]; this.cur = -1;
+      events = [[0, () => { api.legBend(0, 0); api.headLedClear(); }], [3.0, () => api.headLedExp(0)], [4.5, () => { api.legBend(0, 70); api.bodyLed(80, 160, 255); }], [6.2, () => api.headLedExp(3)],
+        [7.0, () => api.move(0, 60)], [9.0, () => { api.stop(); api.headLedExp(1); api.bodyLed(255, 120, 170); }],
+        [10.0, () => { api.headLedExp(0); api.bodyLed(40, 220, 120); api.move(0, 60); }],
+        [20.0, () => { api.headLedExp(0); api.bodyLed(40, 220, 120); api.move(0, 60); }], [22.3, () => { api.stop(); api.headLedExp(13); api.bodyLed(255, 50, 50); }],
+        [23.6, () => api.headLedExp(0)], [24.6, () => { api.headLedExp(1); api.bodyLed(255, 110, 170); }], [26.6, () => api.move(0, 60)], [28.9, () => api.stop()]];
+      bloom.radius = 0.45; bloom.threshold = 0.85; grade.uniforms.vignette.value = 0.35; grade.uniforms.grain.value = 0.02; grade.uniforms.aberr.value = 0;
+    },
+    syncVideo(i, lt) {   // 영상과 이야기 시간 맞추기(재생 중엔 영상 시계를 따르고, 많이 어긋나거나 멈춰 있으면 맞춰 줌)
+      VEO_SHOTS.forEach((s, k) => { const v = TEX[s.src].userData.video; if (k !== i && !v.paused) v.pause(); });
+      const v = TEX[VEO_SHOTS[i].src].userData.video, end = VEO_SHOTS[i].len - 0.05;
+      if (lt >= end) { if (!v.paused) v.pause(); if (Math.abs(v.currentTime - end) > 0.1) v.currentTime = end; return; }
+      if (Math.abs(v.currentTime - lt) > 0.3) v.currentTime = lt;
+      if (!playing) { if (!v.paused) v.pause(); } else if (v.paused) v.play().catch(() => {});
+    },
+    update(t) {
+      const i = t < 10 ? 0 : t < 20 ? 1 : 2, sh = VEO_SHOTS[i], lt = t - sh.t0;
+      grade.uniforms.fade.value = Math.min(1, fade(t, 0, 0.6), Math.abs(t - 10) / 0.25, Math.abs(t - 20) / 0.25);
+      this.syncVideo(i, lt);
+      TEX[sh.src].userData.draw(); this.frame(TEX[sh.src], sh.vH, 40, 1.02); this.aim(0.5, 0.5, 1);
+      if (!this.S[i]) { const [u, v, h, r] = sh.ref; this.S[i] = this.sizeAt(this.ground(u, v), h * r) / 15; }
+      const S = this.S[i];
+      let p, th;
+      const face = (from, to) => { const d = to.clone().sub(from); return Math.atan2(-d.x, -d.z); };
+      if (i === 0) {   // 방: 달빛 위에서 깨어나 아이 쪽으로 몇 걸음
+        const a = this.ground(0.44, 0.75), b = this.ground(0.575, 0.8), boy = this.ground(0.69, 0.86);
+        p = a.clone().lerp(b, ease(fade(lt, 7.0, 9.0))); th = face(p, boy) + (lt < 6 ? -0.5 + 0.5 * ease(fade(lt, 4.5, 6)) : 0);
+        this.lights(p, V(20, 160, -260), V(160, 60, 160)); this.fill.color.set(0xffc890); this.fill.intensity = 0.8; this.key.intensity = 2.4;
+      } else if (i === 1) {   // 언덕길: 아이가 디딜 곳보다 조금 앞서 걷기
+        const [u, v] = boyAt(lt + 0.9), [u2, v2] = boyAt(lt + 1.2);
+        p = this.ground(u - 0.03, v); const q = this.ground(u2 - 0.03, v2); th = face(p, q);
+        this.lights(p, V(-260, 240, -420), V(80, 60, 200)); this.fill.color.set(0xa8c0ff); this.fill.intensity = 1.1; this.key.intensity = 2.6;
+      } else {   // 언덕 끝: 가장자리 쪽으로 가다 빨간 카드에 멈추고, 돌아봐 하트, 팔 벌린 아이에게
+        const a = this.ground(0.5, 0.8), b = this.ground(0.41, 0.66), c = this.ground(0.58, 0.79), boy = this.ground(0.72, 0.89);
+        if (lt < 6.6) { p = a.clone().lerp(b, ease(fade(lt, 0, 2.3))); const walkTh = face(a, b); let d = face(p, boy) - walkTh; while (d > Math.PI) d -= 2 * Math.PI; while (d < -Math.PI) d += 2 * Math.PI; th = walkTh + d * ease(fade(lt, 3.4, 4.4)); }
+        else { p = b.clone().lerp(c, ease(fade(lt, 6.6, 8.9))); th = face(p, boy); }
+        this.lights(p, V(-120, 260, -380), V(120, 60, 200)); this.fill.color.set(0xa8c0ff); this.fill.intensity = 1.1; this.key.intensity = 2.6;
+      }
+      this.placeDog(p, th, S);
+      bloom.strength = 0.35 + 0.4 * Math.sin(Math.PI * fade(lt, 2.8, 3.6)) * (i === 0 ? 1 : 0) + 0.4 * Math.sin(Math.PI * fade(t, 22.2, 23.0));
+    },
+  });
+
   // ---------- 재생 ----------
   const ids = sequence || CLIPS.map(c => c.id), meta = ids.map(id => [...CLIPS, ...STORIES].find(c => c.id === id));
   let cur = -1, t = 0, playing = false, chain = false, ended = false, raf = 0, last = performance.now(), shTX = 0, shY = 0, shTY = playShift;
@@ -752,7 +821,7 @@ export async function createSamples({ host, sequence = null, durations = {}, pla
     playAll() { chain = true; ended = false; shTY = playShift; start(0); playing = true; },
     finish() { chain = false; playing = false; start(ids.length - 1); t = dur(cur); shY = shTY = endShift; ended = true; draw(); onSeqEnd(); },   // 건너뛰기: 마지막 장면 + 끝
     seek(i, tt) { chain = false; playing = false; if (cur !== i) start(i); t = Math.min(dur(cur), Math.max(0, tt)); draw(); },
-    pause() { playing = false; cancelAnimationFrame(raf); },
+    pause() { playing = false; cancelAnimationFrame(raf); Object.values(TEX).forEach(x => x && x.userData && x.userData.video && x.userData.video.pause()); },
     resume() { last = performance.now(); raf = requestAnimationFrame(frame); },
     state: () => ({ cur, t, playing, chain, ended, dur: dur(Math.max(0, cur)) }),
   };
