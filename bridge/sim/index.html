@@ -26,6 +26,7 @@
   section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px; min-width: 0; box-shadow: var(--shadow-sm); }
   h2 { margin: 0 0 8px; font-size: 16px; }
   .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  #examples { max-width: min(100%, 360px); min-width: 0; text-overflow: ellipsis; }
   select { font: inherit; border: 1px solid var(--line-strong); background: var(--surface); color: var(--ink); border-radius: var(--r-sm); padding: 8px 12px; cursor: pointer; }
   button { min-height: 38px; padding: 7px 13px; font-size: 14.5px; }
   button.primary { background: var(--accent); color: var(--accent-text); border-color: var(--accent); font-weight: 700; }
@@ -58,6 +59,14 @@
   .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px; }
   .panel { border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
   .panel h2.ph { margin: 0 0 6px; font-size: 14px; }
+  .howto { margin-top: 8px; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--accent); background: var(--accent-soft); }
+  .howto-head { display: flex; align-items: center; gap: 8px; font-size: 16px; }
+  .howto-head .close { margin-left: auto; min-height: 32px; padding: 2px 10px; }
+  .howto .lvl { white-space: nowrap; flex: none; font-size: 12.5px; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-text); font-weight: 700; }
+  .howto p.note { margin: 4px 0 6px; }
+  .howto-sub { font-size: 14.5px; }
+  .howto ol { margin: 4px 0 6px; padding-left: 24px; font-size: 14.5px; line-height: 1.6; }
+  .howto summary { cursor: pointer; font-weight: 700; font-size: 14.5px; min-height: 28px; }
   .needs { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin-top: 10px; padding: 10px; border-radius: 12px; background: var(--accent-soft); }
   .needs > b { width: 100%; font-size: 14px; }
   .needs .need { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; max-width: 300px; font-weight: 700; }
@@ -190,6 +199,14 @@
       <button id="btnReset">↺ 처음으로</button>
       <span id="runMsg" role="status"></span>
     </div>
+    <section id="howto" class="howto" hidden aria-live="polite">
+      <div class="howto-head"><b id="howtoTitle"></b> <span id="howtoLevel" class="lvl"></span>
+        <button id="howtoClose" class="close" aria-label="따라 하기 안내 닫기">✕</button></div>
+      <p id="howtoGroup" class="note"></p>
+      <b class="howto-sub">💻 시뮬레이터에서 따라 하기</b>
+      <ol id="howtoSim"></ol>
+      <details><summary>🐕 실물 로보독으로 해 보기</summary><ol id="howtoReal"></ol></details>
+    </section>
     <p class="note codehint">블록 코딩 화면에서 블록을 고치면 로보독이 바로 움직여요. MakeCode가 안 열리면 <b>글자 코드</b> 탭에 코드를 붙여넣고 <b>▶ 실행</b>.</p>
     <div class="row" style="justify-content:space-between;gap:6px">
     <div class="tabs codetabs" role="tablist" aria-label="코드 보기">
@@ -307,7 +324,7 @@
 import { Robot, World, Runner, EXPRESSIONS, makeRobodogApi, compile, ensureBabel } from './runtime.js';
 import { ruleAssistant, SAMPLE_REQUESTS, checkAi, askAi } from './assistant.js';
 import { View2D, drawEyes } from './view2d.js';
-import { EXAMPLES } from './examples.js';
+import { EXAMPLES, GROUPS } from './examples.js';
 import { detectDevices, DEVICE_INFO, runHint } from './devices.js';
 
 const $ = (id) => document.getElementById(id);
@@ -337,10 +354,24 @@ let view3d = null, mode3d = true;   // 기본 3D 보기(?view=2d 이면 2D)
 
 // ---------- 예제 / 코드 ----------
 const sel = $('examples');
-sel.innerHTML = '<option value="">예제 불러오기…</option>' + EXAMPLES.map(e => `<option value="${e.id}">${e.title}</option>`).join('');
+// 예제는 '본체 버튼' / '라디오 리모컨' / '점검'으로 나눠 보여 줌
+const escH = (t) => String(t).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+sel.innerHTML = '<option value="">예제 고르기 (본체 버튼 / 라디오 리모컨)…</option>' + GROUPS.map(g =>
+  `<optgroup label="${escH(g.title)}">` + EXAMPLES.filter(e => e.group === g.id).map(e => `<option value="${e.id}">${escH(e.title)} · ${escH(e.level)}</option>`).join('') + '</optgroup>').join('');
+function showHowto(ex) {
+  if (!ex) { $('howto').hidden = true; return; }
+  const g = GROUPS.find(x => x.id === ex.group) || {};
+  $('howtoTitle').textContent = `${g.title ? g.title.split(' ')[0] + ' ' : ''}${ex.title}`;
+  $('howtoLevel').textContent = ex.level || '';
+  $('howtoGroup').textContent = g.note || '';
+  $('howtoSim').innerHTML = (ex.sim || []).map(t => `<li>${escH(t)}</li>`).join('');
+  $('howtoReal').innerHTML = (ex.real || []).map(t => `<li>${escH(t)}</li>`).join('');
+  $('howto').hidden = false;
+}
+$('howtoClose').onclick = () => { $('howto').hidden = true; };
 sel.onchange = () => {
   const ex = EXAMPLES.find(e => e.id === sel.value);
-  if (ex && (!$('code').value.trim() || confirm('지금 코드를 예제로 바꿀까요?'))) { $('code').value = ex.code; save(); applyDevices(ex.code); }
+  if (ex && (!$('code').value.trim() || confirm('지금 코드를 예제로 바꿀까요?'))) { $('code').value = ex.code; save(); applyDevices(ex.code); showHowto(ex); }
   sel.value = '';
 };
 function save() { try { localStorage.setItem('robodog-sim-code', $('code').value); } catch (e) {} }
