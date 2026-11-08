@@ -23,6 +23,7 @@ export const CLIPS = [
 export const STORIES = [
   { id: 'walk', len: 7, title: '로보독의 첫 산책', sub: '실루엣 그림자극', tech: '달빛 역광, 안개로 겹친 언덕, 빛나는 것은 LED 눈과 카드뿐. 상자 속에서 깨어남 → 초록 카드로 산책 → 빨간 카드로 낭떠러지 앞 정지' },
   { id: 'explore', len: 7, title: '로보독 탐험대: 사라진 열쇠', sub: '로보독 눈높이 매크로', tech: '얕은 피사계 심도(초점 이동), 따뜻한 햇빛과 먼지, 책 더미 협곡과 소파 동굴. 두리번 → 탐험 → 열쇠 발견' },
+  { id: 'pb', len: 12, title: '로보독의 첫 산책 (그림책)', sub: 'Canva 일러스트 + 3D 로보독', tech: '배경·아이는 Canva로 그린 그림책 일러스트, 로보독만 시뮬레이터 3D 모델. 그림 속 길 위를 3D 로보독이 걷도록 카메라·바닥을 그림에 맞춤' },
   { id: 'seasons', len: 6, title: '할아버지와 로보독의 사계절', sub: '동화책 툰 · 종이 질감', tech: '셀 음영 + 외곽선, 파스텔 색, 종이 결. 봄 꽃잎 → 여름 → 가을 낙엽 → 겨울 눈, 로보독이 할아버지 곁에서' },
 ];
 export const CODE_STEPS = [   // 5번 영상의 블록 코드(시작 시각)
@@ -82,6 +83,9 @@ const F = '"Pretendard Variable","Pretendard","Noto Sans KR","Apple SD Gothic Ne
 export async function createSamples({ host, sequence = null, durations = {}, playShift = 0, endShift = 0, onClip = () => {}, onFrame = () => {}, onEnd = () => {}, onSeqEnd = () => {} }) {
   try { await Promise.race([document.fonts.load('900 120px "Pretendard Variable"', '보고전하움직인다약통'), new Promise(r => setTimeout(r, 1500))]); } catch (e) { /* 글꼴이 늦으면 기본 글꼴 */ }
 
+  const TEX = {}, PB = { room: 'assets/story/room.jpg', hill: 'assets/story/hill.jpg', walk: 'assets/story/kid-walk.png', stop: 'assets/story/kid-stop.png' };
+  const loadTex = (url) => new Promise((res) => new THREE.TextureLoader().load(url, (tx) => { tx.colorSpace = THREE.SRGBColorSpace; tx.anisotropy = 8; TEX[url] = tx; res(tx); }, undefined, () => res(null)));
+  if ((sequence || []).includes('pb')) await Promise.all(Object.values(PB).map(loadTex));
   const world = new World(); world.useTable = false; world.start = { x: 60, y: 72, heading: 0 };
   const robot = new Robot(world);
   const api = makeRobodogApi(robot, { warnOnce() {}, sleep: () => Promise.resolve(), soundOn: () => false });
@@ -593,6 +597,118 @@ export async function createSamples({ host, sequence = null, durations = {}, pla
       const k = ease(t / 6); camera.fov = lerp(32, 27, k); camera.updateProjectionMatrix();
       camera.position.set(lerp(70, 64, k), lerp(46, 38, k), lerp(-36, -22, k)); look(54, 16, 84);
       bloom.strength = 0.3;
+    },
+  };
+
+  // ================= 그림책 2.5D: Canva 일러스트(배경·아이) + 시뮬레이터 3D 로보독 =================
+  // 카메라는 한 자리에 고정하고 방향·줌만 바꿈 → 그림 위의 한 점과 3D 바닥 위의 한 점이 늘 겹침(그림 속 길 위를 로보독이 걷게)
+  const PBK = {   // 아이 그림 속 카드 위치(그림 비율 0~1, v는 위에서부터)
+    walk: { u: 0.192, v: 0.299, w: 0.152, h: 0.078 }, stop: { u: 0.133, v: 0.039, w: 0.241, h: 0.067 },
+  };
+  clips.pb = {
+    len: 12,
+    setup() {
+      renderer.toneMapping = THREE.NoToneMapping; renderer.toneMappingExposure = 1;
+      scene.background = new THREE.Color(0x000000); scene.fog = null;
+      baseLights[0].intensity = 0.35; baseLights[0].color.set(0x9fb6e0); baseLights[1].intensity = 0;
+      this.bg = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ map: TEX[PB.room], depthTest: false, depthWrite: false, toneMapped: false }));
+      this.bg.renderOrder = -10; clipGroup.add(this.bg);
+      const sf = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000), new THREE.ShadowMaterial({ opacity: 0.45 })); sf.rotation.x = -Math.PI / 2; sf.position.y = 0.05; sf.receiveShadow = true; clipGroup.add(sf);
+      this.key = new THREE.DirectionalLight(0xbcd2ff, 2.4); this.key.castShadow = true; Object.assign(this.key.shadow.camera, { left: -120, right: 120, top: 120, bottom: -120, near: 1, far: 800 }); this.key.shadow.mapSize.set(1024, 1024); this.key.shadow.bias = -0.0006;
+      this.fill = new THREE.DirectionalLight(0xffd7a8, 0.7); clipGroup.add(this.key, this.key.target, this.fill, this.fill.target);
+      const kg = new THREE.PlaneGeometry(1, 1); kg.translate(0, 0.5, 0);   // 발이 원점
+      this.kid = new THREE.Mesh(kg, new THREE.MeshBasicMaterial({ map: TEX[PB.walk], transparent: true, alphaTest: 0.02, depthWrite: false, toneMapped: false }));
+      this.kid.renderOrder = 5; this.kid.material.color.setRGB(0.86, 0.9, 1.0); clipGroup.add(this.kid);
+      this.cardFace = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), new THREE.MeshBasicMaterial({ color: new THREE.Color(0.3, 1.9, 0.7), transparent: true, opacity: 0.9, depthTest: false, toneMapped: false }));
+      this.cardFace.renderOrder = 6; clipGroup.add(this.cardFace);
+      this.cardGlow = new THREE.Sprite(new THREE.SpriteMaterial({ map: softDot(), color: new THREE.Color(0.25, 1.6, 0.6), transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: false }));
+      this.cardGlow.renderOrder = 7; clipGroup.add(this.cardGlow);
+      const N = 160, pos = new Float32Array(N * 3); this.dust = [];
+      for (let i = 0; i < N; i++) this.dust.push([(rnd() - 0.5) * 140, rnd() * 90, (rnd() - 0.5) * 120, rnd() * 6.28]);
+      const dg = new THREE.BufferGeometry(); dg.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      this.dustPts = new THREE.Points(dg, new THREE.PointsMaterial({ map: softDot(), color: 0xbfd6ff, size: 2.2, transparent: true, opacity: 0.6, blending: THREE.AdditiveBlending, depthWrite: false })); clipGroup.add(this.dustPts);
+      rig.visible = true; rig.rotation.set(0, 0, 0); pin = { x: 60, y: 72 };
+      events = [[0, () => { api.legBend(0, 0); api.headLedClear(); }], [1.2, () => api.headLedExp(0)], [2.0, () => { api.legBend(0, 70); api.bodyLed(80, 160, 255); }], [2.4, () => api.headLedExp(6)], [3.2, () => api.headLedExp(0)],
+        [4.6, () => { api.bodyLed(40, 220, 120); api.move(0, 60); }], [9.1, () => { api.stop(); api.headLedExp(13); api.bodyLed(255, 50, 50); }], [9.8, () => { api.headLedExp(1); api.bodyLed(255, 110, 170); }]];
+      bloom.radius = 0.45; bloom.threshold = 0.8;
+      grade.uniforms.vignette.value = 0.45; grade.uniforms.grain.value = 0.03; grade.uniforms.aberr.value = 0.0006; grade.uniforms.tint.value.set(1, 1, 1);
+      this.C = V(0, 60, 0); this.D = 1500; this.Sroom = this.Shill = this.path = null;
+    },
+    // 그림판 배치: 카메라가 vH(그림 속 지평선 높이)를 수평으로 보도록 기울이고, 그림이 기본 화면을 꽉 채우게
+    frame(tex, vH, F) {
+      const A = camera.aspect, a = tex.image.width / tex.image.height, D = this.D;
+      const H0 = 2 * D * Math.tan(THREE.MathUtils.degToRad(F / 2)), W0 = H0 * A;
+      let W, H; if (W0 / H0 > a) { W = W0 * 1.2; H = W / a; } else { H = H0 * 1.2; W = H * a; }   // 시선을 옮겨도 가장자리가 비지 않게 여유
+      const p = Math.atan((0.5 - vH) * H / D);
+      const f = V(0, -Math.sin(p), -Math.cos(p)), u = V(0, Math.cos(p), -Math.sin(p)), r = V(1, 0, 0);
+      const center = this.C.clone().addScaledVector(f, D);
+      this.bg.material.map = tex; this.bg.position.copy(center); this.bg.scale.set(W, H, 1);
+      this.bg.quaternion.setFromRotationMatrix(new THREE.Matrix4().makeBasis(r, u, f.clone().negate()));
+      this.view = { center, r, u, W, H, F };
+    },
+    img(uu, vv) { const v = this.view; return v.center.clone().addScaledVector(v.r, (uu - 0.5) * v.W).addScaledVector(v.u, (0.5 - vv) * v.H); },
+    ground(uu, vv) { const d = this.img(uu, vv).sub(this.C).normalize(); return this.C.clone().addScaledVector(d, -this.C.y / Math.min(-1e-4, d.y)); },
+    aim(uu, vv, zoom) { camera.position.copy(this.C); camera.fov = this.view.F / zoom; camera.updateProjectionMatrix(); const q = this.img(uu, vv); look(q.x, q.y, q.z); },
+    sizeAt(p, frac) { return frac * 2 * p.distanceTo(this.C) * Math.tan(THREE.MathUtils.degToRad(this.view.F / 2)); },   // 기본 화면에서 frac 높이로 보이는 실제 크기
+    placeDog(p, th, S) {   // 로보독(로봇 좌표 60,72 고정)을 p 위치·th 방향·S 배율로
+      rig.scale.setScalar(S); rig.rotation.set(0, th, 0);
+      const c = Math.cos(th), s = Math.sin(th);
+      rig.position.set(p.x - (60 * c + 72 * s) * S, 0, p.z - (-60 * s + 72 * c) * S);
+    },
+    placeKid(p, H, tex, cardCol, glowK) {
+      const a = tex.image.width / tex.image.height, W = H * a, K = tex === TEX[PB.walk] ? PBK.walk : PBK.stop;
+      this.kid.material.map = tex; this.kid.position.copy(p); this.kid.scale.set(W, H, 1); this.kid.quaternion.copy(camera.quaternion);
+      const cp = p.clone().add(V((K.u - 0.5) * W, (1 - K.v) * H, 0).applyQuaternion(camera.quaternion));
+      this.cardFace.position.copy(cp); this.cardFace.quaternion.copy(camera.quaternion); this.cardFace.scale.set(K.w * W * 0.92, K.h * H * 0.92, 1);
+      this.cardFace.material.color.copy(cardCol); this.cardFace.material.opacity = 0.9 * Math.min(1, glowK * 2);
+      this.cardGlow.position.copy(cp); this.cardGlow.scale.setScalar(K.w * W * 3.2 * (0.8 + 0.4 * glowK)); this.cardGlow.material.color.copy(cardCol).multiplyScalar(0.8 * glowK);
+    },
+    lights(dogP, keyOff, fillOff) {
+      this.key.position.copy(dogP).add(keyOff); this.key.target.position.copy(dogP);
+      this.fill.position.copy(dogP).add(fillOff); this.fill.target.position.copy(dogP);
+    },
+    update(t) {
+      const GREEN = new THREE.Color(0.3, 1.9, 0.7), RED = new THREE.Color(2.2, 0.35, 0.35);
+      grade.uniforms.fade.value = Math.min(1, Math.abs(t - 4.2) / 0.3) * fade(t, 0, 0.5);
+      if (t < 4.2) {   // 1) 달빛 드는 방: 로보독이 눈을 뜨고 일어남, 아이가 카드를 들고 들어옴
+        this.frame(TEX[PB.room], 0.47, 40);
+        const k = ease(t / 4.2); this.aim(lerp(0.55, 0.57, k), lerp(0.58, 0.63, k), lerp(1.0, 1.18, k));
+        const dp = this.ground(0.56, 0.8);
+        if (!this.Sroom) this.Sroom = this.sizeAt(dp, 0.24) / 15;
+        this.placeDog(dp, Math.PI - 0.45, this.Sroom);
+        this.lights(dp, V(20, 160, -260), V(-160, 60, 160)); this.fill.color.set(0xffc890); this.fill.intensity = 0.8; this.key.intensity = 2.4;
+        const kin = ease(fade(t, 2.5, 3.5)), kp = this.ground(lerp(1.25, 0.86, kin), 0.985);
+        kp.y = Math.abs(Math.sin(t * 8)) * 2.5 * (1 - fade(t, 3.4, 3.6));
+        this.placeKid(kp, this.sizeAt(kp, 0.9), TEX[PB.walk], GREEN, fade(t, 3.2, 3.6));
+        this.kid.visible = t > 2.4;
+        const p = this.dustPts.geometry.attributes.position;
+        this.dust.forEach(([x, y, z, ph], i) => p.setXYZ(i, dp.x + x + Math.sin(t * 0.5 + ph) * 3, (y + t * 3 + ph) % 90, dp.z + z + Math.cos(t * 0.4 + ph) * 3)); p.needsUpdate = true;
+        this.dustPts.visible = true;
+        bloom.strength = 0.45 + 0.6 * Math.sin(Math.PI * fade(t, 1.1, 1.8));
+      } else {   // 2) 달빛 언덕길: 초록 카드로 함께 걷다가, 낭떠러지 앞에서 빨간 카드에 멈춤
+        this.frame(TEX[PB.hill], 0.45, 40); this.dustPts.visible = false;
+        const zk = ease(fade(t, 5.6, 9.4)); this.aim(lerp(0.52, 0.33, zk), lerp(0.58, 0.55, zk), lerp(1.0, 1.75, zk));
+        if (!this.path) {
+          const W = [[0.47, 0.73], [0.42, 0.66], [0.36, 0.595], [0.3, 0.545]].map(([u, v]) => this.ground(u, v));
+          const KW = [[0.8, 1.08], [0.66, 0.86], [0.56, 0.74], [0.48, 0.665], [0.43, 0.625]].map(([u, v]) => this.ground(u, v));
+          const L = [0]; for (let i = 1; i < W.length; i++) L.push(L[i - 1] + W[i].distanceTo(W[i - 1]));
+          const KL = [0]; for (let i = 1; i < KW.length; i++) KL.push(KL[i - 1] + KW[i].distanceTo(KW[i - 1]));
+          this.path = { W, L, total: L[L.length - 1], KW, KL, ktotal: KL[KL.length - 1] };
+        }
+        const at = (s) => { const { W, L, total } = this.path; const d = Math.max(0, Math.min(1, s)) * total; let i = 1; while (i < L.length - 1 && L[i] < d) i++; const k2 = (d - L[i - 1]) / (L[i] - L[i - 1]); return { p: W[i - 1].clone().lerp(W[i], Math.min(1, k2)), dir: W[i].clone().sub(W[i - 1]).normalize() }; };
+        const s = ease(fade(t, 4.6, 9.1)), A2 = at(s);
+        if (!this.Shill) this.Shill = this.sizeAt(this.path.W[this.path.W.length - 1], 0.18 / 1.75) / 15;
+        const thWalk = Math.atan2(-A2.dir.x, -A2.dir.z), toCam = this.C.clone().sub(A2.p), thCam = Math.atan2(-toCam.x, -toCam.z);
+        let dth = thCam - thWalk; while (dth > Math.PI) dth -= 2 * Math.PI; while (dth < -Math.PI) dth += 2 * Math.PI;
+        this.placeDog(A2.p, thWalk + dth * 0.8 * ease(fade(t, 9.3, 10.0)), this.Shill);   // 멈춘 뒤 아이(카메라) 쪽으로 돌아봄
+        this.lights(A2.p, V(-260, 240, -420), V(80, 60, 200)); this.fill.color.set(0xa8c0ff); this.fill.intensity = 1.2; this.key.intensity = 2.6;
+        const kat = (s3) => { const { KW, KL, ktotal } = this.path; const d = Math.max(0, Math.min(1, s3)) * ktotal; let i = 1; while (i < KL.length - 1 && KL[i] < d) i++; return KW[i - 1].clone().lerp(KW[i], Math.min(1, (d - KL[i - 1]) / (KL[i] - KL[i - 1]))); };
+        const K3 = at(ease(fade(t, 4.6, 8.85)) * 0.9), kp = K3.p.clone().addScaledVector(V(-K3.dir.z, 0, K3.dir.x), this.Shill * 11); kp.y = t < 8.8 ? Math.abs(Math.sin(t * 7)) * this.Shill * 1.4 : 0;
+        const stop = t >= 8.8, kidH = 15 * this.Shill * 2.3;
+        this.placeKid(kp, kidH, stop ? TEX[PB.stop] : TEX[PB.walk], stop ? RED : GREEN, stop ? 0.6 + 0.4 * Math.sin(Math.PI * fade(t, 8.8, 9.3)) + 0.3 : 0.75);
+        this.kid.visible = true;
+        bloom.strength = 0.4 + 0.7 * Math.sin(Math.PI * fade(t, 8.8, 9.5)) + 0.3 * fade(t, 9.8, 10.3);
+      }
     },
   };
 
