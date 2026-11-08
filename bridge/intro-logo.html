@@ -3,258 +3,264 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>빅아이 로보독 · 모션 인트로</title>
-<meta name="theme-color" content="#0b1020">
+<title>빅아이 로보독 · 엔딩 모션</title>
+<meta name="theme-color" content="#0a2342">
 <link rel="stylesheet" href="assets/fonts/pretendard.css">
 <style>
-  html, body { margin: 0; height: 100%; background: #0b1020; overflow: hidden; }
+  html, body { margin: 0; height: 100%; background: #0a2342; overflow: hidden; }
   canvas { display: block; width: 100vw; height: 100vh; }
-  #replay { position: fixed; right: 16px; bottom: 16px; font: 700 14px "Pretendard Variable", Pretendard, system-ui, sans-serif; color: #dbe6ff;
-    background: rgba(255,255,255,.08); border: 1px solid rgba(255,255,255,.22); border-radius: 999px; padding: 8px 16px; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .4s; }
+  #replay { position: fixed; right: 16px; bottom: 16px; font: 600 14px "Pretendard Variable", Pretendard, system-ui, sans-serif; color: #fbefc8;
+    background: rgba(10,30,60,.35); border: 1px solid rgba(251,239,200,.35); border-radius: 999px; padding: 8px 16px; cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .4s; }
   #replay.on { opacity: 1; pointer-events: auto; }
-  #replay:hover { background: rgba(255,255,255,.16); }
+  #replay:hover { background: rgba(10,30,60,.6); }
   body.cap #replay { display: none; }
 </style>
 </head>
 <body>
-<canvas id="c" role="img" aria-label="빅아이 로보독 로고의 눈이 켜지고 신호가 퍼지며 제목 '빅아이 로보독, 마이크로비트 피지컬 AI 수업'이 나타나는 모션 인트로"></canvas>
+<canvas id="c" role="img" aria-label="달빛 언덕에서 카메라가 보름달로 올라가고, 밤하늘의 별들이 모여 로보독의 LED 눈이 되며, 달 앞에 로보독 머리가 실루엣으로 나타나 두리번거리다 웃는 눈을 짓고 제목 '빅아이 로보독'이 나오는 엔딩 모션"></canvas>
 <button id="replay" type="button">다시 보기</button>
 <script>
-// 빅아이 로보독 × 마이크로비트 — 6초 모션 그래픽 인트로 (Canvas 2D, 시간 t의 순수 함수라 어느 시각이든 같은 장면)
-// 시험·캡처: ?t=2.5 (정지 화면) · window.__seek(초) · ?cap (재생 UI 숨김, 캡처용)
-const DUR = 6.2;
+// 엔딩 모션 "별이 모여 눈이 되다" — '로보독의 첫 산책'(veo.html) 마지막 컷에서 바로 이어지는 8.2초.
+// 1) 마지막 컷(언덕·보름달)에서 카메라가 달로 올라감(같은 붓결의 하늘로 녹아듦)
+// 2) 별들이 소용돌이치며 날아와 8×8 LED 눈 두 개가 됨  3) 달 앞에 알약형 머리(실제 빅아이 로보독)가 역광 실루엣으로
+// 4) 눈이 켜지고 두리번·깜빡·^^  5) 제목. 시간 t의 순수 함수(결정적).
+// 시험·캡처: ?t=3.2 · window.__seek(초) · ?cap · ?from=<이미지 주소>(실제 마지막 프레임으로 바꿀 때)
+const DUR = 8.2;
 const cv = document.getElementById('c'), g = cv.getContext('2d');
 const qs = new URLSearchParams(location.search);
 if (qs.has('cap')) document.body.classList.add('cap');
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-const BLUE = '#2456e5', CYAN = '#8fd8ff', INK = '#111827', NAVY = '#0b1020';
 const FONT = '"Pretendard Variable", Pretendard, "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif';
+const CREAM = '#fff4c8';
 
-// ---------- 보조 ----------
 const clamp = (x, a = 0, b = 1) => Math.min(b, Math.max(a, x));
 const prog = (t, a, b) => clamp((t - a) / (b - a));
 const lerp = (a, b, k) => a + (b - a) * k;
 const eOut = (x) => 1 - Math.pow(1 - x, 3);
-const eExpo = (x) => (x >= 1 ? 1 : 1 - Math.pow(2, -10 * x));
 const eInOut = (x) => (x < .5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2);
-const eBack = (x, c = 1.9) => { x -= 1; return 1 + (c + 1) * x * x * x + c * x * x; };
+const eQuint = (x) => (x < .5 ? 16 * x ** 5 : 1 - Math.pow(-2 * x + 2, 5) / 2);
 const rnd = (i) => { const s = Math.sin(i * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
-function rr(x, y, w, h, r) { r = Math.min(r, w / 2, h / 2); g.beginPath(); g.moveTo(x + r, y); g.arcTo(x + w, y, x + w, y + h, r); g.arcTo(x + w, y + h, x, y + h, r); g.arcTo(x, y + h, x, y, r); g.arcTo(x, y, x + w, y, r); g.closePath(); }
+const bump = (t, c, w) => Math.exp(-Math.pow((t - c) / w, 2));
 
-// ---------- 화면(가상 좌표: 가로 1920×1080, 세로 1080×1920) ----------
+// ---------- 화면: 가로는 폭 1920(세로 화면은 1080) 기준, 높이는 실제 비율대로 ----------
 let W = 1920, H = 1080, px = 1, portrait = false;
 function fit() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
-  const w = innerWidth, h = innerHeight;
-  cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
-  portrait = h > w * 1.05;
-  W = portrait ? 1080 : 1920; H = portrait ? 1920 : 1080;
-  px = Math.max(cv.width / W, cv.height / H) === 0 ? 1 : Math.min(cv.width / W, cv.height / H);
+  cv.width = Math.round(innerWidth * dpr); cv.height = Math.round(innerHeight * dpr);
+  portrait = innerHeight > innerWidth * 1.05;
+  W = portrait ? 1080 : 1920; px = cv.width / W; H = cv.height / px;
 }
 
-// ---------- 로고 (assets/logo.svg 의 32×32 도형을 그대로 확대) ----------
-// o: badge(0~1 배지 크기) face(0~1 얼굴 크기) eye(0~1 눈 열림) pupil(0~1 눈동자 켜짐) look(-1~1) blink(0~1 감김) arc(0~1)
-function logo(cx, cy, size, o) {
-  const k = size / 32;
-  g.save(); g.translate(cx, cy); g.scale(k, k); g.translate(-16, -16);
-  if (o.badge > 0.001) {
-    g.save(); g.translate(16, 16); g.rotate((1 - o.badge) * -0.18); g.scale(o.badge, o.badge); g.translate(-16, -16);
-    g.shadowColor = 'rgba(36,86,229,.55)'; g.shadowBlur = 28 * k * 0.5 * o.badge; g.fillStyle = BLUE; rr(0, 0, 32, 32, 9); g.fill(); g.shadowBlur = 0;
-    // 배지 위의 부드러운 빛 (셀 느낌의 단순한 하이라이트)
-    g.save(); rr(0, 0, 32, 32, 9); g.clip(); g.fillStyle = 'rgba(255,255,255,.10)'; g.beginPath(); g.ellipse(8, 2, 22, 11, -0.4, 0, 7); g.fill(); g.restore();
-    if (o.arc > 0.001) {
-      g.strokeStyle = 'rgba(255,255,255,.85)'; g.lineWidth = 1.8; g.lineCap = 'round';
-      g.beginPath(); g.arc(22.2 - 0.0, 11.2, 5.6, -Math.PI / 2 + 0.0, -Math.PI / 2 + 0.0 + 1.0 * o.arc * 1.2, false); g.stroke();
-    }
-    if (o.face > 0.001) {
-      g.save(); g.translate(16, 17); g.scale(1, o.face); g.translate(-16, -17);
-      g.fillStyle = '#fff'; rr(4.5, 10.5, 23, 13, 6.5); g.fill(); g.restore();
-      const eyeH = 7.6 * o.eye * (1 - o.blink * .92);
-      if (eyeH > .05 && o.face > .6) {
-        g.fillStyle = INK;
-        rr(8, 17 - eyeH / 2, 6.6, eyeH, Math.min(2.2, eyeH / 2)); g.fill();
-        rr(17.4, 17 - eyeH / 2, 6.6, eyeH, Math.min(2.2, eyeH / 2)); g.fill();
-        if (o.pupil > .01) {
-          const r = 1.6 * (0.55 + 0.45 * o.pupil) * (eyeH / 7.6 > .3 ? 1 : eyeH / 7.6 / .3);
-          g.shadowColor = CYAN; g.shadowBlur = 14 * o.pupil; g.fillStyle = CYAN; g.globalAlpha = Math.min(1, o.pupil);
-          g.beginPath(); g.arc(11.3 + o.look * 1.7, 17, r, 0, 7); g.fill();
-          g.beginPath(); g.arc(20.7 + o.look * 1.7, 17, r, 0, 7); g.fill();
-          g.globalAlpha = 1; g.shadowBlur = 0;
-        }
-      }
-    }
-    g.restore();
-  }
-  g.restore();
-}
-
-// ---------- 배경 ----------
-function bg(t) {
-  const gr = g.createRadialGradient(W * .5, H * .46, 40, W * .5, H * .5, Math.max(W, H) * .75);
-  gr.addColorStop(0, '#16224a'); gr.addColorStop(.55, '#0d142b'); gr.addColorStop(1, NAVY);
-  g.fillStyle = gr; g.fillRect(0, 0, W, H);
-  // 점 격자: 중심에서 퍼지는 신호에 따라 반짝임
-  const gap = 64, cx = W / 2, cy = H / 2, wave = (t - 1.9) * 760;
-  for (let y = gap / 2; y < H; y += gap) for (let x = gap / 2; x < W; x += gap) {
-    const d = Math.hypot(x - cx, y - cy), pulse = Math.exp(-Math.pow((d - wave) / 130, 2)) * (t > 1.9 && t < 4.6 ? 1 : 0);
-    const base = .10 + .05 * Math.sin(t * .8 + x * .01 + y * .013);
-    g.fillStyle = `rgba(143,216,255,${Math.min(.9, base + pulse * .7)})`;
-    const r = 1.6 + pulse * 3.2; g.beginPath(); g.arc(x, y, r, 0, 7); g.fill();
-  }
-  // 떠다니는 빛 알갱이
-  for (let i = 0; i < 46; i++) {
-    const sp = .015 + rnd(i) * .03, x = ((rnd(i + 50) + t * sp * .12) % 1) * W, y = H - ((rnd(i + 99) * 1.2 + t * sp) % 1.2) * H * 1.05;
-    g.fillStyle = `rgba(190,225,255,${.10 + rnd(i + 7) * .25})`; g.beginPath(); g.arc(x, y, 1.2 + rnd(i + 3) * 2.2, 0, 7); g.fill();
-  }
-  const v = g.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .38, W / 2, H / 2, Math.max(W, H) * .78);
-  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,.55)'); g.fillStyle = v; g.fillRect(0, 0, W, H);
-}
-
-// ---------- 글자 한 자씩 솟아오르기 ----------
-function reveal(str, x, y, size, weight, color, t0, t, step, align) {
-  g.font = `${weight} ${size}px ${FONT}`; g.textBaseline = 'alphabetic';
-  const ws = [...str].map((c) => g.measureText(c).width), tot = ws.reduce((a, b) => a + b, 0);
-  let cx = align === 'center' ? x - tot / 2 : x;
-  [...str].forEach((c, i) => {
-    const p = prog(t, t0 + i * step, t0 + i * step + .55), e = eOut(p);
-    if (p > 0) {
-      g.save(); g.globalAlpha = clamp(p * 2.2); g.fillStyle = color; g.translate(cx, y + (1 - e) * size * .55);
-      g.rotate((1 - e) * .12 * (i % 2 ? 1 : -1)); g.fillText(c, 0, 0); g.restore();
-    }
-    cx += ws[i];
-  });
-  return tot;
-}
-
-// ---------- 신호 고리 ----------
-function rings(cx, cy, t, size) {
-  [1.95, 2.17, 2.39, 4.1].forEach((s, i) => {
-    const p = prog(t, s, s + 1.5); if (p <= 0 || p >= 1) return;
-    const r = size * (.62 + eExpo(p) * (i === 3 ? 4.2 : 3.4)), a = (1 - p) * (i === 3 ? .35 : .7);
-    g.strokeStyle = `rgba(143,216,255,${a})`; g.lineWidth = (1 - p) * 7 + 1.5; g.beginPath(); g.arc(cx, cy, r, 0, 7); g.stroke();
-    if (i < 3) { g.strokeStyle = `rgba(36,86,229,${a * .8})`; g.lineWidth = (1 - p) * 14 + 2; g.beginPath(); g.arc(cx, cy, r * .93, 0, 7); g.stroke(); }
+// ---------- 준비물 ----------
+const IMG = { fe: null, w: 1280, h: 720 };
+const MOON_IMG = { x: 425, y: -28, r: 70 };   // 마지막 컷 속 보름달(위가 잘려 있음)의 위치·반지름(이미지 좌표)
+function loadImg(src) {
+  return new Promise((res) => {
+    const im = new Image(); im.onload = () => {
+      IMG.w = im.naturalWidth; IMG.h = im.naturalHeight;
+      const c = document.createElement('canvas'); c.width = IMG.w; c.height = IMG.h; const x = c.getContext('2d');
+      x.drawImage(im, 0, 0); x.globalCompositeOperation = 'destination-in';
+      const gr = x.createLinearGradient(0, 0, 0, IMG.h * .14); gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,1)');
+      x.fillStyle = gr; x.fillRect(0, 0, IMG.w, IMG.h); IMG.fe = c; res();
+    }; im.onerror = () => res(); im.src = src;
   });
 }
-
-// ---------- 파이프라인: 웹캠 AI → 마이크로비트 → 로보독 ----------
-function pipeline(cx, cy, t, wTot) {
-  const labels = ['웹캠 AI', '마이크로비트', '로보독'], n = 3, gap = wTot / (n - 1);
-  const pa = prog(t, 4.0, 4.9);
-  if (pa <= 0) return;
-  const pos = labels.map((_, i) => cx - wTot / 2 + gap * i);
-  // 선
-  g.lineCap = 'round';
-  for (let i = 0; i < n - 1; i++) {
-    const p = eInOut(prog(t, 4.1 + i * .3, 4.7 + i * .3));
-    g.strokeStyle = 'rgba(143,216,255,.35)'; g.lineWidth = 4; g.setLineDash([2, 14]);
-    g.beginPath(); g.moveTo(pos[i] + 62, cy); g.lineTo(lerp(pos[i] + 62, pos[i + 1] - 62, p), cy); g.stroke(); g.setLineDash([]);
-    // 달리는 신호 알갱이
-    const q = ((t * .9 - i * .35) % 1 + 1) % 1;
-    if (p >= 1 && t > 4.9) { const xx = lerp(pos[i] + 62, pos[i + 1] - 62, q); g.shadowColor = CYAN; g.shadowBlur = 16; g.fillStyle = '#fff'; g.beginPath(); g.arc(xx, cy, 6, 0, 7); g.fill(); g.shadowBlur = 0; }
+const canvas = (w, h) => { const c = document.createElement('canvas'); c.width = w; c.height = h; return [c, c.getContext('2d')]; };
+// 그림책 하늘: 이전 영상처럼 달을 감싸 도는 짧은 붓결 수천 개 (시드 고정)
+let SKY = null, MOONTEX = null, GRAIN = null;
+function makeSky() {
+  const w = 1280, h = 1280, [c, x] = canvas(w, h), cx = w * .5, cy = h * .36;
+  const gr = x.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, '#2a6894'); gr.addColorStop(.5, '#1f5c88'); gr.addColorStop(1, '#16466e');
+  x.fillStyle = gr; x.fillRect(0, 0, w, h);
+  const cols = ['#3479a1', '#5d95ab', '#1a5a84', '#15435f', '#4c88a3', '#2b6b96', '#6fa3b6'];
+  for (let i = 0; i < 5200; i++) {
+    const r = 40 + Math.pow(rnd(i + 11), .8) * 900, a0 = rnd(i + 22) * Math.PI * 2, span = (.05 + rnd(i + 33) * .16) * (220 / (r + 120));
+    const near = Math.max(0, 1 - r / 420);
+    x.strokeStyle = near > .4 && rnd(i + 44) < near * .6 ? `rgba(240,228,180,${.10 + rnd(i + 55) * .14})` : cols[(rnd(i + 66) * cols.length) | 0];
+    x.globalAlpha = .22 + rnd(i + 77) * .35; x.lineWidth = 1.5 + rnd(i + 88) * 3.5; x.lineCap = 'round';
+    x.beginPath(); x.arc(cx, cy, r, a0, a0 + span); x.stroke();
   }
-  labels.forEach((lb, i) => {
-    const p = eBack(prog(t, 4.0 + i * .22, 4.6 + i * .22), 2.2);
-    if (p <= 0) return;
-    g.save(); g.translate(pos[i], cy); g.scale(p, p);
-    g.fillStyle = 'rgba(255,255,255,.08)'; g.strokeStyle = 'rgba(143,216,255,.7)'; g.lineWidth = 3; rr(-62, -62, 124, 124, 34); g.fill(); g.stroke();
-    g.strokeStyle = CYAN; g.fillStyle = CYAN; g.lineWidth = 6; g.lineCap = 'round'; g.lineJoin = 'round';
-    if (i === 0) { // 눈(카메라)
-      g.beginPath(); g.ellipse(0, 0, 30, 19, 0, 0, 7); g.stroke(); g.beginPath(); g.arc(0, 0, 9, 0, 7); g.fill();
-    } else if (i === 1) { // 마이크로비트 보드
-      rr(-32, -22, 64, 44, 8); g.stroke(); g.beginPath(); g.arc(-9, 0, 4, 0, 7); g.fill(); g.beginPath(); g.arc(9, 0, 4, 0, 7); g.fill();
-    } else { // 로보독 얼굴
-      rr(-32, -20, 64, 40, 18); g.stroke(); g.beginPath(); g.arc(-12, 0, 5, 0, 7); g.fill(); g.beginPath(); g.arc(12, 0, 5, 0, 7); g.fill();
-    }
-    g.restore();
-    g.save(); g.globalAlpha = clamp(p); g.font = `700 32px ${FONT}`; g.fillStyle = '#cfe0ff'; g.textAlign = 'center'; g.fillText(lb, pos[i], cy + 112); g.restore();
-  });
+  x.globalAlpha = 1; SKY = c;
+}
+function makeMoon() {   // 크림색 달 + 둥글게 도는 붓결(분화구 없음)
+  const s = 512, [c, x] = canvas(s, s), r = s / 2;
+  const gr = x.createRadialGradient(r * .8, r * .75, r * .1, r, r, r); gr.addColorStop(0, '#fffbe6'); gr.addColorStop(.6, CREAM); gr.addColorStop(1, '#f6e7a8');
+  x.fillStyle = gr; x.beginPath(); x.arc(r, r, r, 0, 7); x.fill();
+  x.save(); x.beginPath(); x.arc(r, r, r - 1, 0, 7); x.clip();
+  for (let i = 0; i < 1400; i++) {
+    const ox = r + (rnd(i + 410) - .5) * r * .9, oy = r + (rnd(i + 420) - .5) * r * .9;   // 중심을 흩어 과녁 무늬를 피함
+    const rr = 10 + rnd(i + 500) * r * .7, a0 = rnd(i + 600) * 7, span = .12 + rnd(i + 700) * .3, warm = rnd(i + 800) > .5;
+    x.strokeStyle = warm ? `rgba(236,208,140,${.07 + rnd(i + 900) * .09})` : `rgba(255,252,236,${.10 + rnd(i + 950) * .12})`;
+    x.lineWidth = 2 + rnd(i + 990) * 4; x.lineCap = 'round'; x.beginPath(); x.arc(ox, oy, rr, a0, a0 + span); x.stroke();
+  }
+  x.restore(); MOONTEX = c;
+}
+function makeGrain() {   // 종이·크레용 결
+  const s = 420, [c, x] = canvas(s, s);
+  for (let i = 0; i < 9000; i++) {
+    const X = rnd(i) * s, Y = rnd(i + 9e3) * s, a = -.35 + (rnd(i + 2e4) - .5) * 1.1, L = 3 + rnd(i + 3e4) * 9, light = rnd(i + 4e4) > .5;
+    x.strokeStyle = light ? `rgba(255,248,225,${.05 + rnd(i + 5e4) * .09})` : `rgba(0,10,30,${.06 + rnd(i + 6e4) * .10})`;
+    x.lineWidth = .8 + rnd(i + 7e4) * .9; x.beginPath(); x.moveTo(X, Y); x.lineTo(X + Math.cos(a) * L, Y + Math.sin(a) * L); x.stroke();
+  }
+  GRAIN = g.createPattern(c, 'repeat');
+}
+
+// ---------- 로보독 머리·눈 (단위 좌표, 머리 가운데 0,0) ----------
+const HEAD = { w: 560, h: 300 }, PITCH = 22, N = 8, EYE_X = 136;
+const PAT = {
+  off:   ['........', '........', '........', '........', '........', '........', '........', '........'],
+  open:  ['........', '...##...', '..####..', '..####..', '..####..', '..####..', '...##...', '........'],
+  blink: ['........', '........', '........', '........', '..####..', '........', '........', '........'],
+  happy: ['........', '........', '...##...', '..#..#..', '.#....#.', '#......#', '........', '........'],
+};
+// [시각, 모양, 가로 이동(점 단위)] — 켜짐 뒤 0.4초 정지, 왼쪽 보기, 천천히 오른쪽, 가운데, 깜빡, ^^
+const KEYS = [[0, 'off', 0], [3.75, 'open', 0], [4.2, 'open', -2], [4.62, 'open', 2], [5.0, 'open', 0], [5.3, 'blink', 0], [5.42, 'open', 0], [5.68, 'happy', 0]];
+const bit = (name, r, c) => { const row = PAT[name][r]; return c >= 0 && c < N && row[c] === '#' ? 1 : 0; };
+function lit(r, c, t) {
+  const tt = t - (t < 4 ? r * .03 : 0);   // 처음 켜질 때만 위에서 아래로 한 줄씩
+  let k = 0; for (let i = 0; i < KEYS.length; i++) if (tt >= KEYS[i][0]) k = i;
+  const cur = KEYS[k], prev = KEYS[Math.max(0, k - 1)], m = prog(tt, cur[0], cur[0] + .06);
+  return lerp(bit(prev[1], r, c - prev[2]), bit(cur[1], r, c - cur[2]), m);
+}
+const DOTS = [];
+for (let e = 0; e < 2; e++) for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+  const i = DOTS.length;
+  DOTS.push({ e, r, c, ux: (e ? EYE_X : -EYE_X) + (c - 3.5) * PITCH, uy: (r - 3.5) * PITCH,
+    sx: rnd(i + 101), sy: rnd(i + 202), tw: .6 + rnd(i + 303) * .9, fly: 2.1 + rnd(i + 404) * .7, size: .8 + rnd(i + 505) * .7 });
+}
+function pill(x, y, w, h) { const r = h / 2; g.beginPath(); g.moveTo(x + r, y); g.lineTo(x + w - r, y); g.arc(x + w - r, y + r, r, -Math.PI / 2, Math.PI / 2); g.lineTo(x + r, y + h); g.arc(x + r, y + r, r, Math.PI / 2, Math.PI * 1.5); g.closePath(); }
+
+// ---------- 레이아웃 ----------
+function layout() {
+  return portrait
+    ? { mx: W / 2, my: H * .30, mr: 330, k: .74, eyebrowY: H * .53, titleY: H * .60, ts: 112, subY: H * .655, ss: 38, two: true, footY: H - 150, track: 0 }
+    : { mx: W / 2, my: H * .335, mr: 296, k: .7, eyebrowY: H * .715, titleY: H * .818, ts: 120, subY: H * .895, ss: 38, two: false, footY: H - 34, track: 3 };
 }
 
 // ---------- 한 장면 ----------
 function render(t) {
-  g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, cv.width, cv.height);
-  // 가상 좌표 → 화면(가운데 정렬, 남는 곳은 배경색으로)
-  const ox = (cv.width - W * px) / 2, oy = (cv.height - H * px) / 2;
-  g.fillStyle = NAVY; g.fillRect(0, 0, cv.width, cv.height);
-  g.setTransform(px, 0, 0, px, ox, oy); g.save(); g.beginPath(); g.rect(0, 0, W, H); g.clip();
+  const L = layout();
+  g.setTransform(px, 0, 0, px, 0, 0);
+  const deep = eInOut(prog(t, .8, 3.2));
 
-  // 카메라: 아주 천천히 밀고 들어가다 끝에서 살짝 숨 고르기 (손맛이 나는 미세한 흔들림 포함)
-  const zoom = 1 + prog(t, 0, 3.0) * .06 - prog(t, 3.0, 4.2) * .035;
-  g.translate(W / 2, H / 2); g.scale(zoom, zoom); g.translate(-W / 2, -H / 2);
-  g.translate(Math.sin(t * 1.3) * 2.2, Math.cos(t * 1.1) * 1.6);
-  bg(t);
+  // 카메라: 이미지 속 달을 붙잡고 화면 가운데 위로 끌어오며 확대 (달이 기준점)
+  const s0 = Math.max(W / IMG.w, H / IMG.h), x0 = (W - IMG.w * s0) / 2, y0 = (H - IMG.h * s0) / 2;
+  const M0x = x0 + MOON_IMG.x * s0, M0y = y0 + MOON_IMG.y * s0, r0 = MOON_IMG.r * s0;
+  const cam = eQuint(prog(t, .25, 2.6));
+  const breathe = 1 + .012 * Math.sin(Math.max(0, t - 6.2) * 1.6) * prog(t, 6.2, 6.8);
+  const mr = r0 * Math.pow(L.mr / r0, cam) * breathe, mx = lerp(M0x, L.mx, cam), my = lerp(M0y, L.my, eInOut(prog(t, .25, 2.6)));
+  const si = s0 * mr / r0;
 
-  // 로고 위치: 가운데 → 제목 옆(가로) / 제목 위(세로)
-  const move = eInOut(prog(t, 3.0, 3.9));
-  const sizeC = portrait ? 560 : 420, sizeF = portrait ? 400 : 300;
-  const cx0 = W / 2, cy0 = portrait ? H * .42 : H * .47;
-  const fx = portrait ? W / 2 : W * .5 - 560, fy = portrait ? H * .20 : H * .30;
-  const lx = lerp(cx0, fx, move), ly = lerp(cy0, fy, move), ls = lerp(sizeC, sizeF, move);
-
-  // 눈 켜짐/움직임
-  const badge = eBack(prog(t, .25, 1.05), 1.7);
-  const face = eBack(prog(t, .95, 1.5), 1.9);
-  const eye = eOut(prog(t, 1.45, 1.75));
-  const flash = Math.exp(-Math.pow((t - 1.78) / .10, 2));
-  const pupil = prog(t, 1.65, 1.95) + flash * .6;
-  let look = 0;
-  if (t > 2.05) look = t < 2.35 ? -eOut(prog(t, 2.05, 2.15)) : t < 2.75 ? lerp(-1, 1, eOut(prog(t, 2.35, 2.45))) : lerp(1, 0, eOut(prog(t, 2.75, 2.95)));
-  const bl = (s) => { const p = prog(t, s, s + .2); return p <= 0 || p >= 1 ? 0 : Math.sin(p * Math.PI); };
-  const blink = Math.max(bl(3.1), bl(4.7));
-  const arc = eOut(prog(t, 1.9, 2.3));
-
-  // 배지 뒤 은은한 빛
-  const glow = g.createRadialGradient(lx, ly, 10, lx, ly, ls * 1.5);
-  glow.addColorStop(0, `rgba(80,140,255,${.38 * badge})`); glow.addColorStop(1, 'rgba(80,140,255,0)');
-  g.fillStyle = glow; g.fillRect(0, 0, W, H);
-  rings(lx, ly, t, ls);
-  // 눈 켜질 때 화면이 한 번 번쩍
-  if (flash > .02) { g.fillStyle = `rgba(190,230,255,${flash * .05})`; g.fillRect(0, 0, W, H); }
-  logo(lx, ly, ls, { badge, face, eye, pupil: clamp(pupil, 0, 1.4), look, blink, arc });
-
-  // 제목
-  const tx = portrait ? W / 2 : W * .5 - 360 + 40, ty = portrait ? H * .50 : H * .39;
-  const tsize = portrait ? 170 : 168, al = portrait ? 'center' : 'left';
-  if (t > 3.6) {
-    const tot = reveal('빅아이 로보독', tx, ty, tsize, 900, '#ffffff', 3.65, t, .07, al);
-    // 밑줄: 왼쪽에서 오른쪽으로 그려짐
-    const bp = eInOut(prog(t, 4.1, 4.6)), bx = portrait ? W / 2 - tot / 2 : tx;
-    g.fillStyle = CYAN; g.shadowColor = CYAN; g.shadowBlur = 18; rr(bx, ty + 34, tot * bp, 8, 4); g.fill(); g.shadowBlur = 0;
-    // 부제
-    const sp = eOut(prog(t, 3.9, 4.5));
-    g.save(); g.globalAlpha = sp; g.font = `600 ${portrait ? 54 : 58}px ${FONT}`; g.fillStyle = '#bcd2ff'; g.textAlign = al;
-    g.fillText('× 마이크로비트 · 피지컬 AI 수업', tx, ty + 120 + (1 - sp) * 26); g.restore();
+  // 1) 그림책 하늘(같은 붓결) — 달을 중심으로 천천히 따라옴(시차), 밤이 깊어짐
+  if (SKY) {
+    const ss = Math.max(W, H) / 1280 * (1.35 + cam * .25);
+    g.drawImage(SKY, mx - SKY.width * .5 * ss, my - SKY.height * .36 * ss, SKY.width * ss, SKY.height * ss);
   }
-  // 파이프라인
-  pipeline(portrait ? W / 2 : W * .5 + 40, portrait ? H * .74 : H * .72, t, portrait ? 760 : 1100);
-  // 협력 문구
-  const cp = eOut(prog(t, 5.0, 5.6));
-  if (cp > 0) { g.save(); g.globalAlpha = cp * .8; g.font = `600 30px ${FONT}`; g.fillStyle = '#9fb4e6'; g.textAlign = 'center'; g.fillText('코코아팹 협력', W / 2, H - (portrait ? 150 : 86)); g.restore(); }
+  g.fillStyle = `rgba(6,18,44,${.58 * deep})`; g.fillRect(0, 0, W, H);
 
-  // 페이드 인(처음)·살짝 질감(필름 그레인 대신 얇은 가로선)
-  const fi = 1 - prog(t, 0, .35);
-  if (fi > 0) { g.fillStyle = `rgba(11,16,32,${fi})`; g.fillRect(0, 0, W, H); }
-  g.restore();
-  g.setTransform(1, 0, 0, 1, 0, 0);
+  // 달무리 (제목이 나올 때 한 번 숨 쉬듯 밝아짐)
+  const pulse = bump(t, 6.2, .22);
+  const halo = g.createRadialGradient(mx, my, mr * .8, mx, my, mr * 2.7);
+  halo.addColorStop(0, `rgba(255,236,180,${.34 + .18 * pulse})`); halo.addColorStop(.4, 'rgba(255,225,160,.10)'); halo.addColorStop(1, 'rgba(255,225,160,0)');
+  g.fillStyle = halo; g.fillRect(0, 0, W, H);
+
+  // 2) 마지막 컷: 달에 붙어 함께 움직이며 하늘 붓결 속으로 녹아듦
+  const imgA = 1 - eInOut(prog(t, .9, 2.3));
+  if (IMG.fe && imgA > 0) { g.globalAlpha = imgA; g.drawImage(IMG.fe, mx - MOON_IMG.x * si, my - MOON_IMG.y * si, IMG.w * si, IMG.h * si); g.globalAlpha = 1; }
+
+  // 3) 보름달(붓결 질감)
+  const moonA = eOut(prog(t, .05, .6));
+  if (moonA > 0 && MOONTEX) {
+    g.save(); g.globalAlpha = moonA; g.shadowColor = 'rgba(255,236,170,.85)'; g.shadowBlur = 50 + 30 * pulse;
+    g.drawImage(MOONTEX, mx - mr, my - mr, mr * 2, mr * 2); g.restore();
+  }
+
+  // 4) 머리: 역광 실루엣. 점이 60% 넘게 도착한 뒤 가운데에서 번지며 드러남
+  const hk = L.k, hx = L.mx, hy = L.my - mr * .04;
+  const reveal = eOut(prog(t, 3.25, 3.8));
+  if (reveal > 0) {
+    g.save(); g.translate(hx, hy); g.scale(hk, hk);
+    g.beginPath(); g.ellipse(0, 0, HEAD.w * .78 * reveal, HEAD.h * 1.2 * reveal, 0, 0, 7); g.clip();
+    g.save(); g.shadowColor = 'rgba(255,236,170,.75)'; g.shadowBlur = 34; pill(-HEAD.w / 2, -HEAD.h / 2, HEAD.w, HEAD.h); g.fillStyle = '#0b0e14'; g.fill(); g.restore();
+    g.strokeStyle = 'rgba(255,244,200,.55)'; g.lineWidth = 3; pill(-HEAD.w / 2, -HEAD.h / 2, HEAD.w, HEAD.h); g.stroke();   // 달빛 테두리
+    pill(-HEAD.w / 2 + 22, -HEAD.h / 2 + 22, HEAD.w - 44, HEAD.h - 44); g.fillStyle = '#181e2a'; g.fill();                    // 베젤 안쪽 면
+    [-EYE_X, EYE_X].forEach((ex) => { g.beginPath(); g.roundRect(ex - 98, -98, 196, 196, 40); g.fillStyle = '#090c13'; g.fill(); });
+    g.fillStyle = '#05070b'; g.beginPath(); g.arc(0, -22, 22, 0, 7); g.fill(); g.strokeStyle = '#2a3242'; g.lineWidth = 3; g.stroke();   // 카메라
+    g.fillStyle = 'rgba(255,244,200,.7)'; g.beginPath(); g.arc(-7, -29, 5, 0, 7); g.fill();
+    g.beginPath(); g.roundRect(-9, 16, 18, 34, 4); g.fillStyle = '#05070b'; g.fill(); g.fillStyle = '#e09a3c'; g.fillRect(-2.5, 36, 5, 7);
+    g.restore();
+  }
+
+  // 5) 별 → LED 점
+  for (let i = 0; i < DOTS.length; i++) {
+    const d = DOTS[i];
+    const tx = hx + d.ux * hk, ty = hy + d.uy * hk, sx = d.sx * W, sy = d.sy * H * .9;
+    const born = prog(t, d.tw, d.tw + .5);
+    if (born <= 0) continue;
+    const f = eInOut(prog(t, d.fly, d.fly + 1.0));
+    const pos = (q) => {   // 시계방향으로 휘어 들어오는 소용돌이 경로(하늘 붓결과 같은 방향)
+      const mxp = (sx + tx) / 2, myp = (sy + ty) / 2, dx = tx - sx, dy = ty - sy, cx = mxp - dy * .45, cy = myp + dx * .45;
+      const a = (1 - q) * (1 - q), b = 2 * (1 - q) * q, c = q * q;
+      return [a * sx + b * cx + c * tx, a * sy + b * cy + c * ty];
+    };
+    const [x, y] = pos(f);
+    const landed = prog(t, d.fly + 1.0, d.fly + 1.4);
+    const on = reveal > 0 ? lit(d.r, d.c, t) : 0;
+    const tw = .7 + .3 * Math.sin(t * 5 + i * 1.7);
+    let a = born * (f < 1 ? (f > 0 ? 1 : tw) : lerp(1, .2, eOut(landed)));
+    a = Math.max(a, on);
+    const rad = lerp(2.4 * d.size + 1.4, 7.6 * hk, f);
+    if (f > 0 && f < 1) for (let k = 1; k <= 6; k++) { const [qx, qy] = pos(Math.max(0, f - k * .03)); g.fillStyle = `rgba(255,232,170,${.18 * (1 - k / 7)})`; g.beginPath(); g.arc(qx, qy, rad * (1 - k * .1), 0, 7); g.fill(); }
+    if (on > .02) { g.shadowColor = 'rgba(255,222,140,1)'; g.shadowBlur = 18 * on; }
+    g.fillStyle = on > .02 ? `rgba(255,246,214,${a})` : f >= 1 ? `rgba(110,130,165,${a})` : `rgba(255,236,186,${a})`;
+    g.beginPath(); g.arc(x, y, rad, 0, 7); g.fill(); g.shadowBlur = 0;
+  }
+  for (let i = 0; i < 70; i++) {   // 날지 않는 배경 별(반짝임만)
+    const a = prog(t, .8 + rnd(i + 900) * 1.2, 1.6 + rnd(i + 900) * 1.2) * (.3 + .3 * Math.sin(t * 2.4 + i * 2.1));
+    if (a <= 0) continue; g.fillStyle = `rgba(255,240,205,${a})`; g.beginPath(); g.arc(rnd(i + 700) * W, rnd(i + 800) * H * .7, .9 + rnd(i + 1e3) * 1.6, 0, 7); g.fill();
+  }
+
+  // 6) 글자: ^^가 혼자 자리 잡은 뒤(5.68) 차례로
+  const txt = (s, x, y, size, w, col, a, rise, track = 0) => {
+    if (a <= 0) return; g.save(); g.globalAlpha = a; g.font = `${w} ${size}px ${FONT}`; g.textAlign = 'center'; g.fillStyle = col;
+    if (track) g.letterSpacing = track + 'px';
+    g.shadowColor = 'rgba(4,14,32,.6)'; g.shadowBlur = 16; g.fillText(s, x, y + rise); g.restore();
+  };
+  const e1 = eOut(prog(t, 6.0, 6.8)), e2 = eOut(prog(t, 6.1, 7.0)), e3 = eOut(prog(t, 6.55, 7.3)), e5 = eOut(prog(t, 6.7, 7.45)), e4 = eOut(prog(t, 6.95, 7.6));
+  txt('로보독 AI 교실', L.mx, L.eyebrowY, 34, 700, '#f3d98f', e1, (1 - e1) * 14, portrait ? 4 : 6);
+  txt('빅아이 로보독', L.mx, L.titleY, L.ts, 800, CREAM, e2, (1 - e2) * 24, L.track);
+  if (L.two) {
+    txt('AI가 보고, 마이크로비트가 전하고,', L.mx, L.subY, L.ss, 500, '#dbe5f5', e3, (1 - e3) * 12);
+    txt('로보독이 움직여요', L.mx, L.subY + L.ss * 1.45, L.ss, 500, '#dbe5f5', e5, (1 - e5) * 12);
+  } else txt('AI가 보고, 마이크로비트가 전하고, 로보독이 움직여요', L.mx, L.subY, L.ss, 500, '#dbe5f5', e3, (1 - e3) * 12);
+  txt('코코아팹 협력', L.mx, L.footY, 28, 500, 'rgba(219,229,245,.85)', e4, 0);
+
+  // 7) 종이·크레용 결: 1/12초마다 흔들림(손그림 '보일링'), 마지막 0.5초는 멈춰 정리
+  if (GRAIN) {
+    const j = Math.floor(Math.min(t, DUR - .5) * 12);
+    g.save(); g.globalCompositeOperation = 'overlay'; g.globalAlpha = .85;
+    g.translate(rnd(j) * 420, rnd(j + 77) * 420); g.fillStyle = GRAIN; g.fillRect(-420, -420, W + 840, H + 840); g.restore();
+  }
+  const v = g.createRadialGradient(W / 2, H * .45, Math.min(W, H) * .45, W / 2, H / 2, Math.max(W, H) * .85);
+  v.addColorStop(0, 'rgba(0,0,0,0)'); v.addColorStop(1, `rgba(2,10,26,${.5 * deep})`); g.fillStyle = v; g.fillRect(0, 0, W, H);
 }
 
 // ---------- 재생 ----------
 const btn = document.getElementById('replay');
-let t0 = 0, cur = 0, running = false, frozen = false;
-function frame(now) {
-  if (!running) return;
-  cur = (now - t0) / 1000; if (cur >= DUR) { cur = DUR; running = false; btn.classList.add('on'); }
-  render(cur); if (running) requestAnimationFrame(frame);
-}
+let t0 = 0, cur = 0, running = false;
+function frame(now) { if (!running) return; cur = (now - t0) / 1000; if (cur >= DUR) { cur = DUR; running = false; btn.classList.add('on'); } render(cur); if (running) requestAnimationFrame(frame); }
 function play() { btn.classList.remove('on'); running = true; t0 = performance.now(); requestAnimationFrame(frame); }
-window.__seek = (s) => { running = false; frozen = true; cur = s; render(s); };
+window.__seek = (s) => { running = false; cur = s; render(s); };
 btn.onclick = play;
 document.addEventListener('keydown', (e) => { if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); play(); } });
 addEventListener('resize', () => { fit(); render(cur); });
-fit();
+fit(); makeSky(); makeMoon(); makeGrain();
 (async () => {
-  try { await Promise.race([Promise.all([document.fonts.load('900 100px "Pretendard Variable"'), document.fonts.load('600 40px "Pretendard Variable"'), document.fonts.load('700 30px "Pretendard Variable"')]), new Promise((r) => setTimeout(r, 1500))]); } catch (e) {}
-  if (qs.has('t')) { window.__seek(parseFloat(qs.get('t'))); }
+  await Promise.all([
+    loadImg(qs.get('from') || 'assets/intro/veo-last.webp'),
+    Promise.race([Promise.all(['800 100px', '700 34px', '500 40px'].map((f) => document.fonts.load(f + ' "Pretendard Variable"'))), new Promise((r) => setTimeout(r, 1500))]).catch(() => {}),
+  ]);
+  if (qs.has('t')) window.__seek(parseFloat(qs.get('t')));
   else if (reduce) { cur = DUR; render(DUR); btn.classList.add('on'); }
   else if (!qs.has('cap')) play();
   else window.__seek(0);
