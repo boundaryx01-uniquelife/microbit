@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>수업 슬라이드 아이콘 세트</title>
+<link rel="stylesheet" href="../bridge/assets/fonts/pretendard.css">
+<style>
+  html, body { margin: 0; background: transparent; font-family: "Pretendard Variable", Pretendard, sans-serif; }
+  body.sheet { background: #fff; display: grid; grid-template-columns: repeat(4, 400px); gap: 16px; padding: 16px; }
+  body.sheet figure { margin: 0; background: #fff; border: 1px solid #e1e6ef; border-radius: 16px; }
+  body.sheet figcaption { font: 600 13px sans-serif; color: #566077; padding: 0 12px 8px; }
+  svg { display: block; }
+</style>
+</head>
+<body>
+<script>
+// 수업 슬라이드 도식 아이콘(글자·숫자가 들어간 6개) 생성기 — 사물 아이콘 8개는 Canva 생성(tools/prep-canva-icons.py)
+// 그림체: 둥근 파스텔 배경 원 + 바닥 그림자, 평면 색 + 셀 음영 한 단계(아래쪽 어둡게) + 위쪽 하이라이트, 외곽선 없음.
+// 로보독은 엔딩·로고와 같은 '알약형 검은 머리 + 8×8 LED 도트 눈'. 글자는 Pretendard.
+// 미리 보기: tools/lesson-icons.html (전체) / ?icon=이름 (한 장, 800×600 투명) — PNG 내보내기는 tools/render-icons.js
+const C = {
+  navy: '#1b2440', ink: '#0e1118', face: '#1b2231', off: '#2c3650', led: '#fff4c8', ledGlow: '#ffd98a',
+  blue: '#2456e5', blueD: '#1a40b3', blueL: '#e3ebff', blueM: '#a9c0ff',
+  green: '#1fa463', greenD: '#167a49', greenL: '#dcf2e6',
+  orange: '#f08a24', orangeD: '#c86a10', orangeL: '#fde8d2',
+  yellow: '#f2b300', yellowD: '#c99300', yellowL: '#fff1c7',
+  red: '#e5484d', redD: '#b8323a', redL: '#fde2e3',
+  white: '#ffffff', paper: '#f6f8fc', gray: '#c9d1df', grayD: '#8a94ab', cream: '#fff4c8',
+};
+let uid = 0;
+const id = (p) => `${p}${++uid}`;
+const F = 'font-family="Pretendard Variable, Pretendard, sans-serif"';
+
+// ---------- 공용 부품 ----------
+const defs = () => `<defs>
+  <linearGradient id="cel" x1="0" y1="0" x2="0" y2="1"><stop offset=".6" stop-color="#000" stop-opacity="0"/><stop offset=".6" stop-color="#0b1430" stop-opacity=".09"/></linearGradient>
+  <linearGradient id="hi" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff" stop-opacity=".28"/><stop offset=".22" stop-color="#fff" stop-opacity="0"/></linearGradient>
+  <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="5" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  <filter id="soft" x="-20%" y="-20%" width="140%" height="140%"><feGaussianBlur stdDeviation="9"/></filter>
+</defs>`;
+// 배경 원 + 바닥 그림자
+const stage = (tint, { r = 250, cy = 300, floor = 470, fw = 210 } = {}) =>
+  `<circle cx="400" cy="${cy}" r="${r}" fill="${tint}"/><ellipse cx="400" cy="${floor}" rx="${fw}" ry="16" fill="${C.navy}" opacity=".12" filter="url(#soft)"/>`;
+// 셀 음영이 들어간 도형: shape는 fill 없는 SVG 도형 문자열(속성 끝에 FILL 자리)
+const solid = (shape, fill, { cel = true, hi = true } = {}) =>
+  shape.replace('FILL', `fill="${fill}"`) + (cel ? shape.replace('FILL', 'fill="url(#cel)"') : '') + (hi ? shape.replace('FILL', 'fill="url(#hi)"') : '');
+const rr = (x, y, w, h, r) => `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" FILL/>`;
+const circ = (cx, cy, r) => `<circle cx="${cx}" cy="${cy}" r="${r}" FILL/>`;
+const text = (s, x, y, size, fill = C.navy, w = 800, anchor = 'middle') => `<text x="${x}" y="${y}" ${F} font-size="${size}" font-weight="${w}" fill="${fill}" text-anchor="${anchor}" letter-spacing="-0.02em">${s}</text>`;
+const label = (s, x, y, size = 30) => text(s, x, y, size, C.navy, 700);
+const arrow = (x1, y, x2, col = C.navy, w = 16) => `<path d="M${x1} ${y}H${x2 - 22}" stroke="${col}" stroke-width="${w}" stroke-linecap="round"/><path d="M${x2 - 34} ${y - 26}L${x2} ${y}L${x2 - 34} ${y + 26}" fill="none" stroke="${col}" stroke-width="${w}" stroke-linecap="round" stroke-linejoin="round"/>`;
+
+// LED 도트 패턴(8×8)
+const PAT = {
+  open:  ['........', '...##...', '..####..', '..####..', '..####..', '..####..', '...##...', '........'],
+  happy: ['........', '........', '...##...', '..#..#..', '.#....#.', '#......#', '........', '........'],
+  three: ['..####..', '.#....#.', '......#.', '...###..', '......#.', '.#....#.', '..####..', '........'],
+  look:  ['........', '.....##.', '....####', '....####', '....####', '....####', '.....##.', '........'],
+};
+// 로보독 머리(정면): 가운데 cx,cy, 너비 w. eyes: [왼쪽 패턴, 오른쪽 패턴]
+function head(cx, cy, w, eyes = ['open', 'open'], { rim = false } = {}) {
+  const h = w * .54, x = cx - w / 2, y = cy - h / 2, k = w / 560;
+  const panel = 196 * k, px = [cx - 136 * k, cx + 136 * k], pitch = 22 * k, dr = 7.4 * k;
+  let s = solid(rr(x, y, w, h, h / 2), C.ink, { hi: false });
+  s += `<rect x="${x + 22 * k}" y="${y + 22 * k}" width="${w - 44 * k}" height="${h - 44 * k}" rx="${(h - 44 * k) / 2}" fill="${C.face}"/>`;
+  s += `<rect x="${x + 8 * k}" y="${y + 6 * k}" width="${w - 16 * k}" height="${h * .3}" rx="${h * .15}" fill="#fff" opacity=".07"/>`;
+  if (rim) s += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${h / 2}" fill="none" stroke="${C.cream}" stroke-opacity=".5" stroke-width="${3 * k}"/>`;
+  let on = '', offd = '';
+  px.forEach((ex, e) => {
+    s += `<rect x="${ex - panel / 2}" y="${cy - panel / 2}" width="${panel}" height="${panel}" rx="${40 * k}" fill="#090c13"/>`;
+    const P = PAT[eyes[e]];
+    for (let r = 0; r < 8; r++) for (let c = 0; c < 8; c++) {
+      const X = ex + (c - 3.5) * pitch, Y = cy + (r - 3.5) * pitch;
+      if (P[r][c] === '#') on += `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="${dr.toFixed(1)}"/>`;
+      else offd += `<circle cx="${X.toFixed(1)}" cy="${Y.toFixed(1)}" r="${(dr * .8).toFixed(1)}"/>`;
+    }
+  });
+  s += `<g fill="${C.off}">${offd}</g><g fill="${C.led}" filter="url(#glow)">${on}</g>`;
+  s += `<circle cx="${cx}" cy="${cy - 22 * k}" r="${20 * k}" fill="#05070b" stroke="#2a3242" stroke-width="${3 * k}"/><circle cx="${cx - 6 * k}" cy="${cy - 28 * k}" r="${5 * k}" fill="${C.cream}" opacity=".8"/>`;
+  s += `<rect x="${cx - 8 * k}" y="${cy + 14 * k}" width="${16 * k}" height="${32 * k}" rx="${4 * k}" fill="#05070b"/><rect x="${cx - 2.5 * k}" y="${cy + 34 * k}" width="${5 * k}" height="${7 * k}" fill="#e09a3c"/>`;
+  return s;
+}
+// 로보독 전신(옆에서 본 몸 + 정면 머리)
+function dog(cx, by, w, eyes = ['open', 'open']) {
+  const k = w / 400; let s = '';
+  const leg = (x, back, col) => { const kx = x + (back ? 22 : 22) * k; return `<path d="M${x} ${by - 140 * k}L${kx} ${by - 72 * k}L${x - 4 * k} ${by - 12 * k}" fill="none" stroke="${col}" stroke-width="${30 * k}" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${kx}" cy="${by - 72 * k}" r="${13 * k}" fill="#4a5672"/><ellipse cx="${x - 4 * k}" cy="${by - 8 * k}" rx="${20 * k}" ry="${12 * k}" fill="${C.navy}"/>`; };
+  s += leg(cx + 175 * k, true, '#3a4560') + leg(cx - 40 * k, true, '#3a4560');           // 먼 쪽 다리(조금 밝게)
+  s += solid(rr(cx - 120 * k, by - 175 * k, 330 * k, 80 * k, 26 * k), '#252c3d');         // 몸통
+  s += `<rect x="${cx - 60 * k}" y="${by - 186 * k}" width="${190 * k}" height="${16 * k}" rx="${4 * k}" fill="#d9c79b"/>`;   // 위판(마이크로비트 자리)
+  s += `<rect x="${cx + 120 * k}" y="${by - 162 * k}" width="${60 * k}" height="${10 * k}" rx="${5 * k}" fill="${C.green}"/>`;   // 몸통 LED
+  s += leg(cx - 80 * k, false, C.ink) + leg(cx + 140 * k, false, C.ink);                 // 가까운 쪽 다리
+  s += head(cx - 110 * k, by - 218 * k, 260 * k, eyes);
+  return s;
+}
+// 마이크로비트(앞면): 5×5 LED, A·B 단추, 금색 단자
+function microbit(cx, cy, w, litMask = '..#..,.#.#.,#...#,.....,.....') {
+  const h = w * .8, x = cx - w / 2, y = cy - h / 2, k = w / 300; let s = '';
+  s += solid(rr(x, y, w, h, 26 * k), '#20283b');
+  const rows = litMask.split(',');
+  for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+    const X = cx + (c - 2) * 30 * k, Y = cy - 22 * k + (r - 2) * 30 * k, on = rows[r][c] === '#';
+    s += `<rect x="${X - 5 * k}" y="${Y - 8 * k}" width="${10 * k}" height="${16 * k}" rx="${3 * k}" fill="${on ? '#ff6b5e' : '#3a4560'}"${on ? ' filter="url(#glow)"' : ''}/>`;
+  }
+  [-1, 1].forEach((d) => { s += `<circle cx="${cx + d * 112 * k}" cy="${cy - 22 * k}" r="${17 * k}" fill="#3a4560"/><circle cx="${cx + d * 112 * k}" cy="${cy - 22 * k}" r="${10 * k}" fill="#11151f"/>`; });
+  s += `<rect x="${x + 10 * k}" y="${y + h - 46 * k}" width="${w - 20 * k}" height="${36 * k}" rx="${8 * k}" fill="#d8a93a"/>`;
+  [-2, -1, 0, 1, 2].forEach((i) => { s += `<circle cx="${cx + i * 50 * k}" cy="${y + h - 28 * k}" r="${(i % 2 ? 7 : 12) * k}" fill="#20283b"/>`; });
+  return s;
+}
+// 숫자 타일
+const tile = (cx, cy, w, h, num, bg, fg = C.navy, border) => solid(rr(cx - w / 2, cy - h / 2, w, h, 30), bg) +
+  (border ? `<rect x="${cx - w / 2 + 6}" y="${cy - h / 2 + 6}" width="${w - 12}" height="${h - 12}" rx="26" fill="none" stroke="${border}" stroke-width="10"/>` : '') +
+  text(num, cx, cy + h * .2, h * .58, fg, 800);
+
+// ---------- 아이콘 14개 ----------
+const ICONS = {
+  // 눈: 센서·카메라 — 렌즈 눈 + 인식 모서리
+  icon_eye: () => stage(C.blueL) +
+    `<path d="M190 300C250 200 330 160 400 160S550 200 610 300C550 400 470 440 400 440S250 400 190 300Z" fill="${C.white}"/>` +
+    solid(circ(400, 300, 112), C.blue) + `<circle cx="400" cy="300" r="78" fill="${C.blueD}"/><circle cx="400" cy="300" r="48" fill="${C.ink}"/>` +
+    `<circle cx="372" cy="270" r="20" fill="#fff"/><circle cx="430" cy="328" r="8" fill="#fff" opacity=".7"/>` +
+    ['M170 170v-40h40', 'M630 170v-40h-40', 'M170 430v40h40', 'M630 430v40h-40'].map((d) => `<path d="${d}" fill="none" stroke="${C.blue}" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>`).join(''),
+  // 뇌: 마이크로비트·AI 판단
+  icon_brain: () => stage(C.orangeL) + microbit(400, 290, 320, '.#.#.,#####,#####,.###.,..#..'),
+  // 몸: 모터·LED·스피커 — 로보독 전신
+  icon_body: () => stage(C.greenL, { floor: 478, fw: 230 }) + dog(400, 478, 400, ['happy', 'happy']),
+  // 자율주행차: 지붕 센서에서 신호
+  icon_car: () => stage(C.redL) +
+    `<path d="M300 205h170c26 0 46 14 58 36l30 54H230l26-52c10-22 26-38 44-38Z" fill="${C.redD}"/>` +
+    solid(`<path d="M170 300c0-14 12-26 26-26h408c14 0 26 12 26 26v84c0 12-10 22-22 22H192c-12 0-22-10-22-22Z" FILL/>`, C.red) +
+    `<path d="M296 222h84v56h-110l14-32c4-14 8-24 12-24Z" fill="#cfe3ff"/><path d="M398 222h70c14 0 24 8 30 20l18 36H398Z" fill="#cfe3ff"/>` +
+    `<rect x="600" y="316" width="30" height="26" rx="8" fill="${C.yellow}"/><rect x="172" y="320" width="22" height="22" rx="6" fill="#fff" opacity=".9"/>` +
+    [270, 530].map((x) => `<circle cx="${x}" cy="404" r="48" fill="${C.ink}"/><circle cx="${x}" cy="404" r="20" fill="${C.gray}"/>`).join('') +
+    solid(rr(368, 176, 64, 30, 12), C.navy) + `<circle cx="400" cy="172" r="16" fill="${C.cream}" filter="url(#glow)"/>` +
+    [40, 70].map((r) => `<path d="M${400 - r} ${172 - r * .45}A${r} ${r} 0 0 1 ${400 + r} ${172 - r * .45}" fill="none" stroke="${C.red}" stroke-width="10" stroke-linecap="round" opacity="${r === 40 ? .9 : .5}"/>`).join(''),
+  // 배달 로봇: 바퀴 여섯, 뚜껑, 깃발, LED 얼굴
+  icon_delivery: () => stage(C.greenL) +
+    `<path d="M548 150V250" stroke="${C.navy}" stroke-width="8" stroke-linecap="round"/><path d="M548 152l60 18-60 20Z" fill="${C.yellow}"/>` +
+    solid(rr(230, 230, 340, 170, 48), C.white) + `<rect x="230" y="320" width="340" height="20" fill="${C.green}"/>` +
+    `<path d="M240 238c10-20 30-30 56-30h208c26 0 46 10 56 30Z" fill="${C.gray}"/>` +
+    `<rect x="300" y="258" width="200" height="48" rx="24" fill="${C.ink}"/>` +
+    [345, 455].map((x) => `<g fill="${C.led}" filter="url(#glow)">${[-1, 0, 1].map((d) => `<circle cx="${x + d * 13}" cy="${282 - (d ? 0 : 8)}" r="5"/>`).join('')}</g>`).join('') +
+    [270, 400, 530].map((x) => `<circle cx="${x}" cy="412" r="34" fill="${C.ink}"/><circle cx="${x}" cy="412" r="13" fill="${C.gray}"/>`).join(''),
+  // 로봇 청소기: 위에서 비스듬히 본 원판
+  icon_vacuum: () => stage(C.blueL, { floor: 438, fw: 230 }) +
+    `<ellipse cx="400" cy="342" rx="230" ry="96" fill="${C.navy}"/>` +
+    solid(`<ellipse cx="400" cy="318" rx="230" ry="96" FILL/>`, C.white) +
+    `<ellipse cx="400" cy="318" rx="230" ry="96" fill="none" stroke="${C.gray}" stroke-width="6"/>` +
+    `<path d="M210 290A230 96 0 0 1 590 290" fill="none" stroke="${C.blue}" stroke-width="16" stroke-linecap="round"/>` +
+    `<ellipse cx="400" cy="304" rx="60" ry="26" fill="${C.ink}"/><ellipse cx="400" cy="300" rx="34" ry="13" fill="${C.blue}"/><circle cx="388" cy="296" r="6" fill="${C.cream}"/>` +
+    `<g fill="${C.led}" filter="url(#glow)"><circle cx="330" cy="352" r="7"/><circle cx="470" cy="352" r="7"/></g>` +
+    [[150, 420], [640, 424], [610, 200], [190, 214]].map(([x, y], i) => `<circle cx="${x}" cy="${y}" r="${7 + i % 2 * 4}" fill="${C.blueM}"/>`).join(''),
+  // ---- 도식 6개: 배경 원(r≈275) 안에 다 들어가게, 이름표는 40px 이상(교실 화면에서 읽히게) ----
+  // 숫자를 바꾸면? 속도 30 → 15
+  icon_change: () => stage('#fff1c0', { r: 275 }) +
+    tile(272, 285, 200, 210, '30', C.blueL, C.blue) + label('속도', 272, 448, 42) +
+    arrow(390, 285, 440, C.navy, 18) +
+    tile(548, 285, 200, 210, '15', C.yellow, C.navy) + label('속도', 548, 448, 42),
+  // 번호가 같아야 짝: 컴퓨터 쪽 3 = 로보독 쪽 3
+  icon_samenum: () => stage('#fde3cf', { r: 275 }) +
+    solid(rr(150, 176, 200, 140, 20), C.navy) + `<rect x="166" y="192" width="168" height="108" rx="10" fill="${C.orangeL}"/>` + text('3', 250, 286, 100, C.orangeD) +
+    `<rect x="132" y="318" width="236" height="16" rx="8" fill="${C.grayD}"/>` + label('컴퓨터', 250, 440, 42) +
+    text('=', 400, 288, 90, C.navy) +
+    head(552, 254, 210, ['three', 'three']) + label('로보독', 552, 440, 42),
+  // 받은 번호를 로보독 눈에 보이기
+  icon_numshow: () => stage('#d7efe3', { r: 275 }) +
+    tile(240, 262, 150, 160, '3', C.orangeL, C.navy, C.orange) + label('받은 번호', 240, 420, 40) +
+    arrow(334, 262, 392, C.navy, 16) +
+    head(540, 262, 230, ['three', 'three']) + label('눈에 보이기', 540, 420, 40),
+  // 우리 모둠 카드 1~4(4는 빈 책상)
+  icon_teachcards: () => stage('#d2e7fb', { r: 280 }) +
+    [[C.red, C.redL, '1'], [C.yellow, C.yellowL, '2'], [C.green, C.greenL, '3'], [C.gray, '#ffffff', '4']].map(([c, l, n], i) => {
+      const x = 182 + i * 112, y = 150, rot = [-5, -2, 2, 5][i], empty = i === 3;
+      return `<g transform="rotate(${rot} ${x + 46} ${y + 85})">` +
+        (empty ? `<rect x="${x}" y="${y}" width="92" height="160" rx="16" fill="#fff" stroke="${C.grayD}" stroke-width="5" stroke-dasharray="12 9"/>`
+               : solid(rr(x, y, 92, 160, 16), l) + `<rect x="${x}" y="${y}" width="92" height="160" rx="16" fill="none" stroke="${c}" stroke-width="6"/>` +
+                 `<circle cx="${x + 46}" cy="${y + 64}" r="24" fill="${c}"/><rect x="${x + 22}" y="${y + 110}" width="48" height="10" rx="5" fill="${c}" opacity=".6"/>`) +
+        `</g><circle cx="${x + 46}" cy="${y + 200}" r="21" fill="${empty ? C.grayD : c}"/>` + text(n, x + 46, y + 209, 25, '#fff');
+    }).join('') + label('모둠 카드', 340, 448, 40) + label('빈 책상', 584, 448, 40),
+  // 안전하게 내려받기 → 꽂기 → 켜기
+  icon_flash: () => stage('#d2e7fb', { r: 280 }) +
+    solid(rr(150, 196, 140, 98, 14), C.navy) + `<rect x="161" y="207" width="118" height="76" rx="8" fill="${C.blueL}"/>` +
+    `<path d="M220 218v36M203 239l17 17 17-17" fill="none" stroke="${C.blue}" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"/><rect x="200" y="294" width="40" height="12" fill="${C.navy}"/><rect x="182" y="304" width="76" height="10" rx="5" fill="${C.navy}"/>` +
+    label('내려받기', 220, 400, 38) + arrow(298, 250, 336, C.grayD, 10) +
+    microbit(400, 250, 116, '.....,.#.#.,.....,#...#,.###.') + label('꽂기', 400, 400, 38) + arrow(464, 250, 502, C.grayD, 10) +
+    head(578, 250, 150, ['happy', 'happy']) + label('켜기', 578, 400, 38),
+  // AI가 틀린 걸까, 코드가 틀린 걸까?
+  icon_debug: () => stage('#d2e7fb') +
+    solid(`<path d="M150 230h190a28 28 0 0 1 28 28v100a28 28 0 0 1-28 28H220l-40 36v-36h-30a28 28 0 0 1-28-28V258a28 28 0 0 1 28-28Z" FILL/>`, C.blue) + text('AI?', 245, 335, 78, '#fff') +
+    solid(`<path d="M430 260h200a28 28 0 0 1 28 28v100a28 28 0 0 1-28 28h-30v36l-40-36H430a28 28 0 0 1-28-28V288a28 28 0 0 1 28-28Z" FILL/>`, C.orange) + text('코드?', 530, 365, 70, '#fff') +
+    `<circle cx="470" cy="190" r="62" fill="#fff" fill-opacity=".55" stroke="${C.navy}" stroke-width="20"/><circle cx="452" cy="172" r="14" fill="#fff"/><path d="M516 236l62 62" stroke="${C.navy}" stroke-width="30" stroke-linecap="round"/>`,
+  // 길잡이(질문): 말풍선 물음표 + 로보독
+  icon_guide: () => stage(C.blueL) +
+    solid(`<path d="M260 130h290a40 40 0 0 1 40 40v130a40 40 0 0 1-40 40H430l-60 52v-52H260a40 40 0 0 1-40-40V170a40 40 0 0 1 40-40Z" FILL/>`, C.white) +
+    text('?', 405, 300, 190, C.blue) + head(250, 410, 210, ['look', 'look']),
+  // 생각해 보기: 전구(필라멘트 대신 LED 도트)
+  icon_think: () => stage(C.yellowL) +
+    `<circle cx="400" cy="250" r="150" fill="${C.cream}" opacity=".7" filter="url(#soft)"/>` +
+    solid(`<path d="M400 120c-80 0-140 60-140 136 0 52 28 86 54 112 14 14 22 30 22 48v10h128v-10c0-18 8-34 22-48 26-26 54-60 54-112 0-76-60-136-140-136Z" FILL/>`, C.yellow) +
+    `<g fill="${C.led}" filter="url(#glow)">${[[-1, 0], [0, -1], [1, 0], [0, 1], [0, 0], [-1, 1], [1, 1]].map(([a, b]) => `<circle cx="${400 + a * 34}" cy="${256 + b * 34 - 17}" r="12"/>`).join('')}</g>` +
+    solid(rr(330, 430, 140, 34, 14), C.navy) + solid(rr(344, 470, 112, 28, 12), '#3a4560') +
+    [[-1, -1], [1, -1], [-1.25, .15], [1.25, .15]].map(([a, b]) => `<path d="M${400 + a * 175} ${250 + b * 120}l${a * 34} ${b * 24 - 6}" stroke="${C.yellowD}" stroke-width="14" stroke-linecap="round"/>`).join(''),
+};
+
+const svg = (name) => `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="600" viewBox="0 0 800 600">${defs()}${ICONS[name]()}</svg>`;
+const q = new URLSearchParams(location.search).get('icon');
+if (q) document.body.innerHTML = svg(q);
+else { document.body.className = 'sheet'; document.body.innerHTML = Object.keys(ICONS).map((n) => `<figure>${svg(n).replace('width="800" height="600"', 'width="400" height="300"')}<figcaption>${n}</figcaption></figure>`).join(''); }
+// 사물 아이콘 8개는 Canva로 만들어 씀(tools/prep-canva-icons.py) — 여기 그림은 참고용으로만 두고 내보내지 않음
+const CANVA = ['icon_vacuum', 'icon_car', 'icon_delivery', 'icon_body', 'icon_eye', 'icon_brain', 'icon_think', 'icon_guide'];
+window.__icons = Object.keys(ICONS).filter((n) => !CANVA.includes(n));
+window.__ready = document.fonts ? document.fonts.ready.then(() => true) : Promise.resolve(true);
+</script>
+</body>
+</html>
