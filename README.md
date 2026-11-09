@@ -64,6 +64,18 @@
 4. **https://microbit-bridge.netlify.app/ai.html** 을 크롬/엣지로 열기 → 카메라 켜기 → 카드 학습 → USB 마이크로비트 연결.
 5. 위험하면 화면 위 **■ 멈춤**(또는 Esc), 로보독 마이크로비트 **A**.
 
+## 자료 다시 만들기
+
+| 무엇 | 어떻게 | 비고 |
+|---|---|---|
+| 수업 슬라이드 PPT | `node tools/build-slides.mjs` (→ `materials/*/*_수업슬라이드.pptx`) | 슬라이드 내용은 `bridge/lessons/data/*.json`, 형식은 `bridge/lessons/SCHEMA.md` |
+| 수업 자료 웹 페이지 | `node tools/build-docs.mjs` (→ `bridge/docs/`, PPT·활동지 복사 포함) | PPT를 다시 만든 뒤 실행 |
+| 슬라이드 아이콘(사물 8개) | Canva에서 생성·내보낸 PNG 폴더로 `python3 tools/prep-canva-icons.py <폴더>` | 흰 바탕을 투명하게·자르기 → `bridge/lessons/assets/icon_*.png` |
+| 슬라이드 아이콘(도식 6개) | `tools/lesson-icons.html` 수정 → 저장소 맨 위에서 정적 서버 실행 후 `node tools/render-icons.js http://127.0.0.1:<포트>/` | 글자·숫자가 들어간 그림. 사물 8개는 덮어쓰지 않음 |
+| 첫 화면 인트로 영상 | `node tools/render-intro.js [사이트주소]` (→ `bridge/assets/intro/intro.mp4`) | 첫 산책 30초(`veo.html`) + 엔딩(`ending.js`) 8.2초를 프레임 단위로 렌더. ffmpeg 필요, 수십 분. 영상 탐색에 Range 요청이 되는 서버 필요(기본은 운영 사이트). `INTRO_TEST=1`로 몇 장만 확인 |
+
+로고·파비콘(`bridge/assets/logo.svg`, `favicon.svg`)은 보름달 앞 로보독(^^ LED 눈) — 각 페이지 머리 메뉴에도 같은 SVG가 들어 있으니 바꿀 때 함께 바꿉니다(`tools/build-docs.mjs` 틀 포함).
+
 ## 검증 상태
 
 자동 시험 통과 — 수치는 `docs/07_검증보고서.md`와 `tests/README.md` 참고(MakeCode 예제 00~08 컴파일·블록 변환 포함). **실물 로보독 연동은 미검증** → `docs/07_검증보고서.md` 4절의 실기 점검을 첫 수업 전에 해 주세요.
