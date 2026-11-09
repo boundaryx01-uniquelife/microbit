@@ -410,5 +410,60 @@ AI 모드 설정은 로봇이 확인 신호를 보낼 때까지 반복 송신. �
 </tr>
 </tbody></table></div>
 <p><strong>아직 남은 것</strong>: 실물 로보독·무선 확장 동작 점검, 크롬북·태블릿 확인, 중·고 성취기준 코드, 활동지 인쇄용 한글/워드 파일, AI 도우미 수업 코드 설정(사이트 운영자).</p>
+<h2>9. 첫 화면·슬라이드 고도화 후 전체 점검 (2026-11-09)</h2>
+<p>배포 주소 <a href="https://microbit-bridge.netlify.app/">https://microbit-bridge.netlify.app/</a> 에서 한 시험씩 차례로 실행한 결과(여러 개를 동시에 돌리면 CPU 부하로 시간에 민감한 항목이 가끔 실패 — 다시 돌리면 통과).</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>시험</th>
+<th>결과</th>
+<th>시험</th>
+<th>결과</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>intro-docs(첫 화면·수업 자료)</td>
+<td>44/44</td>
+<td>lessons-web(웹 슬라이드)</td>
+<td>87/87</td>
+</tr>
+<tr>
+<td>bridge-e2e(AI 브리지)</td>
+<td>27/27</td>
+<td>lesson-sync(함께 보기)</td>
+<td>19/19</td>
+</tr>
+<tr>
+<td>sim-e2e(시뮬레이터)</td>
+<td>51/51</td>
+<td>sim-examples</td>
+<td>28/28</td>
+</tr>
+<tr>
+<td>sim-devices</td>
+<td>17/17</td>
+<td>sim-layout</td>
+<td>7/7</td>
+</tr>
+<tr>
+<td>assistant-ui</td>
+<td>25/25</td>
+<td>assistant-function</td>
+<td>23/23</td>
+</tr>
+<tr>
+<td>rule-assistant</td>
+<td>50/50</td>
+<td>model-compat(로컬)</td>
+<td>특징값 차이 0</td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>링크·그림·스크립트·영상 125개 모두 200, 콘솔 오류 없음(1366×768, 390×844)</li>
+<li>첫 화면 전송량: 인트로 영상 4.5MB + 글꼴 약 0.4MB(3D 엔진을 불러오지 않음)</li>
+<li>사용자 관점 검토 반영: 도식 아이콘 이름표 38&#126;42px로 키움, 그림이 배경 원 밖으로 나가지 않게, 휴대폰 첫 화면은 흐린 배경 영상으로 빈 곳을 채우고 자막 21px</li>
+<li>정리: 쓰지 않는 옛 3D 인트로·실험 페이지·라이브러리 삭제(약 1.8MB)</li>
+</ul>
+<p><strong>남은 것</strong>: 휴대폰 세로 전용 인트로 영상(지금은 가로 영상을 가운데에 보여 줌), 실제 학교 PC·휴대폰에서의 재생 확인.</p>
 </main>
 <footer class="site-foot">빅아이 로보독은 코코아팹의 제품이며, 이 교육 자료는 코코아팹과 협력해 만들었습니다.</footer></body></html>
