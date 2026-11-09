@@ -5,7 +5,11 @@
 body{font-size:17px;line-height:1.75;--page-w:1100px}
 .subnav{position:sticky;top:58px;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .subnav .in{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;align-items:center}
-.subnav nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:thin}
+.subnav nav{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+@media (max-width:720px){.subnav nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent);padding-right:24px}}
+.start{margin:14px 0 6px;padding:14px 18px;border-radius:14px;border:2px solid var(--accent);background:var(--card);line-height:1.8}
+.start b{color:var(--accent)}
+td code{white-space:nowrap} th,td{min-width:4.5em}
 .subnav nav a{white-space:nowrap;text-decoration:none;font-size:14px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
 .subnav nav a:hover{color:var(--ink);border-color:var(--line-strong)}
 .subnav nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -32,7 +36,7 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
 <nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
 </div></header>
-<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html" aria-current="page">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a><a href="09.html">예제 따라 하기</a></nav>
+<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="09.html">예제 따라 하기</a><a href="10.html">블록 한눈표</a><a href="01.html" aria-current="page">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="06.html">중·고 확장</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="08.html">시뮬레이터 안내</a><a href="00.html">교안 분석</a><a href="07.html">검증 보고서</a></nav>
 <button onclick="print()">🖨 인쇄</button></div></div>
 <main><h1>2차시 소개형 — &quot;AI가 보고, 로봇이 움직여요&quot;</h1>
 <ul>
@@ -117,7 +121,9 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <ol>
 <li><strong>학교 PC 점검</strong>: <a href="05.html"><code>운영 가이드</code></a>의 &quot;학교 PC 점검표&quot;로 브라우저·USB·카메라·사이트 차단을 확인.</li>
 <li><strong>로보독 점검</strong>(1대당 1분): <a href="makecode/00_check-robodog.ts" download><code>makecode/00_check-robodog.ts</code></a>를 꽂고 켜서 눈 하트·몸통 초록(배터리)·본체 버튼으로 앉기↔서기를 확인. 몸통이 노랑·빨강이면 충전.</li>
-<li><strong>마이크로비트 준비</strong> (모둠번호를 1, 2, 3… 으로 바꿔서)<ul>
+<li><strong>마이크로비트 준비</strong> — 코드 넣는 법(MakeCode 확장 추가 → 붙여넣기 → 다운로드)은 그림과 함께 <a href="09.html"><code>예제 따라 하기</code></a>의 <strong>1. 실물에 코드 넣는 법</strong>에 있어요.<ul>
+<li>각 파일 맨 위 <code>let 모둠번호 = 1</code>의 숫자를 모둠마다 1, 2, 3… 으로 바꿔서 넣어요(PC용과 로보독용이 <strong>같은 번호</strong>).</li>
+<li>로보독용 코드에만 확장 <code>kocoafab/robodog</code>을 추가해요. PC용(00_bridge-receiver)에는 <strong>추가하지 마세요</strong>(USB 통신이 끊겨요).</li>
 <li>PC용: <a href="makecode/00_bridge-receiver.ts" download><code>makecode/00_bridge-receiver.ts</code></a> → 켤 때 <code>B1</code> 글자가 한 번 흘러감(그 뒤에는 받은 번호 표시)</li>
 <li>로보독용: 1차시는 <a href="makecode/01_hello-robodog.ts" download><code>makecode/01_hello-robodog.ts</code></a>, 2차시는 <a href="makecode/03_ai-traffic-dog.ts" download><code>makecode/03_ai-traffic-dog.ts</code></a></li>
 <li>로보독용 마이크로비트를 <strong>모둠당 2개(01용, 03용) 미리 만들어 라벨을 붙여 두면</strong> 쉬는 시간에 바꿔 꽂기만 하면 됩니다.
@@ -283,7 +289,7 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 </tr>
 <tr>
 <td>학교망이 MakeCode를 막음</td>
-<td>미리 내려받은 .hex를 교사가 넣어 두기, 시뮬레이터는 <strong>글자 코드</strong> 탭 사용</td>
+<td>MakeCode가 열리는 곳(집·교무실·휴대폰 핫스팟)에서 수업 전에 .hex를 다운로드해 마이크로비트에 미리 넣어 두기, 시뮬레이터는 <strong>글자 코드</strong> 탭 사용</td>
 </tr>
 <tr>
 <td>로보독 배터리 부족</td>

@@ -1,0 +1,575 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>블록 한눈표 — 하고 싶은 일로 블록 찾기 · 로보독 수업 자료</title>
+<link rel="stylesheet" href="../assets/brand.css"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><style>
+body{font-size:17px;line-height:1.75;--page-w:1100px}
+.subnav{position:sticky;top:58px;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.subnav .in{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;align-items:center}
+.subnav nav{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+@media (max-width:720px){.subnav nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent);padding-right:24px}}
+.start{margin:14px 0 6px;padding:14px 18px;border-radius:14px;border:2px solid var(--accent);background:var(--card);line-height:1.8}
+.start b{color:var(--accent)}
+td code{white-space:nowrap} th,td{min-width:4.5em}
+.subnav nav a{white-space:nowrap;text-decoration:none;font-size:14px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
+.subnav nav a:hover{color:var(--ink);border-color:var(--line-strong)}
+.subnav nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.subnav button{font-size:14px;min-height:34px;padding:5px 12px;border-radius:999px;white-space:nowrap}
+@media (max-width:720px){.subnav{top:0}}
+main{max-width:900px;margin:0 auto;padding:24px 16px 60px}
+h1{font-size:32px;line-height:1.3;margin:10px 0 18px;letter-spacing:-0.025em} h2{font-size:23px;margin:36px 0 10px;padding-top:6px;border-top:2px solid var(--line)} h3{font-size:19px;margin:24px 0 6px}
+code{background:var(--code);border-radius:5px;padding:1px 6px;font-size:.88em;font-family:ui-monospace,Consolas,"D2Coding",monospace}
+pre{background:var(--code);border-radius:10px;padding:12px 14px;overflow:auto;line-height:1.5} pre code{padding:0;background:none}
+.tbl{overflow-x:auto;margin:12px 0} table{border-collapse:collapse;width:100%;font-size:15.5px;line-height:1.6;background:var(--card)}
+th,td{border:1px solid var(--line);padding:7px 10px;vertical-align:top;text-align:left} th{background:var(--code)}
+blockquote{margin:12px 0;padding:8px 14px;border-left:4px solid var(--accent);background:var(--card);border-radius:0 10px 10px 0}
+li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line);margin:28px 0}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px;margin:10px 0 26px}
+.cards a{display:block;text-decoration:none;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:16px 18px;box-shadow:var(--shadow-sm);transition:border-color .15s,box-shadow .2s,transform .2s}
+.cards a:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-1px)} .cards b{display:block;font-size:18px} .cards span{display:block;color:var(--muted);font-size:14.5px;line-height:1.5;margin-top:4px}
+.dl{columns:2 260px;padding-left:20px} .note{color:var(--muted);font-size:14.5px}
+@media print { header,.subnav,.noprint{display:none} body{background:#fff;color:#000;font-size:12pt} main{max-width:none;padding:0} a{color:#000;text-decoration:none}
+  h2{break-after:avoid} table,pre,blockquote{break-inside:avoid} th{background:#eee} code{background:#f2f2f2}
+  pre{background:#fff;border:1px solid #999;font-size:12pt;line-height:2.1;white-space:pre-wrap}   /* 활동지: 글씨 쓸 칸 넉넉히 */ }
+</style></head>
+<body><header class="gnb"><div class="gnb-in">
+<a class="brand" href="../"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0f2a50"/><circle cx="16" cy="16.4" r="12.6" fill="#fff1c2"/><rect x="4.6" y="10.2" width="22.8" height="12.4" rx="6.2" fill="#0b0e14"/><rect x="6.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><rect x="17.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><g fill="#fff4c8"><circle cx="7.92" cy="17.68" r=".56"/><circle cx="8.78" cy="16.82" r=".56"/><circle cx="9.64" cy="15.96" r=".56"/><circle cx="10.50" cy="15.10" r=".56"/><circle cx="11.36" cy="15.96" r=".56"/><circle cx="12.22" cy="16.82" r=".56"/><circle cx="13.08" cy="17.68" r=".56"/><circle cx="18.92" cy="17.68" r=".56"/><circle cx="19.78" cy="16.82" r=".56"/><circle cx="20.64" cy="15.96" r=".56"/><circle cx="21.50" cy="15.10" r=".56"/><circle cx="22.36" cy="15.96" r=".56"/><circle cx="23.22" cy="16.82" r=".56"/><circle cx="24.08" cy="17.68" r=".56"/></g><circle cx="16" cy="14.4" r=".95" fill="#2e3850"/></svg>
+<span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
+<nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
+</div></header>
+<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="09.html">예제 따라 하기</a><a href="10.html" aria-current="page">블록 한눈표</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="06.html">중·고 확장</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="08.html">시뮬레이터 안내</a><a href="00.html">교안 분석</a><a href="07.html">검증 보고서</a></nav>
+<button onclick="print()">🖨 인쇄</button></div></div>
+<main><h1>블록 한눈표 — 하고 싶은 일로 블록 찾기</h1>
+<ol>
+<li><strong>하고 싶은 일</strong>을 한 문장으로 적어요. (예: &quot;벽이 가까우면 뒤로 물러나요&quot;)</li>
+<li>아래 표에서 그 일을 찾고, 가장 비슷한 <strong>예제 파일</strong>(<code>makecode/…</code>)에서 출발해 숫자나 블록을 조금씩 고쳐요.</li>
+<li>고친 코드는 <strong>시뮬레이터</strong>(<a href="https://microbit-bridge.netlify.app/sim/">https://microbit-bridge.netlify.app/sim/</a>)에서 먼저 시험하고, 실물은 낮은 속도로 한 번 더 확인해요.</li>
+</ol>
+<blockquote>
+<p><strong>글자 코드(JavaScript)</strong>는 블록을 글자로 쓴 것이에요. MakeCode 위쪽의 <code>{} JavaScript</code> 탭에 붙여넣으면 블록으로 바뀌어요. 이 표의 &quot;숫자 뜻·범위&quot;는 시뮬레이터가 받아들이는 값 기준이에요.
+<strong>시뮬레이터</strong> 칸의 뜻: ○ = 움직임을 보여 줘요 / △ = 비슷하게만 보여 줘요 / ✕ = 흉내 내지 못해요.</p>
+</blockquote>
+<h2>1. 움직이기 (걷기 · 멈추기 · 돌기 · 앉기)</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>하고 싶은 일</th>
+<th>블록에 보이는 말</th>
+<th>글자 코드 예</th>
+<th>숫자 뜻·범위</th>
+<th>시뮬레이터</th>
+<th>예제 파일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>앞으로 걷기</td>
+<td>(로보독) 이동</td>
+<td><code>robodog.move(deflib.MoveDirection.Forward, 25)</code></td>
+<td>속도 -100&#126;100. 책상 위에서는 <strong>30 이하</strong>로 해요 (넘으면 안내가 떠요)</td>
+<td>○</td>
+<td><a href="makecode/21_remote-dog.ts" download><code>makecode/21_remote-dog.ts</code></a></td>
+</tr>
+<tr>
+<td>뒤로 걷기</td>
+<td>(로보독) 이동</td>
+<td><code>robodog.move(deflib.MoveDirection.Backward, 20)</code></td>
+<td>방향만 <code>Backward</code>로 바꿔요</td>
+<td>○</td>
+<td><a href="makecode/12_button-explore.ts" download><code>makecode/12_button-explore.ts</code></a>(앞으로만) → 아래 조합 ①</td>
+</tr>
+<tr>
+<td>멈추기</td>
+<td>(로보독) 정지</td>
+<td><code>robodog.stop()</code></td>
+<td>걷기를 멈춰요</td>
+<td>○</td>
+<td><a href="makecode/02_distance-rule.ts" download><code>makecode/02_distance-rule.ts</code></a></td>
+</tr>
+<tr>
+<td>오른쪽으로 돌기</td>
+<td>(로보독) 회전</td>
+<td><code>robodog.rotation(deflib.RotateDirection.Clockwise, 90, 50)</code></td>
+<td>각도 0&#126;360, 빠르기 10&#126;100. <code>Clockwise</code> = 오른쪽(시계 방향)</td>
+<td>○</td>
+<td><a href="makecode/21_remote-dog.ts" download><code>makecode/21_remote-dog.ts</code></a></td>
+</tr>
+<tr>
+<td>왼쪽으로 돌기</td>
+<td>(로보독) 회전</td>
+<td><code>robodog.rotation(deflib.RotateDirection.Counterclockwise, 30, 80)</code></td>
+<td><code>Counterclockwise</code> = 왼쪽</td>
+<td>○</td>
+<td><a href="makecode/12_button-explore.ts" download><code>makecode/12_button-explore.ts</code></a></td>
+</tr>
+<tr>
+<td>앉기·인사·서기 등 자세</td>
+<td>(로보독) 자세</td>
+<td><code>robodog.gesture(deflib.Posture.SitDown)</code></td>
+<td><code>Ready</code>(서기) · <code>SitDown</code>(앉기) · <code>Handstand</code>(물구나무) · <code>Stretch</code>(기지개) · <code>SayHello</code>(인사)</td>
+<td>△ 근사 자세</td>
+<td><a href="makecode/01_hello-robodog.ts" download><code>makecode/01_hello-robodog.ts</code></a>, <a href="makecode/05_motion-tour.ts" download><code>makecode/05_motion-tour.ts</code></a></td>
+</tr>
+<tr>
+<td>몸을 낮게·높게</td>
+<td>(로보독) 다리 높이</td>
+<td><code>robodog.legBend(deflib.LegGroup.AllLegs, 70)</code></td>
+<td>높이 0&#126;100. 다리 묶음: <code>AllLegs</code> <code>FrontLegs</code> <code>BackLegs</code> <code>LeftLegs</code> <code>RightLegs</code></td>
+<td>○</td>
+<td><a href="makecode/05_motion-tour.ts" download><code>makecode/05_motion-tour.ts</code></a></td>
+</tr>
+<tr>
+<td>다리 하나씩 움직이기</td>
+<td>(로보독) 다리</td>
+<td><code>robodog.leg(deflib.LegSelection.RightFront, 100, 80)</code></td>
+<td>높이 0&#126;100, 앞뒤 -100&#126;100</td>
+<td>○</td>
+<td><a href="makecode/05_motion-tour.ts" download><code>makecode/05_motion-tour.ts</code></a></td>
+</tr>
+<tr>
+<td>관절 각도로 움직이기</td>
+<td>(로보독) 모터</td>
+<td><code>robodog.motor(…)</code></td>
+<td>각도는 -90&#126;90으로 잘려요</td>
+<td>○</td>
+<td><a href="makecode/05_motion-tour.ts" download><code>makecode/05_motion-tour.ts</code></a></td>
+</tr>
+</tbody></table></div>
+<ul>
+<li><strong>걷기 모드와 다리 모드는 섞이지 않아요.</strong> 앉기·다리 블록을 쓰다가 걷기 블록을 쓰면 이동·회전 값이 처음으로 돌아가요. 걷기 전에 <code>robodog.gesture(deflib.Posture.Ready)</code>로 서게 하면 안전해요.</li>
+<li><code>robodog.rotation</code>은 &quot;돌아라&quot;라고 <strong>시켜 두고 바로 다음 줄로 넘어가요.</strong> 다 돌 때까지 기다리려면 <code>basic.pause</code>를 같이 써요 (90도, 빠르기 60이면 약 1.3초).</li>
+</ul>
+<h2>2. 표정 · 불빛 · 소리</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>하고 싶은 일</th>
+<th>블록에 보이는 말</th>
+<th>글자 코드 예</th>
+<th>숫자 뜻·범위</th>
+<th>시뮬레이터</th>
+<th>예제 파일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>눈 표정 바꾸기</td>
+<td>(로보독) 눈 표정</td>
+<td><code>robodog.headLedExp(deflib.LedExpression.SparklingEyes)</code></td>
+<td>14가지: <code>SparklingEyes</code>(초롱초롱) <code>ILoveYou</code> <code>EyesClosed</code>(눈 감기) <code>Thanks</code> <code>ThankYou</code> <code>Sparrow</code> <code>RollingEyes</code>(좌우 굴리기) <code>SharpEyes</code>(찢눈) <code>BlinkingSharpEyes</code> <code>Insect</code> <code>Blink</code>(깜박) <code>SnakeEyes</code> <code>Pinwheel</code> <code>BigEyes</code>(왕눈이)</td>
+<td>△ 모양은 근사</td>
+<td><a href="makecode/10_button-bark.ts" download><code>makecode/10_button-bark.ts</code></a></td>
+</tr>
+<tr>
+<td>눈에 글자 한 개</td>
+<td>(로보독) 눈에 글자</td>
+<td><code>robodog.headLedPrint(deflib.HeadLedSide.Both, &quot;A&quot;)</code></td>
+<td>영문·숫자 <strong>한 글자</strong>만. 왼쪽 <code>Left</code> / 오른쪽 <code>Right</code> / 양쪽 <code>Both</code></td>
+<td>○ (한글은 안 나와요)</td>
+<td><a href="makecode/04_ai-team-template.ts" download><code>makecode/04_ai-team-template.ts</code></a></td>
+</tr>
+<tr>
+<td>눈 끄기</td>
+<td>(로보독) 눈 지우기</td>
+<td><code>robodog.headLedClear()</code></td>
+<td></td>
+<td>○</td>
+<td><a href="makecode/04_ai-team-template.ts" download><code>makecode/04_ai-team-template.ts</code></a></td>
+</tr>
+<tr>
+<td>몸통 불빛 색</td>
+<td>(로보독) 몸통 LED</td>
+<td><code>robodog.bodyLed(255, 0, 0)</code></td>
+<td>빨강·초록·파랑 각각 0&#126;255. <code>(255,0,0)</code> 빨강, <code>(0,255,0)</code> 초록, <code>(0,0,255)</code> 파랑, <code>(0,0,0)</code> 끄기</td>
+<td>○</td>
+<td><a href="makecode/02_distance-rule.ts" download><code>makecode/02_distance-rule.ts</code></a></td>
+</tr>
+<tr>
+<td>소리 내기</td>
+<td>(로보독) 효과음</td>
+<td><code>robodog.soundPlay(deflib.SoundEffect.Bark, deflib.SoundVolume.Medium)</code></td>
+<td>소리: <code>Bark</code>(멍멍) <code>Growl</code> <code>Angry</code> <code>Whine</code> <code>HeavyBreath</code> <code>Hello</code> <code>Wait</code> <code>MoveAside</code> <code>Start</code> <code>Laser</code> <code>MotorRotation</code> <code>DingDing</code> <code>AlienSignal</code> <code>Motion</code> <code>Collision</code> 와 음계 <code>Do Re Mi Fa Sol La Si SharpDo</code>. 크기: <code>Quiet</code>(1) <code>Medium</code>(2) <code>Loud</code>(3)</td>
+<td>△ 비슷한 신호음 + 말풍선 (소리는 기본 꺼짐)</td>
+<td><a href="makecode/10_button-bark.ts" download><code>makecode/10_button-bark.ts</code></a></td>
+</tr>
+<tr>
+<td>마이크로비트 화면에 숫자·글자·그림</td>
+<td>기본 → 숫자 보이기 / 문자열 보이기 / 아이콘 보이기</td>
+<td><code>basic.showNumber(3)</code> · <code>basic.showString(&quot;HI&quot;)</code> · <code>basic.showIcon(IconNames.Heart)</code></td>
+<td>5×5 불빛 화면. 한 글자는 잠깐 보이고, 긴 글은 흘러가요</td>
+<td>○</td>
+<td><a href="makecode/02_distance-rule.ts" download><code>makecode/02_distance-rule.ts</code></a></td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>로보독 마이크로비트에서는 <strong>&#39;음악&#39; 블록을 쓰지 마세요.</strong> 로봇과 통신하는 핀과 겹칠 수 있어요. 소리는 위의 효과음 블록을 써요. (시뮬레이터도 경고를 띄워요.)</li>
+<li>등에 꽂은 마이크로비트의 5×5 화면은 잘 안 보일 수 있어요. 눈 표정이나 몸통 불빛으로도 알려 주세요.</li>
+</ul>
+<h2>3. 센서로 알기</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>하고 싶은 일</th>
+<th>블록에 보이는 말</th>
+<th>글자 코드 예</th>
+<th>숫자 뜻·범위</th>
+<th>시뮬레이터</th>
+<th>예제 파일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>앞의 물건까지 거리 알기 (<strong>거리센서</strong> = 빛으로 거리를 재는 눈)</td>
+<td>(로보독) 거리</td>
+<td><code>let 거리 = robodog.getTof()</code></td>
+<td>시뮬레이터: 머리 앞에서 물건까지 <strong>cm</strong>, 아무것도 없으면 <strong>255</strong>. 실물은 단위를 아직 확인하지 못했어요. <strong>실물에서 0은 &quot;값을 못 읽었다&quot;는 뜻</strong>으로 쓰고 있어요</td>
+<td>○</td>
+<td><a href="makecode/02_distance-rule.ts" download><code>makecode/02_distance-rule.ts</code></a></td>
+</tr>
+<tr>
+<td>로보독 방향 알기</td>
+<td>(로보독) 방향</td>
+<td><code>robodog.getRotation()</code></td>
+<td>시뮬레이터는 -180&#126;180으로 줘요</td>
+<td>○</td>
+<td>(예제 없음)</td>
+</tr>
+<tr>
+<td>몸이 기울었는지 알기</td>
+<td>(로보독) 기울기</td>
+<td><code>robodog.getTilt(deflib.TiltAxis.LeftRight)</code></td>
+<td><code>LeftRight</code> / <code>ForwardBackward</code>. 시뮬레이터는 늘 0 (평평)</td>
+<td>△</td>
+<td>(예제 없음)</td>
+</tr>
+<tr>
+<td>배터리</td>
+<td>(로보독) 배터리</td>
+<td><code>robodog.getBattery()</code></td>
+<td>시뮬레이터에서는 패널의 막대 값</td>
+<td>△</td>
+<td>(예제 없음)</td>
+</tr>
+<tr>
+<td>빛·온도·소리 크기</td>
+<td>입력 → 빛 세기 등</td>
+<td><code>input.lightLevel()</code></td>
+<td>시뮬레이터는 <strong>고정값</strong>(빛 128, 온도 22)</td>
+<td>✕</td>
+<td>(예제 없음)</td>
+</tr>
+</tbody></table></div>
+<p><strong>거리센서 쓸 때 꼭 지켜요</strong></p>
+<ul>
+<li><code>getTof()</code>가 <strong>0이면 값이 없는 것</strong>이니 &quot;가깝다&quot;로 읽지 말고 <code>거리 &gt; 0 &amp;&amp; 거리 &lt; 20</code>처럼 0을 빼요. (<a href="makecode/02_distance-rule.ts" download><code>makecode/02_distance-rule.ts</code></a>도 0이면 안전하게 멈춰요.)</li>
+<li>거리센서는 <strong>앞만</strong> 봐요. 뒤로 걸을 때나 책상 끝(낭떠러지)은 알지 못해요.</li>
+<li>&quot;가깝다&quot;의 기준(예: 20)은 모둠이 직접 손을 대 보고 정해요.</li>
+</ul>
+<h2>4. 본체 버튼</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>하고 싶은 일</th>
+<th>블록에 보이는 말</th>
+<th>글자 코드 예</th>
+<th>숫자 뜻·범위</th>
+<th>시뮬레이터</th>
+<th>예제 파일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>로보독 본체 버튼 눌렸는지 알기</td>
+<td>(로보독) 버튼</td>
+<td><code>let 지금버튼 = robodog.getButton()</code></td>
+<td>누르는 순간 잠깐 <code>true</code>(참), 아니면 <code>false</code></td>
+<td>○ [본체 버튼 누르기]</td>
+<td><a href="makecode/10_button-bark.ts" download><code>makecode/10_button-bark.ts</code></a></td>
+</tr>
+<tr>
+<td>&quot;한 번 눌렀을 때&quot; 한 번만 하기</td>
+<td>만약 … 이고 … 아니라면</td>
+<td><code>if (지금버튼 &amp;&amp; !(이전버튼)) { … }</code> + 맨 끝에 <code>이전버튼 = 지금버튼</code></td>
+<td>지금은 눌렸고, 조금 전엔 안 눌렸으면 = 방금 누른 순간</td>
+<td>○</td>
+<td>본체 버튼 예제 모두</td>
+</tr>
+<tr>
+<td>(참고) 마이크로비트 A·B 버튼</td>
+<td>입력 → 버튼 A 눌렀을 때</td>
+<td><code>input.onButtonPressed(Button.A, function () { … })</code></td>
+<td>A, B, A+B(<code>Button.AB</code>)</td>
+<td>○ 단, <strong>실물 로보독에서는 A·B가 가려져 눌 수 없어요</strong></td>
+<td><a href="makecode/20_remote-sender.ts" download><code>makecode/20_remote-sender.ts</code></a> (리모컨용)</td>
+</tr>
+</tbody></table></div>
+<h2>5. 라디오 (숫자 주고받기)</h2>
+<p><strong>라디오</strong>는 마이크로비트끼리 전파로 숫자를 주고받는 기능이에요. <strong>같은 모둠 번호(라디오 그룹)끼리만</strong> 들려요.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>하고 싶은 일</th>
+<th>블록에 보이는 말</th>
+<th>글자 코드 예</th>
+<th>숫자 뜻·범위</th>
+<th>시뮬레이터</th>
+<th>예제 파일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>모둠 번호 정하기</td>
+<td>무선 통신 → 무선 그룹 설정</td>
+<td><code>radio.setGroup(1)</code></td>
+<td>리모컨과 로보독이 <strong>같은 번호</strong>여야 해요. 모둠마다 다르게</td>
+<td>○</td>
+<td><a href="makecode/20_remote-sender.ts" download><code>makecode/20_remote-sender.ts</code></a>, <a href="makecode/21_remote-dog.ts" download><code>makecode/21_remote-dog.ts</code></a></td>
+</tr>
+<tr>
+<td>숫자 보내기 (리모컨 쪽)</td>
+<td>무선 통신 → 숫자 보내기</td>
+<td><code>radio.sendNumber(1)</code></td>
+<td>약속: A=1, B=2, A+B=3</td>
+<td>△ 실행 기록에 &quot;라디오 보냄&quot;만 남겨요</td>
+<td><a href="makecode/20_remote-sender.ts" download><code>makecode/20_remote-sender.ts</code></a></td>
+</tr>
+<tr>
+<td>숫자 받으면 움직이기 (로보독 쪽)</td>
+<td>무선 통신 → 받은 숫자</td>
+<td><code>radio.onReceivedNumber(function (receivedNumber) { … })</code></td>
+<td><code>receivedNumber</code>가 받은 숫자</td>
+<td>○ 로보독 화면 위 [📡 리모컨] 줄의 숫자 버튼</td>
+<td><a href="makecode/21_remote-dog.ts" download><code>makecode/21_remote-dog.ts</code></a>, <a href="makecode/22_remote-tricks.ts" download><code>makecode/22_remote-tricks.ts</code></a></td>
+</tr>
+<tr>
+<td>글자·이름과 값 주고받기</td>
+<td>무선 통신 → 글자/값 보내기·받기</td>
+<td><code>radio.sendString(&quot;go&quot;)</code> · <code>radio.sendValue(&quot;속도&quot;, 25)</code></td>
+<td></td>
+<td>△ 보내기는 기록만, 받기는 시뮬레이터에서 시험할 수 없어요</td>
+<td>(예제 없음)</td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>시뮬레이터의 숫자 버튼은 <strong>한 번 누르면 한 번만</strong> 보내요. 2초 동안 신호가 없으면 멈추는 코드(<a href="makecode/03_ai-traffic-dog.ts" download><code>makecode/03_ai-traffic-dog.ts</code></a>)는 [📡 리모컨] 줄의 [계속 보내기]를 켜세요.</li>
+<li>시뮬레이터에는 리모컨이 따로 없으니 리모컨 코드(<a href="makecode/20_remote-sender.ts" download><code>makecode/20_remote-sender.ts</code></a>)를 돌릴 필요는 없어요. 로보독 코드만 돌리고 숫자 버튼을 눌러요.</li>
+</ul>
+<h2>6. 기다리기 · 반복 · 조건 · 변수</h2>
+<p><strong>변수</strong>는 숫자를 담아 두는 이름표 상자예요. 예: <code>let 가까움 = 20</code>이라고 하면 &quot;가까움&quot;이라는 상자에 20이 들어 있어요.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>하고 싶은 일</th>
+<th>블록에 보이는 말</th>
+<th>글자 코드 예</th>
+<th>숫자 뜻·범위</th>
+<th>시뮬레이터</th>
+<th>예제 파일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>잠깐 기다리기</td>
+<td>기본 → 일시 중지 (ms)</td>
+<td><code>basic.pause(1000)</code></td>
+<td>1000 = 1초. <strong>걷다가 멈추기 전에 시간을 줄 때</strong> 써요</td>
+<td>○</td>
+<td><a href="makecode/12_button-explore.ts" download><code>makecode/12_button-explore.ts</code></a></td>
+</tr>
+<tr>
+<td>계속 반복하기</td>
+<td>기본 → 무한 반복</td>
+<td><code>basic.forever(function () { … })</code></td>
+<td>안에서는 마지막에 <code>basic.pause(50)</code>처럼 조금 쉬어요</td>
+<td>○</td>
+<td>모든 본체 버튼 예제</td>
+</tr>
+<tr>
+<td>만약 &#126;라면 / 아니면</td>
+<td>만약 … 아니면</td>
+<td><code>if (거리 &lt; 20) { … } else { … }</code></td>
+<td>비교: <code>&lt;</code> <code>&gt;</code> <code>==</code>(같다) <code>!=</code>(다르다), 그리고 <code>&amp;&amp;</code>, 또는 <code>||</code></td>
+<td>○</td>
+<td><a href="makecode/02_distance-rule.ts" download><code>makecode/02_distance-rule.ts</code></a></td>
+</tr>
+<tr>
+<td>숫자를 담아 두기</td>
+<td>변수</td>
+<td><code>let 걷는중 = false</code> · <code>걷는중 = !(걷는중)</code></td>
+<td><code>true</code>/<code>false</code>로 켜짐·꺼짐을 기억해요. <code>!</code>은 반대로 바꾸기</td>
+<td>○</td>
+<td><a href="makecode/02_distance-rule.ts" download><code>makecode/02_distance-rule.ts</code></a></td>
+</tr>
+<tr>
+<td>아무 숫자 고르기</td>
+<td>계산 → 무작위</td>
+<td><code>randint(30, 180)</code></td>
+<td>30&#126;180 중 아무 숫자</td>
+<td>○</td>
+<td><a href="makecode/12_button-explore.ts" download><code>makecode/12_button-explore.ts</code></a></td>
+</tr>
+<tr>
+<td>시작한 뒤 흐른 시간</td>
+<td>입력 → 실행 시간 (ms)</td>
+<td><code>input.runningTime()</code></td>
+<td>1000 = 1초</td>
+<td>○</td>
+<td><a href="makecode/12_button-explore.ts" download><code>makecode/12_button-explore.ts</code></a></td>
+</tr>
+<tr>
+<td>나만의 블록(함수) 만들기</td>
+<td>함수</td>
+<td><code>function 두리번 () { … }</code></td>
+<td>자주 쓰는 동작 묶음에 이름 붙이기</td>
+<td>○</td>
+<td><a href="makecode/12_button-explore.ts" download><code>makecode/12_button-explore.ts</code></a></td>
+</tr>
+</tbody></table></div>
+<h2>7. AI 카메라 값 (무선 확장 <code>kocoafab/robodog-radio</code>)</h2>
+<p>로보독 눈 사이의 카메라가 얼굴·색·QR 카드를 알아봐요. <strong>시뮬레이터에는 카메라가 없어서 값이 늘 &quot;인식 없음&quot;(숫자는 0, QR은 <code>&quot;none&quot;</code>)이에요.</strong> 코드가 실행은 되지만 카메라 값에 따라 움직이는 모습은 볼 수 없어요. 실물에서 확인하세요.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>하고 싶은 일</th>
+<th>글자 코드 예</th>
+<th>숫자 뜻</th>
+<th>시뮬레이터</th>
+<th>예제 파일</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>카메라 모드 고르기</td>
+<td><code>robodog.aiDetection(deflib.AiMode.QrCode)</code></td>
+<td><code>Camera</code> <code>FaceDetect</code> <code>FaceTracking</code> <code>ColorDetect</code> <code>QrCode</code></td>
+<td>△ 안내만</td>
+<td><a href="makecode/06_radio-ai-qr.ts" download><code>makecode/06_radio-ai-qr.ts</code></a>, <a href="makecode/07_radio-ai-color.ts" download><code>makecode/07_radio-ai-color.ts</code></a></td>
+</tr>
+<tr>
+<td>얼굴 따라가기 모드</td>
+<td><code>robodog.faceTracking(deflib.AiClass.Class1)</code></td>
+<td>학습한 종류 <code>Class1</code>&#126;<code>Class5</code></td>
+<td>△ 안내만</td>
+<td><a href="makecode/08_radio-ai-face.ts" download><code>makecode/08_radio-ai-face.ts</code></a></td>
+</tr>
+<tr>
+<td>QR 카드 글자 읽기</td>
+<td><code>let 값 = robodog.getQrCode()</code></td>
+<td>글자(예 <code>&quot;GO&quot;</code>). 없으면 <code>&quot;none&quot;</code></td>
+<td>✕ 늘 <code>&quot;none&quot;</code></td>
+<td><a href="makecode/06_radio-ai-qr.ts" download><code>makecode/06_radio-ai-qr.ts</code></a></td>
+</tr>
+<tr>
+<td>색 알아보기</td>
+<td><code>let 색 = robodog.getColorDetect()</code></td>
+<td>0 = 못 알아봄, 1 이상 = 색 번호</td>
+<td>✕ 늘 0</td>
+<td><a href="makecode/07_radio-ai-color.ts" download><code>makecode/07_radio-ai-color.ts</code></a></td>
+</tr>
+<tr>
+<td>얼굴 찾았는지</td>
+<td><code>robodog.getFaceTracking() &gt; 0</code></td>
+<td>0 = 없음</td>
+<td>✕ 늘 0</td>
+<td><a href="makecode/08_radio-ai-face.ts" download><code>makecode/08_radio-ai-face.ts</code></a></td>
+</tr>
+<tr>
+<td>얼굴의 가로 위치</td>
+<td><code>robodog.getAiPosition(deflib.AiPositionAxis.X)</code></td>
+<td><code>X</code>(가로) <code>Y</code>(세로)</td>
+<td>✕ 늘 0</td>
+<td><a href="makecode/08_radio-ai-face.ts" download><code>makecode/08_radio-ai-face.ts</code></a></td>
+</tr>
+</tbody></table></div>
+<ul>
+<li>같은 컴퓨터의 <strong>AI 브리지</strong>를 함께 열면 인식 결과가 라디오 숫자처럼 시뮬레이터에 들어와요. <a href="makecode/03_ai-traffic-dog.ts" download><code>makecode/03_ai-traffic-dog.ts</code></a>로 연습할 수 있어요 (docs/08 참고).</li>
+</ul>
+<h2>8. 아이디어 → 블록 조합 예</h2>
+<h3>조합 ① 벽에 가까워지면 짖고, 뒤로 물러났다가 돌기</h3>
+<p>필요한 블록: 걷기, 거리센서, 효과음, 뒤로 걷기, 회전, 기다리기.</p>
+<pre tabindex="0"><code>let 가까움 = 20
+robodog.gesture(deflib.Posture.Ready)
+robodog.move(deflib.MoveDirection.Forward, 25)
+basic.forever(function () {
+    let 거리 = robodog.getTof()
+    if (거리 &gt; 0 &amp;&amp; 거리 &lt; 가까움) {
+        robodog.stop()
+        robodog.soundPlay(deflib.SoundEffect.Bark, deflib.SoundVolume.Medium)
+        robodog.move(deflib.MoveDirection.Backward, 20)
+        basic.pause(1000)
+        robodog.stop()
+        robodog.rotation(deflib.RotateDirection.Clockwise, 90, 60)
+        basic.pause(1500)
+        robodog.move(deflib.MoveDirection.Forward, 25)
+    }
+    basic.pause(50)
+})
+</code></pre>
+<p><strong>팁: 앞뒤로 떠는 현상.</strong> 뒤로 조금 물러난 뒤 바로 다시 앞으로 걸으면, 아직 벽이 &quot;가까움&quot; 기준 안에 있어서 다시 짖고 다시 물러나요. 로보독이 앞뒤로 떨게 돼요. <strong>돌기를 사이에 넣으면</strong> 벽을 보지 않는 쪽으로 가니까 해결돼요. 돌기를 시킨 뒤 <code>basic.pause(1500)</code>으로 다 돌 때까지 기다리는 것도 잊지 마세요.</p>
+<h3>조합 ② 리모컨으로 조종하다가 장애물 앞에서 자동 정지</h3>
+<p>로보독에 꽂는 마이크로비트용이에요. 리모컨은 <a href="makecode/20_remote-sender.ts" download><code>makecode/20_remote-sender.ts</code></a>(A=1 걷기, B=2 멈춤)를 그대로 써요.</p>
+<pre tabindex="0"><code>let 걷는중 = false
+radio.setGroup(1)
+robodog.gesture(deflib.Posture.Ready)
+radio.onReceivedNumber(function (receivedNumber) {
+    if (receivedNumber == 1) {
+        걷는중 = true
+        robodog.bodyLed(0, 255, 0)
+        robodog.move(deflib.MoveDirection.Forward, 25)
+    } else if (receivedNumber == 2) {
+        걷는중 = false
+        robodog.stop()
+        robodog.bodyLed(255, 0, 0)
+    }
+})
+basic.forever(function () {
+    if (걷는중) {
+        let 거리 = robodog.getTof()
+        if (거리 &gt; 0 &amp;&amp; 거리 &lt; 20) {
+            걷는중 = false
+            robodog.stop()
+            robodog.bodyLed(255, 160, 0)
+            robodog.soundPlay(deflib.SoundEffect.Wait, deflib.SoundVolume.Medium)
+        }
+    }
+    basic.pause(50)
+})
+</code></pre>
+<p>시뮬레이터에서는 장애물을 앞에 놓고 로보독 화면 위 [📡 리모컨] 줄의 <strong>1</strong>을 눌러요. 걷다가 주황 불과 함께 멈추면 성공이에요. 멈춘 뒤 1을 또 누르면 다시 걷기 시작하니, 장애물 앞에서는 다른 쪽으로 돌려 주는 블록을 더 넣어 보세요. 이 생각을 완성한 예제가 <a href="makecode/23_remote-safe-dog.ts" download><code>makecode/23_remote-safe-dog.ts</code></a>(리모컨 ⑥)예요.</p>
+<h3>조합 ③ 본체 버튼으로 켜고 끄기</h3>
+<pre tabindex="0"><code>let 켜짐 = false
+let 이전버튼 = false
+robodog.gesture(deflib.Posture.Ready)
+basic.forever(function () {
+    let 지금버튼 = robodog.getButton()
+    if (지금버튼 &amp;&amp; !(이전버튼)) {
+        켜짐 = !(켜짐)
+        if (켜짐) {
+            robodog.bodyLed(0, 255, 0)
+            robodog.headLedExp(deflib.LedExpression.SparklingEyes)
+            robodog.move(deflib.MoveDirection.Forward, 25)
+        } else {
+            robodog.stop()
+            robodog.bodyLed(255, 0, 0)
+            robodog.headLedExp(deflib.LedExpression.EyesClosed)
+        }
+    }
+    이전버튼 = 지금버튼
+    basic.pause(50)
+})
+</code></pre>
+<p>[▶ 실행]만 누르면 가만히 있는 게 정상이에요. <strong>[본체 버튼 누르기]</strong>를 누르면 걷고, 한 번 더 누르면 멈춰요.</p>
+<h2>9. 시뮬레이터와 실물이 다를 수 있는 것</h2>
+<p>(자세한 표: <a href="08.html"><code>시뮬레이터 안내</code></a>)</p>
+<ul>
+<li><strong>걷는 속도·돌기 빠르기</strong>: 속도 100 ≈ 15cm/초, 빠르기 100 ≈ 120도/초는 추정치예요. <code>basic.pause</code> 시간은 실물에서 다시 맞춰요.</li>
+<li><strong>거리센서</strong>: 단위(cm로 가정)를 실물에서 확인하지 못했어요. 시뮬레이터는 없을 때 255를 주지만 코드는 &quot;0 = 값 없음&quot;도 처리하도록 짜요.</li>
+<li><strong>눈 표정 모양, 자세</strong>(앉기·물구나무·기지개·인사): 근사 그림이에요. 실제 모양과 각도는 달라요.</li>
+<li><strong>효과음</strong>: 실제 소리가 아니라 비슷한 신호음과 말풍선이에요.</li>
+<li><strong>걷는 다리 모양</strong>: 대각선 두 다리씩 걷는 근사예요. 미끄러짐·넘어짐은 없어요. 배터리는 막대 값이에요.</li>
+<li><strong>눈에 글자</strong>: 시뮬레이터는 영문·숫자 한 글자만 표시해요.</li>
+<li><strong>라디오</strong>: 보내기는 기록만 남고, 받기는 패널 숫자 버튼(또는 AI 브리지)으로만 시험해요. 신호가 끊기는 상황은 직접 만들어야 해요.</li>
+<li><strong>마이크로비트 A·B 버튼</strong>: 시뮬레이터에서는 눌리지만 실물 로보독에서는 가려져요.</li>
+<li><strong>방향·기울기</strong>: 방향 값은 -180&#126;180으로 정리해서 줘요(실물은 범위가 다를 수 있음). 기울기는 늘 0이에요.</li>
+<li><strong>빛·온도·소리 크기</strong>: 고정값이에요.</li>
+<li><strong>AI 카메라</strong>: 늘 &quot;인식 없음&quot;이에요.</li>
+<li><strong>지원하지 않는 블록</strong>: 음악, 게임, 핀, 가속도(흔들기) 등은 실행은 되지만 기록에 &quot;지원하지 않는 블록&quot;으로 떠요.</li>
+<li><strong>책상 가장자리</strong>: 거리센서는 책상 끝을 못 봐요. 시뮬레이터는 &quot;떨어졌어요&quot; 경고를 보여 주지만 실물은 정말 떨어져요. 걷는 코드는 바닥이나 울타리 안에서 시험하세요.</li>
+</ul>
+<blockquote>
+<p>시뮬레이터에서 잘 되는 코드도 실물에서는 속도·거리 값이 달라질 수 있어요. <strong>수업 전에 실물로 한 번 확인</strong>하세요.</p>
+</blockquote>
+</main>
+<footer class="site-foot">빅아이 로보독은 코코아팹의 제품이며, 이 교육 자료는 코코아팹과 협력해 만들었습니다.</footer></body></html>

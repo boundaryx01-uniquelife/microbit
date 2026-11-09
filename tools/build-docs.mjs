@@ -20,14 +20,19 @@ const bySrc = new Map(docs.map(d => [d.f, d]));
 // 예제 코드 복사
 const tsFiles = fs.readdirSync(path.join(ROOT, 'makecode')).filter(f => f.endsWith('.ts')).sort();
 for (const f of tsFiles) fs.copyFileSync(path.join(ROOT, 'makecode', f), path.join(OUT, 'makecode', f));
+// 문서 그림(docs/img → bridge/docs/img)
+fs.rmSync(path.join(OUT, 'img'), { recursive: true, force: true });
+if (fs.existsSync(path.join(SRC, 'img'))) fs.cpSync(path.join(SRC, 'img'), path.join(OUT, 'img'), { recursive: true });
 
 const esc = (s) => s.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const GROUPS = [
+  ['처음이면 여기부터', ['09', '10']],
   ['수업안', ['01', '02', '03', '06']],
-  ['수업 준비·평가', ['04', '05', '08', '09']],
+  ['수업 준비·평가', ['04', '05', '08']],
   ['배경·검증', ['00', '07']],
 ];
-const SHORT = { '00': '교안 분석', '01': '2차시 소개형', '02': '4차시 기본형', '03': '8차시 전체형', '04': '활동지·평가', '05': '운영 가이드', '06': '중·고 확장', '07': '검증 보고서', '08': '시뮬레이터 안내', '09': '예제 따라 하기' };
+const SHORT = { '00': '교안 분석', '01': '2차시 소개형', '02': '4차시 기본형', '03': '8차시 전체형', '04': '활동지·평가', '05': '운영 가이드', '06': '중·고 확장', '07': '검증 보고서', '08': '시뮬레이터 안내', '09': '예제 따라 하기', '10': '블록 한눈표' };
+const ORDER = GROUPS.flatMap(g => g[1]);
 
 function linkify(html) {
   // `docs/05_xxx.md`, `05_xxx.md` → 문서 링크 / `makecode/xx.ts` → 예제 내려받기
@@ -44,7 +49,11 @@ const CSS = `
 body{font-size:17px;line-height:1.75;--page-w:1100px}
 .subnav{position:sticky;top:58px;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .subnav .in{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;align-items:center}
-.subnav nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:thin}
+.subnav nav{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+@media (max-width:720px){.subnav nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent);padding-right:24px}}
+.start{margin:14px 0 6px;padding:14px 18px;border-radius:14px;border:2px solid var(--accent);background:var(--card);line-height:1.8}
+.start b{color:var(--accent)}
+td code{white-space:nowrap} th,td{min-width:4.5em}
 .subnav nav a{white-space:nowrap;text-decoration:none;font-size:14px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
 .subnav nav a:hover{color:var(--ink);border-color:var(--line-strong)}
 .subnav nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -75,7 +84,7 @@ const page = (title, active, body) => `<!doctype html>
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
 <nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
 </div></header>
-<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록">${['index', ...docs.map(d => d.slug)].map(s => `<a href="${s}.html"${s === active ? ' aria-current="page"' : ''}>${s === 'index' ? '전체' : SHORT[s] || s}</a>`).join('')}</nav>
+<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록">${['index', ...ORDER.filter(id => docs.some(d => d.slug === id)), ...docs.map(d => d.slug).filter(id => !ORDER.includes(id))].map(s => `<a href="${s}.html"${s === active ? ' aria-current="page"' : ''}>${s === 'index' ? '전체' : SHORT[s] || s}</a>`).join('')}</nav>
 <button onclick="print()">🖨 인쇄</button></div></div>
 <main>${body}</main>
 <footer class="site-foot">빅아이 로보독은 코코아팹의 제품이며, 이 교육 자료는 코코아팹과 협력해 만들었습니다.</footer></body></html>`;
@@ -103,7 +112,7 @@ const firstComment = (src) => {
   }
   return '';
 };
-let idx = `<h1>수업 자료</h1><p class="note">로보독 + 마이크로비트 피지컬 AI 수업안·활동지·운영 가이드입니다. 각 문서는 [🖨 인쇄]로 종이나 PDF로 저장할 수 있어요.</p><div class="cards"><a href="../lessons/"><b>웹 슬라이드로 보기 →</b><span>수업 슬라이드를 브라우저에서 바로 보여 줘요 (교사 모드: 대본 표시)</span></a></div>`;
+let idx = `<h1>수업 자료</h1><p class="note">로보독 + 마이크로비트 피지컬 AI 수업안·활동지·운영 가이드입니다. 각 문서는 [🖨 인쇄]로 종이나 PDF로 저장할 수 있어요.</p><div class="start"><b>로보독이 처음이세요?</b> ① <a href="09.html">예제 따라 하기</a>로 시뮬레이터 → 실물에 코드 넣기 → ② <a href="10.html">블록 한눈표</a>로 내 아이디어 만들기 → ③ <a href="05.html">운영 가이드</a>로 수업 준비 → ④ 차시별 수업안(2·4·8차시) 순서로 보세요.</div><div class="cards"><a href="../lessons/"><b>웹 슬라이드로 보기 →</b><span>수업 슬라이드를 브라우저에서 바로 보여 줘요 (교사 모드: 대본 표시)</span></a></div>`;
 for (const [g, ids] of GROUPS) {
   idx += `<h2>${g}</h2><div class="cards">` + ids.map(id => docs.find(d => d.slug === id)).filter(Boolean)
     .map(d => `<a href="${d.slug}.html"><b>${esc(SHORT[d.slug] || d.title)}</b><span>${esc(d.title)}</span><span>${esc(blurb(d.md))}</span></a>`).join('') + '</div>';

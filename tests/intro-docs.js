@@ -61,7 +61,7 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
     check(`${w}x${h}: 조절 버튼이 화면 안`, await q.evaluate(() => [...document.querySelectorAll('.ctl button')].filter(x => !x.hidden).every(x => { const r = x.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 36; })));
     const endR = await q.evaluate(() => { const f = document.querySelector('.foot'), fr = f.getBoundingClientRect(); return { footB: fr.bottom, footFs: parseFloat(getComputedStyle(f).fontSize), footShown: fr.height > 0, links: [...document.querySelectorAll('.cta a')].map(a => { const r = a.getBoundingClientRect(); return r.bottom <= innerHeight && r.top > 0 && r.width > 50; }) }; });
     check(`${w}x${h}: 시작 카드 링크가 화면 안, 바닥글 12px 이상`, endR.links.every(Boolean) && (!endR.footShown || (endR.footB <= h && endR.footFs >= 12)), JSON.stringify(endR));
-    check(`${w}x${h}: 시작 카드에 학생 링크(수업 코드)가 보임`, await q.evaluate(() => { const r = document.querySelector('.joinl a').getBoundingClientRect(); return r.width > 50 && r.bottom <= innerHeight && r.top > 0; }));
+    check(`${w}x${h}: 시작 카드에 학생 링크(수업 코드)가 보임`, await q.evaluate(() => { const r = document.querySelector('.joinl a[href="lessons/"]').getBoundingClientRect(); return r.width > 50 && r.bottom <= innerHeight && r.top > 0; }));
     await c2.close();
   }
 

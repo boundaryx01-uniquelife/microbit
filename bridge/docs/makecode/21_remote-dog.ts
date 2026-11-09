@@ -7,12 +7,12 @@
 //   2 (B 버튼)   = 멈추기     (몸통 빨강)
 //   3 (A+B 함께) = 오른쪽으로 90도 돌기 (몸통 파랑)
 // 안전: 로보독 본체 버튼을 누르면 언제든 멈춰요.
-// 그룹 번호는 리모컨과 같아야 해요.
+// 모둠 번호는 리모컨과 같아야 해요.
 // =============================================================
 
-let 그룹 = 1
+let 모둠번호 = 1
 let 이전버튼 = false
-radio.setGroup(그룹)
+radio.setGroup(모둠번호)
 robodog.gesture(deflib.Posture.Ready)
 robodog.headLedExp(deflib.LedExpression.SparklingEyes)
 

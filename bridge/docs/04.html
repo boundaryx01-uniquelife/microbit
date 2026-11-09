@@ -5,7 +5,11 @@
 body{font-size:17px;line-height:1.75;--page-w:1100px}
 .subnav{position:sticky;top:58px;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .subnav .in{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;align-items:center}
-.subnav nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:thin}
+.subnav nav{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+@media (max-width:720px){.subnav nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent);padding-right:24px}}
+.start{margin:14px 0 6px;padding:14px 18px;border-radius:14px;border:2px solid var(--accent);background:var(--card);line-height:1.8}
+.start b{color:var(--accent)}
+td code{white-space:nowrap} th,td{min-width:4.5em}
 .subnav nav a{white-space:nowrap;text-decoration:none;font-size:14px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
 .subnav nav a:hover{color:var(--ink);border-color:var(--line-strong)}
 .subnav nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -32,7 +36,7 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
 <nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
 </div></header>
-<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html" aria-current="page">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a><a href="09.html">예제 따라 하기</a></nav>
+<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="09.html">예제 따라 하기</a><a href="10.html">블록 한눈표</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="06.html">중·고 확장</a><a href="04.html" aria-current="page">활동지·평가</a><a href="05.html">운영 가이드</a><a href="08.html">시뮬레이터 안내</a><a href="00.html">교안 분석</a><a href="07.html">검증 보고서</a></nav>
 <button onclick="print()">🖨 인쇄</button></div></div>
 <main><h1>활동지와 평가 도구</h1>
 <p>모든 활동지는 그대로 A4에 출력해 쓸 수 있습니다. (학교 양식에 맞게 수정해도 됩니다)</p>

@@ -5,7 +5,11 @@
 body{font-size:17px;line-height:1.75;--page-w:1100px}
 .subnav{position:sticky;top:58px;z-index:10;background:color-mix(in srgb,var(--bg) 92%,transparent);backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
 .subnav .in{max-width:1100px;margin:0 auto;padding:8px 16px;display:flex;gap:8px;align-items:center}
-.subnav nav{display:flex;gap:6px;overflow-x:auto;flex:1;min-width:0;scrollbar-width:thin}
+.subnav nav{display:flex;flex-wrap:wrap;gap:6px;flex:1;min-width:0}
+@media (max-width:720px){.subnav nav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:thin;-webkit-mask-image:linear-gradient(90deg,#000 85%,transparent);mask-image:linear-gradient(90deg,#000 85%,transparent);padding-right:24px}}
+.start{margin:14px 0 6px;padding:14px 18px;border-radius:14px;border:2px solid var(--accent);background:var(--card);line-height:1.8}
+.start b{color:var(--accent)}
+td code{white-space:nowrap} th,td{min-width:4.5em}
 .subnav nav a{white-space:nowrap;text-decoration:none;font-size:14px;font-weight:600;padding:5px 12px;border-radius:999px;border:1px solid var(--line);color:var(--muted);background:var(--surface)}
 .subnav nav a:hover{color:var(--ink);border-color:var(--line-strong)}
 .subnav nav a[aria-current]{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
@@ -32,10 +36,60 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
 <nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
 </div></header>
-<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="00.html">교안 분석</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="06.html">중·고 확장</a><a href="07.html">검증 보고서</a><a href="08.html">시뮬레이터 안내</a><a href="09.html" aria-current="page">예제 따라 하기</a></nav>
+<div class="subnav"><div class="in"><nav aria-label="수업 자료 목록"><a href="index.html">전체</a><a href="09.html" aria-current="page">예제 따라 하기</a><a href="10.html">블록 한눈표</a><a href="01.html">2차시 소개형</a><a href="02.html">4차시 기본형</a><a href="03.html">8차시 전체형</a><a href="06.html">중·고 확장</a><a href="04.html">활동지·평가</a><a href="05.html">운영 가이드</a><a href="08.html">시뮬레이터 안내</a><a href="00.html">교안 분석</a><a href="07.html">검증 보고서</a></nav>
 <button onclick="print()">🖨 인쇄</button></div></div>
 <main><h1>예제 따라 하기 — 본체 버튼 · 라디오 리모컨 (처음 하는 분용)</h1>
-<p>로보독을 처음 만지는 분도 순서대로만 하면 되도록 썼어요. 예제는 <strong>두 갈래</strong>예요.</p>
+<p>로보독을 처음 만지는 분도 <strong>위에서부터 순서대로</strong> 하면 되도록 썼어요.</p>
+<blockquote>
+<p><strong>먼저 알아 두기</strong> — 새로 넣은 예제(10, 12, 20, 21, 22, 23)는 시뮬레이터에서만 확인했어요. 수업에 쓰기 전에 실물 로보독에서 한 번 해 보세요. 걷는 예제는 항상 <strong>바닥</strong>에서 해요.</p>
+</blockquote>
+<p><strong>처음이면 이 순서로 보세요:</strong> 이 문서(시뮬레이터 → 실물) → <a href="10.html">블록 한눈표</a>(내 아이디어 만들기) → <a href="05.html">운영 가이드</a>(수업 준비).</p>
+<h2>미리 알면 좋은 말</h2>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>말</th>
+<th>뜻</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>마이크로비트</td>
+<td>로보독 등에 꽂는 작은 컴퓨터. 로보독의 <strong>두뇌</strong>예요</td>
+</tr>
+<tr>
+<td>MakeCode(메이크코드)</td>
+<td>마이크로비트에 넣을 코드를 블록으로 만드는 웹사이트</td>
+</tr>
+<tr>
+<td>확장</td>
+<td>MakeCode에 <strong>로보독 블록 꾸러미</strong>를 더하는 것. 한 프로젝트에 한 번만 하면 돼요</td>
+</tr>
+<tr>
+<td>다운로드 / .hex 파일</td>
+<td>만든 코드를 마이크로비트에 넣는 일 / 그때 생기는 파일</td>
+</tr>
+<tr>
+<td>본체 버튼</td>
+<td>로보독 아래쪽 <strong>전원 스위치 옆 작은 버튼</strong></td>
+</tr>
+<tr>
+<td>라디오</td>
+<td>마이크로비트끼리 <strong>숫자를 주고받는 전파</strong>(인터넷 필요 없음)</td>
+</tr>
+<tr>
+<td>모둠 번호</td>
+<td>라디오의 <strong>채널 번호</strong>(코드에서는 라디오 그룹). 같은 번호끼리만 들려요</td>
+</tr>
+<tr>
+<td>변수</td>
+<td>숫자를 담아 두는 <strong>이름표 상자</strong>(예: <code>모둠번호</code>, <code>가까움기준</code>)</td>
+</tr>
+<tr>
+<td>AI 브리지</td>
+<td>카메라로 카드를 알아보고, 그 결과를 숫자로 로보독에 보내 주는 웹 화면</td>
+</tr>
+</tbody></table></div>
+<h2>예제는 두 갈래</h2>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -47,7 +101,7 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <tbody><tr>
 <td>🔘 <strong>본체 버튼으로 해 보기</strong></td>
 <td>로보독 + 마이크로비트 <strong>1개</strong></td>
-<td>로보독 아래쪽 <strong>전원 스위치 옆 작은 버튼</strong>을 누르면 시작</td>
+<td>로보독의 <strong>본체 버튼</strong>을 누르면 시작</td>
 </tr>
 <tr>
 <td>📡 <strong>라디오 리모컨으로 해 보기</strong></td>
@@ -64,22 +118,41 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 <li><strong>② 코드</strong> 옆의 <strong>[예제 고르기]</strong> 상자를 누르면 🔘 본체 버튼 / 📡 라디오 리모컨 / 🛠 점검으로 나뉘어 있어요.</li>
 <li>예제를 고르면 바로 아래에 <strong>&quot;따라 하기&quot;</strong> 상자가 나와요. 적힌 순서대로 누르면 돼요.</li>
 <li>실행은 <strong>[▶ 실행]</strong>, 멈춤은 <strong>[■ 정지]</strong>, 처음 자리로는 <strong>[↺ 처음으로]</strong>.</li>
-<li>공간이 좁으면 오른쪽 <strong>환경 → 공간 크기</strong>에서 넓게 바꿀 수 있어요.</li>
+<li>버튼은 로보독 화면 <strong>바로 위 줄</strong>에 나와요: <strong>[본체 버튼 누르기]</strong>, <strong>[📡 리모컨] 1&#126;4</strong>, <strong>[🅰 마이크로비트] A·B</strong>.</li>
+<li>공간이 좁으면 오른쪽 <strong>환경 → 공간 크기</strong>에서 넓게 바꿀 수 있어요. 소리는 <strong>효과음 켜기</strong>를 눌러야 들려요.</li>
 </ol>
 <h2>1. 실물에 코드 넣는 법 (모든 예제 공통)</h2>
+<p><strong>준비물:</strong> 컴퓨터(크롬·엣지), 마이크로비트, <strong>데이터용</strong> USB 케이블(충전 전용 케이블은 안 돼요), 충전된 로보독.</p>
 <ol>
-<li>컴퓨터에서 <a href="https://makecode.microbit.org">https://makecode.microbit.org</a> → <strong>새 프로젝트</strong>.</li>
-<li>오른쪽 위 <strong>확장(톱니바퀴 → 확장)</strong> → 검색창에 <code>kocoafab/robodog</code> 입력 → 추가.<ul>
-<li>리모컨 쪽 코드(①)에는 확장이 필요 없어요.</li>
+<li><p><a href="https://makecode.microbit.org">https://makecode.microbit.org</a> 를 열고 <strong>새 프로젝트</strong>를 누릅니다. 이름은 아무거나 써도 돼요.</p>
+</li>
+<li><p><strong>로보독 확장 넣기</strong> (로보독 쪽 코드만. 리모컨 쪽 코드 ①에는 필요 없어요)</p>
+<ol>
+<li>가운데 블록 목록 아래쪽 <strong>확장</strong>을 누릅니다(아래 그림 왼쪽 목록의 ⊕ 확장).</li>
+<li>검색창에 <code>kocoafab/robodog</code> 를 <strong>빠짐없이 전부</strong> 입력하고 엔터. (<code>robodog</code>만 치면 안 나와요)</li>
+<li>나온 <strong>robodog</strong> 카드를 한 번 누르면 블록 목록에 <strong>로보독</strong>이 생겨요.</li>
+</ol>
+<p><img src="img/mc_ext_search.jpg" alt="확장 검색 화면: kocoafab/robodog 입력 후 robodog 카드"></p>
+</li>
+<li><p><strong>예제 코드 붙여넣기</strong></p>
+<ol>
+<li>이 문서의 예제 파일 이름(예: <a href="makecode/10_button-bark.ts" download><code>makecode/10_button-bark.ts</code></a>)을 누릅니다. 파일이 내려받아지거나 <strong>글자 화면</strong>으로 열려요.</li>
+<li>글자 화면이면 <strong>Ctrl + A</strong>(전체 선택) → <strong>Ctrl + C</strong>(복사). 시뮬레이터 <strong>글자 코드</strong> 탭에서 복사해도 같아요.</li>
+<li>MakeCode 위쪽 가운데 <strong>{} JavaScript</strong>를 누르고, 안에 있던 글을 <strong>모두 지운 뒤</strong> <strong>Ctrl + V</strong>(붙여넣기).</li>
+</ol>
+<p><img src="img/mc_js.jpg" alt="MakeCode: 위쪽 JavaScript 탭, 왼쪽 아래 다운로드 버튼, 블록 목록의 로보독·확장"></p>
+</li>
+<li><p>위쪽 <strong>블록</strong> 탭을 누르면 블록으로 보여요. 빨간 줄·물음표 블록이 없으면 성공이에요(있으면 2번 확장을 다시 확인).</p>
+<p><img src="img/mc_blocks.jpg" alt="블록 탭으로 돌아온 모습"></p>
+</li>
+<li><p><strong>마이크로비트에 넣기</strong>: 마이크로비트를 USB로 연결 → 왼쪽 아래 보라색 <strong>다운로드</strong>.</p>
+<ul>
+<li>&quot;연결&quot; 창이 나오면 안내대로 <strong>연결</strong>을 누르면 바로 들어가요.</li>
+<li>연결 없이 <strong>.hex 파일</strong>이 내려받아지면, 파일 탐색기에서 그 파일을 <strong>MICROBIT</strong> 드라이브로 끌어다 놓아요. 마이크로비트 뒤쪽 불빛이 깜빡이다 멈추면 끝.</li>
 </ul>
 </li>
-<li>위쪽 <strong>{} JavaScript</strong> 탭을 누르고, 안에 있는 글을 모두 지운 뒤 예제 코드를 붙여넣어요.<ul>
-<li>예제 파일은 [수업 자료] → 예제 목록에서 내려받거나, 시뮬레이터 글자 코드 칸에서 복사해요.</li>
-</ul>
+<li><p>로보독용이면 <strong>로보독 전원을 끈 상태에서</strong> 마이크로비트를 로보독 등에 <strong>끝까지</strong> 꽂고 전원을 켜요.</p>
 </li>
-<li><strong>블록</strong> 탭으로 돌아가면 블록으로 보여요. 블록으로 고쳐도 돼요.</li>
-<li>마이크로비트를 USB로 연결 → <strong>다운로드</strong>.</li>
-<li>로보독용이면 마이크로비트를 로보독 등에 끝까지 꽂고 전원을 켜요.</li>
 </ol>
 <h2>2. 🔘 본체 버튼 예제 (마이크로비트 1개)</h2>
 <div class="tbl"><table>
@@ -92,31 +165,31 @@ li{margin:3px 0} img{max-width:100%} hr{border:0;border-top:1px solid var(--line
 </tr>
 </thead>
 <tbody><tr>
-<td>①</td>
+<td>본체 ①</td>
 <td><a href="makecode/10_button-bark.ts" download><code>makecode/10_button-bark.ts</code></a></td>
 <td>누르면 눈 반짝 → &quot;멍멍&quot; → 앞발 인사</td>
 <td>쉬움</td>
 </tr>
 <tr>
-<td>②</td>
+<td>본체 ②</td>
 <td><a href="makecode/01_hello-robodog.ts" download><code>makecode/01_hello-robodog.ts</code></a></td>
 <td>누를 때마다 다음 장면: 인사 → 조금 걷기 → 앉기</td>
 <td>쉬움</td>
 </tr>
 <tr>
-<td>③</td>
+<td>본체 ③</td>
 <td><a href="makecode/02_distance-rule.ts" download><code>makecode/02_distance-rule.ts</code></a></td>
 <td>누르면 걷다가 장애물 앞에서 멈춤(거리센서)</td>
 <td>보통</td>
 </tr>
 <tr>
-<td>④</td>
+<td>본체 ④</td>
 <td><a href="makecode/12_button-explore.ts" download><code>makecode/12_button-explore.ts</code></a></td>
 <td>누르면 두리번 → 탐험, 벽 만나면 방향 바꾸기, 다시 누르면 멈춤</td>
 <td>도전</td>
 </tr>
 </tbody></table></div>
-<p><strong>따라 하기 (① 버튼 누르면 멍멍)</strong></p>
+<p><strong>따라 하기 (본체 ① 버튼 누르면 멍멍)</strong></p>
 <ol>
 <li>시뮬레이터에서 예제 <strong>① 버튼 누르면 멍멍</strong>을 고르고 <strong>[▶ 실행]</strong>.</li>
 <li>로보독 화면 바로 위 <strong>[본체 버튼 누르기]</strong>를 누르면 로보독이 &quot;멍멍&quot; 하고 인사해요.</li>
@@ -130,7 +203,7 @@ basic.forever(function () {
         // 버튼을 &quot;한 번 눌렀을 때&quot; 할 일
     }
     이전버튼 = 지금버튼
-    basic.pause(50)
+    basic.pause(50)   // 0.05초 쉬기
 })
 </code></pre>
 <ul>
@@ -148,51 +221,91 @@ basic.forever(function () {
 </tr>
 </thead>
 <tbody><tr>
-<td>①</td>
+<td>리모컨 ①</td>
 <td><a href="makecode/20_remote-sender.ts" download><code>makecode/20_remote-sender.ts</code></a></td>
 <td><strong>리모컨</strong>(손에 드는 마이크로비트)</td>
 <td>A = 1, B = 2, A+B = 3 보내기</td>
 </tr>
 <tr>
-<td>②</td>
+<td>리모컨 ②</td>
 <td><a href="makecode/21_remote-dog.ts" download><code>makecode/21_remote-dog.ts</code></a></td>
 <td><strong>로보독</strong>에 꽂는 마이크로비트</td>
 <td>1 걷기 · 2 멈춤 · 3 오른쪽 돌기, 본체 버튼 = 멈춤</td>
 </tr>
 <tr>
-<td>③</td>
+<td>리모컨 ③</td>
 <td><a href="makecode/22_remote-tricks.ts" download><code>makecode/22_remote-tricks.ts</code></a></td>
 <td><strong>로보독</strong>에 꽂는 마이크로비트</td>
 <td>1 인사 · 2 앉기↔서기 · 3 멍멍 (걷지 않음)</td>
 </tr>
 <tr>
-<td>④</td>
+<td>리모컨 ④</td>
 <td><a href="makecode/03_ai-traffic-dog.ts" download><code>makecode/03_ai-traffic-dog.ts</code></a></td>
 <td>로보독</td>
 <td>AI 브리지가 리모컨 역할: 카드 색에 따라 걷기·기다리기·멈추기</td>
 </tr>
 <tr>
-<td>⑤</td>
+<td>리모컨 ⑤</td>
 <td><a href="makecode/04_ai-team-template.ts" download><code>makecode/04_ai-team-template.ts</code></a></td>
 <td>로보독</td>
 <td>우리 모둠이 번호마다 행동을 정하는 빈 틀</td>
 </tr>
+<tr>
+<td>리모컨 ⑥</td>
+<td><a href="makecode/23_remote-safe-dog.ts" download><code>makecode/23_remote-safe-dog.ts</code></a></td>
+<td>로보독</td>
+<td>②에 거리센서를 더함: 걷다가 앞이 가까우면 <strong>스스로 멈춤</strong> (도전)</td>
+</tr>
 </tbody></table></div>
-<p><strong>따라 하기 (② 리모컨으로 움직이기)</strong></p>
+<p><strong>따라 하기 (리모컨 ② 리모컨으로 움직이기)</strong></p>
 <ol>
 <li>마이크로비트 <strong>두 개</strong>에 이름표를 붙여요: &quot;리모컨&quot;, &quot;로보독&quot;.</li>
-<li>&quot;리모컨&quot;에 ① <code>20_remote-sender.ts</code>를 넣고 배터리팩을 연결해요. 화면에 그룹 숫자 <strong>1</strong>이 나와요.</li>
+<li>&quot;리모컨&quot;에 ① <code>20_remote-sender.ts</code>를 넣고 배터리팩을 연결해요. 화면에 모둠 번호 <strong>1</strong>이 나와요.</li>
 <li>&quot;로보독&quot;에 ② <code>21_remote-dog.ts</code>를 넣고 로보독 등에 꽂아 전원을 켜요.</li>
 <li>로보독을 <strong>바닥</strong>에 놓고 리모컨 <strong>A</strong> → 걷기, <strong>B</strong> → 멈추기, <strong>A+B 함께</strong> → 돌기.</li>
 <li>위험하면 로보독 <strong>본체 버튼</strong>을 누르면 바로 멈춰요.</li>
 </ol>
-<p>시뮬레이터에서는 리모컨 대신 로보독 화면 바로 위 <strong>[📡 리모컨]</strong> 줄의 <strong>[1] [2] [3]</strong> 버튼을 누르면 같아요(스크롤 없이 누르면서 바로 볼 수 있어요).</p>
-<p><strong>여러 모둠이 한 교실에서 할 때 — 그룹 번호</strong></p>
+<p>시뮬레이터에서는 리모컨 대신 로보독 화면 바로 위 <strong>[📡 리모컨]</strong> 줄의 <strong>[1] [2] [3]</strong> 버튼을 누르면 같아요(스크롤 없이 누르면서 바로 볼 수 있어요). 숫자 버튼은 한 번 누르면 한 번만 보내요. AI 신호등 안내견처럼 신호가 2초 끊기면 멈추는 코드는 같은 줄의 <strong>[계속 보내기]</strong>를 켜세요.</p>
+<p><strong>여러 모둠이 한 교실에서 할 때 — 모둠 번호</strong></p>
 <ul>
-<li>라디오는 같은 그룹 번호끼리만 들려요. 리모컨과 로보독 코드의 <code>let 그룹 = 1</code>을 <strong>양쪽 모두</strong> 모둠 번호로 바꾸세요(1모둠 = 1, 2모둠 = 2 …).</li>
-<li>다른 모둠 리모컨에 우리 로보독이 움직이면 그룹 번호가 같은 거예요.</li>
+<li>라디오는 같은 모둠 번호끼리만 들려요. 리모컨과 로보독 코드 맨 위 <code>let 모둠번호 = 1</code>의 숫자를 <strong>양쪽 모두</strong> 우리 모둠 번호로 바꾸세요(1모둠 = 1, 2모둠 = 2 …).</li>
+<li>다른 모둠 리모컨에 우리 로보독이 움직이면 모둠 번호가 같은 거예요.</li>
 </ul>
-<h2>4. 잘 안 될 때</h2>
+<h2>4. 내 아이디어를 로보독으로 만들기 (5단계)</h2>
+<p>예제를 해 봤다면, 이제 <strong>우리가 생각한 문제</strong>를 로보독으로 풀어 봐요.</p>
+<ol>
+<li><p><strong>말로 쓰기</strong> — &quot;벽에 가까워지면 짖고 물러나는 경비견&quot;처럼 한 문장으로.</p>
+</li>
+<li><p><strong>&quot;만약 &#126;이면 &#126;한다&quot; 표로 바꾸기</strong> — 무엇을 알아보고(버튼? 거리? 리모컨 숫자? 카드?) 그때 무엇을 할지.</p>
+<div class="tbl"><table>
+<thead>
+<tr>
+<th>만약 (알아보는 것)</th>
+<th>그러면 (할 일)</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>앞이 20보다 가까우면</td>
+<td>멈추고 &quot;멍멍&quot;, 뒤로 1초, 오른쪽으로 돌기</td>
+</tr>
+<tr>
+<td>아니면</td>
+<td>천천히 앞으로</td>
+</tr>
+</tbody></table></div>
+</li>
+<li><p><strong>비슷한 예제에서 출발하기</strong> — 알아보는 것이 <strong>버튼</strong>이면 본체 ①, <strong>거리</strong>면 본체 ③·④, <strong>리모컨</strong>이면 리모컨 ②·⑥, <strong>카드·색</strong>이면 리모컨 ④(AI 브리지). 필요한 블록은 <a href="10.html">블록 한눈표</a>에서 찾아요.</p>
+</li>
+<li><p><strong>시뮬레이터에서 시험하기</strong> — 오른쪽 <strong>환경</strong>에서 장애물·벽을 놓고, 버튼 줄로 신호를 보내 봐요.</p>
+</li>
+<li><p><strong>고치기</strong> — 표와 다르게 움직이면 <strong>한 번에 한 곳만</strong> 고치고 다시 시험해요. 된다면 실물에 넣어 바닥에서 확인!</p>
+</li>
+</ol>
+<blockquote>
+<p>자주 생기는 일: 장애물 앞에서 뒤로 간 다음 바로 앞으로 가면 <strong>앞뒤로 떨어요</strong>. 뒤로 간 뒤 <strong>돌기</strong>를 넣으면 해결돼요.
+시뮬레이터 규칙 도우미에 1번 문장을 쓰면 코드 초안을 만들어 주기도 해요. 알아듣지 못한 말은 노란 안내로 알려 줘요.</p>
+</blockquote>
+<h2>5. 잘 안 될 때</h2>
 <div class="tbl"><table>
 <thead>
 <tr>
@@ -206,23 +319,28 @@ basic.forever(function () {
 </tr>
 <tr>
 <td>리모컨을 눌러도 반응이 없어요</td>
-<td>① 그룹 번호가 양쪽 같은지 ② 리모컨 배터리 ③ 로보독에 ①(리모컨 코드)을 잘못 넣지 않았는지</td>
+<td>① 모둠 번호가 양쪽 같은지 ② 리모컨 배터리 ③ 로보독에 ①(리모컨 코드)을 잘못 넣지 않았는지</td>
 </tr>
 <tr>
 <td>로보독이 엉뚱하게 움직여요</td>
-<td>옆 모둠과 그룹 번호가 같은지</td>
+<td>옆 모둠과 모둠 번호가 같은지</td>
 </tr>
 <tr>
 <td>책상에서 떨어질 것 같아요</td>
-<td>걷는 예제(본체 버튼 ③④, 리모컨 ②)는 <strong>바닥</strong>에서. 책상에서는 리모컨 ③(걷지 않음)을 쓰세요</td>
+<td>걷는 예제(본체 ③④, 리모컨 ②⑥)는 <strong>바닥</strong>에서. 책상에서는 리모컨 ③(걷지 않음)을 쓰세요</td>
 </tr>
 <tr>
-<td>MakeCode에 빨간 줄이 생겨요</td>
+<td>MakeCode에 빨간 줄·물음표 블록이 생겨요</td>
 <td>확장 <code>kocoafab/robodog</code>을 추가했는지 확인</td>
 </tr>
+<tr>
+<td>컴퓨터에 MICROBIT 드라이브가 안 보여요</td>
+<td>충전 전용 케이블일 수 있어요. 데이터용 케이블로 바꾸기</td>
+</tr>
+<tr>
+<td>걷다가 주저앉거나 떨어요</td>
+<td>배터리 부족. 충전하고 다시 해 보기(점검 예제 <a href="makecode/00_check-robodog.ts" download><code>makecode/00_check-robodog.ts</code></a>의 몸통 불빛 초록 = 충분)</td>
+</tr>
 </tbody></table></div>
-<blockquote>
-<p>실물 확인 상태: 새로 추가한 예제(10, 12, 20, 21, 22)는 시뮬레이터에서만 확인했어요. 실물 로보독에서 동작을 한 번 확인한 뒤 수업에 쓰세요.</p>
-</blockquote>
 </main>
 <footer class="site-foot">빅아이 로보독은 코코아팹의 제품이며, 이 교육 자료는 코코아팹과 협력해 만들었습니다.</footer></body></html>

@@ -3,7 +3,7 @@
 export const DEVICE_INFO = {
   tof:     { icon: '📏', label: '거리센서 + 장애물', how: '앞에 장애물을 놓았어요. 장애물을 옮기거나 지워 보며 반응을 확인하세요', panel: 'pEnv' },
   radio:   { icon: '📡', label: '라디오 숫자 받기(리모컨·AI 신호)', how: '[라디오로 숫자 보내기]의 숫자 버튼 = 리모컨 버튼이에요. 장면의 카드도 그 숫자 색으로 바뀌어요', panel: 'pRadio' },
-  button:  { icon: '🔘', label: '로보독 본체 버튼', how: '[로보독 본체 버튼 누르기]를 누르세요', panel: 'pSensor' },
+  button:  { icon: '🔘', label: '로보독 본체 버튼', how: '[본체 버튼 누르기]를 누르세요', panel: 'pSensor' },
   mbBtn:   { icon: '🅰', label: '마이크로비트 A·B 버튼', how: '실물에선 등에 꽂으면 가려져요. 로보독 코드라면 본체 버튼으로 바꾸세요', panel: 'pMb', warn: true },
   battery: { icon: '🔋', label: '배터리', how: '배터리 막대를 움직여 보세요', panel: 'pSensor' },
   tilt:    { icon: '📐', label: '기울기·방향', how: '시뮬레이터는 평평한 곳만 흉내 내요(기울기 0)', panel: 'pSensor' },
