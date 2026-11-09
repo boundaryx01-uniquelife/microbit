@@ -1,0 +1,6 @@
+schema_version: "1.1"
+name: design-logo-ending
+expected_outcome: |
+  The run inspects the end of the existing video before designing, writes design.md with a concept that continues the
+  last scene (palette/style), a timed sequence, a deterministic render(t)/seek approach, and an encoding plan;
+  builds an HTML canvas ending and renders three PNG frames that visibly follow the last scene; reports what was not verified.

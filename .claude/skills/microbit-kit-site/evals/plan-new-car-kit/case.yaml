@@ -1,0 +1,7 @@
+schema_version: "1.1"
+name: plan-new-car-kit
+expected_outcome: |
+  plan.md separates reusable vs kit-specific parts with file paths, lists intake questions for the new kit
+  (extension blocks, button occlusion, serial/pin conflicts, safe speed, real hardware), offers a simulator level
+  choice with effort, proposes collecting kit values in one config place, keeps safety and unverified-hardware
+  honesty, and gives a concrete first step. No repository files are modified.

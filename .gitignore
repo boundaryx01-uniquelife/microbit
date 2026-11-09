@@ -11,3 +11,6 @@ node_modules/
 
 # 공유 미리보기 그림(og:image)
 !bridge/assets/intro/og.png
+
+# Netlify CLI 로컬 상태(배포 도구가 만듦)
+.netlify/
