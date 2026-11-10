@@ -38,6 +38,7 @@ basic.forever(function () {
 
   // ---- 화면 좌표 ↔ 월드 끌기 ----
   const drag = async (from, to) => {
+    await S(() => document.getElementById('top2d').scrollIntoView({ block: 'center' }));
     const a = await S(([x, y]) => window.__sim.view2d.toScreen(x, y), [from.x, from.y]);
     const c = await S(([x, y]) => window.__sim.view2d.toScreen(x, y), [to.x, to.y]);
     await p.mouse.move(a.x, a.y); await p.mouse.down();
@@ -96,7 +97,6 @@ basic.forever(function () {
   const t0 = await S(() => window.__sim.robot.tof());
   await drag({ x: r0.x, y: r0.y - 40 }, { x: r0.x, y: r0.y - 70 });
   const t1 = await S(() => window.__sim.robot.tof());
-  console.log('DBG', JSON.stringify(await S(([x, y]) => ({ sy: scrollY, ih: innerHeight, sc: window.__sim.view2d.toScreen(x, y - 40), r: window.__sim.robot.y, hit: window.__sim.PROPS.hitTest(window.__sim.world.props, x, y - 40, 4, { items: true }) }), [r0.x, r0.y])));
   check('거리센서: 상자를 30cm 더 멀리 끌면 값이 그만큼 커짐', t1 - t0 >= 25 && t1 - t0 <= 35, `${t0} → ${t1}`);
   await drag({ x: r0.x, y: r0.y - 70 }, { x: r0.x + 50, y: r0.y - 70 });
   check('상자를 옆으로 치우면 거리 없음(255)', (await S(() => window.__sim.robot.tof())) === 255);
@@ -118,8 +118,8 @@ basic.forever(function () {
   await p.waitForTimeout(500);
   st = await S(() => ({ vel: window.__sim.robot.vel, led: window.__sim.robot.bodyLed.join(), run: window.__sim.runner.running }));
   check('실행 중에 끌어 치우면 → 걷기(초록 불), 실행은 계속', st.vel === 25 && st.led === '0,255,0' && st.run, JSON.stringify(st));
-  await S(() => window.__sim.robot.reset());   // 다시 앞을 보게
-  await drag({ x: rr.x + 70, y: rr.y }, { x: rr.x, y: rr.y - 40 });
+  const rn = await R();
+  await drag({ x: rr.x + 70, y: rr.y }, { x: rn.x, y: rn.y - 40 });
   await p.waitForTimeout(500);
   st = await S(() => ({ vel: window.__sim.robot.vel, led: window.__sim.robot.bodyLed.join() }));
   check('실행 중에 앞으로 끌어 놓으면 → 멈춤', st.vel === 0 && st.led === '255,0,0', JSON.stringify(st));

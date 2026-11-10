@@ -31,8 +31,9 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 1. 수준 결정: 0 없음 / 1 2D 위에서 보기 / 2 3D (작업량 표를 보여 주고 사용자가 고름).
 2. 재사용: `compile()`(Babel로 TS 제거 + 모든 호출 `await` + 반복문 맨 위 `__yield`), `Runner`(협동 실행, `forever`·핸들러·정지 세대), `World`(공간·장애물·추락·raycast). 확장에 **콜백을 받는 블록**이 있으면 `addAsyncNs('<ns>')`로 등록(그 콜백 안의 호출이 기다리게). `Runner`는 서브클래스로 `buildEnv`에 교구 네임스페이스·enum을 더한다(`references/simulator.md` 7절).
 3. 교구 어댑터: `make<Kit>Api(R, h)` 팩토리(블록 표의 함수마다 하나), `Robot.reset/step(dt)` 운동학(템플릿: 4족·차동·메카넘 — 6절), 센서(raycast 거리, 바닥 캔버스 라인, 색 패치), 표시 장치(OLED·LED)를 패널로.
-4. 추정 상수는 `EST` 한 곳에(최대 속도 cm/s, 회전 °/s, 치수) — 실측하면 바꾸고 "추정"표시를 지운다.
-5. 시험(Playwright, 오프라인/인터넷 필요를 나눔, `fastForward` 훅): 앞 1초 이동 거리, 제자리 90° 회전, 옆 이동 시 heading 불변(메카넘), 장애물 앞 거리, 추락, `while(true){}`에도 응답, 미지원 블록 경고, 예제 전부 오류 0, 390px 가로 스크롤 없음. `window.__sim`으로 상태를 읽는다.
+4. **환경도 시뮬레이션한다**(사용자 요구): 코드가 쓰는 센서를 보고 실행할 때 필요한 물체를 **없을 때만** 자동으로 놓는다(거리 → 상자, 색 → 색 물체·컬러칩, 라인 → 검은 선). 사용자가 옮긴 배치는 지우지 않는다. 모든 물체는 화면에서 끌기·추가·지우기(실행 중에도), 센서 값이 바로 따라 바뀌게. 공용 모듈 `bridge/sim/props.js`(소품·센서 계산·편집기), `maps.js`·`mapui.js`(레벨별 지도 + 30cm 타일 편집기 + 저장·내보내기, 대회 규칙 수치로 재구성한 연습장은 '공식 맵 아님' 표시)를 다시 쓴다. 카메라처럼 실물 값 대응표가 펌웨어에 있는 것(색 → 클래스 번호)은 화면에서 바꿀 수 있는 설정 + '실물 확인 필요'.
+5. 추정 상수는 `EST` 한 곳에(최대 속도 cm/s, 회전 °/s, 치수) — 실측하면 바꾸고 "추정"표시를 지운다.
+6. 시험(Playwright, 오프라인/인터넷 필요를 나눔, `fastForward` 훅, 장면 자동 준비·끌기 후 센서 값 변화 포함): 앞 1초 이동 거리, 제자리 90° 회전, 옆 이동 시 heading 불변(메카넘), 장애물 앞 거리, 추락, `while(true){}`에도 응답, 미지원 블록 경고, 예제 전부 오류 0, 390px 가로 스크롤 없음. `window.__sim`으로 상태를 읽는다.
 
 ### ② MakeCode 블록 — `references/makecode-blocks.md`
 1. 편집기 삽입: `makecode.microbit.org/?controller=1` iframe + postMessage(origin 검사), 확장은 **커밋 해시로 고정**해 미리 넣는다(`github:owner/repo#sha`) — 확장이 바뀌어도 수업이 깨지지 않게. 60초 안에 응답 없으면 JS 탭으로 폴백.

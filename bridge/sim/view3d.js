@@ -86,7 +86,7 @@ export class View3D {
   buildProps() {
     const g = this.obsGroup, P = this.world.props;
     while (g.children.length) { const c = g.children[0]; g.remove(c); if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); }
-    const col = (name) => new THREE.Color(colorRGB(name)[0] / 255, colorRGB(name)[1] / 255, colorRGB(name)[2] / 255);
+    const col = (name) => new THREE.Color().setRGB(colorRGB(name)[0] / 255, colorRGB(name)[1] / 255, colorRGB(name)[2] / 255, THREE.SRGBColorSpace);
     for (const t of P.tracks) {
       const pts = t.closed ? t.pts.concat([t.pts[0]]) : t.pts;
       for (let i = 0; i + 1 < pts.length; i++) {
