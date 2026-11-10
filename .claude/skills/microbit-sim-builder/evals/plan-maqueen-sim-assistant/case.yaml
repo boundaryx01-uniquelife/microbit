@@ -1,0 +1,9 @@
+schema_version: "1.1"
+name: plan-maqueen-sim-assistant
+expected_outcome: |
+  plan.md builds one block table from the extension source first (extractor, pinned commit), derives the drive
+  model from the implementation (not block names), reuses compile/Runner/World and adds the namespace to the
+  async set, specifies a differential-drive model with estimated constants in one place, plans offline rule
+  assistant + API mode with automatic fallback both generated from the same table, validates every generated code
+  deterministically against the table (also server side), leaves policy values (speed limits) to the teacher, and
+  lists tests with concrete expected numbers. No repository files are modified.
