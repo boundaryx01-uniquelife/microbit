@@ -18,10 +18,12 @@ aiPonybot.stopAllMotors()
 aiPonybot.clear()
 aiPonybot.showString("PONYBOT OK", 0, 0, 1)
 
-function 바퀴점검 (글자: string, 방향: aiPonybot.Mecanum) {
+function 글자보이기 (글자: string) {
     aiPonybot.showString("          ", 0, 6, 1)
     aiPonybot.showString(글자, 0, 6, 1)
-    aiPonybot.runMecanum(방향, 점검속도)
+}
+
+function 멈추고쉬기 () {
     basic.pause(1000)
     aiPonybot.stopAllMotors()
     basic.pause(300)
@@ -32,10 +34,18 @@ input.onButtonPressed(Button.A, function () {
         return
     }
     점검중 = true
-    바퀴점검("FORWARD", aiPonybot.Mecanum.Forward)
-    바퀴점검("BACKWARD", aiPonybot.Mecanum.Backward)
-    바퀴점검("RIGHT", aiPonybot.Mecanum.Right)
-    바퀴점검("LEFT", aiPonybot.Mecanum.Left)
+    글자보이기("FORWARD")
+    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 점검속도)
+    멈추고쉬기()
+    글자보이기("BACKWARD")
+    aiPonybot.runMecanum(aiPonybot.Mecanum.Backward, 점검속도)
+    멈추고쉬기()
+    글자보이기("RIGHT")
+    aiPonybot.runMecanum(aiPonybot.Mecanum.Right, 점검속도)
+    멈추고쉬기()
+    글자보이기("LEFT")
+    aiPonybot.runMecanum(aiPonybot.Mecanum.Left, 점검속도)
+    멈추고쉬기()
     aiPonybot.stopAllMotors()
     aiPonybot.showString("DONE      ", 0, 6, 1)
     점검중 = false
