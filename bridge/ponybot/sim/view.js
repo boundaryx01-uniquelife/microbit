@@ -1,11 +1,12 @@
 // 포니봇 2D 위에서 보기 + OLED·5x5 LED 그리기 (월드 좌표: x 오른쪽, y 아래, heading 0=위 시계 +, cm)
 import { EST, WHEEL_XY, MOTOR_WHEEL } from './pony.js';
+import { drawProps } from '../../sim/props.js';
 
 const RAD = Math.PI / 180;
 const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 export class PonyView {
-  constructor(canvas, world, robot) { this.cv = canvas; this.world = world; this.robot = robot; this.showBeam = true; this.pad = 14; }
+  constructor(canvas, world, robot) { this.cv = canvas; this.world = world; this.robot = robot; this.showBeam = true; this.pad = 14; this.editor = null; }
   fit() {   // 장면 크기에 맞게 비율·해상도를 맞춤
     const { w, h } = this.world.size, cv = this.cv;
     cv.style.aspectRatio = `${w} / ${h}`;
@@ -42,21 +43,8 @@ export class PonyView {
       g.beginPath(); g.moveTo(m.x0, m.y0); g.lineTo(m.x1, m.y1); g.stroke(); g.setLineDash([]);
       g.fillStyle = 'rgba(0,0,0,.6)'; g.textAlign = 'left'; g.fillText(m.label, m.x0 + 1, m.y0 - 3);
     }
-    // 검은 선
-    for (const t of W.floor.tracks) {
-      g.strokeStyle = '#161616'; g.lineWidth = t.width; g.lineJoin = 'round'; g.lineCap = 'round';
-      g.beginPath(); t.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
-    }
-    for (const c of W.floor.chips) {
-      g.fillStyle = rgb(this.chipColor(c.color)); g.fillRect(c.x, c.y, c.w, c.h);
-      g.strokeStyle = 'rgba(0,0,0,.35)'; g.lineWidth = 0.4; g.strokeRect(c.x, c.y, c.w, c.h);
-    }
-    // 장애물
-    for (const o of W.obstacles) {
-      g.fillStyle = o.kind === 'book' ? '#6b4a2f' : '#e5484d'; g.fillRect(o.x, o.y, o.w, o.h);
-      g.strokeStyle = 'rgba(0,0,0,.5)'; g.lineWidth = 0.4; g.strokeRect(o.x, o.y, o.w, o.h);
-      if (o.label) { g.fillStyle = '#222'; g.textAlign = 'center'; g.fillText(o.label, o.x + o.w / 2, o.y + o.h + 4); }
-    }
+    // 소품: 검은 선 → 컬러칩 → 상자 → 색 물체 (공용 그리기)
+    drawProps(g, W.props, { selected: this.editor ? this.editor.selection : null });
     for (const p of W.pins) {
       g.beginPath(); g.arc(p.x, p.y, p.r, 0, 7);
       if (p.down) { g.fillStyle = 'rgba(120,120,120,.45)'; g.fill(); }
@@ -71,10 +59,14 @@ export class PonyView {
       g.beginPath(); R.trail.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); g.stroke();
     }
     this.drawRobot(g);
+    if (this.editor) this.editor.drawOverlay(g);   // 선택 표시·선 점
     // 눈금자 10cm
     g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(4, h - 5, 10, 1); g.textAlign = 'left'; g.font = '3.6px system-ui, sans-serif'; g.fillText('10cm', 16, h - 4.5);
   }
-  chipColor(n) { return { red: [215, 45, 45], yellow: [235, 200, 40], green: [50, 165, 80], blue: [50, 90, 200] }[n] || [200, 200, 200]; }
+  toScreen(x, y) {   // 월드 → 화면(clientX/Y). 시험·편집기용
+    const r = this.cv.getBoundingClientRect();
+    return { x: r.left + x / this.world.size.w * r.width, y: r.top + y / this.world.size.h * r.height };
+  }
   drawRobot(g) {
     const R = this.robot, W = this.world;
     // 초음파 부채꼴 + 맞은 점

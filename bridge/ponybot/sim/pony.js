@@ -2,6 +2,7 @@
 // 기준 소스: github.com/boundary-x/ai_ponybot_basic v1.3.1 (kits/ponybot/blocks.json). 구현(PWM 표)을 읽어 만들었음.
 // ※ 움직임(속도·가감속·크기·센서 위치)은 실물 측정값이 아닌 '추정'입니다. 실측하면 EST 만 고치면 됩니다.
 import { Runner, addAsyncNs } from '../../sim/runtime.js';
+import { emptyProps, assignProps, addProp, removeProp, hitTest, colorAt, colorRGB, obstacleHit, raycast as propsRaycast, roundedRectTrack } from '../../sim/props.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const RAD = Math.PI / 180;
@@ -75,36 +76,16 @@ export const ENUMS = {
 };
 
 // ------------------------------------------------------------
-// 월드: 바닥(색·검은 선·컬러칩) + 장애물 + 핀 + 벽. 좌표 x 오른쪽, y 아래, heading 0=위 시계 +, 단위 cm
+// 월드: 바닥(색) + 소품(props.js: 상자·색 물체·컬러칩·검은 선) + 핀 + 벽. 좌표 x 오른쪽, y 아래, heading 0=위 시계 +, 단위 cm
+//  소품은 공용 모듈(bridge/sim/props.js)이 맡고, 월드는 그 값을 그대로 읽는다(편집기가 끌어 옮기면 센서 값도 따라 바뀜)
 // ------------------------------------------------------------
-const WHITE = [235, 235, 235], BLACK = [22, 22, 22];
-export const CHIP_RGB = { red: [215, 45, 45], yellow: [235, 200, 40], green: [50, 165, 80], blue: [50, 90, 200] };
-
-function roundedLoop(x0, y0, x1, y1, r, n = 8) {   // 시계 방향 둥근 사각 경로 (왼쪽 변 아래쪽에서 시작해 위로)
-  const pts = [];
-  const arc = (cx, cy, a0, a1) => { for (let i = 0; i <= n; i++) { const a = (a0 + (a1 - a0) * i / n) * RAD; pts.push([cx + r * Math.cos(a), cy + r * Math.sin(a)]); } };
-  pts.push([x0, y1 - r]);
-  arc(x0 + r, y0 + r, 180, 270);       // 왼쪽 위
-  arc(x1 - r, y0 + r, 270, 360);       // 오른쪽 위
-  arc(x1 - r, y1 - r, 0, 90);          // 오른쪽 아래
-  arc(x0 + r, y1 - r, 90, 180);        // 왼쪽 아래
-  return pts;
-}
-function distToPolyline(px, py, pts) {
-  let best = Infinity;
-  for (let i = 0; i < pts.length - 1; i++) {
-    const [ax, ay] = pts[i], [bx, by] = pts[i + 1];
-    const dx = bx - ax, dy = by - ay, l2 = dx * dx + dy * dy || 1e-9;
-    const t = clamp(((px - ax) * dx + (py - ay) * dy) / l2, 0, 1);
-    best = Math.min(best, Math.hypot(px - (ax + t * dx), py - (ay + t * dy)));
-  }
-  return best;
-}
+const WHITE = [235, 235, 235];
+export const CHIP_RGB = Object.fromEntries(['red', 'yellow', 'green', 'blue'].map(n => [n, colorRGB(n)]));
 
 export const SCENES = {
   bowling: {
     title: '볼링 레인 (스트라이크!)', w: 140, h: 260, walls: true, start: { x: 70, y: 238, heading: 0 }, floor: [226, 205, 160],
-    hint: '핀 6개를 향해 똑바로 달려 보세요. 오른쪽으로 치우치면 어떤 바퀴가 문제일까요?',
+    hint: '핀 6개를 향해 똑바로 달려 보세요. 오른쪽으로 치우치면 어떤 바퀴가 문제일까요? (상자·색 물체를 더 놓아 볼 수도 있어요)',
     build(w) {
       w.pins = [];
       [[-10, 52], [0, 52], [10, 52], [-5, 40], [5, 40], [0, 28]].forEach(([dx, y]) => w.pins.push({ x: 70 + dx, y, r: 3.5, down: false }));
@@ -113,19 +94,18 @@ export const SCENES = {
   },
   circuit: {
     title: '컬러칩 서킷 (검은 선 + 컬러칩)', w: 240, h: 160, walls: true, start: { x: 40, y: 104, heading: 0 }, floor: [235, 235, 235],
-    hint: '두 라인 센서로 검은 선을 따라가 보세요. 컬러칩(빨강·노랑·초록) 위에서는 색 값이 바뀌어요.',
-    build(w) {
-      w.floor.tracks.push({ pts: roundedLoop(40, 35, 200, 125, 30), width: 4 });
-      w.floor.chips.push({ x: 106, y: 31, w: 8, h: 8, color: 'red', onLine: true });
-      w.floor.chips.push({ x: 196, y: 76, w: 8, h: 8, color: 'yellow', onLine: true });
-      w.floor.chips.push({ x: 106, y: 121, w: 8, h: 8, color: 'green', onLine: true });
-    },
+    hint: '두 라인 센서로 검은 선을 따라가 보세요. 컬러칩(빨강·노랑·초록) 위에서는 색 값이 바뀌어요. 칩과 선은 끌어서 옮길 수 있어요.',
+    props: () => ({
+      tracks: [roundedRectTrack(40, 35, 200, 125, 30, 8, 4)],
+      chips: [{ x: 106, y: 31, w: 8, h: 8, color: 'red' }, { x: 196, y: 76, w: 8, h: 8, color: 'yellow' }, { x: 106, y: 121, w: 8, h: 8, color: 'green' }],
+    }),
+    build() {},
   },
   relay: {
     title: '거리 릴레이 (책/벽과의 거리)', w: 120, h: 260, walls: true, start: { x: 60, y: 224, heading: 0 }, floor: [235, 235, 235],
-    hint: '책 앞면까지의 거리를 ping 으로 재고, 가까울수록 느리게 가도록 코드를 써 보세요.',
+    hint: '책 앞면까지의 거리를 ping 으로 재고, 가까울수록 느리게 가도록 코드를 써 보세요. 책(상자)도 끌어서 옮길 수 있어요.',
+    props: () => ({ boxes: [{ x: 38, y: 20, w: 44, h: 2.5, label: '책' }] }),
     build(w) {
-      w.obstacles.push({ x: 38, y: 20, w: 44, h: 2.5, kind: 'book', label: '책' });
       w.floor.zones.push({ y0: 22.5, y1: 32.5, color: 'rgba(229,72,77,.18)', label: '10cm 이하' });
       w.floor.zones.push({ y0: 32.5, y1: 42.5, color: 'rgba(235,190,40,.2)', label: '10~20cm' });
       w.floor.zones.push({ y0: 42.5, y1: 260, color: 'rgba(60,170,90,.1)', label: '20cm 초과' });
@@ -134,13 +114,13 @@ export const SCENES = {
   },
   free: {
     title: '넓은 빈 바닥 (벽 없음)', w: 300, h: 200, walls: false, start: { x: 150, y: 100, heading: 0 }, floor: [240, 240, 240],
-    hint: '벽이 없어서 앞에 아무것도 없으면 거리는 500(최댓값)으로 읽혀요.',
+    hint: '벽이 없어서 앞에 아무것도 없으면 거리는 500(최댓값)으로 읽혀요. 코드가 거리·선·색을 읽으면 필요한 물건을 자동으로 놓아 줘요.',
     build() {},
   },
 };
 
 export class PonyWorld {
-  constructor() { this.userBoxes = []; this.loadScene('bowling'); }
+  constructor() { this.props = emptyProps(); this.loadScene('bowling'); }
   loadScene(id) {
     const sc = SCENES[id] || SCENES.free;
     this.sceneId = SCENES[id] ? id : 'free';
@@ -148,66 +128,69 @@ export class PonyWorld {
     this.size = { w: sc.w, h: sc.h };
     this.walls = sc.walls;
     this.start = { ...sc.start };
-    this.obstacles = [];
     this.pins = [];
-    this.floor = { bg: sc.floor, tracks: [], chips: [], zones: [], marks: [] };
-    this.userBoxes = [];
+    const self = this;
+    this.floor = { bg: sc.floor, zones: [], marks: [], get tracks() { return self.props.tracks; }, get chips() { return self.props.chips; } };   // tracks·chips 는 props 의 별칭
+    assignProps(this.props, sc.props ? sc.props() : {});
     sc.build(this);
   }
-  addBox(x, y) { const b = { x: x - 6, y: y - 6, w: 12, h: 12, kind: 'box', user: true }; this.obstacles.push(b); this.userBoxes.push(b); return b; }
-  removeBoxAt(x, y) {
-    const i = this.obstacles.findIndex(o => o.user && x >= o.x && x <= o.x + o.w && y >= o.y && y <= o.y + o.h);
-    if (i < 0) return false; this.obstacles.splice(i, 1); return true;
+  // 지도 라이브러리·불러오기: 크기·시작 자리·소품을 바꿈(핀·구역은 없앰). props 를 안 주면 소품은 그대로
+  setField({ size, start, props }) {
+    if (size) this.size = { w: size.w, h: size.h };
+    if (start) this.start = { ...start };
+    if (props) assignProps(this.props, props);
+    if (props !== undefined || size) { this.pins = []; this.floor.zones = []; this.floor.marks = []; }
+    this.walls = true; this.floor.bg = WHITE; this.sceneId = 'map'; this.scene = { title: '지도', hint: '', w: this.size.w, h: this.size.h };
   }
-  clearBoxes() { this.obstacles = this.obstacles.filter(o => !o.user); }
+  get obstacles() { return this.props.boxes; }
+  addBox(x, y) { return addProp(this.props, 'box', x, y); }                      // (옛 호출용) x,y 를 중심으로 12×12 상자
+  removeBoxAt(x, y) { const h = hitTest(this.props, x, y, 0.1, { items: true }); return h && h.kind === 'box' ? removeProp(this.props, 'box', h.prop) : false; }
+  clearBoxes() { this.props.boxes.length = 0; }
   resetPins() { this.pins.forEach(p => { p.down = false; }); }
   pinsDown() { return this.pins.filter(p => p.down).length; }
 
   outside(x, y, r) { return x < r || y < r || x > this.size.w - r || y > this.size.h - r; }
   collides(x, y, r) {
     if (this.walls && this.outside(x, y, r)) return true;
-    return this.obstacles.some(o => x + r > o.x && x - r < o.x + o.w && y + r > o.y && y - r < o.y + o.h);
+    return obstacleHit(this.props, x, y, r);
   }
-  // 광선(해석적): 장애물 사각형 + 서 있는 핀(원) + 벽. 못 맞히면 Infinity. 거리 단위 cm
+  // 광선(해석적): 상자·색 물체(props) + 서 있는 핀(원) + 벽. 못 맞히면 Infinity. 거리 단위 cm
   raycast(ox, oy, heading, maxLen = 1e4) {
     const dx = Math.sin(heading * RAD), dy = -Math.cos(heading * RAD);
-    let best = Infinity;
-    const slab = (minx, miny, maxx, maxy) => {
-      let t0 = 0, t1 = Infinity;
-      for (const [o, d, mn, mx] of [[ox, dx, minx, maxx], [oy, dy, miny, maxy]]) {
-        if (Math.abs(d) < 1e-9) { if (o < mn || o > mx) return Infinity; continue; }
-        let a = (mn - o) / d, b = (mx - o) / d; if (a > b) [a, b] = [b, a];
-        t0 = Math.max(t0, a); t1 = Math.min(t1, b); if (t0 > t1) return Infinity;
-      }
-      return t0;
-    };
-    for (const o of this.obstacles) best = Math.min(best, slab(o.x, o.y, o.x + o.w, o.y + o.h));
+    let best = propsRaycast(this.props, ox, oy, heading, 0, maxLen);
     for (const p of this.pins) {
       if (p.down) continue;
       const fx = ox - p.x, fy = oy - p.y, b = fx * dx + fy * dy, c = fx * fx + fy * fy - p.r * p.r, disc = b * b - c;
       if (disc >= 0) { const t = -b - Math.sqrt(disc); if (t >= 0) best = Math.min(best, t); }
     }
-    if (this.walls) {
-      const t = slabInside(ox, oy, dx, dy, this.size.w, this.size.h);
-      best = Math.min(best, t);
-    }
+    if (this.walls) best = Math.min(best, slabInside(ox, oy, dx, dy, this.size.w, this.size.h));
     return best <= maxLen ? best : Infinity;
   }
-  // 바닥 한 점: {rgb, line} — line = 검은 선(또는 선 위에 놓인 칩) 위인가
-  floorAt(x, y) {
-    const f = this.floor;
-    for (const c of f.chips) {
-      if (x >= c.x && x <= c.x + c.w && y >= c.y && y <= c.y + c.h) return { rgb: CHIP_RGB[c.color] || WHITE, line: !!c.onLine, chip: c.color };
-    }
-    for (const t of f.tracks) if (distToPolyline(x, y, t.pts) <= t.width / 2) return { rgb: BLACK, line: true };
-    return { rgb: f.bg, line: false };
-  }
+  // 바닥 한 점: {rgb, line, chip}
+  floorAt(x, y) { return colorAt(this.props, x, y, this.floor.bg); }
 }
 function slabInside(ox, oy, dx, dy, W, H) {   // 상자 안쪽에서 벽까지 거리
   let t = Infinity;
   if (dx > 1e-9) t = Math.min(t, (W - ox) / dx); else if (dx < -1e-9) t = Math.min(t, (0 - ox) / dx);
   if (dy > 1e-9) t = Math.min(t, (H - oy) / dy); else if (dy < -1e-9) t = Math.min(t, (0 - oy) / dy);
   return Math.max(0, t);
+}
+
+// ------------------------------------------------------------
+// 코드에서 필요한 환경 찾기(주석·글자는 먼저 지움) → 'distance' | 'line' | 'color:red' ...
+// ------------------------------------------------------------
+const COLOR_BY_NUM = ['red', 'green', 'blue', 'yellow'];
+export function needsFromCode(src) {
+  const code = String(src || '').replace(/\/\/[^\n]*|\/\*[\s\S]*?\*\/|"(?:\\.|[^"\\\n])*"|'(?:\\.|[^'\\\n])*'|`(?:\\.|[^`\\])*`/g, ' ');
+  const needs = [];
+  if (/\bping\s*\(/.test(code)) needs.push('distance');
+  if (/\b(readLineSensor|checkTwoLineState|checkSingleLineSensor)\b/.test(code)) needs.push('line');
+  const colors = new Set();
+  for (const m of code.matchAll(/\bisColorAdvanced\s*\(\s*([A-Za-z_.]*?DetectedColor\.(Red|Green|Blue|Yellow)\b|(\d))/g)) colors.add(m[2] ? m[2].toLowerCase() : COLOR_BY_NUM[+m[3]] || 'red');
+  const anyColorRead = /\b(isColorAdvanced|getRed|getGreen|getBlue|getLight|isColorInRange)\s*\(/.test(code);
+  if (anyColorRead && !colors.size) colors.add('red');
+  for (const c of colors) needs.push('color:' + c);
+  return needs;
 }
 
 // ------------------------------------------------------------

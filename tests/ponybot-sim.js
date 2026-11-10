@@ -253,6 +253,193 @@ async function startServer() {
   await p.screenshot({ path: path.join(OUT, 'ponybot_sim.png') });
   await p.click('#btnStop');
 
+  // ============================================================
+  // 소품·편집기·지도 (props.js / maps.js / mapui.js)
+  // ============================================================
+  const SHOT = '/tmp/claude-0/-home-user-microbit/5be5baa5-83cc-5031-993e-cb8ff7e544f8/scratchpad/props';
+  fs.mkdirSync(SHOT, { recursive: true });
+  const sc = (x, y) => S(({ x, y }) => window.__pony.view.toScreen(x, y), { x, y });
+  const mouseAt = async (x, y, what) => { const s = await sc(x, y); await p.mouse.move(s.x, s.y); if (what === 'down') await p.mouse.down(); if (what === 'up') await p.mouse.up(); };
+  const dragW = async (a, b) => { await mouseAt(a[0], a[1]); await p.mouse.down(); const A = await sc(a[0], a[1]), B = await sc(b[0], b[1]); for (let i = 1; i <= 8; i++) await p.mouse.move(A.x + (B.x - A.x) * i / 8, A.y + (B.y - A.y) * i / 8); await p.mouse.up(); };
+  const clickW = async (x, y) => { await mouseAt(x, y); await p.mouse.down(); await p.mouse.up(); };
+  const tool = async (t) => { await p.evaluate((t) => document.querySelector(`.pe-bar [data-tool="${t}"]`).click(), t); };
+  const swatch = async (c) => { await p.evaluate((c) => document.querySelector(`.pe-colors [data-color="${c}"]`).click(), c); };
+  const pc = async (fn, arg) => S(fn, arg);
+  const reset = async (scene = 'free') => { await S((scene) => { const P = window.__pony; P.runner.stop(); P.setScene(scene); P.editor.setTool('select'); }, scene); };
+  await S(() => document.getElementById('field').scrollIntoView({ block: 'center' }));
+
+  // 1) 도우미 → 실행 → 빨간 칩이 앞에 생기고 로봇이 그 위에서 멈춤
+  await reset('free');
+  await p.fill('#askText', '계속 앞으로 가다가 빨간색이 보이면 멈추고 OLED에 "RED"라고 써'); await p.click('#askGo');
+  await p.waitForFunction(() => /isColorAdvanced/.test(document.getElementById('code').value), null, { timeout: 15000 });
+  await p.click('#btnRun'); await p.waitForTimeout(3200);
+  const rd = await S(() => { const P = window.__pony; return { chips: JSON.parse(JSON.stringify(P.props.chips)), pwm: P.robot.pwm.slice(), oled: P.oled.textRows()[0], y: P.robot.y, red: P.api.isColorAdvanced(0), log: document.getElementById('log').textContent }; });
+  check('도우미 "빨간색이 보이면 멈추고" → 실행하면 빨간 칩이 앞에 생기고 로봇이 그 위에서 멈춰 RED', rd.chips.length === 1 && rd.chips[0].color === 'red' && rd.pwm.every(v => v === 0) && rd.oled === 'RED' && rd.red === true && /빨간 컬러칩을 앞 \d+cm에 놓았어요 — 끌어서 옮길 수 있어요/.test(rd.log), JSON.stringify(rd).slice(0, 240));
+  // 2) 다시 실행해도 중복·이동 없음
+  await S(() => { window.__pony.props.chips[0].x += 14; });
+  const moved = await S(() => JSON.stringify(window.__pony.props.chips));
+  await p.click('#btnRun'); await p.waitForTimeout(500);
+  const again = await S(() => ({ chips: JSON.stringify(window.__pony.props.chips), log: document.getElementById('log').textContent }));
+  check('다시 실행: 사용자가 옮긴 칩은 그대로·중복 없음·같은 안내 안 나옴', again.chips === moved && !/놓았어요/.test(again.log), again.log.slice(0, 80));
+  await p.click('#btnStop');
+  // 3) 선 코드 + 빈 장면 → 선 생성 → 라인 따라가기 예제가 선 위에 머묾
+  const s1 = await S(() => { window.__pony.loadExample('S1_line-follow'); const c = document.getElementById('code').value; window.__pony.setScene('free'); return c; });
+  await S((c) => { document.getElementById('code').value = c; }, s1);
+  await p.click('#btnRun'); await p.waitForTimeout(400);
+  const made = await S(() => { const P = window.__pony; return { tracks: P.props.tracks.length, onLine: P.PROPS.onLine(P.props, P.robot.x, P.robot.y), log: document.getElementById('log').textContent }; });
+  await p.click('.mbbtn[data-btn="A"]'); await p.waitForTimeout(6000);
+  const fl = await S(() => { const P = window.__pony, t = P.props.tracks[0]; return { off: P.PROPS.distToTrack(t, P.robot.x, P.robot.y), moved: Math.hypot(P.robot.x - P.world.start.x, P.robot.y - P.world.start.y) }; });
+  check('선 코드 + 빈 장면 → 검은 선 자동 생성, 라인 따라가기가 6초 뒤에도 선 위(4cm 이내)', made.tracks === 1 && made.onLine && /검은 선 트랙/.test(made.log) && fl.off <= 4 && fl.moved > 15, JSON.stringify({ made, fl }));
+  await p.click('#btnStop');
+  // 4) 끌어서 옮기면 센서 값이 바뀜
+  await reset('free');
+  const drag0 = await S(() => { const P = window.__pony; P.setPose(150, 100, 0); const b = P.editor.addAt('box', 150, 40); return { ping: P.api.ping(1), y: b.y }; });
+  await dragW([150, 40], [150, 8]);
+  const drag1 = await S(() => { const P = window.__pony, b = P.props.boxes[0]; return { ping: P.api.ping(1), y: b.y }; });
+  check('상자를 위로 끌어 옮김 → 위치가 바뀌고 ping 이 늘어남', drag0.ping < 50 && drag1.y < drag0.y - 20 && drag1.ping > drag0.ping + 25, JSON.stringify([drag0, drag1]));
+  await dragW([150, 14], [150, 100]);   // 로봇 위로 끌기 → 막힘
+  const onRobot = await S(() => { const P = window.__pony, b = P.props.boxes[0]; return Math.hypot(b.x + b.w / 2 - P.robot.x, b.y + b.h / 2 - P.robot.y); });
+  check('로봇 위로는 끌어 놓을 수 없음(겹치지 않음)', onRobot > 9 + 3, `거리 ${f(onRobot)}`);
+  // 실행 중에도 끌 수 있음
+  await S(() => { window.__pony.props.boxes.length = 0; window.__pony.editor.addAt('box', 60, 40); document.getElementById('code').value = 'basic.forever(function () { basic.pause(50) })'; });
+  await p.click('#btnRun'); await p.waitForTimeout(200);
+  await dragW([60, 40], [100, 60]);
+  const runDrag = await S(() => ({ x: window.__pony.props.boxes[0].x, running: window.__pony.runner.running }));
+  check('프로그램이 도는 중에도 소품을 끌어 옮길 수 있음', runDrag.running && runDrag.x > 80, JSON.stringify(runDrag));
+  await p.click('#btnStop');
+  // 5) 도구로 놓기·지우기·Delete
+  await reset('free');
+  await S(() => { const P = window.__pony; P.props.boxes.length = 0; P.props.objects.length = 0; P.props.chips.length = 0; P.props.tracks.length = 0; P.setPose(150, 100, 0); });
+  await tool('box'); await clickW(50, 50);
+  await tool('object'); await swatch('yellow'); await clickW(250, 50);
+  await tool('chip'); await swatch('blue'); await clickW(250, 150);
+  await tool('box'); await clickW(150, 100);   // 로봇 위: 거절
+  let cnt = await S(() => { const P = window.__pony.props; return { b: P.boxes.length, o: P.objects.length, c: P.chips.length, oc: P.objects[0] && P.objects[0].color, cc: P.chips[0] && P.chips[0].color }; });
+  check('도구로 놓기: 상자·노란 물체·파란 칩 추가, 로봇 위는 거절', cnt.b === 1 && cnt.o === 1 && cnt.c === 1 && cnt.oc === 'yellow' && cnt.cc === 'blue', JSON.stringify(cnt));
+  await tool('erase'); await clickW(50, 50); await clickW(250, 50);
+  await tool('select'); await clickW(250, 150); await p.keyboard.press('Delete');
+  cnt = await S(() => { const P = window.__pony.props; return { b: P.boxes.length, o: P.objects.length, c: P.chips.length }; });
+  check('지우개로 상자·물체 지우기, 선택 + Delete 로 칩 지우기', cnt.b === 0 && cnt.o === 0 && cnt.c === 0, JSON.stringify(cnt));
+  // 6) 선 점 끌기·끼우기 → 라인 센서 값 변화, 프리셋 전환·굵기
+  await reset('free');
+  await S(() => { const P = window.__pony; P.editor.preset('straight'); });
+  await tool('track');
+  const line0 = await S(() => { const P = window.__pony; P.setPose(100, 102.5, 90); return [P.api.readLineSensor(1), P.api.readLineSensor(2), P.props.tracks[0].pts.length]; });
+  await mouseAt(100, 100, 'down'); await mouseAt(100, 100, 'up'); await mouseAt(100, 100, 'down');   // 두 번 눌러 점 끼움 + 바로 끌기
+  const B = await sc(100, 130); await p.mouse.move(B.x, B.y, { steps: 6 }); await p.mouse.up();
+  const line1 = await S(() => { const P = window.__pony; return [P.api.readLineSensor(1), P.api.readLineSensor(2), P.props.tracks[0].pts.length, P.props.tracks[0].pts[1]]; });
+  check('선 편집: 두 번 눌러 점 추가 후 끌기 → 점 3개·선이 휘고 라인 센서 값이 1,0 → 0,0', line0[0] === 1 && line0[1] === 0 && line0[2] === 2 && line1[2] === 3 && near(line1[3][1], 130, 3) && line1[0] === 0 && line1[1] === 0, JSON.stringify([line0, line1]));
+  await tool('erase'); await mouseAt(line1[3][0], line1[3][1], 'down'); await mouseAt(line1[3][0], line1[3][1], 'up');
+  check('지우개로 선의 점 하나 지움', (await S(() => window.__pony.props.tracks[0].pts.length)) === 2);
+  await S(() => { const P = window.__pony; P.editor.setTool('select'); document.getElementById('mapSet').open = true; });
+  await p.click('[data-preset="oval"]');
+  const ov = await S(() => { const P = window.__pony, t = P.props.tracks[0]; return { closed: t.closed, n: t.pts.length, tracks: P.props.tracks.length, startOn: P.PROPS.onLine(P.props, P.world.start.x, P.world.start.y), robotOn: P.PROPS.onLine(P.props, P.robot.x, P.robot.y) }; });
+  await p.click('[data-preset="figure8"]');
+  const f8 = await S(() => { const t = window.__pony.props.tracks[0]; return { closed: t.closed, n: t.pts.length, tracks: window.__pony.props.tracks.length }; });
+  await S(() => { const w = document.getElementById('pe-width'); w.value = '7'; w.dispatchEvent(new Event('input')); });
+  const wd = await S(() => window.__pony.props.tracks[0].width);
+  check('프리셋 전환: 타원(닫힘·선 위 시작) → 8자(32점, 선 1개) → 굵기 슬라이더 7cm', ov.closed && ov.n > 10 && ov.tracks === 1 && ov.startOn && ov.robotOn && f8.closed && f8.n === 32 && f8.tracks === 1 && wd === 7, JSON.stringify({ ov, f8, wd }));
+  // 7) 저장 → 새로 고침 → 불러오기
+  await S(() => { const P = window.__pony; P.editor.setTool('box'); });
+  await tool('box'); await clickW(250, 30); await tool('object'); await swatch('green'); await clickW(40, 30); await tool('select');
+  const saved = await S(() => { document.getElementById('pe-save').click(); return JSON.stringify(window.__pony.props); });
+  await p.waitForLoadState('networkidle'); await p.reload(); await p.waitForFunction(() => window.__ponyReady && window.Babel, null, { timeout: 30000 });
+  const preLoad = await S(() => JSON.stringify(window.__pony.props));
+  await S(() => { window.__pony.setScene('free'); document.getElementById('pe-load').click(); });
+  const restored = await S(() => JSON.stringify(window.__pony.props));
+  check('장면 저장 → 새로 고침 → 불러오기: 소품이 그대로 복원', saved === restored && preLoad !== saved && JSON.parse(restored).objects[0].color === 'green' && JSON.parse(restored).tracks[0].width === 7, `${saved.length} vs ${restored.length}`);
+  await S(() => document.getElementById('field').scrollIntoView({ block: 'center' }));
+
+  // 8) 지도 라이브러리
+  const mapIds = await S(() => [...document.querySelectorAll('#map-pick option')].map(o => o.value).filter(v => v && !v.startsWith('c:')));
+  const mapRes = [];
+  for (const id of mapIds) {
+    const r = await S((id) => { const P = window.__pony; const ok = P.lib.loadBuiltin(id), m = P.PROPS ? null : null;
+      return { id, ok, size: { ...P.world.size }, start: { ...P.world.start }, rx: P.robot.x, ry: P.robot.y, tracks: P.props.tracks.length, scene: document.getElementById('scene').value }; }, id);
+    mapRes.push(r);
+  }
+  check(`내장 지도 ${mapIds.length}개 전부 로드: 크기·시작 자리·로봇 위치 반영, 오류 0`, mapIds.length >= 11 && mapRes.every(r => r.ok && r.tracks > 0 && near(r.rx, r.start.x, 0.01) && near(r.ry, r.start.y, 0.01) && r.scene === 'map'), JSON.stringify(mapRes.filter(r => !r.ok)));
+  await S(() => { document.getElementById('mapSet').open = true; });
+  await p.selectOption('#map-pick', 'l4-rcj-a');
+  const banner = await S(() => ({ b: document.getElementById('map-banner').innerText, st: document.getElementById('map-status').innerText }));
+  check('RCJ 지도: "공식 대회 맵 아님" 문구와 출처 링크 표시', /공식 대회 맵 아님/.test(banner.b) && /Rescue Line Entry 2025/.test(banner.b) && (await S(() => !!document.querySelector('#map-banner a[href*="robocupap.org/RCAP2025_Rules/Rescue-Line-Entry-Rules-2025.pdf"]'))), banner.b.slice(0, 80));
+  // 타일 지도 중심선에서 라인 센서가 1
+  const along = await S(() => {
+    const P = window.__pony, E = P.EST, out = { n: 0, ok: 0 };
+    for (const id of ['l4-rcj-a', 'l4-rcj-b', 'l4-rcj-c', 'l2-square']) {
+      P.lib.loadBuiltin(id);
+      for (const t of P.props.tracks) {
+        const L = P.PROPS.trackLength(t);
+        for (let s = 0; s <= L; s += 7) {
+          const q = P.PROPS.pointAlong(t, s), h = q.heading * Math.PI / 180, c = Math.cos(h), sn = Math.sin(h), u = -E.lineHalfGap, v = E.lineForward;
+          P.robot.heading = q.heading; P.robot.x = q.x - (u * c + v * sn); P.robot.y = q.y - (u * sn - v * c);
+          out.n++; if (P.robot.lineRaw(0) === 1) out.ok++;
+        }
+      }
+    }
+    return out;
+  });
+  check(`타일·대회형 지도 중심선을 따라 샘플 ${along.n}곳 모두 라인 센서가 1을 읽음`, along.n > 100 && along.ok === along.n, JSON.stringify(along));
+  // 끊긴 선
+  const gp = await S(() => { const P = window.__pony; P.lib.loadBuiltin('l3-gaps'); const rd = (sy) => { P.robot.heading = 0; P.robot.x = 52.5; P.robot.y = sy + P.EST.lineForward; return P.robot.lineRaw(0); }; return { before: rd(240), gap1: rd(201), after: rd(150), gap2: rd(121), end: rd(60) }; });
+  check('끊긴 선 지도: 선 위 1 · 틈 안 0 · 틈 뒤 다시 1', gp.before === 1 && gp.gap1 === 0 && gp.after === 1 && gp.gap2 === 0 && gp.end === 1, JSON.stringify(gp));
+  // 초록 표식
+  const gm = await S(() => {
+    const P = window.__pony; P.lib.loadBuiltin('l4-rcj-b'); const ch = P.props.chips.find(c => c.color === 'green'), cx = ch.x + ch.w / 2, cy = ch.y + ch.h / 2;
+    P.robot.heading = 90; P.robot.x = cx - P.EST.colorForward; P.robot.y = cy;
+    return { green: P.api.isColorAdvanced(1), red: P.api.isColorAdvanced(0), g: P.api.getGreen(), r: P.api.getRed() };
+  });
+  check('초록 표식 칩 위 컬러 센서: isColorAdvanced(Green)=true · Red=false', gm.green === true && gm.red === false && gm.g > gm.r, JSON.stringify(gm));
+  // 고치면 '내 지도'
+  const ce = await S(() => {
+    const P = window.__pony; P.lib.loadBuiltin('l1-oval'); const before = { custom: P.lib.cur.custom, title: P.lib.cur.title };
+    P.editor.addAt('box', 120, 40); return { before, after: { custom: P.lib.cur.custom, title: P.lib.cur.title }, status: document.getElementById('map-status').innerText, fresh: P.PROPS && true };
+  });
+  check('프리셋을 불러온 뒤 고치면 "내 지도"로 바뀜(복사 후 편집)', ce.before.custom === false && ce.after.custom === true && /내 지도/.test(ce.after.title) && /내 지도/.test(ce.status), JSON.stringify(ce));
+  // 타일 편집(화면 클릭 + API)
+  const til = await S(() => {
+    const P = window.__pony; P.lib.loadBuiltin('l1-straight'); P.lib.resizeTiles(4, 2);
+    const g = (x, y, t, r) => P.lib.setTile(x, y, t, r);
+    g(0, 0, 'start', 1); g(1, 0, 'line', 1); g(2, 0, 'curve', 2); g(2, 1, 'curve', 0); g(3, 1, 'goal', 3);
+    const tr = P.props.tracks; let cont = true, n = 0;
+    for (const t of tr) { const L = P.PROPS.trackLength(t); for (let s = 0; s <= L; s += 1.5) { const q = P.PROPS.pointAlong(t, s); n++; cont = cont && P.PROPS.onLine(P.props, q.x, q.y); } }
+    return { size: { ...P.world.size }, start: { ...P.world.start }, tracks: tr.length, n, cont, robot: [P.robot.x, P.robot.y], custom: P.lib.cur.custom, chips: P.props.chips.map(c => c.color) };
+  });
+  check('타일 편집: 시작·직선·곡선 2개·도착 → 한 줄로 이어짐(120×60cm), 시작 자리·도착 칩', til.size.w === 120 && til.size.h === 60 && til.tracks === 1 && til.cont && til.start.heading === 90 && near(til.start.x, 15, 0.01) && near(til.robot[0], 15, 0.01) && til.custom && til.chips.join() === 'blue', JSON.stringify(til));
+  await S(() => { document.getElementById('mapSet').open = true; document.getElementById('tile-det').open = true; });
+  await p.click('#tile-box [data-tile="cross"]');
+  const cb = await p.locator('#tile-canvas').boundingBox();
+  await p.mouse.click(cb.x + cb.width * 0.12, cb.y + cb.height * 0.75);   // 칸 (0,1)
+  const ct = await S(() => window.__pony.lib.grid.cells[1][0]);
+  check('타일 격자 캔버스를 눌러 고른 타일(+ 교차로)을 놓음', ct.t === 'cross', JSON.stringify(ct));
+  await S(() => window.__pony.lib.setTile(0, 1, 'rotate'));
+  check('칸 돌리기 → 방향 +1', (await S(() => window.__pony.lib.grid.cells[1][0].r)) === 1);
+  // 내 지도 이름으로 저장·불러오기, 내보내기·가져오기
+  const named = await S(() => {
+    const P = window.__pony; P.lib.loadBuiltin('l2-square'); P.editor.addAt('object', 100, 100, 'blue'); P.editor.addAt('chip', 150, 40, 'green');
+    document.getElementById('map-name').value = '시험 지도'; document.getElementById('map-save').click();
+    const a = JSON.stringify({ props: P.props, size: P.world.size, start: P.world.start });
+    P.lib.loadBuiltin('l1-straight');
+    const sel = document.getElementById('map-saved'); sel.value = '시험 지도'; document.getElementById('map-load').click();
+    const b = JSON.stringify({ props: P.props, size: P.world.size, start: P.world.start });
+    return { a, b, list: [...sel.options].map(o => o.value).join('|'), title: P.lib.cur.title, ls: !!localStorage.getItem('sim-maps.custom.v1') };
+  });
+  check('내 지도를 이름으로 저장 → 다른 지도로 바꿈 → 불러오기: 소품·크기·시작 자리 동일', named.a === named.b && /시험 지도/.test(named.list) && named.title === '시험 지도' && named.ls, named.list);
+  const rt = await S(() => {
+    const P = window.__pony; P.lib.loadBuiltin('l4-rcj-c'); const a = JSON.stringify({ props: P.props, size: P.world.size, start: P.world.start }), text = P.lib.exportText();
+    P.lib.loadBuiltin('l1-oval'); const ok = P.lib.importText(text); const b = JSON.stringify({ props: P.props, size: P.world.size, start: P.world.start });
+    const bad = P.lib.importText('{깨짐'); return { a, b, ok, bad, haveBox: P.props.boxes.length };
+  });
+  check('지도 내보내기(JSON) → 가져오기 왕복 동일, 깨진 글은 거절', rt.ok && rt.a === rt.b && rt.bad === false && rt.haveBox === 1);
+  // 로봇 시작 자리로
+  const ts = await S(() => { const P = window.__pony; P.lib.loadBuiltin('l3-zigzag'); P.setPose(200, 100, 70); document.getElementById('map-tostart').click(); return { x: P.robot.x, y: P.robot.y, h: P.robot.heading, s: { ...P.world.start } }; });
+  check('"로봇 시작 자리로" → 지도의 시작 자리·방향', near(ts.x, ts.s.x, 0.01) && near(ts.y, ts.s.y, 0.01) && near(ts.h, ts.s.heading, 0.01), JSON.stringify(ts));
+  // 화면 그림(데스크톱)
+  await S(() => { const P = window.__pony; P.lib.loadBuiltin('l4-rcj-b'); document.getElementById('mapSet').open = true; document.getElementById('tile-det').open = true; });
+  await p.waitForTimeout(300);
+  await p.screenshot({ path: path.join(SHOT, 'desktop.png'), fullPage: true });
+  await S(() => window.__pony.setScene('free'));
+
   // ---- 화면 ----
   const vis = await S(() => ({ img: !!document.querySelector('header img').naturalWidth, est: /추정/.test(document.body.innerText), assistant: !!document.getElementById('askGo') && !document.getElementById('assistant').hidden, scenes: document.querySelectorAll('#scene option').length }));
   check('제품 그림 로드·"추정" 표시·말로 코드 만들기 칸', vis.img && vis.est && vis.assistant && vis.scenes === 4, JSON.stringify(vis));
@@ -272,9 +459,12 @@ async function startServer() {
   check('도우미: 모르는 말은 코드 없이 경고', /알아듣지 못/.test(unk), unk.slice(0, 60));
   await p.setViewportSize({ width: 390, height: 844 });
   await p.reload(); await p.waitForFunction(() => window.__ponyReady, null, { timeout: 30000 }); await p.waitForTimeout(300);
+  await S(() => { window.__pony.lib.loadBuiltin('l4-rcj-b'); window.__pony.lib.resizeTiles(10, 4); document.getElementById('mapSet').open = true; document.getElementById('tile-det').open = true; });
+  await p.waitForTimeout(300);
   const sw = await S(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth, bw: document.body.scrollWidth }));
   check('390px 가로 스크롤 없음', sw.sw <= sw.iw && sw.bw <= sw.iw, JSON.stringify(sw));
   await p.screenshot({ path: path.join(OUT, 'ponybot_sim_390.png'), fullPage: true });
+  await p.screenshot({ path: path.join(SHOT, 'mobile390.png'), fullPage: true });
 
   check('페이지 오류·콘솔 오류 0', errs.length === 0, errs.slice(0, 3).join(' | '));
   await b.close();
