@@ -35,10 +35,13 @@ const name = require('path').basename(file, '.ts');
     await inp.press('Enter');
     await p.waitForTimeout(10000);
     await shot('ext_search');
-    const card = p.locator('.extensions-browser .common-card, .extensions-browser [class*="card"]').filter({ hasText: new RegExp(extName.replace('-', '[- ]?') + '(?![-\\w])', 'i') }).first();
+    const card = p.locator('.extensions-browser .common-card, .extensions-browser [class*="card"]').filter({ hasText: new RegExp(extName.replace(/[-_]/g, '[-_ ]?') + '(?![-\\w])', 'i') }).first();
     if (!(await card.count())) { console.log('RESULT ext card not found'); await b.close(); return; }
     console.log('card text:', (await card.innerText()).replace(/\n/g, ' ').slice(0, 80));
-    await card.click();
+    // 카드 위에 투명한 '선택' 버튼이 덮여 있으면 그 버튼을 누름(제목 칸만 잡힌 경우)
+    const cardId = await card.getAttribute('id');
+    const action = cardId ? p.locator(`button.common-card-action[aria-labelledby="${cardId}"]`) : null;
+    if (action && await action.count()) await action.first().click(); else await card.click();
     await p.waitForTimeout(12000);
     await shot('ext_added');
   }
