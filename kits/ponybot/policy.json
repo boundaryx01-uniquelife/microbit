@@ -1,0 +1,17 @@
+{
+  "_note": "교사가 정하는 값입니다. 아래 값 중 defaultSpeed·defaultSeconds·nearCm·radioTimeoutMs·colorSensorVersion·maxChars 는 '문장에 숫자가 없을 때만' 쓰는 자리표시자(예제 00~04 값을 그대로 옮김)입니다. maxSpeed·autoStopMs 는 null = 한도 없음(도우미가 임의로 정하지 않음). 확장의 속도 범위 0~255는 정책이 아니라 확장 자체의 범위입니다.",
+  "defaultSpeed": 100,
+  "defaultSpeed_note": "자리표시자 — 선생님이 실물 시험 후 정하세요(문장에 속도 숫자가 없을 때만 사용). null이면 속도 없는 이동 문장은 코드를 만들지 않고 숫자를 물어봅니다.",
+  "maxSpeed": null,
+  "autoStopMs": null,
+  "forbid": [],
+  "defaultSeconds": 1,
+  "defaultSeconds_note": "자리표시자 — '앞으로 가' 처럼 시간이 없을 때 움직이는 시간(초). 예제 01의 1초.",
+  "nearCm": 20,
+  "nearCm_note": "자리표시자 — '가까우면' 의 기준 cm(문장에 숫자가 없을 때만). 예제 02·03의 20.",
+  "radioTimeoutMs": 2000,
+  "radioTimeoutMs_note": "자리표시자 — 계속 움직이는 라디오 동작에서 신호가 끊기면 멈추는 시간. 예제 03·04의 2000. null이면 끊김 감지 없음.",
+  "colorSensorVersion": "V2",
+  "colorSensorVersion_note": "자리표시자 — 컬러센서 모듈 V1(검은색)/V2(보라색). 공식 활동 자료가 'V2용'이라 V2.",
+  "maxChars": 300
+}

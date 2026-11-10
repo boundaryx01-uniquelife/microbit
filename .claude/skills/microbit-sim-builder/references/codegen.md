@@ -1,5 +1,7 @@
 # ③ 코드 생성 — 규칙 도우미(오프라인 워크플로) + Claude API 모드
 
+> 아래는 기준 구현(로보독) 분석이다. 새 교구 절차는 SKILL.md ③, 2절의 `kit.blocks.json` 제안 모양은 실제 추출기 출력(namespaces[].functions/enums)과 다르다 — 낱말은 vocab.json, 사실은 facts.json으로 나눈다.
+
 
 ## 1. 아키텍처
 

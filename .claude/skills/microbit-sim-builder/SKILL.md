@@ -24,6 +24,8 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 - 커밋을 붙여 고정한다(편집기의 확장 고정 해시와 같은 커밋). `pxt.json`의 `files` → `.ts`의 `//% block=… blockId … min/max/defl`, enum 멤버, `_locales/ko` 번역을 읽는다. 기억으로 쓰지 않는다.
 - 결과 표를 사용자에게 보여 주고 **보조 확장**(조명·네오픽셀 등 별도 저장소)도 있는지 묻는다.
 - 블록 이름만 보지 말고 **구현을 읽는다**: 모터 번호와 바퀴 위치, 값 자르기(예: `speed*16`을 4095에서 자름), 센서 '못 읽음' 값(0인지 최대값인지). 시뮬레이터 정확도는 이 읽기에서 나온다.
+- 구현에서 읽은 사실은 표 옆 `kits/<slug>/facts.json`에 적는다(추출기는 못 채움): 모터→바퀴 위치, 값 자르기, 센서 못 읽음 값(예: 포니봇 `ping` 반사 없음 = 500), 근거 줄. 시뮬레이터·도우미·문서가 이 파일을 함께 본다.
+- 한글 낱말은 `kits/<slug>/vocab.json`(enum 멤버·함수별 동의어: "앞/앞으로/직진" → `Mecanum.Forward`)에 따로 둔다. 확장의 블록 글자는 화살표(↑ ↶)뿐인 경우가 많아 표만으로는 말을 못 알아듣는다. vocab의 모든 대상이 표에 실제로 있는지 시험한다.
 
 ### ① 시뮬레이터 — `references/simulator.md`
 1. 수준 결정: 0 없음 / 1 2D 위에서 보기 / 2 3D (작업량 표를 보여 주고 사용자가 고름).
@@ -42,6 +44,9 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 - **오프라인 규칙 워크플로(기본, 키·인터넷 불필요)**: 입력 검사(길이·개인정보 안내) → 트리거로 문장 나누기(“A 버튼을 누르면”, “라디오 3을 받으면”, “가까우면”, “계속”) → 조각별 동작 사전(블록 표의 한글 블록명·동의어에서 만든 표) → 코드 템플릿 조립 → 경고·추천 예제. 못 알아들은 조각은 경고로 돌려준다(추측해서 넣지 않음).
 - **Claude API 모드(선택)**: 서버 함수(Netlify 등)에서만 키 사용, 수업 코드가 맞을 때만 켜짐, 실패·미설정이면 규칙 모드로 자동 폴백. 프롬프트의 블록 문법 부분은 **블록 표에서 생성**(손으로 베끼지 않음), 구조화 출력(json_schema: code·explanation·warnings). 모델은 설정값(기본은 기준 구현 값 유지).
 - **출력 검사(두 모드 공통)**: `validate-code.mjs` — 표에 없는 함수/enum(환각), 확장 범위 밖 숫자, 인자 수, 문법 → 오류면 코드 대신 설명과 함께 돌려줌. 서버에서도 돌린다(브라우저 검사는 우회 가능).
+- **규칙 도우미에 필요한 정책 키**(`kits/<slug>/policy.json`): `defaultSpeed`·`defaultSeconds`(문장에 숫자가 없을 때만), `nearCm`, `radioTimeoutMs`, `maxSpeed`·`autoStopMs`(null = 한도 없음), `forbid`, `maxChars`, 교구 설정(예: 컬러센서 버전). 값마다 `_note`로 자리표시자인지 표시. **null이면 숫자를 지어내지 않고 되묻는다.** 검사기에는 `policy.max["ns.fn.param"]` 모양으로 바꿔 넘기고, 도우미 출력은 `strictPolicy:true`(정책 위반 = 거절).
+- **문장 나누기 함정**: 마침표로 나누면 "1.5초"가 깨진다 — 숫자 사이 `.`은 예외.
+- **검사기 배포**: `scripts/validate-code.mjs`를 사이트 안(예: `bridge/sim/validate-code.mjs`)으로 복사해 브라우저·서버 함수가 import. 원본은 스킬, 복사 뒤 `diff`로 같게 유지. 표에는 확장 블록만 있어 `basic`·`input`·`radio`는 검사 범위 밖.
 - **정책 값은 사용자(교사)가 정한다**: 속도 한도·자동 멈춤 시간 등은 `policy.json`(또는 환경 변수) 설정값. 스킬이 숫자를 정하거나 바꾸지 않는다. 기존 교구 값이 있으면 그대로 기본값으로 두고, 새 교구는 비워 두고 사용자에게 묻는다. 시뮬레이터는 정책과 무관하게 확장의 실제 범위를 재현한다.
 
 ## 지켜야 할 원칙
@@ -49,7 +54,7 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 - **시뮬레이터는 추정 모델**: 화면에 "추정" 표시, 실물 미검증 항목을 목록으로 사용자에게.
 - **개인정보**: 규칙 모드는 글이 브라우저 밖으로 안 나간다고 표시. AI 모드는 무엇이(문장·현재 코드) 어디로 가는지 표시, 이름·학교 쓰지 말라는 안내, 코드 전송은 기본 끔.
 - **제조사 자료**: 공식 이미지·문서는 허락 범위와 출처를 `SOURCE.md`(파일별 원본 주소·라이선스)로 남긴다.
-- **하위 에이전트를 만들 때마다 사용자에게 알린다**: 맡은 일·모델·사고 깊이·이유. 블록 표 추출·시험 실행은 Haiku/Sonnet, 운동학 부호·안전 설계·최종 검토는 메인.
+- **하위 에이전트를 만들 때마다 사용자에게 알린다**: 맡은 일·모델·사고 깊이·이유. 분량이 작아 직접 했으면 "위임 없음"이라고만 적는다. 블록 표 추출·시험 실행은 Haiku/Sonnet, 운동학 부호·안전 설계·최종 검토는 메인.
 
 ## 스크립트
 | 파일 | 하는 일 |
@@ -58,7 +63,8 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 | `scripts/validate-code.mjs` | 블록 표(+선택 policy)로 JS 검사. CLI·Node·브라우저 공용(`validateCode(src, blocks, {Babel})`) |
 
 ## 산출물 체크
-- [ ] `kits/<slug>/blocks.json`(+md) — 출처 커밋 기록
+- [ ] `kits/<slug>/blocks.json`(+md, 출처 커밋) · `facts.json` · `vocab.json` · `policy.json`
+- [ ] 파일 예(포니봇): 시뮬레이터 `bridge/<slug>/sim/{index.html,<slug>.js}`, 도우미 `bridge/<slug>/sim/assistant.js`, 프롬프트 생성 `tools/build-assistant-prompt.mjs`, 시험 `tests/<slug>-sim.js`·`tests/<slug>-assistant.mjs`
 - [ ] 시뮬레이터: 어댑터·운동학·센서, `EST` 추정 표시, 시험 통과 수치
 - [ ] 예제 전부 `validate-code` 오류 0 + MakeCode 블록 변환 통과(인터넷 필요 — 못 돌리면 못 돌렸다고)
 - [ ] 도우미: 규칙 모드 시험 문장, AI 모드 폴백, 출력 검사 서버·브라우저 둘 다

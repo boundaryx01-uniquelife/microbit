@@ -14,6 +14,10 @@
 //
 // policy.json 예(값은 교사가 정한다):
 //   { "max": { "aiPonybot.runMecanum.speed": 150 }, "forbid": ["music.*"] }
+// 교사용 policy.json(예: maxSpeed)은 도우미가 이 모양으로 바꿔 넘긴다(어느 인자가 '속도'인지는 교구마다 다름).
+// strictPolicy:true = W3·W4를 오류로(도우미 출력용). 예제 점검은 기본(경고)으로.
+// 배포: 이 파일을 사이트 안(예: bridge/sim/validate-code.mjs)에 복사해 브라우저·서버 함수가 import — 원본은 스킬, 복사 후 diff로 동기 확인.
+// 한계: 표에는 확장 블록만 있다 → basic·input·radio·IconNames 등 기본 블록은 검사하지 않는다.
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -49,7 +53,7 @@ const numValue = (n) => {
 };
 const lineOf = (n) => (n.loc ? n.loc.start.line - 1 : 0);   // 감싼 줄 하나 빼기
 
-export function validateCode(src, blocks, { Babel, policy = {} } = {}) {
+export function validateCode(src, blocks, { Babel, policy = {}, strictPolicy = false } = {}) {
   if (!Babel) throw new Error('Babel이 필요합니다(bridge/sim/lib/babel.min.js)');
   const { fns, enums, nsNames } = indexBlocks(blocks);
   const errors = [], warnings = [];
@@ -98,6 +102,9 @@ export function validateCode(src, blocks, { Babel, policy = {} } = {}) {
   } catch (e) {
     errors.push({ code: 'E5', line: 0, msg: '문법 오류: ' + String(e.message).split('\n')[0] });
   }
+  if (strictPolicy) {   // 도우미 출력: 정책 위반은 경고가 아니라 거절
+    for (let i = warnings.length - 1; i >= 0; i--) if (warnings[i].code === 'W3' || warnings[i].code === 'W4') errors.push(...warnings.splice(i, 1));
+  }
   return { ok: errors.length === 0, errors, warnings };
 }
 
@@ -113,9 +120,9 @@ export function loadBabel(file) {
 if (import.meta.url === `file://${process.argv[1]}`) {
   const a = process.argv.slice(2), opt = {}, files = [];
   for (let i = 0; i < a.length; i++) {
-    if (a[i].startsWith('--')) opt[a[i].slice(2)] = a[++i]; else files.push(a[i]);
+    if (a[i] === '--strict') opt.strict = true; else if (a[i].startsWith('--')) opt[a[i].slice(2)] = a[++i]; else files.push(a[i]);
   }
-  if (!opt.blocks || !files.length) { console.error('사용법: node validate-code.mjs --blocks kit.blocks.json [--babel babel.min.js] [--policy policy.json] file.ts ...'); process.exit(2); }
+  if (!opt.blocks || !files.length) { console.error('사용법: node validate-code.mjs --blocks kit.blocks.json [--babel babel.min.js] [--policy policy.json] [--strict] file.ts ...'); process.exit(2); }
   const babelPath = opt.babel || ['bridge/sim/lib/babel.min.js', 'sim/lib/babel.min.js'].find(p => fs.existsSync(p));
   if (!babelPath) { console.error('--babel 경로를 주세요(@babel/standalone babel.min.js)'); process.exit(2); }
   const Babel = loadBabel(babelPath);
@@ -123,7 +130,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   const policy = opt.policy ? JSON.parse(fs.readFileSync(opt.policy, 'utf8')) : {};
   let bad = 0;
   for (const f of files) {
-    const r = validateCode(fs.readFileSync(f, 'utf8'), blocks, { Babel, policy });
+    const r = validateCode(fs.readFileSync(f, 'utf8'), blocks, { Babel, policy, strictPolicy: !!opt.strict });
     const tag = r.ok ? 'OK ' : 'ERR';
     console.log(`${tag} ${path.basename(f)}  오류 ${r.errors.length} · 경고 ${r.warnings.length}`);
     [...r.errors, ...r.warnings].forEach(x => console.log(`   ${x.code} ${x.line}행 ${x.msg}`));
