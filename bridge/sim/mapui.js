@@ -13,7 +13,8 @@ const el = (tag, attrs = {}, kids = []) => {
 };
 const CELL = 36;
 
-export function attachMapLibrary(host_el, { editor, host }) {
+// 선택 옵션(교구마다): mapLabel(map) = 목록에 보일 이름, tiles:false = 타일 편집 칸을 숨김(선 지도를 만들 필요 없는 교구)
+export function attachMapLibrary(host_el, { editor, host, mapLabel = null, tiles = true }) {
   const lib = { cur: { id: null, title: '', custom: false, source: '', note: '', level: 0 }, grid: null, tileType: 'line', rot: 0, rotateMode: false, tileOn: false };
   const say = (t) => { status.textContent = t; if (editor && editor.say) editor.say(t); };
   const snapshot = () => ({ id: lib.cur.custom ? 'custom' : lib.cur.id, title: lib.cur.title, size: { ...host.getSize() }, start: { ...host.getStart() }, props: cloneProps(host.getProps()), tiles: lib.grid ? JSON.parse(JSON.stringify(lib.grid)) : null, source: lib.cur.source, note: lib.cur.note });
@@ -26,7 +27,7 @@ export function attachMapLibrary(host_el, { editor, host }) {
   const pick = el('select', { id: 'map-pick', 'aria-label': '지도 고르기', style: 'max-width:100%;min-width:0;font:inherit;padding:8px' }, [el('option', { value: '', text: '지도 고르기…' })]);
   for (const lv of [1, 2, 3, 4]) {
     const g = el('optgroup', { label: LEVELS[lv] });
-    for (const m of MAP_LIST.filter(x => x.level === lv)) g.appendChild(el('option', { value: m.id, text: m.title }));
+    for (const m of MAP_LIST.filter(x => x.level === lv)) g.appendChild(el('option', { value: m.id, text: mapLabel ? mapLabel(m) : m.title }));
     pick.appendChild(g);
   }
   const customGroup = el('optgroup', { label: '내 지도(저장한 것)' });
@@ -175,7 +176,7 @@ export function attachMapLibrary(host_el, { editor, host }) {
   if (editor) editor.listeners.push((reason) => { if (lib.cur.id || lib.cur.custom) markCustom(); else { lib.cur.custom = true; lib.cur.title = '내 지도'; render(); } });
 
   root.append(status, banner, rowPick, rowStart, rowSave, rowLoad, rowShare, ta);
-  host_el.append(root, tileDet);
+  host_el.append(root); if (tiles) host_el.append(tileDet);
   refreshSaved(); renderPal(); render(); syncTilePanel();
   lib.refreshSaved = refreshSaved;
   return lib;

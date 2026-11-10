@@ -339,7 +339,7 @@ export function ensureFor(needs, props, robot, world = {}, opts = {}) {
     if (!seen) {
       let done = false;
       for (const lat of [0, 25, -25, 45, -45]) {
-        for (const d of [40, 55, 70, 90, 30]) {
+        for (const d of opts.distanceSteps || [40, 55, 70, 90, 30]) {   // opts.distanceSteps: 교구마다 처음 놓을 거리 후보(cm)
           const [x, y] = fwd(d, lat), rad = DEFAULT_SIZE.box * 0.75;
           if (!free(x, y, rad) || !offTracks(x, y, rad, rr)) continue;
           addProp(props, 'box', x, y);

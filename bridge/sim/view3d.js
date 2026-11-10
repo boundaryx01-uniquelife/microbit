@@ -4,6 +4,7 @@ import { OrbitControls } from './lib/OrbitControls.js';
 import { EST, GEOM, HEAD } from './runtime.js';
 import { drawFace } from './view2d.js';
 import { radioCard } from './devices.js';
+import { colorRGB } from './props.js';
 
 export class View3D {
   constructor(container, world, robot) {
@@ -81,6 +82,36 @@ export class View3D {
     this.tableKey = this.tableSig();
   }
   tableSig() { const W = this.world; return `${W.useTable}|${W.table.w}x${W.table.h}`; }
+  // 소품: 2D와 같은 자리·크기. 상자 = 나무색 블록, 색 물체 = 색 원기둥(카드 모양 받침), 컬러칩 = 바닥에 납작하게, 검은 선 = 납작한 띠
+  buildProps() {
+    const g = this.obsGroup, P = this.world.props;
+    while (g.children.length) { const c = g.children[0]; g.remove(c); if (c.geometry) c.geometry.dispose(); if (c.material) c.material.dispose(); }
+    const col = (name) => new THREE.Color(colorRGB(name)[0] / 255, colorRGB(name)[1] / 255, colorRGB(name)[2] / 255);
+    for (const t of P.tracks) {
+      const pts = t.closed ? t.pts.concat([t.pts[0]]) : t.pts;
+      for (let i = 0; i + 1 < pts.length; i++) {
+        const [x0, y0] = pts[i], [x1, y1] = pts[i + 1], len = Math.hypot(x1 - x0, y1 - y0);
+        if (len < 0.01) continue;
+        const m = new THREE.Mesh(new THREE.BoxGeometry(len + t.width * 0.3, 0.12, t.width), new THREE.MeshStandardMaterial({ color: 0x161616 }));
+        m.position.set((x0 + x1) / 2, 0.08, (y0 + y1) / 2); m.rotation.y = -Math.atan2(y1 - y0, x1 - x0); m.receiveShadow = true; g.add(m);
+      }
+    }
+    for (const c of P.chips) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(c.w, 0.2, c.h), new THREE.MeshStandardMaterial({ color: col(c.color) }));
+      m.position.set(c.x + c.w / 2, 0.12, c.y + c.h / 2); m.receiveShadow = true; g.add(m);
+    }
+    for (const b of P.boxes) {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(b.w, 10, b.h), new THREE.MeshStandardMaterial({ color: b.label ? 0x6b4a2f : 0x9a7b55 }));
+      m.position.set(b.x + b.w / 2, 5, b.y + b.h / 2); m.castShadow = true; g.add(m);
+    }
+    for (const o of P.objects) {
+      const h = Math.max(8, o.r * 2.4);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(o.r, o.r, h, 28), new THREE.MeshStandardMaterial({ color: col(o.color), roughness: 0.5 }));
+      m.position.set(o.x, h / 2, o.y); m.castShadow = true; g.add(m);
+      const cap = new THREE.Mesh(new THREE.CylinderGeometry(o.r * 0.55, o.r * 0.55, 0.1, 20), new THREE.MeshStandardMaterial({ color: 0xffffff }));
+      cap.position.set(o.x, h + 0.05, o.y); g.add(cap);
+    }
+  }
   makeDog() {
     const P = {};
     const dog = P.dog = new THREE.Group();
@@ -180,6 +211,10 @@ export class View3D {
     this.tofTag = this.label(256, 96); this.tofTag.sp.scale.set(6, 2.25, 1);
     this.card = this.label(320, 260); this.card.sp.scale.set(8, 6.5, 1);
     this.btnTag = this.label(300, 90); this.btnTag.sp.scale.set(7, 2.1, 1);
+    // AI 카메라 시야(추정 ±30°·100cm): 바닥에 깔리는 부채꼴
+    const C = EST.aiCam, fan = new THREE.Mesh(new THREE.CircleGeometry(C.maxCm, 28, Math.PI / 2 - C.halfFovDeg * Math.PI / 180, 2 * C.halfFovDeg * Math.PI / 180),
+      new THREE.MeshBasicMaterial({ color: 0x2456e5, transparent: true, opacity: 0.14, side: THREE.DoubleSide, depthWrite: false }));
+    fan.rotation.x = -Math.PI / 2; this.camFan = new THREE.Group(); this.camFan.add(fan); this.camFan.visible = false; this.camFan.position.y = 0.3; this.scene.add(this.camFan);
   }
   paint(L, key, fn) { if (L.key === key) return; L.key = key; const x = L.c.getContext('2d'); x.clearRect(0, 0, L.c.width, L.c.height); fn(x, L.c.width, L.c.height); L.tex.needsUpdate = true; }
   drawDevices(R, y) {
@@ -200,6 +235,10 @@ export class View3D {
         x.fillText(d >= EST.tofMax ? '거리 없음' : '거리 ' + d, w / 2, h / 2 + 2);
       });
     }
+    // AI 카메라 시야
+    const camOn = !!(W.camView || R.aiMode === 3) && !R.fallen;
+    this.camFan.visible = camOn;
+    if (camOn) { this.camFan.position.set(R.x + fx * EST.noseOffset, 0.3, R.y + fz * EST.noseOffset); this.camFan.rotation.y = -rad; }
     // AI 신호 카드: 라디오로 받은 마지막 숫자를 카드 색으로
     const radioOn = devs.includes('radio');
     this.card.sp.visible = radioOn;
@@ -268,15 +307,8 @@ export class View3D {
     if (!this.ready) return;
     const R = this.robot, W = this.world;
     if (this.tableKey !== this.tableSig()) this.buildTable();
-    const key = JSON.stringify(W.obstacles);
-    if (key !== this.obsKey) {
-      this.obsKey = key;
-      while (this.obsGroup.children.length) this.obsGroup.remove(this.obsGroup.children[0]);
-      W.obstacles.forEach(o => {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(o.w, 10, o.h), new THREE.MeshStandardMaterial({ color: 0xe5484d }));
-        m.position.set(o.x + o.w / 2, 5, o.y + o.h / 2); m.castShadow = true; this.obsGroup.add(m);
-      });
-    }
+    const key = JSON.stringify(W.props);
+    if (key !== this.obsKey) { this.obsKey = key; this.buildProps(); }
     const pts = R.trail.map(p => new THREE.Vector3(p.x, 0.2, p.y)); pts.push(new THREE.Vector3(R.x, 0.2, R.y));
     this.trailLine.geometry.setFromPoints(pts);
     // 로봇들 위치·방향·자세 (군무 중이면 여러 대)

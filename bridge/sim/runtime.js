@@ -6,6 +6,7 @@
 // 상수 (추정치 — 실물 측정 후 조정)
 // ------------------------------------------------------------
 import { GEOM, HEAD, lengthToAngles, legFromAngles } from './legs.js';
+import { emptyProps, obstacleHit, raycast as propsRaycast, objectsInView } from './props.js';
 export { GEOM, HEAD };
 
 export const EST = {
@@ -17,6 +18,10 @@ export const EST = {
   noseOffset: HEAD.fwd + GEOM.headDepth / 2,       // 몸 중심 → 머리 앞면(거리센서) cm
   tofMax: 255,             // 거리센서 최대값(값 단위를 cm로 가정)
   radius: 7,               // 충돌 반경(cm)
+  // AI 카메라 흉내(전부 추정 — 실물 카메라 시야·인식 거리·좌표 범위는 측정하지 않음)
+  aiCam: { halfFovDeg: 30, maxCm: 100, posRange: 100 },   // 시야 ±30°, 0~100cm, 위치값 -100~100
+  // 색 → 'AI 클래스 번호'. 카메라 펌웨어가 정하는 값이라 확장 소스에 없음 → 설정 칸에서 바꿀 수 있는 임시 값(실물 카메라에서 확인 필요)
+  aiClassDefault: { red: 1, yellow: 2, green: 3, blue: 4 },
 };
 
 // 다리 번호: 확장 소스의 순서 (0 왼앞, 1 왼뒤, 2 오른뒤, 3 오른앞)
@@ -165,6 +170,7 @@ export class Robot {
     this.headL = blank8(); this.headR = blank8(); this.expr = 0; this.exprT = 0;
     this.bubble = null; this.bubbleT = 0;
     this.fallen = false; this.bumped = false;
+    this.aiMode = 0;                     // AI 카메라 모드(deflib.AiMode: 0 카메라, 1 얼굴, 2 얼굴 추적, 3 색, 4 QR)
     this.trail = [{ x: this.x, y: this.y }];
     const stand = lengthToAngles(69, 0);
     this.joint = [0, 1, 2, 3].map(() => stand.slice());   // 지금 관절 각도 [어깨, 무릎](도)
@@ -292,6 +298,13 @@ export class Robot {
   tof() {
     return this.world.raycast(this.x, this.y, this.heading, EST.noseOffset, EST.tofMax);
   }
+  // AI 카메라가 보는 색 물체 중 가장 가까운 것(상자에 가려지면 제외). map: 색 → 번호(0·없음이면 못 알아봄). 못 보면 null
+  aiSees(map = this.world.aiClass) {
+    const rad = this.heading * Math.PI / 180, C = EST.aiCam;
+    const nx = this.x + Math.sin(rad) * EST.noseOffset, ny = this.y - Math.cos(rad) * EST.noseOffset;
+    for (const v of objectsInView(this.world.props, nx, ny, this.heading, C.halfFovDeg * 2, C.maxCm)) if (map[v.color]) return v;
+    return null;
+  }
 }
 
 // ------------------------------------------------------------
@@ -301,9 +314,11 @@ export class World {
   constructor() {
     this.useTable = true;
     this.extra = [];                   // 군무용 추가 로봇들
-    this.obstacles = [];               // {x,y,w,h}
+    this.props = emptyProps();         // 소품(공용 props.js): 상자·색 물체·컬러칩(·선). 편집기가 끌어 옮기면 센서 값도 따라 바뀜
+    this.aiClass = { ...EST.aiClassDefault };   // 색 → AI 클래스 번호(설정에서 바꿈)
     this.setSize(120, 80);
   }
+  get obstacles() { return this.props.boxes; }   // 옛 이름(상자 목록). {x,y,w,h}
   // 공간 크기(cm). 처음 자리는 가운데에서 조금 아래(앞쪽으로 걸을 공간 확보)
   setSize(w, h) {
     this.table = { w, h };
@@ -312,16 +327,20 @@ export class World {
   offTable(x, y) { return this.useTable && (x < 0 || y < 0 || x > this.table.w || y > this.table.h); }
   collides(x, y, r) {
     if (!this.useTable && (x < r || y < r || x > this.table.w - r || y > this.table.h - r)) return true; // 바닥 모드: 벽
-    return this.obstacles.some(o => x + r > o.x && x - r < o.x + o.w && y + r > o.y && y - r < o.y + o.h);
+    return obstacleHit(this.props, x, y, r);
   }
+  // 거리센서: 코(startOff)에서 앞으로 재서 상자·물체·(바닥 모드면) 벽까지 cm. 없으면 max
   raycast(x, y, heading, startOff, max) {
     const rad = heading * Math.PI / 180, dx = Math.sin(rad), dy = -Math.cos(rad);
-    for (let d = 0; d <= max; d += 0.5) {
-      const px = x + dx * (startOff + d), py = y + dy * (startOff + d);
-      if (!this.useTable && (px < 0 || py < 0 || px > this.table.w || py > this.table.h)) return Math.round(d);
-      if (this.obstacles.some(o => px >= o.x && px <= o.x + o.w && py >= o.y && py <= o.y + o.h)) return Math.round(d);
+    let d = propsRaycast(this.props, x, y, heading, startOff, max);
+    if (!this.useTable) {
+      const ox = x + dx * startOff, oy = y + dy * startOff;
+      let t = Infinity;
+      if (dx > 1e-9) t = Math.min(t, (this.table.w - ox) / dx); else if (dx < -1e-9) t = Math.min(t, -ox / dx);
+      if (dy > 1e-9) t = Math.min(t, (this.table.h - oy) / dy); else if (dy < -1e-9) t = Math.min(t, -oy / dy);
+      d = Math.min(d, Math.max(0, t));
     }
-    return max;
+    return d <= max ? Math.round(d) : max;
   }
 }
 
@@ -388,6 +407,11 @@ export function compile(src) {
 // h: { warnOnce, sleep, soundOn, button, battery, tilt }
 // ------------------------------------------------------------
 export function makeRobodogApi(R, h) {
+  const colorSeen = () => { if (R.aiMode !== 3) return null; const v = R.aiSees(); if (v) aiWarn(); return v; };
+  const aiWarn = () => {
+    if (R.aiMode === 3) h.warnOnce('aicam-color', `AI 카메라(색 인식)는 시뮬레이터가 흉내만 내요: 앞 ±${EST.aiCam.halfFovDeg}° · ${EST.aiCam.maxCm}cm 안의 색 물체를 알아보고, 색 → 클래스 번호는 설정 칸의 임시 값이에요(실물 카메라에서 확인 필요).`);
+    else h.warnOnce('aicam', '로보독 AI 카메라(얼굴·QR)는 시뮬레이터에서 흉내 내지 않아요. 값은 늘 "인식 없음"(0, "none")이에요. 색 인식은 aiDetection(색)으로 켜면 색 물체를 알아봐요. 실물에서 확인하세요.');
+  };
   return {
       gesture: (p) => { R.setMode(4); R.posture = clamp(p, 0, 4); R.postureT = 0; },
       legBend: (legs, height) => {
@@ -450,14 +474,23 @@ export function makeRobodogApi(R, h) {
       getTof: () => R.tof(),
       getTilt: (what) => h.tilt(what),
       getRotation: () => { let h = ((Math.round(R.heading) % 360) + 360) % 360; if (h > 180) h -= 360; return h; },
-      // 무선 확장(kocoafab/robodog-radio)의 AI 카메라 블록: 시뮬레이터에는 카메라가 없어 '인식 없음' 값만 돌려줌
+      // 무선 확장(kocoafab/robodog-radio @4a50d45)의 AI 카메라 블록.
+      // 확장 소스: aiDetection(모드) = 카메라 모드 고르기, getColorDetect() = 색 인식 모드(3)일 때만 카메라가 준 클래스 번호(아니면 0),
+      //            getAiPosition(X|Y) = 인식한 결과의 부호 있는 위치. 시뮬레이터는 색 물체만 흉내(얼굴·QR은 "인식 없음")
       rfBand: (band) => { h.warnOnce('rfband', `무선 확장: 밴드 ${band} (시뮬레이터에서는 라디오 없이 바로 움직여요)`); },
-      aiDetection: () => { h.warnOnce('aicam', '로보독 AI 카메라(얼굴·색·QR)는 시뮬레이터에서 흉내만 내요. 값은 늘 "인식 없음"(0, "none")이에요. 실물에서 확인하세요.'); },
-      faceTracking: () => { h.warnOnce('aicam', '로보독 AI 카메라(얼굴·색·QR)는 시뮬레이터에서 흉내만 내요. 값은 늘 "인식 없음"(0, "none")이에요. 실물에서 확인하세요.'); },
+      aiDetection: (m) => { R.aiMode = Number(m) || 0; aiWarn(); },
+      faceTracking: () => { aiWarn(); },
       getCameraAlive: () => true,
-      getFaceClass: () => 0, getFaceTracking: () => 0, getColorDetect: () => 0,
-      getQrCode: () => 'none',
-      getAiPosition: () => 0,
+      getFaceClass: () => { aiWarn(); return 0; }, getFaceTracking: () => { aiWarn(); return 0; },
+      getColorDetect: () => {   // 확장 소스처럼: 색 인식 모드가 아니면 0
+        if (R.aiMode !== 3) { h.warnOnce('aicam-mode', 'getColorDetect()는 aiDetection(색 인식)으로 모드를 켠 뒤에만 값이 나와요(그 전에는 0).'); return 0; }
+        const v = colorSeen(); return v ? (R.world.aiClass[v.color] || 0) : 0;
+      },
+      getQrCode: () => { aiWarn(); return 'none'; },
+      getAiPosition: (axis) => {   // X: 정면 기준 각도를 -100(왼쪽 끝)~100(오른쪽 끝)으로(추정), Y: 흉내 내지 않음(0)
+        const v = colorSeen(); if (!v || axis !== 0) return 0;
+        return clamp(Math.round(v.bearing / EST.aiCam.halfFovDeg * EST.aiCam.posRange), -EST.aiCam.posRange, EST.aiCam.posRange);
+      },
   };
 }
 
