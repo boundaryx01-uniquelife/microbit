@@ -10,16 +10,19 @@
       robot: '포니봇',
       title: '포니봇 AI 교실',
       brandSub: '피지컬 AI 수업',
-      home: 'ponybot/',
-      aiHref: 'ai.html?kit=ponybot',
-      docsHref: 'ponybot/',
-      foot: 'AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. · <a href="ponybot/">포니봇 수업 자료</a> · <a href="NOTICE.md">오픈소스·출처 고지</a>',
+      home: '/ponybot/',
+      aiHref: '/ai.html?kit=ponybot',
+      docsHref: '/ponybot/',
+      foot: 'AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. · <a href="/ponybot/">포니봇 수업 자료</a> · <a href="/NOTICE.md">오픈소스·출처 고지</a>',
       filePrefix: '포니봇AI'
     }
   };
   var slug = 'robodog';
   try {
-    var q = new URLSearchParams(location.search).get('kit');
+    var sp = new URLSearchParams(location.search);
+    var q = sp.get('kit');
+    // 수업 슬라이드(?l=ponybot_4차시)는 수업 ID 앞부분으로 교구를 알아냄
+    if (!q && sp.get('l')) q = String(sp.get('l')).split('_')[0];
     if (q && Object.prototype.hasOwnProperty.call(KITS, q)) slug = q;
   } catch (e) { /* 옛 브라우저: 기본 교구 */ }
   var kit = KITS[slug];
