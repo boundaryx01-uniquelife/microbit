@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // 교구별 첫 화면: kits/<slug>/kit.json → bridge/<slug>/index.html + 예제(.ts)·수업 꾸러미 복사
 // 사용법: node tools/build-kit.mjs [slug]   (slug 없으면 kits/ 아래 전부)
-// 기본 교구(로보독)는 기존 bridge/index.html·docs/ 를 그대로 쓰므로 여기서 만들지 않는다.
+// 로보독은 기존 bridge/robodog/index.html·sim/·docs/ 를 그대로 쓴다(page=false).
+// 마지막에 모든 kit.json 의 hub 항목으로 사이트 메인(bridge/index.html, 교구 선택 화면)을 만든다.
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,9 +20,12 @@ const firstTitle = (src) => {
   return '';
 };
 
-const slugs = process.argv[2] ? [process.argv[2]] : fs.readdirSync(KITS).filter((d) => fs.existsSync(path.join(KITS, d, 'kit.json')));
+const ALL = fs.readdirSync(KITS).filter((d) => fs.existsSync(path.join(KITS, d, 'kit.json')))
+  .map((d) => JSON.parse(fs.readFileSync(path.join(KITS, d, 'kit.json'), 'utf8')));
+const slugs = process.argv[2] ? [process.argv[2]] : ALL.filter((k) => k.page).map((k) => k.slug);
 for (const slug of slugs) {
-  const kit = JSON.parse(fs.readFileSync(path.join(KITS, slug, 'kit.json'), 'utf8'));
+  const kit = ALL.find((k) => k.slug === slug);
+  if (!kit || !kit.page) { console.warn(`⚠ ${slug}: page=true 인 교구만 첫 화면을 만듦`); continue; }
   const OUT = path.join(ROOT, 'bridge', slug);
   fs.rmSync(path.join(OUT, 'makecode'), { recursive: true, force: true });
   fs.rmSync(path.join(OUT, 'materials'), { recursive: true, force: true });
@@ -69,7 +73,7 @@ code{word-break:break-all}
 </style></head>
 <body><header class="gnb"><div class="gnb-in">
 <a class="brand" href="./"><span>${esc(kit.name.replace(/^AI /, ''))} AI 교실<small>피지컬 AI 수업</small></span></a>
-<nav aria-label="주 메뉴"><a href="./" aria-current="page">처음</a><a href="../ai.html?kit=${slug}">AI 브리지</a><a href="../">다른 교구(로보독)</a></nav>
+<nav aria-label="주 메뉴"><a href="./" aria-current="page">처음</a><a href="../ai.html?kit=${slug}">AI 브리지</a><a href="../">전체 교구</a></nav>
 </div></header>
 <main>
 <h1>${esc(kit.name)} × 마이크로비트 AI 교실</h1>
@@ -95,3 +99,70 @@ ${pkgHtml || '<p class="note">준비 중입니다.</p>'}
   fs.writeFileSync(path.join(OUT, 'index.html'), html);
   console.log(`${slug}: bridge/${slug}/index.html, 예제 ${examples.length}개, 꾸러미 ${(kit.materials || []).length}개`);
 }
+
+// ---------- 사이트 메인: 교구 선택 화면 ----------
+const hubKits = ALL.filter((k) => k.hub).sort((a, b) => a.hub.order - b.hub.order);
+const card = (k) => {
+  const h = k.hub, ready = h.status === 'ready';
+  const links = (h.links || []).map(([t, u], i) => `<a href="${esc(u)}"${i === 0 ? ' class="go"' : ''}>${esc(t)}</a>`).join('');
+  return `<article class="kit${ready ? '' : ' coming'}">
+  <div class="pic">${h.image ? `<img src="${esc(h.image)}" alt="${esc(h.imageAlt || '')}" loading="lazy">` : ''}</div>
+  <div class="body"><span class="badge${ready ? '' : ' wait'}">${esc(h.badge || (ready ? '' : '준비 중'))}</span>
+  <h2>${ready ? `<a href="${esc(h.home)}">${esc(k.name)}</a>` : esc(k.name)}</h2>
+  <p class="vendor">${esc(k.vendor)}</p><p>${esc(h.tagline)}</p>
+  ${links ? `<nav class="links" aria-label="${esc(k.name)} 바로 가기">${links}</nav>` : '<p class="note">자료가 준비되면 이곳에 열려요.</p>'}</div>
+</article>`;
+};
+const hub = `<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>피지컬 AI 교실 · 마이크로비트 교구 선택</title>
+<meta name="description" content="웹캠으로 AI를 가르치고 마이크로비트로 로봇을 움직이는 피지컬 AI 수업. 교구를 골라 시작하세요.">
+<meta name="theme-color" content="#0a2342">
+<meta property="og:type" content="website"><meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="피지컬 AI 교실 · 마이크로비트 교구 선택">
+<meta property="og:description" content="AI가 보고, 마이크로비트가 전하고, 로봇이 움직인다 — 교구별 수업 자료·AI 브리지·예제">
+<meta property="og:url" content="https://microbit-bridge.netlify.app/">
+<link rel="stylesheet" href="assets/brand.css"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<style>
+body{background:var(--bg,#F4F6FA)}
+main{max-width:1100px;margin:0 auto;padding:28px 16px 56px}
+.hero h1{font-size:clamp(26px,4.4vw,40px);line-height:1.25;margin:4px 0 10px}
+.hero h1 em{font-style:normal;color:var(--accent,#2456E5)}
+.hero p{color:var(--sub,#566077);max-width:720px;margin:0 0 6px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 26px;padding:0;list-style:none}
+.flow li{background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);border-radius:999px;padding:6px 14px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.kit{display:flex;flex-direction:column;background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);border-radius:18px;overflow:hidden}
+.kit .pic{position:relative;aspect-ratio:16/9;background:#0a2342;overflow:hidden}
+.kit .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.kit .pic img[src*="icon_"]{object-fit:contain;padding:14px;box-sizing:border-box;background:#eef3ff}
+.kit .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+.kit h2{margin:2px 0 0;font-size:22px}.kit h2 a{color:inherit;text-decoration:none}.kit h2 a:hover{color:var(--accent,#2456E5)}
+.kit p{margin:0}.vendor{color:var(--sub,#566077);font-size:14px}
+.badge{align-self:flex-start;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#e6edfd;color:#1b3fb0}
+.badge.wait{background:#fff3cd;color:#7a5b00}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px}
+.links a{padding:8px 12px;border-radius:10px;border:1px solid var(--line,#e3e7ef);text-decoration:none;color:var(--ink,#111827);font-size:15px}
+.links a.go{background:var(--accent,#2456E5);border-color:transparent;color:#fff;font-weight:700}
+.links a:hover{border-color:var(--accent,#2456E5)}
+.kit.coming{opacity:.85}.kit.coming .pic{filter:grayscale(.6)}
+.note{color:var(--sub,#566077);font-size:14px;margin-top:auto!important;padding-top:10px}
+.links a:focus-visible,.kit h2 a:focus-visible{outline:3px solid var(--accent,#2456E5);outline-offset:2px}
+</style></head>
+<body><header class="gnb"><div class="gnb-in">
+<a class="brand" href="./"><span>피지컬 AI 교실<small>마이크로비트 × 로봇 교구</small></span></a>
+<nav aria-label="주 메뉴"><a href="./" aria-current="page">교구 선택</a><a href="ai.html">AI 브리지</a><a href="lessons/">수업 슬라이드</a></nav>
+</div></header>
+<main>
+<section class="hero"><h1>내가 가르친 <em>AI</em>로 로봇을 움직여요</h1>
+<p>웹캠으로 카드·물건을 AI에게 가르치고, 인식한 번호를 마이크로비트가 라디오로 전해 로봇이 움직입니다. 수업에 쓰는 교구를 골라 시작하세요.</p>
+<ol class="flow" aria-label="수업 흐름"><li>① 문제 찾기</li><li>② AI 가르치기</li><li>③ 마이크로비트로 전달</li><li>④ 로봇 움직이기</li><li>⑤ 안전 점검</li></ol></section>
+<div class="grid">
+${hubKits.map(card).join('\n')}
+</div>
+</main>
+<footer class="site-foot">${hubKits.filter((k) => k.hub.status === 'ready').map((k) => `${esc(k.name)}${esc(k.josaEun || "은(는)")} ${esc(k.vendor)}의 제품입니다.`).join(' ')} · <a href="NOTICE.md">오픈소스·출처 고지</a></footer>
+</body></html>
+`;
+fs.writeFileSync(path.join(ROOT, 'bridge', 'index.html'), hub);
+console.log(`메인: bridge/index.html, 교구 ${hubKits.length}개 (${hubKits.map((k) => k.slug + ':' + k.hub.status).join(', ')})`);

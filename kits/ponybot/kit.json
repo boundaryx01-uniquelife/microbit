@@ -50,5 +50,29 @@
     "초음파 거리센서: 손을 대면 숫자가 줄어드는지, 반사가 없을 때 500이 나오는지",
     "라디오 수신: USB 마이크로비트와 같은 모둠번호에서 2초 안에 신호가 오는지"
   ],
-  "josaEun": "은"
+  "josaEun": "은",
+  "page": true,
+  "hub": {
+    "order": 2,
+    "status": "ready",
+    "home": "ponybot/",
+    "image": "lessons/assets/icon_delivery.png",
+    "imageAlt": "바퀴 달린 로봇 아이콘",
+    "tagline": "메카넘 바퀴로 앞뒤·옆·대각선까지 움직이는 로봇. 거리·라인·컬러 센서와 OLED 화면",
+    "badge": "1차 공개 · 실물 점검 중",
+    "links": [
+      [
+        "첫 화면",
+        "ponybot/"
+      ],
+      [
+        "AI 브리지",
+        "ai.html?kit=ponybot"
+      ],
+      [
+        "4차시 슬라이드",
+        "lessons/?l=ponybot_4차시"
+      ]
+    ]
+  }
 }

@@ -38,6 +38,7 @@ description: 마이크로비트에 꽂는 피지컬 교구(로봇·자동차·�
 - **하위 에이전트를 만들 때마다 사용자에게 알린다:** 맡은 일 · 모델 · 사고 깊이(지정 안 했으면 "기본값") · 이유. 넓은 조사·반복 치환·시험 실행·리뷰는 Sonnet(결정적 목록 작업은 Haiku), 설계·안전 규칙·최종 판단은 메인.
 
 ## 산출물 체크
+- [ ] `kits/<slug>/kit.json`에 `hub`(order·status·home·tagline·links) 추가 → `node tools/build-kit.mjs`로 사이트 메인(`/`, 교구 선택)에 카드가 생김. 준비 중 교구는 `status: "coming"`, 자체 첫 화면은 `page: true`
 - [ ] `kit/` 설정 + 교구 이름이 사이트 문구·메타·로고·NOTICE에 반영(옛 교구 이름 grep 0건, 의도된 출처 표기 제외)
 - [ ] 예제 `.ts`가 MakeCode에서 블록으로 변환(`tests/makecode-blocks.js`) · 시뮬레이터 예제 시험
 - [ ] 도우미 안전 규칙 시험(`tests/rule-assistant.mjs` 교구 수치로)

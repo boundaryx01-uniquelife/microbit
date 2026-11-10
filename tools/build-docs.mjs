@@ -80,9 +80,9 @@ const page = (title, active, body) => `<!doctype html>
 <title>${esc(title)} · 로보독 수업 자료</title>
 <link rel="stylesheet" href="../assets/brand.css"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><style>${CSS}</style></head>
 <body><header class="gnb"><div class="gnb-in">
-<a class="brand" href="../"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0f2a50"/><circle cx="16" cy="16.4" r="12.6" fill="#fff1c2"/><rect x="4.6" y="10.2" width="22.8" height="12.4" rx="6.2" fill="#0b0e14"/><rect x="6.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><rect x="17.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><g fill="#fff4c8"><circle cx="7.92" cy="17.68" r=".56"/><circle cx="8.78" cy="16.82" r=".56"/><circle cx="9.64" cy="15.96" r=".56"/><circle cx="10.50" cy="15.10" r=".56"/><circle cx="11.36" cy="15.96" r=".56"/><circle cx="12.22" cy="16.82" r=".56"/><circle cx="13.08" cy="17.68" r=".56"/><circle cx="18.92" cy="17.68" r=".56"/><circle cx="19.78" cy="16.82" r=".56"/><circle cx="20.64" cy="15.96" r=".56"/><circle cx="21.50" cy="15.10" r=".56"/><circle cx="22.36" cy="15.96" r=".56"/><circle cx="23.22" cy="16.82" r=".56"/><circle cx="24.08" cy="17.68" r=".56"/></g><circle cx="16" cy="14.4" r=".95" fill="#2e3850"/></svg>
+<a class="brand" href="../robodog/"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0f2a50"/><circle cx="16" cy="16.4" r="12.6" fill="#fff1c2"/><rect x="4.6" y="10.2" width="22.8" height="12.4" rx="6.2" fill="#0b0e14"/><rect x="6.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><rect x="17.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><g fill="#fff4c8"><circle cx="7.92" cy="17.68" r=".56"/><circle cx="8.78" cy="16.82" r=".56"/><circle cx="9.64" cy="15.96" r=".56"/><circle cx="10.50" cy="15.10" r=".56"/><circle cx="11.36" cy="15.96" r=".56"/><circle cx="12.22" cy="16.82" r=".56"/><circle cx="13.08" cy="17.68" r=".56"/><circle cx="18.92" cy="17.68" r=".56"/><circle cx="19.78" cy="16.82" r=".56"/><circle cx="20.64" cy="15.96" r=".56"/><circle cx="21.50" cy="15.10" r=".56"/><circle cx="22.36" cy="15.96" r=".56"/><circle cx="23.22" cy="16.82" r=".56"/><circle cx="24.08" cy="17.68" r=".56"/></g><circle cx="16" cy="14.4" r=".95" fill="#2e3850"/></svg>
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
-<nav aria-label="주 메뉴"><a href="../">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
+<nav aria-label="주 메뉴"><a href="../robodog/">처음</a><a href="../sim/">시뮬레이터</a><a href="../ai.html">AI 브리지</a><a href="./" aria-current="page">수업 자료</a></nav>
 </div></header>
 <div class="subnav"><div class="in"><nav aria-label="수업 자료 목록">${['index', ...ORDER.filter(id => docs.some(d => d.slug === id)), ...docs.map(d => d.slug).filter(id => !ORDER.includes(id))].map(s => `<a href="${s}.html"${s === active ? ' aria-current="page"' : ''}>${s === 'index' ? '전체' : SHORT[s] || s}</a>`).join('')}</nav>
 <button onclick="print()">🖨 인쇄</button></div></div>
@@ -119,7 +119,10 @@ for (const [g, ids] of GROUPS) {
 }
 // 수업 꾸러미(슬라이드·활동지·진행표·준비물) 복사 + 목록
 const PKG = path.join(ROOT, 'materials');
-const pkgs = fs.existsSync(PKG) ? fs.readdirSync(PKG).filter(d => fs.statSync(path.join(PKG, d)).isDirectory()) : [];
+// 다른 교구 꾸러미(kits/<slug>/kit.json 의 materials)는 그 교구 첫 화면(bridge/<slug>/)에서 내려받으므로 여기서 뺀다
+const KITS = path.join(ROOT, 'kits');
+const otherKitPkgs = new Set(fs.existsSync(KITS) ? fs.readdirSync(KITS).flatMap(d => { const f = path.join(KITS, d, 'kit.json'); return fs.existsSync(f) ? (JSON.parse(fs.readFileSync(f, 'utf8')).materials || []) : []; }) : []);
+const pkgs = fs.existsSync(PKG) ? fs.readdirSync(PKG).filter(d => fs.statSync(path.join(PKG, d)).isDirectory() && !otherKitPkgs.has(d)) : [];
 if (pkgs.length) {
   idx += `<h2>바로 쓰는 수업 꾸러미</h2><p class="note">수업 슬라이드(발표자 노트에 교사 대본), 학생 활동지, 교사용 진행표, 인쇄용 준비물(색 카드는 컬러 인쇄). 한글·파워포인트에서 열립니다.</p>`;
   for (const d of pkgs) {
