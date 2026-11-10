@@ -1212,19 +1212,19 @@
           "members": [
             {
               "name": "MicroSeconds",
-              "value": null,
+              "value": "0",
               "block_en": "마이크로초",
               "block_ko": null
             },
             {
               "name": "Centimeters",
-              "value": null,
+              "value": "1",
               "block_en": "센티미터",
               "block_ko": null
             },
             {
               "name": "Inches",
-              "value": null,
+              "value": "2",
               "block_en": "인치",
               "block_ko": null
             }
@@ -1236,25 +1236,25 @@
           "members": [
             {
               "name": "Red",
-              "value": null,
+              "value": "0",
               "block_en": "빨간색",
               "block_ko": null
             },
             {
               "name": "Green",
-              "value": null,
+              "value": "1",
               "block_en": "초록색",
               "block_ko": null
             },
             {
               "name": "Blue",
-              "value": null,
+              "value": "2",
               "block_en": "파란색",
               "block_ko": null
             },
             {
               "name": "Yellow",
-              "value": null,
+              "value": "3",
               "block_en": "노란색",
               "block_ko": null
             }
@@ -1302,31 +1302,31 @@
           "members": [
             {
               "name": "X",
-              "value": null,
+              "value": "0",
               "block_en": "X 좌표",
               "block_ko": null
             },
             {
               "name": "Y",
-              "value": null,
+              "value": "1",
               "block_en": "Y 좌표",
               "block_ko": null
             },
             {
               "name": "W",
-              "value": null,
+              "value": "2",
               "block_en": "너비",
               "block_ko": null
             },
             {
               "name": "H",
-              "value": null,
+              "value": "3",
               "block_en": "높이",
               "block_ko": null
             },
             {
               "name": "D",
-              "value": null,
+              "value": "4",
               "block_en": "객체 수",
               "block_ko": null
             }
@@ -1338,25 +1338,25 @@
           "members": [
             {
               "name": "R",
-              "value": null,
+              "value": "0",
               "block_en": "빨간색(R)",
               "block_ko": null
             },
             {
               "name": "G",
-              "value": null,
+              "value": "1",
               "block_en": "초록색(G)",
               "block_ko": null
             },
             {
               "name": "B",
-              "value": null,
+              "value": "2",
               "block_en": "파랑색(B)",
               "block_ko": null
             },
             {
               "name": "I",
-              "value": null,
+              "value": "3",
               "block_en": "클래스 ID(I)",
               "block_ko": null
             }
@@ -1368,13 +1368,13 @@
           "members": [
             {
               "name": "String",
-              "value": null,
+              "value": "0",
               "block_en": "문자형",
               "block_ko": null
             },
             {
               "name": "Number",
-              "value": null,
+              "value": "1",
               "block_en": "정수형",
               "block_ko": null
             }
@@ -1386,67 +1386,67 @@
           "members": [
             {
               "name": "X",
-              "value": null,
+              "value": "0",
               "block_en": "X 좌표",
               "block_ko": null
             },
             {
               "name": "Y",
-              "value": null,
+              "value": "1",
               "block_en": "Y 좌표",
               "block_ko": null
             },
             {
               "name": "Z",
-              "value": null,
+              "value": "2",
               "block_en": "거리(Z)",
               "block_ko": null
             },
             {
               "name": "Yaw",
-              "value": null,
+              "value": "3",
               "block_en": "좌우회전(Yaw)",
               "block_ko": null
             },
             {
               "name": "Pitch",
-              "value": null,
+              "value": "4",
               "block_en": "상하각도(Pitch)",
               "block_ko": null
             },
             {
               "name": "Mouth",
-              "value": null,
+              "value": "5",
               "block_en": "입벌림",
               "block_ko": null
             },
             {
               "name": "LeftEye",
-              "value": null,
+              "value": "6",
               "block_en": "왼쪽 눈",
               "block_ko": null
             },
             {
               "name": "RightEye",
-              "value": null,
+              "value": "7",
               "block_en": "오른쪽 눈",
               "block_ko": null
             },
             {
               "name": "Roll",
-              "value": null,
+              "value": "8",
               "block_en": "기울기(Roll)",
               "block_ko": null
             },
             {
               "name": "Smile",
-              "value": null,
+              "value": "9",
               "block_en": "웃음",
               "block_ko": null
             },
             {
               "name": "Visible",
-              "value": null,
+              "value": "10",
               "block_en": "얼굴 감지 여부",
               "block_ko": null
             }
@@ -1458,25 +1458,25 @@
           "members": [
             {
               "name": "LeftDir",
-              "value": null,
+              "value": "0",
               "block_en": "왼쪽 방향",
               "block_ko": null
             },
             {
               "name": "LeftSpeed",
-              "value": null,
+              "value": "1",
               "block_en": "왼쪽 속도",
               "block_ko": null
             },
             {
               "name": "RightDir",
-              "value": null,
+              "value": "2",
               "block_en": "오른쪽 방향",
               "block_ko": null
             },
             {
               "name": "RightSpeed",
-              "value": null,
+              "value": "3",
               "block_en": "오른쪽 속도",
               "block_ko": null
             }

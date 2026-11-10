@@ -7,7 +7,7 @@
 
 ### enum `NeoPixelColors`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Red` | 0xFF0000 | 빨간색(red) |  |
 | `Orange` | 0xFFA500 | 주황색(orange) |  |
@@ -21,7 +21,7 @@
 
 ### enum `NeoPixelMode`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `RGB` | 1 | RGB (GRB format) |  |
 | `RGBW` | 2 | RGB+W |  |
@@ -29,7 +29,7 @@
 
 ## namespace `neopixel`
 
-| 함수 | 영어 블록 | 한국어 블록 | 인자(형, 범위, 기본) | 반환 | blockId | group | 숨김 |
+| 함수 | 블록 글자(소스) | 번역(_locales) | 인자(형, 범위, 기본) | 반환 | blockId | group | 숨김 |
 |---|---|---|---|---|---|---|---|
 | `create` | %pin\|에 연결된 %numLeds\|개의 %mode\|타입 라이트 |  | pin: DigitalPin =DigitalPin.P8; numLeds: number =4; mode: NeoPixelMode | Strip | neopixel_create | 라이트 제어(기초) |  |
 | `rgb` | 빨강(R): %red\|초록(G): %green\|파랑(B): %blue |  | red: number [0..255]; green: number [0..255]; blue: number [0..255] | number | neopixel_rgb | 색상 블록 |  |
@@ -39,9 +39,9 @@
 
 ### enum `HueInterpolationDirection`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
-| `Clockwise` |  |  |  |
-| `CounterClockwise` |  |  |  |
-| `Shortest` |  |  |  |
+| `Clockwise` | 0 |  |  |
+| `CounterClockwise` | 1 |  |  |
+| `Shortest` | 2 |  |  |
 

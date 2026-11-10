@@ -253,7 +253,14 @@ def parse_ts(text, fname):
             mm = re.match(r"^([\w$]+)\s*(?:=\s*([^,]+?))?\s*,?\s*$", c)
             if mm and not c.startswith("}"):
                 e = stack[-1][3]
-                e["members"].append({"name": mm.group(1), "value": mm.group(2).strip() if mm.group(2) else None,
+                val = mm.group(2).strip() if mm.group(2) else None
+                if val is None:   # TypeScript 자동 번호: 앞 멤버 + 1 (첫 멤버는 0). 앞이 숫자가 아니면 모름(None)
+                    prev = e["members"][-1]["value"] if e["members"] else "-1"
+                    try:
+                        val = str(int(prev, 0) + 1)
+                    except (TypeError, ValueError):
+                        val = None
+                e["members"].append({"name": mm.group(1), "value": val,
                                      "annot": pend, "block_en": pend.get("block"), "block_ko": None,
                                      "blockHidden": bool(pend.get("blockHidden"))})
                 handled = True
@@ -425,7 +432,7 @@ def to_md(data):
     for ns in data["namespaces"]:
         L += ["## namespace `%s`" % ns["name"], ""]
         if ns["functions"]:
-            L += ["| 함수 | 영어 블록 | 한국어 블록 | 인자(형, 범위, 기본) | 반환 | blockId | group | 숨김 |", "|---|---|---|---|---|---|---|---|"]
+            L += ["| 함수 | 블록 글자(소스) | 번역(_locales) | 인자(형, 범위, 기본) | 반환 | blockId | group | 숨김 |", "|---|---|---|---|---|---|---|---|"]
             for f in ns["functions"]:
                 ps = "; ".join("%s: %s%s%s" % (p["name"], p["type"] or "?",
                                (" [%s..%s]" % (p["min"] if p["min"] is not None else "", p["max"] if p["max"] is not None else ""))
@@ -436,7 +443,7 @@ def to_md(data):
                     esc(f["group"]), "예" if f["hidden"] else ""))
             L.append("")
         for e in ns["enums"]:
-            L += ["### enum `%s`" % e["name"], "", "| 멤버 | 값 | 영어 | 한국어 |", "|---|---|---|---|"]
+            L += ["### enum `%s`" % e["name"], "", "| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |", "|---|---|---|---|"]
             for m in e["members"]:
                 L.append("| `%s` | %s | %s | %s |" % (m["name"], esc(m["value"]), esc(m["block_en"]), esc(m["block_ko"])))
             L.append("")

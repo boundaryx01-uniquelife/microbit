@@ -1,0 +1,1658 @@
+{
+  "extension": {
+    "id": "boundary-x/ai_ponybot_basic",
+    "name": "ai-ponybot-basic",
+    "version": "1.3.1",
+    "dependencies": {
+      "core": "*"
+    },
+    "files": [
+      "main.blocks",
+      "main.ts"
+    ],
+    "ref": "63fa6aac90447084e7acdcb65d267ec43be7cc0b",
+    "missing_files": [],
+    "locale_strings": 0,
+    "locale_hits": 0
+  },
+  "namespaces": [
+    {
+      "name": "aiPonybot",
+      "meta": {
+        "weight": 10,
+        "color": "#58ACFA",
+        "icon": "\\uf057",
+        "block": "AI ponybot"
+      },
+      "functions": [
+        {
+          "name": "servo",
+          "params": [
+            {
+              "name": "index",
+              "type": "Servo",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            },
+            {
+              "name": "degree",
+              "type": "number",
+              "min": 0,
+              "max": 180,
+              "default": null
+            }
+          ],
+          "returns": "void",
+          "block_en": "|%index|서보모터|%degree|각도로 이동",
+          "block_ko": null,
+          "blockId": "aiponybot_motor_servo",
+          "group": "서보모터 제어",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "runMotor",
+          "params": [
+            {
+              "name": "index",
+              "type": "Motor",
+              "min": null,
+              "max": null,
+              "default": "Motor.Motor1",
+              "fieldEditor": "gridpicker"
+            },
+            {
+              "name": "direction",
+              "type": "Direction",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            },
+            {
+              "name": "speed",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": null
+            }
+          ],
+          "returns": "void",
+          "block_en": "|%index|모터|%direction|방향|%speed|속도로 회전",
+          "block_ko": null,
+          "blockId": "aiponybot_motor_runMotor",
+          "group": "모터 제어(심화)",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "runMecanum",
+          "params": [
+            {
+              "name": "direction",
+              "type": "Mecanum",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            },
+            {
+              "name": "speed",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": null
+            }
+          ],
+          "returns": "void",
+          "block_en": "|메카넘|%direction|방향|%speed|속도로 이동",
+          "block_ko": null,
+          "blockId": "aiponybot_motor_runMecanum",
+          "group": "모터 제어(기초)",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "stopMotor",
+          "params": [
+            {
+              "name": "index",
+              "type": "Motor",
+              "min": null,
+              "max": null,
+              "default": "Motor.Motor1",
+              "fieldEditor": "gridpicker"
+            }
+          ],
+          "returns": "void",
+          "block_en": "|%index|모터 정지",
+          "block_ko": null,
+          "blockId": "aiponybot_motor_stopMotor",
+          "group": "모터 제어(심화)",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "stopAllMotors",
+          "params": [],
+          "returns": "void",
+          "block_en": "|모든 모터 정지",
+          "block_ko": null,
+          "blockId": "aiponybot_motor_stopAllMotors",
+          "group": "모터 제어(기초)",
+          "weight": 20,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "runNormal",
+          "params": [
+            {
+              "name": "direction",
+              "type": "DirectionControl",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            },
+            {
+              "name": "speed",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": null
+            }
+          ],
+          "returns": "void",
+          "block_en": "|포니봇|%direction|방향|%speed|속도로 이동",
+          "block_ko": null,
+          "blockId": "aiponybot_motor_runNormal",
+          "group": "모터 제어(기초)",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "checkTwoLineState",
+          "params": [
+            {
+              "name": "state",
+              "type": "TwoLineState",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            }
+          ],
+          "returns": "boolean",
+          "block_en": "두 라인 센서의 값이 %state",
+          "block_ko": null,
+          "blockId": "checkTwoLineState",
+          "group": "라인 감지 센서",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "checkSingleLineSensor",
+          "params": [
+            {
+              "name": "channel",
+              "type": "LineSensorChannel",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            },
+            {
+              "name": "state",
+              "type": "LineState",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            }
+          ],
+          "returns": "boolean",
+          "block_en": "%channel 라인 센서의 값이 %state",
+          "block_ko": null,
+          "blockId": "checkSingleLineSensor",
+          "group": "라인 감지 센서",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "readLineSensor",
+          "params": [
+            {
+              "name": "channel",
+              "type": "LineSensorChannel",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            }
+          ],
+          "returns": "number",
+          "block_en": "%channel 라인 센서 값 읽기",
+          "block_ko": null,
+          "blockId": "readLineSensor",
+          "group": "라인 감지 센서",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "ping",
+          "params": [
+            {
+              "name": "unit",
+              "type": "PingUnit",
+              "min": null,
+              "max": null,
+              "default": null,
+              "fieldEditor": "gridpicker"
+            },
+            {
+              "name": "maxCmDistance",
+              "type": null,
+              "min": null,
+              "max": null,
+              "default": "500"
+            }
+          ],
+          "returns": "number",
+          "block_en": "%unit 단위로 측정한 거리",
+          "block_ko": null,
+          "blockId": "aiponybot_sonar_ping",
+          "group": "거리 감지 센서",
+          "weight": 0,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "initColorSensor",
+          "params": [
+            {
+              "name": "version",
+              "type": "SensorVersion",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "void",
+          "block_en": "컬러센서 초기화 : %version",
+          "block_ko": null,
+          "blockId": "aiponybot_color_init_version",
+          "group": "색상 감지 센서",
+          "weight": 100,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "getLight",
+          "params": [],
+          "returns": "number",
+          "block_en": "밝기(B) 값 읽기",
+          "block_ko": null,
+          "blockId": "aiponybot_color_tcs34725_get_light",
+          "group": "색상 감지 센서",
+          "weight": 48,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "getRed",
+          "params": [],
+          "returns": "number",
+          "block_en": "빨간색(R) 색상 값 읽기",
+          "block_ko": null,
+          "blockId": "aiponybot_color_tcs34725_get_red",
+          "group": "색상 감지 센서",
+          "weight": 47,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "getGreen",
+          "params": [],
+          "returns": "number",
+          "block_en": "초록색(G) 색상 값 읽기",
+          "block_ko": null,
+          "blockId": "aiponybot_color_tcs34725_get_green",
+          "group": "색상 감지 센서",
+          "weight": 46,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "getBlue",
+          "params": [],
+          "returns": "number",
+          "block_en": "파란색(B) 색상 값 읽기",
+          "block_ko": null,
+          "blockId": "aiponybot_color_tcs34725_get_blue",
+          "group": "색상 감지 센서",
+          "weight": 45,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "isColorAdvanced",
+          "params": [
+            {
+              "name": "color",
+              "type": "DetectedColor",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "threshold",
+              "type": "number",
+              "min": 10,
+              "max": 100,
+              "default": 40
+            }
+          ],
+          "returns": "boolean",
+          "block_en": "감지된 색상이 %color (임계값 %threshold)",
+          "block_ko": null,
+          "blockId": "aiponybot_color_sensor_is_color_advanced",
+          "group": "색상 감지 센서",
+          "weight": 43,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "isColorInRange",
+          "params": [
+            {
+              "name": "minR",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": 0
+            },
+            {
+              "name": "maxR",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": 255
+            },
+            {
+              "name": "minG",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": 0
+            },
+            {
+              "name": "maxG",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": 255
+            },
+            {
+              "name": "minB",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": 0
+            },
+            {
+              "name": "maxB",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": 255
+            }
+          ],
+          "returns": "boolean",
+          "block_en": "R: %minR ~ %maxR, G: %minG ~ %maxG, B: %minB ~ %maxB",
+          "block_ko": null,
+          "blockId": "aiponybot_color_sensor_is_in_range",
+          "group": "색상 감지 센서",
+          "weight": 42,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "invert",
+          "params": [
+            {
+              "name": "on",
+              "type": "boolean",
+              "min": null,
+              "max": null,
+              "default": "true",
+              "shadow": "toggleOnOff"
+            }
+          ],
+          "returns": "void",
+          "block_en": "디스플레이 색상 반전 %on",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어",
+          "weight": 2,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "clear",
+          "params": [],
+          "returns": "void",
+          "block_en": "디스플레이 지우기",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어",
+          "weight": 3,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "display",
+          "params": [
+            {
+              "name": "on",
+              "type": "boolean",
+              "min": null,
+              "max": null,
+              "default": 1,
+              "shadow": "toggleOnOff"
+            }
+          ],
+          "returns": "void",
+          "block_en": "디스플레이 화면 %on",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어",
+          "weight": 1,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "pixel",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "min": 0,
+              "max": 127,
+              "default": 0
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "min": 0,
+              "max": 63,
+              "default": 0
+            },
+            {
+              "name": "color",
+              "type": "number",
+              "min": 0,
+              "max": 1,
+              "default": 1
+            }
+          ],
+          "returns": "void",
+          "block_en": "픽셀 출력 - 위치: x %x y %y, 색상: %color",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어(도형)",
+          "weight": 4,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "showString",
+          "params": [
+            {
+              "name": "text",
+              "type": "string",
+              "min": null,
+              "max": null,
+              "default": "AI ponybot"
+            },
+            {
+              "name": "column",
+              "type": "number",
+              "min": 0,
+              "max": 120,
+              "default": 0
+            },
+            {
+              "name": "row",
+              "type": "number",
+              "min": 0,
+              "max": 7,
+              "default": 0
+            },
+            {
+              "name": "color",
+              "type": "number",
+              "min": 0,
+              "max": 1,
+              "default": 1
+            }
+          ],
+          "returns": "void",
+          "block_en": "문장 출력 - 내용: %text, 위치: %column열 %row행, 색상: %color",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어(데이터)",
+          "weight": 1,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "showNumber",
+          "params": [
+            {
+              "name": "number",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": 777
+            },
+            {
+              "name": "column",
+              "type": "number",
+              "min": 0,
+              "max": 120,
+              "default": 0
+            },
+            {
+              "name": "row",
+              "type": "number",
+              "min": 0,
+              "max": 7,
+              "default": 0
+            },
+            {
+              "name": "color",
+              "type": "number",
+              "min": 0,
+              "max": 1,
+              "default": 1
+            }
+          ],
+          "returns": "void",
+          "block_en": "숫자 출력 - 내용: %number, 위치: %column열 %row행, 색상: %color",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어(데이터)",
+          "weight": 3,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "printString",
+          "params": [
+            {
+              "name": "text",
+              "type": "string",
+              "min": null,
+              "max": null,
+              "default": "AI ponybot"
+            },
+            {
+              "name": "newline",
+              "type": "boolean",
+              "min": null,
+              "max": null,
+              "default": true
+            }
+          ],
+          "returns": "void",
+          "block_en": "문장 출력 - 내용: %text, 줄바꿈: %newline",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어(데이터)",
+          "weight": 2,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "printNumber",
+          "params": [
+            {
+              "name": "number",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": "777"
+            },
+            {
+              "name": "newline",
+              "type": "boolean",
+              "min": null,
+              "max": null,
+              "default": true
+            }
+          ],
+          "returns": "void",
+          "block_en": "숫자 출력 - 내용: %number, 줄바꿈: %newline",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어(데이터)",
+          "weight": 4,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "horizontalLine",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "min": 0,
+              "max": 127,
+              "default": 0
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "min": 0,
+              "max": 63,
+              "default": 0
+            },
+            {
+              "name": "length",
+              "type": "number",
+              "min": 1,
+              "max": 128,
+              "default": 16
+            },
+            {
+              "name": "color",
+              "type": "number",
+              "min": 0,
+              "max": 1,
+              "default": 1
+            }
+          ],
+          "returns": "void",
+          "block_en": "수평선 출력 - 위치: x %x y %y, 길이: %length, 색상: %color",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어(도형)",
+          "weight": 2,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "verticalLine",
+          "params": [
+            {
+              "name": "x",
+              "type": "number",
+              "min": 0,
+              "max": 127,
+              "default": 0
+            },
+            {
+              "name": "y",
+              "type": "number",
+              "min": 0,
+              "max": 63,
+              "default": 0
+            },
+            {
+              "name": "length",
+              "type": "number",
+              "min": 1,
+              "max": 128,
+              "default": 16
+            },
+            {
+              "name": "color",
+              "type": "number",
+              "min": 0,
+              "max": 1,
+              "default": 1
+            }
+          ],
+          "returns": "void",
+          "block_en": "수직선 출력 - 위치: x %x y %y, 길이: %length, 색상: %color",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어(도형)",
+          "weight": 1,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "rectangle",
+          "params": [
+            {
+              "name": "x1",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "y1",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "x2",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "y2",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "color",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": 1
+            }
+          ],
+          "returns": "void",
+          "block_en": "사각형 출력 - x1 %x1 y1 %y1 x2 %x2 y2 %y2, 색상: %color",
+          "block_ko": null,
+          "blockId": null,
+          "group": "디스플레이 제어(도형)",
+          "weight": 3,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "parseUARTUnified",
+          "params": [
+            {
+              "name": "data",
+              "type": "string",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "type",
+              "type": "UARTDataType",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "format",
+              "type": "ReturnFormat",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "any",
+          "block_en": "블루투스 수신 값: %data 에서 사물 %type 을 %format 으로 추출",
+          "block_ko": null,
+          "blockId": null,
+          "group": "AI 데이터 활용",
+          "weight": 70,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "parseColorUnified",
+          "params": [
+            {
+              "name": "data",
+              "type": "string",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "color",
+              "type": "ColorDataType",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "format",
+              "type": "ReturnFormat",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "any",
+          "block_en": "블루투스 수신 값: %data 에서 컬러 %color 을 %format 으로 추출",
+          "block_ko": null,
+          "blockId": null,
+          "group": "AI 데이터 활용",
+          "weight": 69,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "parseFaceUnified",
+          "params": [
+            {
+              "name": "data",
+              "type": "string",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "type",
+              "type": "FaceDataType",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "number",
+          "block_en": "블루투스 수신 값: %data 에서 얼굴 %type 추출",
+          "block_ko": null,
+          "blockId": null,
+          "group": "AI 데이터 활용",
+          "weight": 68,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "parseHandPoseUnified",
+          "params": [
+            {
+              "name": "data",
+              "type": "string",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "type",
+              "type": "HandDataType",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "format",
+              "type": "ReturnFormat",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "any",
+          "block_en": "블루투스 수신 값: %data 에서 핸드포즈 %type 을 %format 으로 추출",
+          "block_ko": null,
+          "blockId": null,
+          "group": "AI 데이터 활용",
+          "weight": 67,
+          "hidden": false,
+          "file": "main.ts"
+        }
+      ],
+      "enums": [
+        {
+          "name": "Mecanum",
+          "block_en": null,
+          "members": [
+            {
+              "name": "LeftForward",
+              "value": "1",
+              "block_en": "↖",
+              "block_ko": null
+            },
+            {
+              "name": "Forward",
+              "value": "2",
+              "block_en": "↑",
+              "block_ko": null
+            },
+            {
+              "name": "RightForward",
+              "value": "3",
+              "block_en": "↗",
+              "block_ko": null
+            },
+            {
+              "name": "Left",
+              "value": "4",
+              "block_en": "←",
+              "block_ko": null
+            },
+            {
+              "name": "Stop",
+              "value": "5",
+              "block_en": "s",
+              "block_ko": null
+            },
+            {
+              "name": "Right",
+              "value": "6",
+              "block_en": "→",
+              "block_ko": null
+            },
+            {
+              "name": "LeftBackward",
+              "value": "7",
+              "block_en": "↙",
+              "block_ko": null
+            },
+            {
+              "name": "Backward",
+              "value": "8",
+              "block_en": "↓",
+              "block_ko": null
+            },
+            {
+              "name": "RightBackward",
+              "value": "9",
+              "block_en": "↘",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "DirectionControl",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Forward",
+              "value": "1",
+              "block_en": "↑",
+              "block_ko": null
+            },
+            {
+              "name": "Backward",
+              "value": "2",
+              "block_en": "↓",
+              "block_ko": null
+            },
+            {
+              "name": "Clockwise",
+              "value": "3",
+              "block_en": "↶",
+              "block_ko": null
+            },
+            {
+              "name": "CounterClockwise",
+              "value": "4",
+              "block_en": "↷",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "Stepper",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Stepper42",
+              "value": "1",
+              "block_en": "42",
+              "block_ko": null
+            },
+            {
+              "name": "Stepper28",
+              "value": "2",
+              "block_en": "28",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "Servo",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Servo1",
+              "value": "0x01",
+              "block_en": "서보 1",
+              "block_ko": null
+            },
+            {
+              "name": "Servo2",
+              "value": "0x02",
+              "block_en": "서보 2",
+              "block_ko": null
+            },
+            {
+              "name": "Servo3",
+              "value": "0x03",
+              "block_en": "서보 3",
+              "block_ko": null
+            },
+            {
+              "name": "Servo4",
+              "value": "0x04",
+              "block_en": "서보 4",
+              "block_ko": null
+            },
+            {
+              "name": "Servo5",
+              "value": "0x05",
+              "block_en": "서보 5",
+              "block_ko": null
+            },
+            {
+              "name": "Servo6",
+              "value": "0x06",
+              "block_en": "서보 6",
+              "block_ko": null
+            },
+            {
+              "name": "Servo7",
+              "value": "0x07",
+              "block_en": "서보 7",
+              "block_ko": null
+            },
+            {
+              "name": "Servo8",
+              "value": "0x08",
+              "block_en": "서보 8",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "Motor",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Motor4",
+              "value": "0x4",
+              "block_en": "모터 4",
+              "block_ko": null
+            },
+            {
+              "name": "Motor1",
+              "value": "0x1",
+              "block_en": "모터 1",
+              "block_ko": null
+            },
+            {
+              "name": "Motor3",
+              "value": "0x3",
+              "block_en": "모터 3",
+              "block_ko": null
+            },
+            {
+              "name": "Motor2",
+              "value": "0x2",
+              "block_en": "모터 2",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "Direction",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Clockwise",
+              "value": "1",
+              "block_en": "정회전",
+              "block_ko": null
+            },
+            {
+              "name": "CounterClockwise",
+              "value": "-1",
+              "block_en": "역회전",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "StepperPair",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Motors1And2",
+              "value": "0x1",
+              "block_en": null,
+              "block_ko": null
+            },
+            {
+              "name": "Motors3And4",
+              "value": "0x2",
+              "block_en": null,
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "TwoLineState",
+          "block_en": null,
+          "members": [
+            {
+              "name": "OffOff",
+              "value": "0",
+              "block_en": "◌ ◌ ",
+              "block_ko": null
+            },
+            {
+              "name": "OnOn",
+              "value": "1",
+              "block_en": "● ●",
+              "block_ko": null
+            },
+            {
+              "name": "OnOff",
+              "value": "2",
+              "block_en": "● ◌",
+              "block_ko": null
+            },
+            {
+              "name": "OffOn",
+              "value": "3",
+              "block_en": "◌ ●",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "LineState",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Off",
+              "value": "0",
+              "block_en": "◌",
+              "block_ko": null
+            },
+            {
+              "name": "On",
+              "value": "1",
+              "block_en": "●",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "LineSensorChannel",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Left",
+              "value": "1",
+              "block_en": "왼쪽",
+              "block_ko": null
+            },
+            {
+              "name": "Right",
+              "value": "2",
+              "block_en": "오른쪽",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "PingUnit",
+          "block_en": null,
+          "members": [
+            {
+              "name": "MicroSeconds",
+              "value": "0",
+              "block_en": "마이크로초",
+              "block_ko": null
+            },
+            {
+              "name": "Centimeters",
+              "value": "1",
+              "block_en": "센티미터",
+              "block_ko": null
+            },
+            {
+              "name": "Inches",
+              "value": "2",
+              "block_en": "인치",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "DetectedColor",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Red",
+              "value": "0",
+              "block_en": "빨간색",
+              "block_ko": null
+            },
+            {
+              "name": "Green",
+              "value": "1",
+              "block_en": "초록색",
+              "block_ko": null
+            },
+            {
+              "name": "Blue",
+              "value": "2",
+              "block_en": "파란색",
+              "block_ko": null
+            },
+            {
+              "name": "Yellow",
+              "value": "3",
+              "block_en": "노란색",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "SensorVersion",
+          "block_en": null,
+          "members": [
+            {
+              "name": "V1",
+              "value": "1",
+              "block_en": "검은색 모듈(V1)",
+              "block_ko": null
+            },
+            {
+              "name": "V2",
+              "value": "2",
+              "block_en": "보라색 모듈(V2)",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "Display",
+          "block_en": null,
+          "members": [
+            {
+              "name": "On",
+              "value": "1",
+              "block_en": "ON",
+              "block_ko": null
+            },
+            {
+              "name": "Off",
+              "value": "0",
+              "block_en": "OFF",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "UARTDataType",
+          "block_en": null,
+          "members": [
+            {
+              "name": "X",
+              "value": "0",
+              "block_en": "X 좌표",
+              "block_ko": null
+            },
+            {
+              "name": "Y",
+              "value": "1",
+              "block_en": "Y 좌표",
+              "block_ko": null
+            },
+            {
+              "name": "W",
+              "value": "2",
+              "block_en": "너비",
+              "block_ko": null
+            },
+            {
+              "name": "H",
+              "value": "3",
+              "block_en": "높이",
+              "block_ko": null
+            },
+            {
+              "name": "D",
+              "value": "4",
+              "block_en": "객체 수",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "ColorDataType",
+          "block_en": null,
+          "members": [
+            {
+              "name": "R",
+              "value": "0",
+              "block_en": "빨간색(R)",
+              "block_ko": null
+            },
+            {
+              "name": "G",
+              "value": "1",
+              "block_en": "초록색(G)",
+              "block_ko": null
+            },
+            {
+              "name": "B",
+              "value": "2",
+              "block_en": "파랑색(B)",
+              "block_ko": null
+            },
+            {
+              "name": "I",
+              "value": "3",
+              "block_en": "클래스 ID(I)",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "ReturnFormat",
+          "block_en": null,
+          "members": [
+            {
+              "name": "String",
+              "value": "0",
+              "block_en": "문자형",
+              "block_ko": null
+            },
+            {
+              "name": "Number",
+              "value": "1",
+              "block_en": "정수형",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "FaceDataType",
+          "block_en": null,
+          "members": [
+            {
+              "name": "X",
+              "value": "0",
+              "block_en": "X 좌표",
+              "block_ko": null
+            },
+            {
+              "name": "Y",
+              "value": "1",
+              "block_en": "Y 좌표",
+              "block_ko": null
+            },
+            {
+              "name": "Z",
+              "value": "2",
+              "block_en": "거리(Z)",
+              "block_ko": null
+            },
+            {
+              "name": "Yaw",
+              "value": "3",
+              "block_en": "좌우회전(Yaw)",
+              "block_ko": null
+            },
+            {
+              "name": "Pitch",
+              "value": "4",
+              "block_en": "상하각도(Pitch)",
+              "block_ko": null
+            },
+            {
+              "name": "Mouth",
+              "value": "5",
+              "block_en": "입벌림",
+              "block_ko": null
+            },
+            {
+              "name": "LeftEye",
+              "value": "6",
+              "block_en": "왼쪽 눈",
+              "block_ko": null
+            },
+            {
+              "name": "RightEye",
+              "value": "7",
+              "block_en": "오른쪽 눈",
+              "block_ko": null
+            },
+            {
+              "name": "Roll",
+              "value": "8",
+              "block_en": "기울기(Roll)",
+              "block_ko": null
+            },
+            {
+              "name": "Smile",
+              "value": "9",
+              "block_en": "웃음",
+              "block_ko": null
+            },
+            {
+              "name": "Visible",
+              "value": "10",
+              "block_en": "얼굴 감지 여부",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "HandDataType",
+          "block_en": null,
+          "members": [
+            {
+              "name": "LeftDir",
+              "value": "0",
+              "block_en": "왼쪽 방향",
+              "block_ko": null
+            },
+            {
+              "name": "LeftSpeed",
+              "value": "1",
+              "block_en": "왼쪽 속도",
+              "block_ko": null
+            },
+            {
+              "name": "RightDir",
+              "value": "2",
+              "block_en": "오른쪽 방향",
+              "block_ko": null
+            },
+            {
+              "name": "RightSpeed",
+              "value": "3",
+              "block_en": "오른쪽 속도",
+              "block_ko": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "aiPonybot.smbus",
+      "meta": {},
+      "functions": [
+        {
+          "name": "writeByte",
+          "params": [
+            {
+              "name": "address",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "register",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "value",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "void",
+          "block_en": null,
+          "block_ko": null,
+          "blockId": null,
+          "group": null,
+          "weight": null,
+          "hidden": true,
+          "file": "main.ts"
+        },
+        {
+          "name": "writeBuffer",
+          "params": [
+            {
+              "name": "address",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "register",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "value",
+              "type": "Buffer",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "void",
+          "block_en": null,
+          "block_ko": null,
+          "blockId": null,
+          "group": null,
+          "weight": null,
+          "hidden": true,
+          "file": "main.ts"
+        },
+        {
+          "name": "readBuffer",
+          "params": [
+            {
+              "name": "address",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "register",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "length",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "Buffer",
+          "block_en": null,
+          "block_ko": null,
+          "blockId": null,
+          "group": null,
+          "weight": null,
+          "hidden": true,
+          "file": "main.ts"
+        },
+        {
+          "name": "readNumber",
+          "params": [
+            {
+              "name": "address",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "register",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "format",
+              "type": "NumberFormat",
+              "min": null,
+              "max": null,
+              "default": "NumberFormat.UInt8LE"
+            }
+          ],
+          "returns": "number",
+          "block_en": null,
+          "block_ko": null,
+          "blockId": null,
+          "group": null,
+          "weight": null,
+          "hidden": true,
+          "file": "main.ts"
+        },
+        {
+          "name": "unpack",
+          "params": [
+            {
+              "name": "format",
+              "type": "string",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "buffer",
+              "type": "Buffer",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "number[]",
+          "block_en": null,
+          "block_ko": null,
+          "blockId": null,
+          "group": null,
+          "weight": null,
+          "hidden": true,
+          "file": "main.ts"
+        }
+      ],
+      "enums": []
+    }
+  ]
+}

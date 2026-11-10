@@ -329,6 +329,8 @@ export class World {
 // 코드 변환: TypeScript 타입 제거 + 협동 스케줄링(await) 삽입
 // ------------------------------------------------------------
 const ASYNC_NS = new Set(['basic', 'input', 'radio', 'loops', 'control', 'serial', 'robodog', 'pins', 'music', 'led', 'game']);
+// 다른 교구 어댑터가 자기 네임스페이스(콜백을 받는 확장 API)를 등록할 때 씀. 로보독 동작은 그대로.
+export function addAsyncNs(...names) { names.forEach(n => ASYNC_NS.add(n)); }
 // Babel(약 2.8MB)은 처음 실행할 때 또는 화면이 한가할 때 불러옴(첫 화면을 막지 않음)
 let babelP = null;
 export function ensureBabel() {

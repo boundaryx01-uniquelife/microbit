@@ -29,10 +29,10 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 
 ### ① 시뮬레이터 — `references/simulator.md`
 1. 수준 결정: 0 없음 / 1 2D 위에서 보기 / 2 3D (작업량 표를 보여 주고 사용자가 고름).
-2. 재사용: `compile()`(Babel로 TS 제거 + 모든 호출 `await` + 반복문 맨 위 `__yield`), `Runner`(협동 실행, `forever`·핸들러·정지 세대), `World`(공간·장애물·추락·raycast). `ASYNC_NS`에 확장 네임스페이스를 **반드시** 추가(빠뜨리면 그 블록이 기다리지 않아 순서가 깨짐).
+2. 재사용: `compile()`(Babel로 TS 제거 + 모든 호출 `await` + 반복문 맨 위 `__yield`), `Runner`(협동 실행, `forever`·핸들러·정지 세대), `World`(공간·장애물·추락·raycast). 확장에 **콜백을 받는 블록**이 있으면 `addAsyncNs('<ns>')`로 등록(그 콜백 안의 호출이 기다리게). `Runner`는 서브클래스로 `buildEnv`에 교구 네임스페이스·enum을 더한다(`references/simulator.md` 7절).
 3. 교구 어댑터: `make<Kit>Api(R, h)` 팩토리(블록 표의 함수마다 하나), `Robot.reset/step(dt)` 운동학(템플릿: 4족·차동·메카넘 — 6절), 센서(raycast 거리, 바닥 캔버스 라인, 색 패치), 표시 장치(OLED·LED)를 패널로.
 4. 추정 상수는 `EST` 한 곳에(최대 속도 cm/s, 회전 °/s, 치수) — 실측하면 바꾸고 "추정"표시를 지운다.
-5. 시험(Playwright): 앞 1초 이동 거리, 제자리 90° 회전, 옆 이동 시 heading 불변(메카넘), 장애물 앞 거리, 추락, `while(true){}`에도 응답, 미지원 블록 경고, 예제 전부 오류 0, 390px 가로 스크롤 없음. `window.__sim`으로 상태를 읽는다.
+5. 시험(Playwright, 오프라인/인터넷 필요를 나눔, `fastForward` 훅): 앞 1초 이동 거리, 제자리 90° 회전, 옆 이동 시 heading 불변(메카넘), 장애물 앞 거리, 추락, `while(true){}`에도 응답, 미지원 블록 경고, 예제 전부 오류 0, 390px 가로 스크롤 없음. `window.__sim`으로 상태를 읽는다.
 
 ### ② MakeCode 블록 — `references/makecode-blocks.md`
 1. 편집기 삽입: `makecode.microbit.org/?controller=1` iframe + postMessage(origin 검사), 확장은 **커밋 해시로 고정**해 미리 넣는다(`github:owner/repo#sha`) — 확장이 바뀌어도 수업이 깨지지 않게. 60초 안에 응답 없으면 JS 탭으로 폴백.
@@ -43,7 +43,7 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 두 모드, 같은 UI, 같은 검사:
 - **오프라인 규칙 워크플로(기본, 키·인터넷 불필요)**: 입력 검사(길이·개인정보 안내) → 트리거로 문장 나누기(“A 버튼을 누르면”, “라디오 3을 받으면”, “가까우면”, “계속”) → 조각별 동작 사전(블록 표의 한글 블록명·동의어에서 만든 표) → 코드 템플릿 조립 → 경고·추천 예제. 못 알아들은 조각은 경고로 돌려준다(추측해서 넣지 않음).
 - **Claude API 모드(선택)**: 서버 함수(Netlify 등)에서만 키 사용, 수업 코드가 맞을 때만 켜짐, 실패·미설정이면 규칙 모드로 자동 폴백. 프롬프트의 블록 문법 부분은 **블록 표에서 생성**(손으로 베끼지 않음), 구조화 출력(json_schema: code·explanation·warnings). 모델은 설정값(기본은 기준 구현 값 유지).
-- **출력 검사(두 모드 공통)**: `validate-code.mjs` — 표에 없는 함수/enum(환각), 확장 범위 밖 숫자, 인자 수, 문법 → 오류면 코드 대신 설명과 함께 돌려줌. 서버에서도 돌린다(브라우저 검사는 우회 가능).
+- **출력 검사(두 모드 공통)**: `validate-code.mjs` — 표에 없는 함수/enum(환각), 네임스페이스 빠진 enum(`Mecanum.Forward` → `aiPonybot.Mecanum.Forward`), 확장 범위 밖 숫자, 인자 수, 문법 → 오류면 코드 대신 설명과 함께 돌려줌. 서버에서도 돌린다(브라우저 검사는 우회 가능).
 - **규칙 도우미에 필요한 정책 키**(`kits/<slug>/policy.json`): `defaultSpeed`·`defaultSeconds`(문장에 숫자가 없을 때만), `nearCm`, `radioTimeoutMs`, `maxSpeed`·`autoStopMs`(null = 한도 없음), `forbid`, `maxChars`, 교구 설정(예: 컬러센서 버전). 값마다 `_note`로 자리표시자인지 표시. **null이면 숫자를 지어내지 않고 되묻는다.** 검사기에는 `policy.max["ns.fn.param"]` 모양으로 바꿔 넘기고, 도우미 출력은 `strictPolicy:true`(정책 위반 = 거절).
 - **문장 나누기 함정**: 마침표로 나누면 "1.5초"가 깨진다 — 숫자 사이 `.`은 예외.
 - **검사기 배포**: `scripts/validate-code.mjs`를 사이트 안(예: `bridge/sim/validate-code.mjs`)으로 복사해 브라우저·서버 함수가 import. 원본은 스킬, 복사 뒤 `diff`로 같게 유지. 표에는 확장 블록만 있어 `basic`·`input`·`radio`는 검사 범위 밖.

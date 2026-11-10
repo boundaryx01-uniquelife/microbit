@@ -5,7 +5,7 @@
 
 ## namespace `aiPonybot`
 
-| 함수 | 영어 블록 | 한국어 블록 | 인자(형, 범위, 기본) | 반환 | blockId | group | 숨김 |
+| 함수 | 블록 글자(소스) | 번역(_locales) | 인자(형, 범위, 기본) | 반환 | blockId | group | 숨김 |
 |---|---|---|---|---|---|---|---|
 | `servo` | \|%index\|서보모터\|%degree\|각도로 이동 |  | index: Servo; degree: number [0..180] | void | aiponybot_motor_servo | 서보모터 제어 |  |
 | `runMotor` | \|%index\|모터\|%direction\|방향\|%speed\|속도로 회전 |  | index: Motor =Motor.Motor1; direction: Direction; speed: number [0..255] | void | aiponybot_motor_runMotor | 모터 제어(심화) |  |
@@ -42,7 +42,7 @@
 
 ### enum `Mecanum`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `LeftForward` | 1 | ↖ |  |
 | `Forward` | 2 | ↑ |  |
@@ -56,7 +56,7 @@
 
 ### enum `DirectionControl`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Forward` | 1 | ↑ |  |
 | `Backward` | 2 | ↓ |  |
@@ -65,14 +65,14 @@
 
 ### enum `Stepper`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Stepper42` | 1 | 42 |  |
 | `Stepper28` | 2 | 28 |  |
 
 ### enum `Servo`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Servo1` | 0x01 | 서보 1 |  |
 | `Servo2` | 0x02 | 서보 2 |  |
@@ -85,7 +85,7 @@
 
 ### enum `Motor`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Motor4` | 0x4 | 모터 4 |  |
 | `Motor1` | 0x1 | 모터 1 |  |
@@ -94,21 +94,21 @@
 
 ### enum `Direction`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Clockwise` | 1 | 정회전 |  |
 | `CounterClockwise` | -1 | 역회전 |  |
 
 ### enum `StepperPair`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Motors1And2` | 0x1 |  |  |
 | `Motors3And4` | 0x2 |  |  |
 
 ### enum `TwoLineState`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `OffOff` | 0 | ◌ ◌  |  |
 | `OnOn` | 1 | ● ● |  |
@@ -117,103 +117,103 @@
 
 ### enum `LineState`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Off` | 0 | ◌ |  |
 | `On` | 1 | ● |  |
 
 ### enum `LineSensorChannel`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `Left` | 1 | 왼쪽 |  |
 | `Right` | 2 | 오른쪽 |  |
 
 ### enum `PingUnit`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
-| `MicroSeconds` |  | 마이크로초 |  |
-| `Centimeters` |  | 센티미터 |  |
-| `Inches` |  | 인치 |  |
+| `MicroSeconds` | 0 | 마이크로초 |  |
+| `Centimeters` | 1 | 센티미터 |  |
+| `Inches` | 2 | 인치 |  |
 
 ### enum `DetectedColor`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
-| `Red` |  | 빨간색 |  |
-| `Green` |  | 초록색 |  |
-| `Blue` |  | 파란색 |  |
-| `Yellow` |  | 노란색 |  |
+| `Red` | 0 | 빨간색 |  |
+| `Green` | 1 | 초록색 |  |
+| `Blue` | 2 | 파란색 |  |
+| `Yellow` | 3 | 노란색 |  |
 
 ### enum `SensorVersion`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `V1` | 1 | 검은색 모듈(V1) |  |
 | `V2` | 2 | 보라색 모듈(V2) |  |
 
 ### enum `Display`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
 | `On` | 1 | ON |  |
 | `Off` | 0 | OFF |  |
 
 ### enum `UARTDataType`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
-| `X` |  | X 좌표 |  |
-| `Y` |  | Y 좌표 |  |
-| `W` |  | 너비 |  |
-| `H` |  | 높이 |  |
-| `D` |  | 객체 수 |  |
+| `X` | 0 | X 좌표 |  |
+| `Y` | 1 | Y 좌표 |  |
+| `W` | 2 | 너비 |  |
+| `H` | 3 | 높이 |  |
+| `D` | 4 | 객체 수 |  |
 
 ### enum `ColorDataType`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
-| `R` |  | 빨간색(R) |  |
-| `G` |  | 초록색(G) |  |
-| `B` |  | 파랑색(B) |  |
-| `I` |  | 클래스 ID(I) |  |
+| `R` | 0 | 빨간색(R) |  |
+| `G` | 1 | 초록색(G) |  |
+| `B` | 2 | 파랑색(B) |  |
+| `I` | 3 | 클래스 ID(I) |  |
 
 ### enum `ReturnFormat`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
-| `String` |  | 문자형 |  |
-| `Number` |  | 정수형 |  |
+| `String` | 0 | 문자형 |  |
+| `Number` | 1 | 정수형 |  |
 
 ### enum `FaceDataType`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
-| `X` |  | X 좌표 |  |
-| `Y` |  | Y 좌표 |  |
-| `Z` |  | 거리(Z) |  |
-| `Yaw` |  | 좌우회전(Yaw) |  |
-| `Pitch` |  | 상하각도(Pitch) |  |
-| `Mouth` |  | 입벌림 |  |
-| `LeftEye` |  | 왼쪽 눈 |  |
-| `RightEye` |  | 오른쪽 눈 |  |
-| `Roll` |  | 기울기(Roll) |  |
-| `Smile` |  | 웃음 |  |
-| `Visible` |  | 얼굴 감지 여부 |  |
+| `X` | 0 | X 좌표 |  |
+| `Y` | 1 | Y 좌표 |  |
+| `Z` | 2 | 거리(Z) |  |
+| `Yaw` | 3 | 좌우회전(Yaw) |  |
+| `Pitch` | 4 | 상하각도(Pitch) |  |
+| `Mouth` | 5 | 입벌림 |  |
+| `LeftEye` | 6 | 왼쪽 눈 |  |
+| `RightEye` | 7 | 오른쪽 눈 |  |
+| `Roll` | 8 | 기울기(Roll) |  |
+| `Smile` | 9 | 웃음 |  |
+| `Visible` | 10 | 얼굴 감지 여부 |  |
 
 ### enum `HandDataType`
 
-| 멤버 | 값 | 영어 | 한국어 |
+| 멤버 | 값 | 블록 글자(소스) | 번역(_locales) |
 |---|---|---|---|
-| `LeftDir` |  | 왼쪽 방향 |  |
-| `LeftSpeed` |  | 왼쪽 속도 |  |
-| `RightDir` |  | 오른쪽 방향 |  |
-| `RightSpeed` |  | 오른쪽 속도 |  |
+| `LeftDir` | 0 | 왼쪽 방향 |  |
+| `LeftSpeed` | 1 | 왼쪽 속도 |  |
+| `RightDir` | 2 | 오른쪽 방향 |  |
+| `RightSpeed` | 3 | 오른쪽 속도 |  |
 
 ## namespace `aiPonybot.smbus`
 
-| 함수 | 영어 블록 | 한국어 블록 | 인자(형, 범위, 기본) | 반환 | blockId | group | 숨김 |
+| 함수 | 블록 글자(소스) | 번역(_locales) | 인자(형, 범위, 기본) | 반환 | blockId | group | 숨김 |
 |---|---|---|---|---|---|---|---|
 | `writeByte` |  |  | address: number; register: number; value: number | void |  |  | 예 |
 | `writeBuffer` |  |  | address: number; register: number; value: Buffer | void |  |  | 예 |

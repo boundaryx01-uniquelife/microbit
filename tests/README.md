@@ -14,6 +14,8 @@ Playwright(크로미움)가 필요합니다.
 | `lessons-web.js` | 웹 슬라이드 뷰어 87항목(목록·넘기기·교사 모드·함께 보기·휴대폰) | 위 서버 실행 후 `node tests/lessons-web.js` |
 | `lesson-sync.js` | 슬라이드 함께 보기(교사 → 학생 화면 따라가기) 19항목 | 위 서버 실행 후 `node tests/lesson-sync.js` |
 | `sim-layout.js` · `sim-devices.js` · `sim-examples.js` | 시뮬레이터 화면 배치 7 · 장치(버튼·센서) 17 · 예제 28항목 | 위 서버 실행 후 각각 `node tests/<이름>.js` |
+| `ponybot-sim.js` | 포니봇 2D 시뮬레이터 49항목(메카넘 앞·옆·대각선·회전 수치, 거리 500=못 읽음, 라인·색 센서, 예제 7개, 도우미 코드 실행, 390px) — 서버를 스스로 띄움 | `node tests/ponybot-sim.js` |
+| `ponybot-assistant.mjs` | 포니봇 말로 코드 만들기 76항목(블록 표 검사·범위 밖 자르기·정책 null=한도 없음·모르는 말 경고·프롬프트 생성·복사본 동기) | `node tests/ponybot-assistant.mjs` |
 | `sim-compare.js` · `sim-dance-shots.js` | 2D·3D 비교, 춤 동작 화면 캡처(육안 확인) | 위 서버 실행 후 |
 | `sim-shots.js` | 3D 자세 화면 캡처(육안 확인) | `node tests/sim-shots.js` |
 | `build-sim-examples.js` | `makecode/*.ts` → `bridge/sim/examples.js` 생성 | 예제를 고친 뒤 실행 |

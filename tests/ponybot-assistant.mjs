@@ -7,7 +7,7 @@ import { buildBlockSyntax, buildSystemPrompt, buildPolicyText, OUTPUT_SCHEMA } f
 const read = (p) => JSON.parse(fs.readFileSync(new URL(p, import.meta.url), 'utf8'));
 const blocks = read('../kits/ponybot/blocks.json');
 const policy = read('../kits/ponybot/policy.json');
-const Babel = loadBabel(new URL('../bridge/sim/lib/babel.min.js', import.meta.url).pathname);
+const Babel = await loadBabel(new URL('../bridge/sim/lib/babel.min.js', import.meta.url).pathname);
 configurePony({ blocks, validateCode, Babel });
 
 const results = [];
@@ -140,6 +140,10 @@ const hid = JSON.parse(JSON.stringify(blocks)); hid.namespaces[0].functions.find
 check('프롬프트: 숨김 함수는 제외', !buildBlockSyntax(hid).includes('aiPonybot.servo(') && buildBlockSyntax(blocks).includes('aiPonybot.servo('));
 check('출력 스키마: code·explanation·warnings', OUTPUT_SCHEMA.required.join() === 'code,explanation,warnings' && OUTPUT_SCHEMA.additionalProperties === false);
 
+// 배포용 복사본이 원본과 같은지(사이트는 bridge/ 아래만 받을 수 있어 복사해 둠)
+check('검사기 복사본 = 스킬 원본 (bridge/sim/validate-code.mjs)', fs.readFileSync(new URL('../bridge/sim/validate-code.mjs', import.meta.url), 'utf8') === fs.readFileSync(new URL('../.claude/skills/microbit-sim-builder/scripts/validate-code.mjs', import.meta.url), 'utf8'));
+check('블록 표 복사본 = 원본 (bridge/ponybot/sim/data/blocks.json)', fs.readFileSync(new URL('../bridge/ponybot/sim/data/blocks.json', import.meta.url), 'utf8') === fs.readFileSync(new URL('../kits/ponybot/blocks.json', import.meta.url), 'utf8'));
+check('정책 복사본 = 원본 (bridge/ponybot/sim/data/policy.json)', fs.readFileSync(new URL('../bridge/ponybot/sim/data/policy.json', import.meta.url), 'utf8') === fs.readFileSync(new URL('../kits/ponybot/policy.json', import.meta.url), 'utf8'));
 const pass = results.filter(Boolean).length, fail = results.length - pass;
 console.log(`\n${pass}/${results.length} 통과${fail ? `, ${fail} 실패` : ''}`);
 process.exit(fail ? 1 : 0);

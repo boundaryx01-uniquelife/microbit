@@ -7,7 +7,7 @@
 //
 // 검사(오류 = 실제 MakeCode에서 안 되거나 확장 범위 밖, 경고 = 블록 변환이 깨질 수 있음·정책):
 //  E1 표에 없는 함수(ns.fn)          E2 표에 없는 enum 멤버       E3 숫자 인자가 확장 범위(min..max) 밖
-//  E4 인자 개수 초과                 E5 문법 오류
+//  E4 인자 개수 초과                 E5 문법 오류                E6 네임스페이스 안 enum을 짧은 이름으로 씀
 //  W1 숨김(hidden) 함수              W2 블록으로 안 바뀌는 문법(화살표 함수·템플릿 문자열·class)
 //  W3 정책 위반(policy.json — 사용자가 정한 값만. 이 스크립트에는 기본 한도가 없다)
 //  W4 금지 네임스페이스(policy.forbid, 예: "music.*")
@@ -19,22 +19,21 @@
 // 배포: 이 파일을 사이트 안(예: bridge/sim/validate-code.mjs)에 복사해 브라우저·서버 함수가 import — 원본은 스킬, 복사 후 diff로 동기 확인.
 // 한계: 표에는 확장 블록만 있다 → basic·input·radio·IconNames 등 기본 블록은 검사하지 않는다.
 
-import fs from 'node:fs';
-import path from 'node:path';
-import vm from 'node:vm';
+// node 모듈은 아래 loadBabel·CLI에서만 동적으로 불러온다 → 같은 파일을 브라우저에서도 import 가능
 
 export function indexBlocks(blocks) {
-  const fns = new Map(), enums = new Map();
+  const fns = new Map(), enums = new Map(), bare = new Map();   // bare: 네임스페이스 안 enum의 짧은 이름 → ns
   for (const ns of blocks.namespaces || []) {
     for (const f of ns.functions || []) fns.set(`${ns.name}.${f.name}`, f);
     for (const e of ns.enums || []) {
       const members = new Set(e.members.map(m => m.name));
-      enums.set(e.name, members);                       // 전역 enum(Mecanum.Forward)
-      if (ns.name !== '(global)') enums.set(`${ns.name}.${e.name}`, members);   // aiPonybot.Mecanum.Forward
+      if (ns.name === '(global)') enums.set(e.name, members);            // 전역 enum(MotorType.Forward)
+      else { enums.set(`${ns.name}.${e.name}`, members); bare.set(e.name, ns.name); }   // aiPonybot.Mecanum.Forward
     }
   }
   const nsNames = new Set((blocks.namespaces || []).map(n => n.name).filter(n => n !== '(global)'));
-  return { fns, enums, nsNames };
+  for (const k of [...bare.keys()]) if (enums.has(k)) bare.delete(k);   // 같은 이름의 전역 enum이 있으면 제외
+  return { fns, enums, nsNames, bare };
 }
 
 const dotted = (n) => {
@@ -55,7 +54,7 @@ const lineOf = (n) => (n.loc ? n.loc.start.line - 1 : 0);   // 감싼 줄 하나
 
 export function validateCode(src, blocks, { Babel, policy = {}, strictPolicy = false } = {}) {
   if (!Babel) throw new Error('Babel이 필요합니다(bridge/sim/lib/babel.min.js)');
-  const { fns, enums, nsNames } = indexBlocks(blocks);
+  const { fns, enums, nsNames, bare } = indexBlocks(blocks);
   const errors = [], warnings = [];
   const forbid = (policy.forbid || []).map(p => p.replace(/\*$/, ''));
   const plugin = () => ({
@@ -87,6 +86,7 @@ export function validateCode(src, blocks, { Babel, policy = {}, strictPolicy = f
         if (p.parentPath.isMemberExpression() || p.parentPath.isCallExpression({ callee: p.node })) return;
         const name = dotted(p.node); if (!name) return;
         const owner = name.split('.').slice(0, -1).join('.'), member = name.split('.').pop();
+        if (bare.has(owner)) { errors.push({ code: 'E6', line: lineOf(p.node), msg: `${name}: ${bare.get(owner)}.${owner}.${member}로 써야 함(네임스페이스 빠짐)` }); return; }
         if (enums.has(owner) && !enums.get(owner).has(member))
           errors.push({ code: 'E2', line: lineOf(p.node), msg: `${name}: ${owner}에 없는 값(있는 값: ${[...enums.get(owner)].join(', ')})` });
       },
@@ -108,7 +108,8 @@ export function validateCode(src, blocks, { Babel, policy = {}, strictPolicy = f
   return { ok: errors.length === 0, errors, warnings };
 }
 
-export function loadBabel(file) {
+export async function loadBabel(file) {
+  const fs = await import('node:fs'), vm = await import('node:vm');
   const ctx = { window: {}, self: {}, console };
   ctx.globalThis = ctx;
   vm.createContext(ctx);
@@ -117,7 +118,8 @@ export function loadBabel(file) {
 }
 
 // ---- CLI ----
-if (import.meta.url === `file://${process.argv[1]}`) {
+if (typeof process !== 'undefined' && process.argv && import.meta.url === `file://${process.argv[1]}`) {
+  const fs = await import('node:fs'), path = await import('node:path');
   const a = process.argv.slice(2), opt = {}, files = [];
   for (let i = 0; i < a.length; i++) {
     if (a[i] === '--strict') opt.strict = true; else if (a[i].startsWith('--')) opt[a[i].slice(2)] = a[++i]; else files.push(a[i]);
@@ -125,7 +127,7 @@ if (import.meta.url === `file://${process.argv[1]}`) {
   if (!opt.blocks || !files.length) { console.error('사용법: node validate-code.mjs --blocks kit.blocks.json [--babel babel.min.js] [--policy policy.json] [--strict] file.ts ...'); process.exit(2); }
   const babelPath = opt.babel || ['bridge/sim/lib/babel.min.js', 'sim/lib/babel.min.js'].find(p => fs.existsSync(p));
   if (!babelPath) { console.error('--babel 경로를 주세요(@babel/standalone babel.min.js)'); process.exit(2); }
-  const Babel = loadBabel(babelPath);
+  const Babel = await loadBabel(babelPath);
   const blocks = JSON.parse(fs.readFileSync(opt.blocks, 'utf8'));
   const policy = opt.policy ? JSON.parse(fs.readFileSync(opt.policy, 'utf8')) : {};
   let bad = 0;
