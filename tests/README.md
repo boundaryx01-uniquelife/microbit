@@ -10,6 +10,7 @@ Playwright(크로미움)가 필요합니다.
 | `assistant-ui.js` | 로보독 도우미 화면 25항목(규칙 도우미, AI 응답·실패 시 전환, 빈 입력·오류 안내, 편집기 화면 배치) — AI 서버 응답은 가짜로 대신 | 위 서버 실행 후 `node tests/assistant-ui.js` |
 | `rule-assistant.mjs` | 규칙 도우미 안전 규칙 50항목(속도 30, 계속 걷기 자동 멈춤, 거리 0 멈춤, 라디오 2초 감시, 모르는 버튼 거절 등) | `node tests/rule-assistant.mjs` |
 | `intro-docs.js` | 첫 화면 44항목(인트로 영상 자동 재생·자막·건너뛰기·다시 보기·엔딩 정지 화면·움직임 줄이기·영상 못 받을 때·화면 크기별 시작 카드·공유 미리보기)과 수업 자료 페이지(링크·내려받기·인쇄) | 위 서버 실행 후 `node tests/intro-docs.js` |
+| `physical-ai-intro.js` | 사이트 첫 화면(교구 선택) 인트로 'Physical AI with micro:bit' 25항목(미리 보기 시각별 장면·결정성, 전체 화면 재생→건너뛰기·Esc→카드, 카드 자리 고정, 다시 보기, 같은 탭 재방문·움직임 줄이기 정지 로고, 390px, 카드 링크·포니봇 공식 그림, mp4) | 위 서버 실행 후 `node tests/physical-ai-intro.js` |
 | `assistant-function.mjs` | 도우미 서버 함수 23항목(가짜 Claude API 서버, 요금 없음) | `node tests/assistant-function.mjs` |
 | `lessons-web.js` | 웹 슬라이드 뷰어 87항목(목록·넘기기·교사 모드·함께 보기·휴대폰) | 위 서버 실행 후 `node tests/lessons-web.js` |
 | `lesson-sync.js` | 슬라이드 함께 보기(교사 → 학생 화면 따라가기) 19항목 | 위 서버 실행 후 `node tests/lesson-sync.js` |
