@@ -1,13 +1,14 @@
 // 2D 화면: 위에서 본 책상(이동 경로·장애물) + 옆에서 본 다리 자세
 import { EST, GEOM, HEAD } from './runtime.js';
+import { drawProps, colorKo } from './props.js';
 
 const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
 
 export class View2D {
   constructor(topCanvas, sideCanvas, world, robot) {
     this.top = topCanvas; this.side = sideCanvas; this.world = world; this.robot = robot;
-    this.placing = false;
-    this.top.addEventListener('click', (e) => this.onClick(e));
+    this.editor = null;      // 소품 편집기(props.js attachEditor): 끌어 옮기기·놓기·지우기
+    this.showCam = false;    // AI 카메라 시야 표시
   }
   scale() {
     const W = this.top.clientWidth, H = this.top.clientHeight, m = 16;
@@ -15,13 +16,14 @@ export class View2D {
     const s = Math.min(sx, sy);
     return { s, ox: (W - this.world.table.w * s) / 2, oy: (H - this.world.table.h * s) / 2 };
   }
-  onClick(e) {
-    if (!this.placing) return;
+  // 화면 ↔ 월드(cm). 편집기·시험이 씀
+  toWorld(ev) {
     const r = this.top.getBoundingClientRect(), { s, ox, oy } = this.scale();
-    const x = (e.clientX - r.left - ox) / s, y = (e.clientY - r.top - oy) / s;
-    const i = this.world.obstacles.findIndex(o => x >= o.x && x <= o.x + o.w && y >= o.y && y <= o.y + o.h);
-    if (i >= 0) this.world.obstacles.splice(i, 1);
-    else if (Math.hypot(x - this.robot.x, y - this.robot.y) > EST.radius + 6) this.world.obstacles.push({ x: x - 5, y: y - 5, w: 10, h: 10 });
+    return { x: (ev.clientX - r.left - ox) / s, y: (ev.clientY - r.top - oy) / s };
+  }
+  toScreen(x, y) {
+    const r = this.top.getBoundingClientRect(), { s, ox, oy } = this.scale();
+    return { x: r.left + ox + x * s, y: r.top + oy + y * s };
   }
   fit(c) {
     const dpr = window.devicePixelRatio || 1, w = c.clientWidth, h = c.clientHeight;
@@ -47,9 +49,10 @@ export class View2D {
     for (let x = 10; x < W.table.w; x += 10) { ctx.beginPath(); ctx.moveTo(ox + x * s, oy); ctx.lineTo(ox + x * s, oy + W.table.h * s); ctx.stroke(); }
     for (let y = 10; y < W.table.h; y += 10) { ctx.beginPath(); ctx.moveTo(ox, oy + y * s); ctx.lineTo(ox + W.table.w * s, oy + y * s); ctx.stroke(); }
     ctx.fillStyle = css('--muted'); ctx.font = '11px system-ui'; ctx.fillText(`${W.useTable ? '책상' : '바닥(벽 있음)'} ${W.table.w}×${W.table.h}cm (칸 10cm)`, ox + 6, oy + 14);
-    // 장애물
-    ctx.fillStyle = css('--obstacle');
-    W.obstacles.forEach(o => ctx.fillRect(ox + o.x * s, oy + o.y * s, o.w * s, o.h * s));
+    // 소품(상자·색 물체·컬러칩): 공용 그리기. cm 단위로 확대해서 그림
+    ctx.save(); ctx.translate(ox, oy); ctx.scale(s, s);
+    drawProps(ctx, W.props, { selected: this.editor ? this.editor.selection : null });
+    ctx.restore();
     // 이동 경로
     ctx.strokeStyle = css('--trail'); ctx.lineWidth = 2; ctx.beginPath();
     R.trail.forEach((p, i) => (i ? ctx.lineTo(ox + p.x * s, oy + p.y * s) : ctx.moveTo(ox + p.x * s, oy + p.y * s)));
@@ -59,6 +62,7 @@ export class View2D {
     const bx = R.x + Math.sin(rad) * EST.bodyLen / 2, by = R.y - Math.cos(rad) * EST.bodyLen / 2;
     ctx.strokeStyle = 'rgba(255,80,80,.55)'; ctx.setLineDash([4, 4]); ctx.beginPath();
     ctx.moveTo(ox + bx * s, oy + by * s); ctx.lineTo(ox + (bx + Math.sin(rad) * Math.min(d, 255)) * s, oy + (by - Math.cos(rad) * Math.min(d, 255)) * s); ctx.stroke(); ctx.setLineDash([]);
+    if (this.showCam || R.aiMode === 3) this.drawCamera(ctx, R, s, ox, oy);
     // 로보독(위에서) — 군무 중이면 추가 로봇들도
     for (const R2 of (W.extra || [])) this.drawRobotTop(ctx, R2, s, ox, oy);
     this.drawRobotTop(ctx, R, s, ox, oy);
@@ -71,7 +75,24 @@ export class View2D {
     }
     if (R.fallen) banner(ctx, c, '⚠ 로보독이 책상에서 떨어졌어요! [처음으로]를 누르세요', '#d43c3c');
     else if (R.bumped) banner(ctx, c, '쿵! 장애물에 부딪혔어요', '#c27c0e');
-    if (this.placing) { ctx.fillStyle = css('--accent'); ctx.font = 'bold 12px system-ui'; ctx.fillText('장애물 놓기: 클릭하면 놓기/지우기', ox + 6, oy + W.table.h * s - 8); }
+    if (this.editor && this.editor.tool !== 'select') { ctx.fillStyle = css('--accent'); ctx.font = 'bold 12px system-ui'; ctx.fillText('놓기 도구: 바닥을 눌러 놓기 · 끝내려면 [선택/이동]', ox + 6, oy + W.table.h * s - 8); }
+  }
+
+  // AI 카메라 시야(추정: 앞 ±30°, 100cm). 알아본 물체는 고리로 표시
+  drawCamera(ctx, R, s, ox, oy) {
+    const C = EST.aiCam, rad = R.heading * Math.PI / 180, on = R.aiMode === 3;
+    const nx = R.x + Math.sin(rad) * EST.noseOffset, ny = R.y - Math.cos(rad) * EST.noseOffset;
+    const a0 = rad - C.halfFovDeg * Math.PI / 180 - Math.PI / 2, a1 = rad + C.halfFovDeg * Math.PI / 180 - Math.PI / 2;
+    ctx.save();
+    ctx.fillStyle = on ? 'rgba(36,86,229,.13)' : 'rgba(36,86,229,.06)'; ctx.strokeStyle = on ? 'rgba(36,86,229,.55)' : 'rgba(36,86,229,.3)'; ctx.lineWidth = 1; ctx.setLineDash([5, 4]);
+    ctx.beginPath(); ctx.moveTo(ox + nx * s, oy + ny * s); ctx.arc(ox + nx * s, oy + ny * s, C.maxCm * s, a0, a1); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.setLineDash([]);
+    const v = R.aiSees();
+    if (v) {
+      ctx.strokeStyle = '#2456e5'; ctx.lineWidth = 2.5; ctx.beginPath(); ctx.arc(ox + v.obj.x * s, oy + v.obj.y * s, (v.obj.r + 2) * s, 0, Math.PI * 2); ctx.stroke();
+      ctx.fillStyle = '#2456e5'; ctx.font = 'bold 11px system-ui';
+      ctx.fillText(`카메라: ${colorKo(v.color)} → ${R.world.aiClass[v.color] || '-'}`, ox + v.obj.x * s + (v.obj.r + 3) * s, oy + v.obj.y * s - (v.obj.r + 2) * s);
+    }
+    ctx.restore();
   }
 
   drawRobotTop(ctx, R, s, ox, oy) {

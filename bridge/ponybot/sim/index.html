@@ -1,0 +1,327 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>포니봇 시뮬레이터 · AI 교실</title>
+<link rel="stylesheet" href="../../assets/brand.css">
+<link rel="icon" href="../../assets/favicon.svg" type="image/svg+xml">
+<style>
+  header.top { display: flex; align-items: center; gap: 14px; padding: 10px 16px; background: var(--surface); border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+  header.top img { width: 72px; height: 72px; object-fit: cover; border-radius: 12px; flex: none; background: #b3ecff; }
+  header.top h1 { margin: 0; font-size: 19px; }
+  header.top p { margin: 2px 0 0; font-size: 13.5px; color: var(--muted); }
+  .est { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--warn-soft); color: var(--warn); font-weight: 800; font-size: 13px; border: 1px solid var(--warn); }
+  main { display: grid; grid-template-columns: minmax(0, 5fr) minmax(0, 6fr); gap: 14px; padding: 14px; max-width: 1500px; margin: 0 auto; }
+  @media (max-width: 980px) { main { grid-template-columns: minmax(0, 1fr); padding: 12px 16px; } }
+  main > div { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  section.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px; min-width: 0; box-shadow: var(--shadow-sm); }
+  h2 { margin: 0 0 8px; font-size: 16px; }
+  h3 { margin: 0 0 6px; font-size: 14px; }
+  .row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  select { font: inherit; padding: 8px 10px; max-width: 100%; min-width: 0; cursor: pointer; }
+  button { font: inherit; min-height: 40px; padding: 6px 14px; border: 1px solid var(--line-strong); border-radius: var(--r-sm); background: var(--surface); color: var(--ink); cursor: pointer; }
+  button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); font-weight: 700; }
+  button.stop { background: var(--stop); color: var(--stop-text); border-color: var(--stop); font-weight: 700; }
+  button.on { outline: 3px solid var(--accent); }
+  button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+  textarea#code { width: 100%; height: 46vh; min-height: 260px; box-sizing: border-box; font: 13px/1.5 var(--mono); padding: 10px; border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--ink); resize: vertical; white-space: pre; tab-size: 4; }
+  .note { font-size: 13.5px; color: var(--muted); line-height: 1.6; margin: 6px 0; overflow-wrap: anywhere; }
+  #runMsg { font-weight: 700; font-size: 14.5px; }
+  #runMsg.err { color: var(--bad); } #runMsg.ok { color: var(--ok); }
+  #log { font: 12px/1.5 var(--mono); white-space: pre-wrap; overflow-wrap: anywhere; max-height: 150px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 8px; margin-top: 8px; min-height: 1.5em; }
+  #log .warn { color: var(--warn); } #log .error { color: var(--bad); font-weight: 700; }
+  #assistant textarea { width: 100%; box-sizing: border-box; font: inherit; margin: 6px 0; }
+  #askOut .warn { color: var(--warn); } #askOut .ok { color: var(--ok); } #assistant .hint { font-size: .9em; opacity: .8; margin: 4px 0; }
+  #askSample { max-width: 100%; }
+  #field { width: 100%; display: block; margin: 0 auto; border-radius: 10px; background: var(--surface-2); touch-action: none; cursor: crosshair; }
+  details.mapset { margin-top: 8px; border: 1px solid var(--line); border-radius: 10px; padding: 4px 10px; }
+  .ctrl button { min-width: 44px; min-height: 44px; }
+  .mbbtn { width: 48px; border-radius: 50%; font-weight: 800; padding: 0; user-select: none; touch-action: none; }
+  .sensors { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 10px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 13.5px; margin: 0; }
+  .kv dd { margin: 0; font-variant-numeric: tabular-nums; font-weight: 700; overflow-wrap: anywhere; }
+  .kv dt { color: var(--muted); }
+  .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--ink); vertical-align: -2px; background: #555; }
+  .dot.on { background: #ffd23f; }
+  .sw { display: inline-block; width: 26px; height: 14px; border-radius: 4px; border: 1px solid var(--ink); vertical-align: -2px; }
+  table.wh { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  table.wh th, table.wh td { text-align: left; padding: 2px 4px; border-bottom: 1px solid var(--line); }
+  table.wh td.p { color: var(--ok); } table.wh td.n { color: var(--bad); }
+  #oled { width: 100%; max-width: 384px; aspect-ratio: 2 / 1; image-rendering: pixelated; border-radius: 8px; display: block; background: #05080e; }
+  #led5 { width: 110px; height: 110px; border-radius: 8px; display: block; }
+  .scene-img { width: 100%; max-width: 300px; border-radius: 10px; display: block; }
+  .scenebox { display: flex; gap: 12px; align-items: flex-start; flex-wrap: wrap; }
+  .scenebox .t { flex: 1 1 200px; min-width: 0; }
+  details > summary { cursor: pointer; font-weight: 700; min-height: 36px; display: flex; align-items: center; }
+  pre.est-list { font: 12px/1.5 var(--mono); background: var(--bg); padding: 8px; border-radius: 8px; overflow: auto; max-width: 100%; margin: 6px 0 0; }
+  .score { font-weight: 800; }
+</style>
+</head>
+<body>
+<header class="top">
+  <img src="../assets/official/material-pony-v2.webp" alt="AI 포니봇 제품 그림 (제조사 바운더리엑스 공식 자료)" width="72" height="72">
+  <div>
+    <h1>AI 포니봇 시뮬레이터 <span class="est" title="속도·회전·크기·센서 위치는 실물 측정값이 아닌 추정치예요">움직임 추정</span></h1>
+    <p>micro:bit 메카넘 4바퀴 로봇 · 블록을 글자 코드(JavaScript)로 적어 위에서 내려다본 바닥에서 돌려 봐요. 실물과 다를 수 있어요.</p>
+  </div>
+</header>
+
+<main>
+  <div class="left">
+    <section class="card" aria-labelledby="codeH">
+      <h2 id="codeH">코드</h2>
+      <div class="row">
+        <label for="examples" class="note" style="margin:0">예제</label>
+        <select id="examples" aria-label="예제 고르기"></select>
+        <button id="btnRun" class="primary">▶ 실행</button>
+        <button id="btnStop" class="stop">■ 정지</button>
+      </div>
+      <p class="note" id="exHow"></p>
+      <textarea id="code" spellcheck="false" aria-label="포니봇 글자 코드"></textarea>
+      <p id="runMsg" role="status" aria-live="polite"></p>
+      <div id="log" aria-label="실행 기록"></div>
+    </section>
+
+    <!-- 말로 코드 만들기(assistant.js, 규칙 모드 — 글은 이 컴퓨터 밖으로 나가지 않음) -->
+    <section id="assistant" class="card" aria-label="말로 코드 만들기">
+      <h2>💬 말로 코드 만들기</h2>
+      <p class="hint">예: “A 버튼을 누르면 앞으로 2초 동안 가”. 글은 이 컴퓨터 밖으로 나가지 않아요. 이름·학교는 쓰지 마세요.</p>
+      <textarea id="askText" rows="2" maxlength="300" aria-label="하고 싶은 동작을 글로" placeholder="포니봇이 어떻게 움직이면 좋을까요?"></textarea>
+      <div class="row"><button id="askGo" class="primary">코드 만들기</button><select id="askSample" aria-label="예시 문장"><option value="">예시 문장 고르기</option></select></div>
+      <div id="askOut" aria-live="polite"></div>
+    </section>
+  </div>
+
+  <div class="right">
+    <section class="card" aria-labelledby="sceneH">
+      <h2 id="sceneH">장면 · 위에서 본 바닥</h2>
+      <div class="row">
+        <label for="scene" class="note" style="margin:0">장면</label>
+        <select id="scene" aria-label="장면 고르기"></select>
+        <button id="btnReset">로봇 처음 자리로</button>
+      </div>
+      <div class="scenebox" style="margin:8px 0">
+        <img id="sceneImg" class="scene-img" alt="" hidden>
+        <div class="t"><p class="note" id="sceneHint"></p><p class="note score" id="score"></p></div>
+      </div>
+      <div id="peBar"></div>
+      <canvas id="field" aria-label="위에서 본 포니봇과 바닥 (도구를 고르고 눌러 놓거나, 끌어서 옮겨요)"></canvas>
+      <div class="row ctrl" style="margin-top:8px">
+        <button class="mbbtn" data-btn="A" aria-label="A 버튼">A</button>
+        <button class="mbbtn" data-btn="B" aria-label="B 버튼">B</button>
+        <span class="note" style="margin:0">라디오 숫자</span>
+        <span id="radioBtns" class="row" style="gap:4px"></span>
+      </div>
+      <p class="note">도구를 고르고 바닥을 누르면 상자·색 물체·컬러칩을 놓아요. [선택/이동]에서 끌어 옮기면 센서 값이 바로 달라져요(실행 중에도). 초음파·부채꼴은 파란색이에요.</p>
+      <details class="mapset" id="mapSet"><summary>🗺 지도 설정 (검은 선 · 지도 고르기 · 타일 · 저장)</summary><div id="mapBody"></div></details>
+    </section>
+
+    <section class="card" aria-labelledby="senH">
+      <h2 id="senH">센서 · 바퀴 · 화면</h2>
+      <div class="sensors">
+        <div>
+          <h3>센서</h3>
+          <dl class="kv">
+            <dt>거리(ping)</dt><dd id="sDist">-</dd>
+            <dt>라인 왼쪽(P16)</dt><dd><span class="dot" id="sL"></span> <span id="sLv">0</span></dd>
+            <dt>라인 오른쪽(P15)</dt><dd><span class="dot" id="sR"></span> <span id="sRv">0</span></dd>
+            <dt>색(R,G,B)</dt><dd><span class="sw" id="sSw"></span> <span id="sRgb">-</span></dd>
+            <dt>위치·방향</dt><dd id="sPose">-</dd>
+            <dt>몸 속도</dt><dd id="sVel">-</dd>
+          </dl>
+        </div>
+        <div>
+          <h3>바퀴 명령 (모터 → 바퀴)</h3>
+          <table class="wh" aria-label="모터별 명령">
+            <thead><tr><th>모터</th><th>바퀴</th><th>명령</th><th>cm/s</th></tr></thead>
+            <tbody id="whBody"></tbody>
+          </table>
+          <p class="note" id="servoNote" style="margin:4px 0 0"></p>
+        </div>
+        <div>
+          <h3>마이크로비트 5×5</h3>
+          <canvas id="led5" width="110" height="110" aria-label="마이크로비트 LED 5x5"></canvas>
+        </div>
+        <div style="grid-column: 1 / -1">
+          <h3>포니봇 화면(OLED 128×64)</h3>
+          <canvas id="oled" width="128" height="64" aria-label="포니봇 OLED 화면"></canvas>
+        </div>
+      </div>
+      <details style="margin-top:8px"><summary>추정값 보기 (실측하면 바꿀 것)</summary>
+        <p class="note">아래 값은 모두 추정이에요. 모터 번호→바퀴 위치는 확장의 PWM 표에서 풀었고 실물 확인이 필요해요.</p>
+        <pre class="est-list" id="estList"></pre>
+      </details>
+    </section>
+  </div>
+</main>
+
+<script type="module">
+import { ensureBabel } from '../../sim/runtime.js';
+import { EST, MOTOR_WHEEL, SCENES, PonyWorld, PonyRobot, PonyRunner, makePonybotApi, needsFromCode } from './pony.js';
+import * as PROPS from '../../sim/props.js';
+import { attachMapLibrary } from '../../sim/mapui.js';
+import { PonyView, drawOled, drawLed5 } from './view.js';
+import { EXAMPLES } from './examples.js';
+import { ponyAssistant, configurePony, SAMPLE_REQUESTS } from './assistant.js';
+import { validateCode } from '../../sim/validate-code.mjs';
+
+const $ = (id) => document.getElementById(id);
+const world = new PonyWorld(), robot = new PonyRobot(world);
+const logBox = $('log');
+const log = (msg, kind) => { const d = document.createElement('div'); if (kind) d.className = kind; d.textContent = msg; logBox.appendChild(d); logBox.scrollTop = logBox.scrollHeight; };
+const runner = new PonyRunner(robot, { log, onDisplay: () => drawLed5($('led5'), runner.display), soundOn: () => false });
+const api = makePonybotApi(robot, { oled: runner.oled });
+const view = new PonyView($('field'), world, robot);
+
+// ---- 소품 편집기(끌어 옮기기·놓기·지우기·선 편집) + 지도 라이브러리 ----
+const robotBody = { get x() { return robot.x; }, get y() { return robot.y; }, radius: EST.radius };
+const editor = PROPS.attachEditor($('field'), {
+  getProps: () => world.props, toWorld: (ev) => view.toWorld(ev), toScreen: (x, y) => view.toScreen(x, y), getSize: () => world.size, robot: robotBody,
+  storageKey: () => 'ponybot-sim.scene.v1.' + world.sceneId,
+  getMeta: () => ({ scene: world.sceneId, size: { ...world.size }, start: { ...world.start } }),
+  applyMeta: (m) => { if (m.size && (m.size.w !== world.size.w || m.size.h !== world.size.h)) { world.setField({ size: m.size, start: m.start }); robot.reset(); } },
+  onMessage: () => {},
+  onChange: (reason, d) => { if (reason === 'preset' && d.start) { world.start = { ...world.start, ...d.start }; if (!runner.running) robot.reset(); } },
+});
+view.editor = editor;
+editor.buildToolbar($('peBar'));
+editor.buildMapPanel($('mapBody'));
+function applyField(f) {   // 지도·타일 불러오기: 월드 크기·시작 자리·소품을 바꾸고 로봇을 시작 자리로
+  runner.stop(); world.setField({ size: f.size, start: f.start, props: f.props });
+  robot.reset();
+  const sel = $('scene'); let o = sel.querySelector('option[value="map"]');
+  if (!o) { o = document.createElement('option'); o.value = 'map'; sel.appendChild(o); }
+  o.textContent = '지도: ' + (f.title || '내 지도'); sel.value = 'map';
+  $('sceneImg').hidden = true; $('sceneHint').textContent = f.title ? `지도 “${f.title}” — 지도 설정에서 고르고 고칠 수 있어요.` : '';
+}
+const lib = attachMapLibrary($('mapBody'), { editor, host: {
+  getProps: () => world.props, getSize: () => world.size, getStart: () => world.start, apply: applyField,
+  robotToStart: () => { runner.stop(); robot.reset(); },
+} });
+// 코드가 읽는 센서(거리·선·색)에 맞춰 없는 환경만 채움(사용자가 놓은 것은 그대로)
+function autoSetup() {
+  const needs = needsFromCode($('code').value);
+  if (!needs.length) return [];
+  const notes = PROPS.ensureFor(needs, world.props, robot, world, { robotRadius: EST.radius });
+  notes.forEach(n => log(n));
+  return notes;
+}
+
+// ---- 말로 코드 만들기 (블록 표·정책은 data/ 복사본: 원본 kits/ponybot/) ----
+let POLICY = {};
+const assistReady = Promise.all([
+  fetch('data/blocks.json').then(r => r.json()), fetch('data/policy.json').then(r => r.json()), ensureBabel(),
+]).then(([blocks, policy]) => { POLICY = policy; configurePony({ blocks, validateCode, Babel: window.Babel }); })
+  .catch(e => log('도우미 준비 실패: ' + e.message, 'warn'));
+SAMPLE_REQUESTS.forEach(t => { const o = document.createElement('option'); o.value = t; o.textContent = t; $('askSample').appendChild(o); });
+$('askSample').addEventListener('change', () => { if ($('askSample').value) $('askText').value = $('askSample').value; });
+$('askGo').addEventListener('click', async () => {
+  await assistReady;
+  const r = ponyAssistant($('askText').value, POLICY);
+  const out = $('askOut'); out.textContent = '';
+  const p = (t, cls) => { const d = document.createElement('p'); d.textContent = t; if (cls) d.className = cls; out.appendChild(d); };
+  if (r.explanation) p(r.explanation);
+  (r.warnings || []).forEach(w => p('⚠ ' + w, 'warn'));
+  (r.suggestions || []).forEach(sg => p('추천 예제: ' + (sg.title || sg) + (sg.why ? ' — ' + sg.why : '')));
+  if (r.code) { $('code').value = r.code; p('위 코드 칸에 넣었어요. [실행]을 눌러 보세요.', 'ok'); }
+});
+
+// ---- 예제·장면 ----
+EXAMPLES.forEach((e, i) => { const o = document.createElement('option'); o.value = e.id; o.textContent = e.title + (e.simOnly ? ' (시뮬레이터 전용)' : ''); $('examples').appendChild(o); });
+Object.entries(SCENES).forEach(([id, s]) => { const o = document.createElement('option'); o.value = id; o.textContent = s.title; $('scene').appendChild(o); });
+const SCENE_IMG = { bowling: 'activity-bowling.webp', circuit: 'activity-circuit.webp', relay: 'activity-relay.webp' };
+function setScene(id) {
+  runner.stop(); world.loadScene(id); robot.reset();
+  const tmp = $('scene').querySelector('option[value="map"]'); if (tmp) tmp.remove();
+  $('scene').value = world.sceneId; editor.select(null);
+  const img = $('sceneImg'), f = SCENE_IMG[world.sceneId];
+  if (f) { img.src = '../assets/official/' + f; img.alt = world.scene.title + ' 공식 활동 그림 (바운더리엑스)'; img.hidden = false; } else img.hidden = true;
+  $('sceneHint').textContent = world.scene.hint;
+  runner.running = false;
+}
+$('scene').addEventListener('change', () => { if ($('scene').value !== 'map') setScene($('scene').value); });
+$('btnReset').addEventListener('click', () => { runner.stop(); robot.reset(); });
+
+function loadExample(id) {
+  const e = EXAMPLES.find(x => x.id === id) || EXAMPLES[0];
+  $('examples').value = e.id; $('code').value = e.code; $('exHow').textContent = e.how;
+  if (world.sceneId !== e.scene && world.sceneId !== 'map') setScene(e.scene);
+  $('runMsg').textContent = ''; $('runMsg').className = '';
+  autoSetup();
+}
+$('examples').addEventListener('change', () => loadExample($('examples').value));
+
+async function runCode() {
+  logBox.textContent = '';
+  robot.reset(); runner.stop();
+  autoSetup(); robot.reset();
+  $('runMsg').textContent = '실행 중…'; $('runMsg').className = '';
+  const ok = await runner.start($('code').value);
+  if (ok) { $('runMsg').textContent = '실행 중 (정지 버튼으로 멈춰요)'; $('runMsg').className = 'ok'; }
+  else { $('runMsg').textContent = '코드를 읽을 수 없어요 — 아래 기록을 보세요'; $('runMsg').className = 'err'; }
+}
+$('btnRun').addEventListener('click', runCode);
+$('btnStop').addEventListener('click', () => { runner.stop(); $('runMsg').textContent = '정지했어요 (바퀴도 멈춤)'; $('runMsg').className = ''; });
+
+// ---- 입력: A/B, 라디오, 상자 놓기 ----
+document.querySelectorAll('.mbbtn').forEach(b => {
+  const n = b.dataset.btn;
+  b.addEventListener('pointerdown', () => { runner.setButton(n, true); runner.press(n); });
+  const up = () => runner.setButton(n, false);
+  b.addEventListener('pointerup', up); b.addEventListener('pointerleave', up); b.addEventListener('pointercancel', up);
+  b.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); runner.press(n); } });
+});
+for (let i = 0; i <= 9; i++) {
+  const b = document.createElement('button'); b.textContent = i; b.setAttribute('aria-label', '라디오 숫자 ' + i);
+  b.addEventListener('click', () => runner.radioReceive(i));
+  $('radioBtns').appendChild(b);
+}
+// ---- 화면 갱신 ----
+const f1 = (v) => (Math.round(v * 10) / 10).toFixed(1);
+$('estList').textContent = JSON.stringify(EST, null, 1).replace(/[{}"]/g, '').replace(/,$/gm, '') + '\n모터→바퀴: ' + JSON.stringify(MOTOR_WHEEL);
+let lastOled = -1, lastSlow = 0, last = performance.now();
+const whBody = $('whBody');
+[1, 2, 3, 4].forEach(m => { const tr = document.createElement('tr'); tr.innerHTML = `<td>M${m}</td><td>${MOTOR_WHEEL[m]}</td><td id="wc${m}">0</td><td id="wv${m}">0</td>`; whBody.appendChild(tr); });
+function frame(now) {
+  const dt = Math.min(0.05, (now - last) / 1000); last = now;
+  robot.step(dt);
+  view.draw();
+  if (runner.oled.version !== lastOled) { lastOled = runner.oled.version; drawOled($('oled'), runner.oled); }
+  if (now - lastSlow > 100) {
+    lastSlow = now;
+    $('sDist').textContent = api.ping(1) + ' cm' + (api.ping(1) >= 500 ? ' (못 읽음=500)' : '');
+    const l = robot.lineRaw(0), r = robot.lineRaw(1);
+    $('sL').classList.toggle('on', !!l); $('sR').classList.toggle('on', !!r); $('sLv').textContent = l; $('sRv').textContent = r;
+    const c = robot.colorRGB(); $('sSw').style.background = `rgb(${c})`; $('sRgb').textContent = c.map(Math.round).join(', ');
+    $('sPose').textContent = `x ${f1(robot.x)}, y ${f1(robot.y)}, 방향 ${f1(((robot.heading % 360) + 360) % 360)}°`;
+    $('sVel').textContent = `옆 ${f1(robot.vx)} · 앞 ${f1(robot.vy)} cm/s · 회전 ${f1(robot.omega / Math.PI * 180)}°/s`;
+    [1, 2, 3, 4].forEach(m => {
+      const u = robot.pwm[m - 1] / 16, el = $('wc' + m), v = robot.w[MOTOR_WHEEL[m]];
+      el.textContent = (u > 0 ? '▲ ' : u < 0 ? '▼ ' : '■ ') + Math.round(Math.abs(u)); el.className = u > 0 ? 'p' : u < 0 ? 'n' : '';
+      $('wv' + m).textContent = f1(v);
+    });
+    const sv = robot.servo.map((a, i) => (a == null ? null : `서보${i + 1}=${a}°`)).filter(Boolean);
+    $('servoNote').textContent = sv.length ? sv.join(' · ') : '';
+    $('score').textContent = world.pins.length ? `쓰러뜨린 핀 ${world.pinsDown()} / ${world.pins.length}` : '';
+  }
+  requestAnimationFrame(frame);
+}
+
+// ---- 시험 훅 ----
+function fastForward(sec) { robot.step(sec); }
+window.__pony = {
+  robot, runner, world, view, api, oled: runner.oled, EST, SCENES, props: world.props, editor, lib, PROPS, needsFromCode, autoSetup, applyField,
+  setScene, loadExample, runCode, fastForward,
+  setPose(x, y, heading = 0) { robot.x = x; robot.y = y; robot.heading = heading; robot.trail = []; },
+  state() { return { x: robot.x, y: robot.y, heading: robot.heading, vx: robot.vx, vy: robot.vy, omega: robot.omega, pwm: robot.pwm.slice(), w: { ...robot.w }, running: runner.running }; },
+};
+
+loadExample(EXAMPLES[0].id);
+ensureBabel().catch(() => log('Babel 을 불러오지 못했어요 (인터넷·파일 확인)', 'error'));
+drawLed5($('led5'), runner.display);
+requestAnimationFrame(frame);
+window.__ponyReady = true;
+</script>
+</body>
+</html>

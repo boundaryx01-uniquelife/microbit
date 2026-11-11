@@ -1,0 +1,293 @@
+{
+  "extension": {
+    "id": "boundary-x/ai_ponybot_light",
+    "name": "ai-ponybot-light",
+    "version": null,
+    "dependencies": {
+      "core": "*",
+      "ws2812b": "github:microsoft/pxt-ws2812b#v0.1.1"
+    },
+    "files": [
+      "main.blocks",
+      "main.ts",
+      "README.md"
+    ],
+    "ref": "0723938d4a3b0b261c0adccf6f831b9de7be9cba",
+    "missing_files": [],
+    "locale_strings": 0,
+    "locale_hits": 0
+  },
+  "namespaces": [
+    {
+      "name": "(global)",
+      "meta": {},
+      "functions": [],
+      "enums": [
+        {
+          "name": "NeoPixelColors",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Red",
+              "value": "0xFF0000",
+              "block_en": "빨간색(red)",
+              "block_ko": null
+            },
+            {
+              "name": "Orange",
+              "value": "0xFFA500",
+              "block_en": "주황색(orange)",
+              "block_ko": null
+            },
+            {
+              "name": "Yellow",
+              "value": "0xFFFF00",
+              "block_en": "노란색(yellow)",
+              "block_ko": null
+            },
+            {
+              "name": "Green",
+              "value": "0x00FF00",
+              "block_en": "초록색(green)",
+              "block_ko": null
+            },
+            {
+              "name": "Blue",
+              "value": "0x0000FF",
+              "block_en": "파란색(blue)",
+              "block_ko": null
+            },
+            {
+              "name": "Indigo",
+              "value": "0x000080",
+              "block_en": "남색(indigo)",
+              "block_ko": null
+            },
+            {
+              "name": "Violet",
+              "value": "0x8a2be2",
+              "block_en": "보라색(violet)",
+              "block_ko": null
+            },
+            {
+              "name": "White",
+              "value": "0xFFFFFF",
+              "block_en": "흰색(white)",
+              "block_ko": null
+            },
+            {
+              "name": "Black",
+              "value": "0x000000",
+              "block_en": "끄기",
+              "block_ko": null
+            }
+          ]
+        },
+        {
+          "name": "NeoPixelMode",
+          "block_en": null,
+          "members": [
+            {
+              "name": "RGB",
+              "value": "1",
+              "block_en": "RGB (GRB format)",
+              "block_ko": null
+            },
+            {
+              "name": "RGBW",
+              "value": "2",
+              "block_en": "RGB+W",
+              "block_ko": null
+            },
+            {
+              "name": "RGB_RGB",
+              "value": "3",
+              "block_en": "RGB (RGB format)",
+              "block_ko": null
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "neopixel",
+      "meta": {
+        "weight": 5,
+        "color": "#58ACFA",
+        "icon": "\\uf057",
+        "block": "ponybot light"
+      },
+      "functions": [
+        {
+          "name": "create",
+          "params": [
+            {
+              "name": "pin",
+              "type": "DigitalPin",
+              "min": null,
+              "max": null,
+              "default": "DigitalPin.P8"
+            },
+            {
+              "name": "numLeds",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": 4
+            },
+            {
+              "name": "mode",
+              "type": "NeoPixelMode",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "Strip",
+          "block_en": "%pin|에 연결된 %numLeds|개의 %mode|타입 라이트",
+          "block_ko": null,
+          "blockId": "neopixel_create",
+          "group": "라이트 제어(기초)",
+          "weight": 100,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "rgb",
+          "params": [
+            {
+              "name": "red",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": null
+            },
+            {
+              "name": "green",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": null
+            },
+            {
+              "name": "blue",
+              "type": "number",
+              "min": 0,
+              "max": 255,
+              "default": null
+            }
+          ],
+          "returns": "number",
+          "block_en": "빨강(R): %red|초록(G): %green|파랑(B): %blue",
+          "block_ko": null,
+          "blockId": "neopixel_rgb",
+          "group": "색상 블록",
+          "weight": 20,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "pickColorPackRGB",
+          "params": [
+            {
+              "name": "color",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null,
+              "shadow": "colorNumberPicker"
+            }
+          ],
+          "returns": "number",
+          "block_en": "색상 선택 %color",
+          "block_ko": null,
+          "blockId": "pick_color_packrgb",
+          "group": "색상 블록",
+          "weight": 40,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "getColors",
+          "params": [
+            {
+              "name": "color",
+              "type": "NeoPixelColors",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "number",
+          "block_en": "%color",
+          "block_ko": null,
+          "blockId": "neopixel_colors",
+          "group": "색상 블록",
+          "weight": 30,
+          "hidden": false,
+          "file": "main.ts"
+        },
+        {
+          "name": "hsl",
+          "params": [
+            {
+              "name": "hue",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "saturation",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            },
+            {
+              "name": "luminance",
+              "type": "number",
+              "min": null,
+              "max": null,
+              "default": null
+            }
+          ],
+          "returns": "number",
+          "block_en": "색조(H): %hue|채도(S): %saturation|명도(L): %luminance",
+          "block_ko": null,
+          "blockId": "neopixelHSL",
+          "group": "색상 블록",
+          "weight": 2,
+          "hidden": false,
+          "file": "main.ts"
+        }
+      ],
+      "enums": [
+        {
+          "name": "HueInterpolationDirection",
+          "block_en": null,
+          "members": [
+            {
+              "name": "Clockwise",
+              "value": "0",
+              "block_en": null,
+              "block_ko": null
+            },
+            {
+              "name": "CounterClockwise",
+              "value": "1",
+              "block_en": null,
+              "block_ko": null
+            },
+            {
+              "name": "Shortest",
+              "value": "2",
+              "block_en": null,
+              "block_ko": null
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -160,6 +160,15 @@
   .caption .step { display: inline-block; background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; font-size: 12px; margin-right: 8px; vertical-align: 2px; }
   .panel.auto { outline: 3px solid var(--accent); outline-offset: 2px; }
   .mbbtn.auto, .radio button.auto { background: var(--accent); color: var(--accent-text); }
+  .pe-bar [data-tool="track"] { display: none; }   /* 로보독에는 라인 센서가 없어 '선 편집'은 숨김(포니봇용) */
+  #top2d { cursor: crosshair; touch-action: none; }
+  .aimap { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 6px 10px; margin: 6px 0; }
+  .aimap label { display: flex; align-items: center; gap: 6px; }
+  .aimap .dot { width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0,0,0,.4); flex: none; }
+  .aimap select { padding: 4px 8px; }
+  .est { color: var(--warnc); font-weight: 700; }
+  details.mapset { margin-top: 10px; border: 1px solid var(--line); border-radius: 12px; padding: 4px 10px; }
+  details.mapset > summary { cursor: pointer; font-weight: 700; }
 </style>
 <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
 </head>
@@ -262,7 +271,8 @@
       <div class="qgrp" id="qMb"><span class="qlab">🅰 마이크로비트</span><button data-q="A">A</button><button data-q="B">B</button><button data-q="AB">A+B</button></div>
     </div>
     <div id="pane2d" class="hidden">
-      <canvas id="top2d" aria-label="위에서 본 책상과 로보독"></canvas>
+      <div id="peBar"></div>
+      <canvas id="top2d" aria-label="위에서 본 책상과 로보독 (물체를 끌어 옮길 수 있어요)"></canvas>
       <div class="sub">
         <canvas id="side2d" aria-label="옆에서 본 로보독"></canvas>
         <canvas id="eyes" aria-label="로보독 눈 LED"></canvas>
@@ -270,7 +280,7 @@
     </div>
     <div id="pane3d">
       <div id="view3d"></div>
-      <p class="note">마우스 끌기 = 돌려 보기, 휠 = 확대/축소, 오른쪽 끌기 = 옮기기</p>
+      <p class="note">마우스 끌기 = 돌려 보기, 휠 = 확대/축소, 오른쪽 끌기 = 옮기기. 상자·물체를 끌어 옮기려면 <button id="goEdit" type="button" style="min-height:32px;padding:2px 10px">2D 보기로 가서 옮기기</button></p>
       <canvas id="eyes3" style="width:100%;height:110px;display:block;border-radius:10px;margin-top:6px" aria-label="로보독 눈 LED"></canvas>
     </div>
 
@@ -294,6 +304,8 @@
         <label class="row" style="gap:6px"><input id="radioRepeat" type="checkbox"> 마지막 숫자 계속 보내기(0.5초마다)</label>
         <p class="note">AI 브리지 대신 숫자를 직접 보내요. 한 번 누르면 한 번만 가요 — <b>AI 신호등 안내견</b>처럼 2초 동안 신호가 없으면 멈추는 코드는 <b>계속 보내기</b>를 켜세요. 받는 그룹: <b id="radioGroup">-</b></p>
         <label class="row" style="gap:6px"><input id="bridgeLink" type="checkbox" checked> 같은 컴퓨터의 AI 브리지 결과 받기</label>
+        <label class="row" style="gap:6px"><input id="camEmu" type="checkbox"> 카메라 흉내: 로보독 앞 카드 → 라디오 숫자</label>
+        <p class="note" style="margin:0"><span class="est">시뮬레이터 전용 흉내</span> — 실제로는 노트북 웹캠 + AI 브리지가 보내요. 로보독 앞(±30°·100cm)의 카드(색 물체)를 빨강 1 · 노랑 2 · 초록 3, 카드가 없거나 다른 색이면 배경 4로 0.5초마다 보내요. 숫자 버튼을 직접 누르면 4초 동안은 버튼이 우선이에요.</p>
       </div>
       <div class="panel" id="pSensor">
         <h2 class="ph">로보독 센서</h2>
@@ -302,6 +314,7 @@
           <span>방향(˚)</span><b id="sHead">-</b>
           <span>모드</span><b id="sMode">-</b>
           <span>이동 속도</span><b id="sVel">-</b>
+          <span>AI 카메라</span><b id="sAi">-</b>
         </div>
         <div class="row" style="margin-top:6px">
           <button id="btnRobot" title="실물: 본체 아래쪽 전원 스위치 옆 버튼">본체 버튼 누르기</button>
@@ -322,25 +335,37 @@
           </select>
         </label>
         <div class="row" style="margin-top:6px">
-          <button id="btnPlace">장애물 놓기</button>
-          <button id="btnClearObs">장애물 지우기</button>
+          <button id="btnPlace" title="2D 보기에서 상자·색 물체·컬러칩을 놓고 끌어 옮겨요">물체 놓기·옮기기 (2D)</button>
+          <button id="btnClearObs">장면 비우기</button>
         </div>
+        <p class="note" style="margin:4px 0 0">2D 보기에서 상자·색 물체(카드)를 <b>끌어 옮길 수 있어요</b>. 실행 중에도 돼요. 거리센서·AI 카메라 값이 바로 바뀌어요.</p>
+        <details id="aiSet" style="margin-top:6px"><summary>📷 AI 카메라 설정 <span class="est">(추정값)</span></summary>
+          <p class="note" style="margin:4px 0">색 인식 모드(aiDetection → 색)에서 로보독 앞 <b>±30°·0~100cm</b>의 가장 가까운 색 물체를 알아봐요(시야·거리는 <span class="est">추정</span>). 색 → 클래스 번호는 카메라 펌웨어가 정해서 확장 소스에 없어요 → 아래는 임시값이에요. <b class="est">실물 카메라에서 확인 필요</b></p>
+          <div id="aiMap" class="aimap"></div>
+          <button id="aiMapReset" type="button" style="min-height:32px">기본값(빨강 1·노랑 2·초록 3·파랑 4)</button>
+        </details>
         <label class="row" style="gap:6px;margin-top:6px"><input id="soundOn" type="checkbox"> 소리 켜기(비슷한 신호음)</label>
         <label class="row" style="gap:6px;margin-top:6px">눈 LED 색
           <select id="eyeColor" aria-label="눈 LED 색"><option value="white">흰색</option><option value="blue">파란색</option></select></label>
       </div>
     </div>
+    <details class="mapset" id="mapSet"><summary>🗺 지도 (장면 저장·가져오기·크기)</summary>
+      <p class="note" style="margin:4px 0">상자·카드를 놓은 장면을 <b>내 지도</b>로 저장하고 나눌 수 있어요. 목록의 <b>포니봇용(라인 센서)</b> 지도는 검은 선 길이라 로보독에는 맞지 않아요(선을 읽는 센서가 없어요). 지도를 고르면 공간 크기도 바뀌어요.</p>
+      <div id="mapBody"></div>
+    </details>
     </details>
   </section>
 </main>
 <footer class="site-foot">빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. · <a href="../docs/">수업 자료</a> · <a href="../NOTICE.md">오픈소스·출처 고지</a></footer>
 
 <script type="module">
-import { Robot, World, Runner, EXPRESSIONS, makeRobodogApi, compile, ensureBabel } from './runtime.js';
+import { Robot, World, Runner, EXPRESSIONS, EST, makeRobodogApi, compile, ensureBabel } from './runtime.js';
 import { ruleAssistant, SAMPLE_REQUESTS, checkAi, askAi } from './assistant.js';
 import { View2D, drawEyes } from './view2d.js';
 import { EXAMPLES, GROUPS } from './examples.js';
-import { detectDevices, DEVICE_INFO, runHint } from './devices.js';
+import { detectDevices, DEVICE_INFO, runHint, needsFromCode, usesAiCards } from './devices.js';
+import * as PROPS from './props.js';
+import { attachMapLibrary } from './mapui.js';
 
 const $ = (id) => document.getElementById(id);
 const world = new World();
@@ -386,7 +411,7 @@ function showHowto(ex) {
 $('howtoClose').onclick = () => { $('howto').hidden = true; };
 sel.onchange = () => {
   const ex = EXAMPLES.find(e => e.id === sel.value);
-  if (ex && (!$('code').value.trim() || confirm('지금 코드를 예제로 바꿀까요?'))) { $('code').value = ex.code; save(); applyDevices(ex.code); showHowto(ex); }
+  if (ex && (!$('code').value.trim() || confirm('지금 코드를 예제로 바꿀까요?'))) { $('code').value = ex.code; save(); applyDevices(ex.code); autoSetup(ex.code); showHowto(ex); }
   sel.value = '';
 };
 function save() { try { localStorage.setItem('robodog-sim-code', $('code').value); } catch (e) {} }
@@ -399,15 +424,14 @@ $('code').addEventListener('keydown', (e) => {
 
 // ---------- 코드에 필요한 장치를 장면·패널에 함께 ----------
 let curDevs = [];
-// 처음 자리 앞 약 37cm (공간 크기가 바뀌어도 로보독 기준으로)
+// 처음 자리 앞 약 37cm (공간 크기가 바뀌어도 로보독 기준으로) — 자동 시연의 '장애물' 장면용
 const frontObstacle = () => ({ x: world.start.x - 5, y: world.start.y - 43, w: 10, h: 6 });
+const clearProps = () => PROPS.assignProps(world.props, PROPS.emptyProps());
+let camCode = null;   // 카메라 흉내 기본값을 정한 코드(코드가 바뀔 때만 기본값을 다시 정함)
 function applyDevices(code, opts = {}) {
   const devs = curDevs = detectDevices(code);
   world.devices = devs; world.radioLast = null;
-  if (devs.includes('tof') && !world.obstacles.length && !opts.keepScene) {
-    world.obstacles.push(frontObstacle());
-    log('거리센서를 쓰는 코드라 로보독 앞에 장애물을 놓았어요');
-  }
+  if (camCode !== code) { camCode = code; $('camEmu').checked = usesAiCards(code); }   // AI 신호 코드(라디오 숫자 + AI 카드 설명 + 카메라 블록 없음)면 기본으로 켬
   updateQuick(devs);
   const box = $('needs');
   box.hidden = !devs.length;
@@ -425,10 +449,25 @@ $('needs').addEventListener('click', (e) => {
   const p = $(b.dataset.panel); p.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); flash(p);
 });
 
+// 코드가 읽는 센서(거리·색 인식·AI 신호 카드)에 맞춰 '없는 것만' 장면에 채움. 사용자가 놓거나 옮긴 것은 그대로 둠
+function autoSetup(code) {
+  if (demoActive) return [];
+  const needs = needsFromCode(code, world.aiClass);
+  if (!needs.length) return [];
+  const rr = { x: robot.x, y: robot.y, heading: robot.heading, radius: EST.radius }, ctx = { size: world.table }, o = { robotRadius: EST.radius, distanceSteps: [55, 70, 90, 40, 30] };   // 걷는 속도가 느려 거리센서 상자는 조금 멀리
+  const cards = usesAiCards(code), notes = [];
+  notes.push(...PROPS.ensureFor(needs.filter(n => !(cards && n === 'object:green')), world.props, rr, ctx, o));
+  // AI 신호 카드: 초록은 오른쪽 옆(카메라 시야 밖)에 둬서, 빨강 → 끌어 옮기기 → 초록 으로 시험하게 함
+  if (cards && needs.includes('object:green')) notes.push(...PROPS.ensureFor(['object:green'], world.props, { ...rr, heading: rr.heading + 40 }, ctx, o).map(n => n.replace('앞 ', '오른쪽 앞 ')));
+  const out = notes.map(n => (cards ? n.replace('물체를', '카드를').replace('세웠어요', '놓았어요') : n));
+  out.forEach(n => log(n));
+  return out;
+}
 async function runCode(code, msg) {
   robot.reset(); runner.stop();
   if (!code.trim()) { runMsg('코드가 비어 있어요. 도우미에게 말하거나 예제를 불러오세요.', 'err'); return false; }
   const devs = applyDevices(code, { keepScene: !!demoActive });
+  autoSetup(code);
   const ok = await runner.start(code);
   if (ok) { runMsg('▶ 실행 중 — ' + runHint(devs), 'ok'); log(msg || '실행 시작 — ' + runHint(devs)); showRobot(); }
   return ok;
@@ -457,7 +496,7 @@ $('qNums').addEventListener('click', (e) => {
   const b = e.target.closest('button'); if (!b) return;
   if (e.isTrusted) stopDemo();
   const n = Number(b.dataset.n);
-  runner.radioReceive(n); lastRadio = n; log(`라디오 받음: ${n}`);
+  markManual(); runner.radioReceive(n); lastRadio = n; log(`라디오 받음: ${n}`);
   $('qNums').querySelectorAll('button').forEach(x => x.classList.toggle('last', x === b));
 });
 $('qRepeat').onchange = (e) => { $('radioRepeat').checked = e.target.checked; };
@@ -473,11 +512,12 @@ $('btnRobot').onclick = () => runner.robotButton();
 $('battery').oninput = (e) => { runner.battery = Number(e.target.value); $('batVal').textContent = e.target.value; };
 
 // ---------- 라디오 ----------
-let lastRadio = null;
-setInterval(() => { if ($('radioRepeat').checked && lastRadio !== null) runner.radioReceive(lastRadio); }, 500);
+let lastRadio = null, lastManualRadio = -1e9;
+const markManual = () => { lastManualRadio = performance.now(); };   // 직접 보낸 숫자(버튼·계속 보내기·AI 브리지)가 있으면 카메라 흉내는 잠시 쉼
+setInterval(() => { if ($('radioRepeat').checked && lastRadio !== null) { markManual(); runner.radioReceive(lastRadio); } }, 500);
 for (let n = 0; n <= 9; n++) {
   const b = document.createElement('button'); b.textContent = n;
-  b.onclick = () => { runner.radioReceive(n); lastRadio = n; log(`라디오 받음: ${n}`); };
+  b.onclick = () => { markManual(); runner.radioReceive(n); lastRadio = n; log(`라디오 받음: ${n}`); };
   $('radioBtns').appendChild(b);
 }
 let lastBridge = null;
@@ -485,7 +525,7 @@ try {
   const bc = new BroadcastChannel('robodog-ai-bridge');
   bc.onmessage = (e) => {
     if (!$('bridgeLink').checked || !e.data || typeof e.data.n !== 'number') return;
-    runner.radioReceive(e.data.n);
+    markManual(); runner.radioReceive(e.data.n);
     if (e.data.n !== lastBridge) { lastBridge = e.data.n; log(`AI 브리지에서 받음: ${e.data.n}`); }
   };
 } catch (e) { $('bridgeLink').disabled = true; }
@@ -494,26 +534,86 @@ try {
 const setTable = (on) => { world.useTable = on; $('btnTable').classList.toggle('on', on); $('btnFloor').classList.toggle('on', !on); };
 $('btnTable').onclick = () => setTable(true);
 $('btnFloor').onclick = () => setTable(false);
-// 공간 크기: 바꾸면 로보독을 새 공간의 처음 자리로, 장애물은 지움
+// 공간 크기: 바꾸면 로보독을 새 공간의 처음 자리로, 놓아 둔 소품은 지움(코드에 필요한 것은 다시 채움)
 let spaceSize = '200x140';
 try { const v = localStorage.getItem('sim-space'); if (v && $('spaceSize').querySelector(`option[value="${v}"]`)) spaceSize = v; } catch (e) {}
+function resetCamera() {
+  if (view3d && view3d.ready) { view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y); }
+}
 function applySpace(v, { moveCam = true } = {}) {
   const [w, h] = v.split('x').map(Number);
-  world.setSize(w, h); world.obstacles.length = 0; robot.reset();
-  if (moveCam && view3d && view3d.ready) {
-    view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y);
-  }
+  world.setSize(w, h); clearProps(); robot.reset();
+  const o = $('spaceSize').querySelector('option[value="map"]'); if (o) o.remove();
+  $('spaceSize').value = v;
+  if (moveCam) resetCamera();
 }
 $('spaceSize').value = spaceSize; applySpace(spaceSize, { moveCam: false });
 $('spaceSize').onchange = (e) => {
+  if (e.target.value === 'map') return;
   stopDemo(); endDance(); runner.stop();
   spaceSize = e.target.value; try { localStorage.setItem('sim-space', spaceSize); } catch (err) {}
   applySpace(spaceSize);
-  if (curDevs.includes('tof')) world.obstacles.push(frontObstacle());
+  autoSetup($('code').value);
   log(`공간 크기: ${$('spaceSize').selectedOptions[0].textContent}`);
 };
-$('btnPlace').onclick = () => { view2d.placing = !view2d.placing; $('btnPlace').classList.toggle('on', view2d.placing); if (mode3d && view2d.placing) showTab(false); };
-$('btnClearObs').onclick = () => { world.obstacles.length = 0; };
+
+// ---------- 소품 편집기(끌어 옮기기·놓기·지우기) + 지도 ----------
+// 2D 화면 위에서 상자·색 물체(카드)·컬러칩을 놓고 끌어 옮김. 실행 중에도 되고, 거리센서·AI 카메라 값은 소품 위치를 그대로 읽음.
+const robotBody = { get x() { return robot.x; }, get y() { return robot.y; }, radius: EST.radius };
+const editor = PROPS.attachEditor($('top2d'), {
+  getProps: () => world.props, toWorld: (ev) => view2d.toWorld(ev), toScreen: (x, y) => view2d.toScreen(x, y), getSize: () => world.table, robot: robotBody,
+  storageKey: () => 'robodog-sim.scene.v1',
+  getMeta: () => ({ size: { ...world.table }, start: { ...world.start } }),
+  applyMeta: () => {}, onMessage: () => {},
+});
+view2d.editor = editor;
+editor.buildToolbar($('peBar'));
+$('top2d').addEventListener('pointerdown', (e) => { if (e.isTrusted) stopDemo(); }, true);
+function applyField(f) {   // 지도 불러오기: 공간 크기·시작 자리·소품을 바꾸고 로보독을 시작 자리로
+  stopDemo(); endDance(); runner.stop();
+  world.setSize(f.size.w, f.size.h);
+  if (f.start) world.start = { ...world.start, ...f.start };
+  if (f.props) PROPS.assignProps(world.props, f.props);
+  robot.reset();
+  const sel = $('spaceSize'); let o = sel.querySelector('option[value="map"]');
+  if (!o) { o = document.createElement('option'); o.value = 'map'; sel.appendChild(o); }
+  o.textContent = `지도: ${f.title || '내 지도'} ${world.table.w}×${world.table.h}cm`; sel.value = 'map';
+  resetCamera();
+}
+const mapLib = attachMapLibrary($('mapBody'), { editor, tiles: false, mapLabel: (m) => `포니봇용(라인 센서) · ${m.title}`, host: {
+  getProps: () => world.props, getSize: () => world.table, getStart: () => world.start, apply: applyField,
+  robotToStart: () => { runner.stop(); robot.reset(); },
+} });
+$('btnPlace').onclick = () => { showTab(false); editor.setTool('box'); $('top2d').scrollIntoView({ behavior: 'smooth', block: 'nearest' }); };
+$('goEdit').onclick = () => { showTab(false); editor.setTool('select'); };
+$('btnClearObs').onclick = () => { clearProps(); editor.select(null); };
+
+// ---------- AI 카메라: 색 → 클래스 번호(설정), 시야 표시 ----------
+const AI_COLORS = ['red', 'yellow', 'green', 'blue'];
+try { const v = JSON.parse(localStorage.getItem('robodog-sim-aiclass') || 'null'); if (v) for (const c of AI_COLORS) if (Number.isInteger(v[c]) && v[c] >= 0 && v[c] <= 5) world.aiClass[c] = v[c]; } catch (e) {}
+$('aiMap').innerHTML = AI_COLORS.map(c => `<label><span class="dot" style="background:rgb(${PROPS.colorRGB(c).join(',')})"></span>${PROPS.colorKo(c)}
+  <select id="aiCls-${c}" aria-label="${PROPS.colorKo(c)} 물체의 클래스 번호">${[0, 1, 2, 3, 4, 5].map(n => `<option value="${n}">${n ? n : '인식 안 함'}</option>`).join('')}</select></label>`).join('');
+const syncAiMap = () => AI_COLORS.forEach(c => { $('aiCls-' + c).value = String(world.aiClass[c] || 0); });
+const saveAiMap = () => { try { localStorage.setItem('robodog-sim-aiclass', JSON.stringify(world.aiClass)); } catch (e) {} };
+AI_COLORS.forEach(c => $('aiCls-' + c).onchange = (e) => { world.aiClass[c] = Number(e.target.value); saveAiMap(); log(`AI 카메라 설정: ${PROPS.colorKo(c)} → 클래스 ${e.target.value || '인식 안 함'} (임시값, 실물 카메라에서 확인 필요)`); });
+$('aiMapReset').onclick = () => { Object.assign(world.aiClass, EST.aiClassDefault); saveAiMap(); syncAiMap(); };
+syncAiMap();
+
+// ---------- 카메라 흉내: 로보독 앞 카드 → 라디오 숫자 (시뮬레이터 전용) ----------
+// 실제로는 노트북 웹캠 + AI 브리지가 라디오 숫자를 보냄. 여기서는 로보독 앞 시야의 가장 가까운 색 카드로 대신함.
+const CARD_NUM = { red: 1, yellow: 2, green: 3 };   // 이 자료의 약속(1 빨강, 2 노랑, 3 초록, 4 배경)
+let camLast = { n: null, t: 0 };
+setInterval(() => {
+  if (!$('camEmu').checked || !runner.running || demoActive || danceOn) return;
+  const now = performance.now();
+  if (now - lastManualRadio < 4000) return;                  // 직접 누른 숫자가 우선
+  const v = robot.aiSees(CARD_NUM), n = v ? CARD_NUM[v.color] : 4;
+  const changed = n !== camLast.n;
+  if (!changed && now - camLast.t < 500) return;             // 같은 값은 0.5초마다 한 번만(AI 브리지처럼)
+  camLast = { n, t: now };
+  runner.radioReceive(n);
+  if (changed) log(`(카메라 흉내) ${v ? PROPS.colorKo(v.color) + ' 카드가 보여요 → 라디오 ' + n : '카드가 안 보여요 → 배경 4'}`);
+}, 100);
 // 눈 LED 색 (홍보 영상에 흰색·파란색 두 가지가 나옴)
 $('eyeColor').onchange = (e) => {
   const blue = e.target.value === 'blue', st = document.documentElement.style;
@@ -568,6 +668,13 @@ function frame(now) {
   $('sHead').textContent = h;
   $('sMode').textContent = MODES[robot.mode] + (robot.mode === 4 ? ` (${['준비', '앉기', '물구나무', '기지개', '인사'][robot.posture]})` : '');
   $('sVel').textContent = robot.vel;
+  // AI 카메라: 색 인식 모드면 보이는 색·클래스·위치, 아니면 모드
+  world.camView = curDevs.includes('aicam') || $('camEmu').checked; view2d.showCam = world.camView;
+  let aiTxt = '-';
+  if (robot.aiMode === 3) { const v = robot.aiSees(); aiTxt = v ? `색 인식: ${PROPS.colorKo(v.color)} → 클래스 ${world.aiClass[v.color]} (위치 ${Math.round(v.bearing / EST.aiCam.halfFovDeg * EST.aiCam.posRange)})` : '색 인식: 안 보임 → 0'; }
+  else if (curDevs.includes('aicam')) aiTxt = `모드 ${robot.aiMode}: 인식 없음(0)`;
+  else if ($('camEmu').checked) aiTxt = camLast.n ? `카메라 흉내: 라디오 ${camLast.n}` : '카메라 흉내 켜짐';
+  if ($('sAi').textContent !== aiTxt) $('sAi').textContent = aiTxt;
   requestAnimationFrame(frame);
 }
 window.addEventListener('resize', () => { ledDirty = true; });
@@ -637,8 +744,8 @@ async function playDemo(demo) {
   try {
     for (let round = 0; ; round++) {
       // 준비
-      runner.stop(); world.obstacles.length = 0; setTable(true);
-      if (demo.setup === 'obstacle') world.obstacles.push(frontObstacle());
+      runner.stop(); clearProps(); setTable(true);   // 자동 시연은 자기 장면을 새로 꾸밈(놓아 둔 소품은 지움)
+      if (demo.setup === 'obstacle') world.props.boxes.push(frontObstacle());
       robot.reset(); applyDevices(ex.code, { keepScene: true });
       await runner.start(ex.code);
       const n = demo.steps.filter(s => s[0] !== 'wait' || s[2]).length;
@@ -699,7 +806,7 @@ function endDance() {
   }
 }
 function setupDance() {
-  runner.stop(); world.obstacles.length = 0; setTable(false);
+  runner.stop(); clearProps(); setTable(false);
   world.setSize(120, 80);   // 군무 자리는 120×80 기준
   robot.reset(); world.extra = [];
   const xs = [22.5, 47.5, 72.5, 97.5], ys = [30, 62];
@@ -1006,7 +1113,7 @@ $('tab2d').setAttribute('aria-controls', 'pane2d'); $('tab3d').setAttribute('ari
   });
 }
 
-window.__sim = { runner, robot, world, showTab, showCodeTab, mcState: () => ({ mcReady, mcFromEditor }), playDemo: (i) => playDemo(DEMOS[i]), stopDemo, view3d: () => view3d, aiMode: () => aiOn };   // 자동 시험용
+window.__sim = { runner, robot, world, editor, view2d, mapLib, PROPS, autoSetup, applyField, camEmuState: () => ({ on: $('camEmu').checked, last: camLast }), showTab, showCodeTab, mcState: () => ({ mcReady, mcFromEditor }), playDemo: (i) => playDemo(DEMOS[i]), stopDemo, view3d: () => view3d, aiMode: () => aiOn };   // 자동 시험용
 </script>
 </body>
 </html>
