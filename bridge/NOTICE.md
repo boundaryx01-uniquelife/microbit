@@ -27,6 +27,12 @@ MIT License 전문: `sim/lib/LICENSE-MIT.txt`
 `kocoafab/robodog-radio`(4a50d45)의 블록 이름·열거형 값·동작 규칙(값 변환, 회전 대기 등)을 옮겨 썼습니다.
 Copyright (c) 2026 코코아팹 — MIT License 전문: `sim/lib/LICENSE-robodog-MIT.txt`
 
+## AI 포니봇 확장(boundary-x/ai_ponybot_basic) — MIT License
+
+포니봇 예제(`ponybot/makecode/`)와 블록 표(`kits/ponybot/api.json`)는 공식 MakeCode 확장
+`boundary-x/ai_ponybot_basic`(v1.3.1)의 블록 이름·열거형 값·핀 배치를 참고했습니다. 확장 코드는 이 사이트에 포함하지 않습니다(MakeCode가 GitHub에서 받음).
+Copyright (c) 2025 boundary X — MIT License 전문: 저장소 `kits/ponybot/LICENSE-ai_ponybot_basic-MIT.txt`
+
 ## 공식 다리 시뮬레이션 데이터 (`sim/legs.js`)
 
 `sim/legs.js`의 다리 높이·발끝 → 관절 각도 표본 125개, 특수 곡선 4개, 보간 상수, 측면도 비율은
@@ -37,3 +43,5 @@ Copyright (c) 2026 코코아팹 — MIT License 전문: `sim/lib/LICENSE-robodog
 
 "빅아이 로보독"은 코코아팹(네패스)의 제품입니다. 이 사이트와 자료는 코코아팹과 협력해 만든 수업 도구입니다.
 홍보 영상 장면(사용자 제공 캡처)은 외형 참고에만 썼고 사이트에 싣지 않았습니다.
+
+"AI 포니봇"은 바운더리엑스(boundaryX)의 제품입니다. 포니봇 자료는 제조사 사용 허락을 받아 만들었습니다(표기 문구는 제조사와 최종 확인 예정).

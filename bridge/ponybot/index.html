@@ -1,0 +1,41 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>포니봇 AI 교실 · 수업 자료</title>
+<meta name="description" content="AI 포니봇 × 마이크로비트 피지컬 AI 수업: 웹캠 AI 브리지, MakeCode 예제, 수업 꾸러미">
+<link rel="stylesheet" href="../assets/brand.css"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<style>
+main{max-width:960px;margin:0 auto;padding:24px 16px 48px}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
+.cards a{display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:12px;background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);text-decoration:none;color:inherit}
+.cards a b{color:var(--accent,#2456E5);font-size:18px}
+.note{color:var(--sub,#566077);font-size:14px}
+ul.dl li{margin:6px 0}
+.warnbox{border-left:4px solid #F2B300;background:#fff8e1;padding:12px 16px;border-radius:8px;color:#111827}
+code{word-break:break-all}
+</style></head>
+<body><header class="gnb"><div class="gnb-in">
+<a class="brand" href="./"><span>포니봇 AI 교실<small>피지컬 AI 수업</small></span></a>
+<nav aria-label="주 메뉴"><a href="./" aria-current="page">처음</a><a href="../sim/?kit=ponybot">시뮬레이터</a><a href="../ai.html?kit=ponybot">AI 브리지</a><a href="../">전체 교구</a></nav>
+</div></header>
+<main>
+<h1>AI 포니봇 × 마이크로비트 AI 교실</h1>
+<p class="note">카드를 웹캠으로 AI에게 가르치고 → 인식한 번호를 USB 마이크로비트가 라디오로 보내고 → AI 포니봇에 꽂은 마이크로비트가 받아 움직입니다.</p>
+<div class="cards">
+<a href="../sim/?kit=ponybot"><b>시뮬레이터 열기 →</b><span>블록 코딩(MakeCode) + 위에서 본 2D·3D 포니봇, 실물 없이 미리 시험</span></a>
+<a href="../ai.html?kit=ponybot"><b>AI 브리지 열기 →</b><span>크롬·엣지에서 웹캠 + USB 마이크로비트 연결</span></a>
+<a href="../lessons/?l=ponybot_4차시"><b>4차시 기본형 수업 슬라이드</b><span>웹 슬라이드 (교사 모드: 대본 표시)</span></a>
+</div>
+
+<h2>수업 꾸러미</h2>
+<h3>포니봇 4차시 기본형</h3><ul class="dl"><li><a href="materials/%ED%8F%AC%EB%8B%88%EB%B4%87_4%EC%B0%A8%EC%8B%9C_%EA%B8%B0%EB%B3%B8%ED%98%95/ponybot_4%EC%B0%A8%EC%8B%9C_%EC%88%98%EC%97%85%EC%8A%AC%EB%9D%BC%EC%9D%B4%EB%93%9C.pptx" download>ponybot_4차시_수업슬라이드.pptx</a></li></ul>
+
+<h2>MakeCode 예제 내려받기</h2>
+<p class="note">makecode.microbit.org → 새 프로젝트 → 확장에 <code>https://github.com/boundary-x/ai_ponybot_basic</code> 입력해 추가 → 내려받은 파일을 가져오기(또는 JavaScript 탭에 붙여넣기). <b>00_bridge-receiver</b>는 컴퓨터에 꽂는 마이크로비트용이라 확장이 필요 없습니다.</p>
+<ul class="dl"><li><a href="makecode/00_bridge-receiver.ts" download>00_bridge-receiver.ts</a> <span class="note">USB 마이크로비트(컴퓨터에 꽂는 것) — 확장 없이</span></li><li><a href="makecode/00_check-ponybot.ts" download>00_check-ponybot.ts</a> <span class="note">0. 연결·센서 점검 (수업 전 1분)</span></li><li><a href="makecode/01_hello-ponybot.ts" download>01_hello-ponybot.ts</a> <span class="note">1. 안녕, 포니봇! (순차 구조)</span></li><li><a href="makecode/02_distance-rule.ts" download>02_distance-rule.ts</a> <span class="note">2. 규칙으로 반응하기 (센서 + 조건문)</span></li><li><a href="makecode/03_ai-traffic-ponybot.ts" download>03_ai-traffic-ponybot.ts</a> <span class="note">3. AI 신호등 포니봇</span></li><li><a href="makecode/04_ai-team-template.ts" download>04_ai-team-template.ts</a> <span class="note">4. 우리 모둠 AI 포니봇 (프로젝트 틀)</span></li></ul>
+
+<h2>수업 전 꼭 확인할 것 (실물 미검증)</h2>
+<div class="warnbox"><p>아래는 확장 코드로만 확인했고 실물로는 아직 확인하지 않았습니다. 수업 전에 선생님이 직접 확인해 주세요.</p><ul><li>메카넘 9방향·제자리 회전(↶/↷)이 화면 글자대로 움직이는지 (0번 점검 예제로 확인)</li><li>예제 속도에서 바퀴가 확실히 도는지, 1초에 얼마나 가는지</li><li>포니봇에 꽂은 마이크로비트의 A·B 버튼을 누를 수 있는지</li><li>초음파 거리센서: 손을 대면 숫자가 줄어드는지, 반사가 없을 때 500이 나오는지</li><li>라디오 수신: USB 마이크로비트와 같은 모둠번호에서 2초 안에 신호가 오는지</li></ul>
+<p>속도·가까움 기준 같은 값은 예시입니다(예제 기본 속도 80, 범위 0~255). 교실 환경에 맞게 선생님이 정해 주세요.</p></div>
+</main>
+<footer class="site-foot">AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. 확장 블록: boundary-x/ai_ponybot_basic (MIT, (c) 2025 boundary X) · <a href="../NOTICE.md">오픈소스·출처 고지</a></footer>
+</body></html>

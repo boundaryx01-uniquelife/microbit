@@ -1,0 +1,16 @@
+{
+  "slug": "maqueen",
+  "name": "마퀸(micro:Maqueen)",
+  "vendor": "DFRobot",
+  "page": false,
+  "_note": "준비 중. 자료를 만들 때 microbit-kit-site 스킬 1단계(접수)부터 시작",
+  "hub": {
+    "order": 3,
+    "status": "coming",
+    "image": "lessons/assets/icon_car.png",
+    "imageAlt": "작은 자동차 로봇 아이콘",
+    "tagline": "두 바퀴 소형 자동차 로봇. 같은 AI 브리지로 수업할 수 있도록 준비하고 있어요",
+    "badge": "준비 중",
+    "links": []
+  }
+}
