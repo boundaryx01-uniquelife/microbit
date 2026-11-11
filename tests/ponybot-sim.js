@@ -1,4 +1,4 @@
-// 포니봇 시뮬레이터 자동 시험 (Playwright, 헤드리스 크로미움)
+// 포니봇 시뮬레이터 자동 시험 (Playwright, 헤드리스 크로미움) — 통합 시뮬레이터 /sim/?kit=ponybot (옛 /ponybot/sim/ 은 이쪽으로 넘어감)
 // 실행: node tests/ponybot-sim.js [기본주소]
 //   기본주소를 안 주면 bridge/ 를 python3 -m http.server 로 직접 띄워 시험하고 끝나면 끕니다.
 const { chromium } = require('playwright');
@@ -18,7 +18,7 @@ async function startServer() {
   const srv = spawn('python3', ['-m', 'http.server', String(port), '--bind', '127.0.0.1'], { cwd: path.join(__dirname, '..', 'bridge'), stdio: 'ignore' });
   const base = `http://127.0.0.1:${port}/`;
   for (let i = 0; i < 50; i++) {
-    try { const r = await fetch(base + 'ponybot/sim/index.html'); if (r.ok) return { srv, base }; } catch (e) { /* 기다림 */ }
+    try { if (await new Promise((res) => require('http').get(base + 'sim/guide.js', (r) => { r.resume(); res(r.statusCode === 200); }).on('error', () => res(false)))) return { srv, base }; } catch (e) { /* 기다림 */ }
     await new Promise(r => setTimeout(r, 100));
   }
   srv.kill(); throw new Error('정적 서버가 안 떠요');
@@ -28,13 +28,14 @@ async function startServer() {
   let srv = null, BASE = process.argv[2];
   if (!BASE) { const s = await startServer(); srv = s.srv; BASE = s.base; }
   BASE = BASE.replace(/\/?$/, '/');
-  const URL = BASE + 'ponybot/sim/index.html';
+  const URL = BASE + 'sim/?kit=ponybot&tab=js';   // 글자 코드 탭으로 열어 MakeCode 창을 안 띄움(MakeCode 는 tests/sim-unified.js 가 시험)
 
   const b = await chromium.launch();
   const ctx = await b.newContext({ viewport: { width: 1400, height: 950 } });
   const p = await ctx.newPage();
   const errs = [];
   p.on('pageerror', e => errs.push('pageerror: ' + e.message));
+  p.on('dialog', d => d.accept());
   p.on('console', m => { if (m.type() === 'error' && !/aiPonybot\.Mecanum/.test(m.text())) errs.push('console: ' + m.text()); });   // 일부러 낸 enum 오류는 제외
   // 장면을 빨리 바꾸면 이전 그림 요청이 취소(ERR_ABORTED)됨 — 실패가 아니므로 제외. 다른 실패(404 등)는 그대로 잡음
   p.on('requestfailed', r => { const ft = (r.failure() && r.failure().errorText) || ''; if (!/ERR_ABORTED/.test(ft)) errs.push('requestfailed: ' + r.url() + ' ' + ft); });
@@ -42,6 +43,9 @@ async function startServer() {
   await p.waitForFunction(() => window.__ponyReady && window.Babel, null, { timeout: 30000 });
 
   const S = (fn, arg) => p.evaluate(fn, arg);
+  // 실행 버튼(기록은 실행마다 지워 '이번 실행의 경고'만 보게 함) / 말로 코드 만들기 → 코드 칸에 넣기
+  const clickRun = async () => { await p.evaluate(() => { document.getElementById('log').textContent = ''; }); await p.click('#btnRun'); };
+  const ask = async (text) => { await p.fill('#askText', text); await p.click('#askBtn'); await p.waitForSelector('#askUse:not([disabled])', { timeout: 15000 }); await p.click('#askUse'); };
   const EST = await S(() => ({ ...window.__pony.EST }));
   // 결정적 이동 시험: 바퀴 명령 → fastForward(물리만 진행). 가감속 포함 예상 이동거리 d = v·T − v²/(2a)
   const vOf = (speed) => speed * 16 / 16 / 255 * EST.maxCmPerSec;
@@ -172,7 +176,7 @@ async function startServer() {
   const logs = (sel) => p.$$eval('#log ' + sel, els => els.map(e => e.textContent));
   const runSrc = async (src, scene = 'free') => {
     await S(({ src, scene }) => { window.__pony.setScene(scene); window.__pony.setPose(...[window.__pony.world.start.x, window.__pony.world.start.y, 0]); document.getElementById('code').value = src; }, { src, scene });
-    await p.click('#btnRun');
+    await clickRun();
     await p.waitForTimeout(150);
   };
   await runSrc('aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 80)\nbasic.pause(1000)\naiPonybot.stopAllMotors()');
@@ -213,10 +217,10 @@ async function startServer() {
   await p.click('#btnStop');
 
   // ---- 예제 전부 ----
-  const ids = await p.$$eval('#examples option', os => os.map(o => o.value));
+  const ids = await p.$$eval('#examples option', os => os.map(o => o.value).filter(Boolean));   // 첫 칸('예제 고르기…')은 빼고
   for (const id of ids) {
     await p.selectOption('#examples', id);
-    await p.click('#btnRun'); await p.waitForTimeout(700);
+    await clickRun(); await p.waitForTimeout(700);
     await p.click('.mbbtn[data-btn="A"]'); await p.waitForTimeout(150);
     await p.click('.mbbtn[data-btn="B"]'); await p.waitForTimeout(150);
     await p.click('#radioBtns button:nth-child(4)'); await p.waitForTimeout(200);   // 3
@@ -228,14 +232,14 @@ async function startServer() {
 
   // ---- 예제 동작 ----
   await S(() => window.__pony.loadExample('02_distance-rule'));
-  await p.click('#btnRun'); await p.waitForTimeout(400);
+  await clickRun(); await p.waitForTimeout(400);
   await S(() => window.__pony.setPose(60, 70, 0));   // 실행 시 처음 자리로 돌아가므로, 실행 뒤에 책 가까이로 옮김
   await p.click('.mbbtn[data-btn="A"]'); await p.waitForTimeout(4500);
   const dr = await S(() => ({ y: window.__pony.robot.y, ping: window.__pony.api.ping(1), pwm: window.__pony.robot.pwm.slice(), row: window.__pony.oled.textRows() }));
   check('02 거리 규칙: 책 앞에서 멈춤(ping<20·정지)', dr.ping < 20 && dr.ping > 5 && dr.pwm.every(v => v === 0), `y=${f(dr.y)} ping=${dr.ping} ${dr.row[0]}`);
   await p.click('#btnStop');
   await S(() => window.__pony.loadExample('03_ai-traffic-ponybot'));
-  await p.click('#btnRun'); await p.waitForTimeout(2800);   // 시작하면 'R1' 글자가 흐르는 동안은 라디오 핸들러가 아직 등록 전(실물도 같음)
+  await clickRun(); await p.waitForTimeout(2800);   // 시작하면 'R1' 글자가 흐르는 동안은 라디오 핸들러가 아직 등록 전(실물도 같음)
   await p.click('#radioBtns button:nth-child(4)'); await p.waitForTimeout(1100);
   const g1 = await S(() => window.__pony.robot.pwm.slice());
   await p.click('#radioBtns button:nth-child(2)'); await p.waitForTimeout(500);
@@ -243,7 +247,7 @@ async function startServer() {
   check('03 신호등: 3 → 출발(4개 모터 전진), 1 → 정지', g1.every(v => v > 0) && g2.every(v => v === 0), `${g1} → ${g2} ` + JSON.stringify(await S(() => ({ ping: window.__pony.api.ping(1), h: Object.keys(window.__pony.runner.handlers), y: window.__pony.robot.y, log: document.getElementById('log').textContent.slice(0, 200), oled: window.__pony.oled.textRows()[0] }))));
   await p.click('#btnStop');
   await S(() => window.__pony.loadExample('S1_line-follow'));
-  await p.click('#btnRun'); await p.waitForTimeout(400);
+  await clickRun(); await p.waitForTimeout(400);
   await p.click('.mbbtn[data-btn="A"]'); await p.waitForTimeout(6000);
   const lf = await S(() => {
     const P = window.__pony, pts = P.world.floor.tracks[0].pts;
@@ -257,7 +261,7 @@ async function startServer() {
   // ============================================================
   // 소품·편집기·지도 (props.js / maps.js / mapui.js)
   // ============================================================
-  const SHOT = '/tmp/claude-0/-home-user-microbit/5be5baa5-83cc-5031-993e-cb8ff7e544f8/scratchpad/props';
+  const SHOT = process.env.SHOT_DIR || OUT;
   fs.mkdirSync(SHOT, { recursive: true });
   const sc = (x, y) => S(({ x, y }) => window.__pony.view.toScreen(x, y), { x, y });
   const mouseAt = async (x, y, what) => { const s = await sc(x, y); await p.mouse.move(s.x, s.y); if (what === 'down') await p.mouse.down(); if (what === 'up') await p.mouse.up(); };
@@ -267,26 +271,26 @@ async function startServer() {
   const swatch = async (c) => { await p.evaluate((c) => document.querySelector(`.pe-colors [data-color="${c}"]`).click(), c); };
   const pc = async (fn, arg) => S(fn, arg);
   const reset = async (scene = 'free') => { await S((scene) => { const P = window.__pony; P.runner.stop(); P.setScene(scene); P.editor.setTool('select'); }, scene); };
-  await S(() => document.getElementById('field').scrollIntoView({ block: 'center' }));
+  await S(() => document.getElementById('top2d').scrollIntoView({ block: 'center' }));
 
   // 1) 도우미 → 실행 → 빨간 칩이 앞에 생기고 로봇이 그 위에서 멈춤
   await reset('free');
-  await p.fill('#askText', '계속 앞으로 가다가 빨간색이 보이면 멈추고 OLED에 "RED"라고 써'); await p.click('#askGo');
+  await ask('계속 앞으로 가다가 빨간색이 보이면 멈추고 OLED에 "RED"라고 써');
   await p.waitForFunction(() => /isColorAdvanced/.test(document.getElementById('code').value), null, { timeout: 15000 });
-  await p.click('#btnRun'); await p.waitForTimeout(3200);
+  await clickRun(); await p.waitForTimeout(3200);
   const rd = await S(() => { const P = window.__pony; return { chips: JSON.parse(JSON.stringify(P.props.chips)), pwm: P.robot.pwm.slice(), oled: P.oled.textRows()[0], y: P.robot.y, red: P.api.isColorAdvanced(0), log: document.getElementById('log').textContent }; });
   check('도우미 "빨간색이 보이면 멈추고" → 실행하면 빨간 칩이 앞에 생기고 로봇이 그 위에서 멈춰 RED', rd.chips.length === 1 && rd.chips[0].color === 'red' && rd.pwm.every(v => v === 0) && rd.oled === 'RED' && rd.red === true && /빨간 컬러칩을 앞 \d+cm에 놓았어요 — 끌어서 옮길 수 있어요/.test(rd.log), JSON.stringify(rd).slice(0, 240));
   // 2) 다시 실행해도 중복·이동 없음
   await S(() => { window.__pony.props.chips[0].x += 14; });
   const moved = await S(() => JSON.stringify(window.__pony.props.chips));
-  await p.click('#btnRun'); await p.waitForTimeout(500);
+  await clickRun(); await p.waitForTimeout(500);
   const again = await S(() => ({ chips: JSON.stringify(window.__pony.props.chips), log: document.getElementById('log').textContent }));
   check('다시 실행: 사용자가 옮긴 칩은 그대로·중복 없음·같은 안내 안 나옴', again.chips === moved && !/놓았어요/.test(again.log), again.log.slice(0, 80));
   await p.click('#btnStop');
   // 3) 선 코드 + 빈 장면 → 선 생성 → 라인 따라가기 예제가 선 위에 머묾
   const s1 = await S(() => { window.__pony.loadExample('S1_line-follow'); const c = document.getElementById('code').value; window.__pony.setScene('free'); return c; });
   await S((c) => { document.getElementById('code').value = c; }, s1);
-  await p.click('#btnRun'); await p.waitForTimeout(400);
+  await clickRun(); await p.waitForTimeout(400);
   const made = await S(() => { const P = window.__pony; return { tracks: P.props.tracks.length, onLine: P.PROPS.onLine(P.props, P.robot.x, P.robot.y), log: document.getElementById('log').textContent }; });
   await p.click('.mbbtn[data-btn="A"]'); await p.waitForTimeout(6000);
   const fl = await S(() => { const P = window.__pony, t = P.props.tracks[0]; return { off: P.PROPS.distToTrack(t, P.robot.x, P.robot.y), moved: Math.hypot(P.robot.x - P.world.start.x, P.robot.y - P.world.start.y) }; });
@@ -303,7 +307,7 @@ async function startServer() {
   check('로봇 위로는 끌어 놓을 수 없음(겹치지 않음)', onRobot > 9 + 3, `거리 ${f(onRobot)}`);
   // 실행 중에도 끌 수 있음
   await S(() => { window.__pony.props.boxes.length = 0; window.__pony.editor.addAt('box', 60, 40); document.getElementById('code').value = 'basic.forever(function () { basic.pause(50) })'; });
-  await p.click('#btnRun'); await p.waitForTimeout(200);
+  await clickRun(); await p.waitForTimeout(200);
   await dragW([60, 40], [100, 60]);
   const runDrag = await S(() => ({ x: window.__pony.props.boxes[0].x, running: window.__pony.runner.running }));
   check('프로그램이 도는 중에도 소품을 끌어 옮길 수 있음', runDrag.running && runDrag.x > 80, JSON.stringify(runDrag));
@@ -342,6 +346,7 @@ async function startServer() {
   check('프리셋 전환: 타원(닫힘·선 위 시작) → 8자(32점, 선 1개) → 굵기 슬라이더 7cm', ov.closed && ov.n > 10 && ov.tracks === 1 && ov.startOn && ov.robotOn && f8.closed && f8.n === 32 && f8.tracks === 1 && wd === 7, JSON.stringify({ ov, f8, wd }));
   // 7) 저장 → 새로 고침 → 불러오기
   await S(() => { const P = window.__pony; P.editor.setTool('box'); });
+  await S(() => document.getElementById('top2d').scrollIntoView({ block: 'center' }));   // 위 [프리셋] 누르며 화면이 움직였으므로 바닥을 다시 가운데로
   await tool('box'); await clickW(250, 30); await tool('object'); await swatch('green'); await clickW(40, 30); await tool('select');
   const saved = await S(() => { document.getElementById('pe-save').click(); return JSON.stringify(window.__pony.props); });
   await p.waitForLoadState('networkidle'); await p.reload(); await p.waitForFunction(() => window.__ponyReady && window.Babel, null, { timeout: 30000 });
@@ -349,7 +354,7 @@ async function startServer() {
   await S(() => { window.__pony.setScene('free'); document.getElementById('pe-load').click(); });
   const restored = await S(() => JSON.stringify(window.__pony.props));
   check('장면 저장 → 새로 고침 → 불러오기: 소품이 그대로 복원', saved === restored && preLoad !== saved && JSON.parse(restored).objects[0].color === 'green' && JSON.parse(restored).tracks[0].width === 7, `${saved.length} vs ${restored.length}`);
-  await S(() => document.getElementById('field').scrollIntoView({ block: 'center' }));
+  await S(() => document.getElementById('top2d').scrollIntoView({ block: 'center' }));
 
   // 8) 지도 라이브러리
   const mapIds = await S(() => [...document.querySelectorAll('#map-pick option')].map(o => o.value).filter(v => v && !v.startsWith('c:')));
@@ -442,20 +447,20 @@ async function startServer() {
   await S(() => window.__pony.setScene('free'));
 
   // ---- 화면 ----
-  const vis = await S(() => ({ img: !!document.querySelector('header img').naturalWidth, est: /추정/.test(document.body.innerText), assistant: !!document.getElementById('askGo') && !document.getElementById('assistant').hidden, scenes: document.querySelectorAll('#scene option').length }));
+  const vis = await S(() => ({ img: !!document.querySelector('.brand img').naturalWidth, est: /추정/.test(document.body.innerText), assistant: !!document.getElementById('askBtn') && !document.getElementById('assist').hidden, scenes: document.querySelectorAll('#scene option').length }));
   check('제품 그림 로드·"추정" 표시·말로 코드 만들기 칸', vis.img && vis.est && vis.assistant && vis.scenes === 4, JSON.stringify(vis));
 
   // ---- 말로 코드 만들기 → 실행 → 움직임 (규칙 모드, 오프라인) ----
   await p.selectOption('#scene', 'free').catch(() => {});
-  await p.fill('#askText', 'A 버튼을 누르면 오른쪽 옆으로 1초 동안 가'); await p.click('#askGo');
+  await ask('A 버튼을 누르면 오른쪽 옆으로 1초 동안 가');
   await p.waitForFunction(() => /runMecanum\(aiPonybot\.Mecanum\.Right/.test(document.getElementById('code').value), null, { timeout: 15000 });
-  await p.click('#btnRun'); await p.waitForTimeout(600);
+  await clickRun(); await p.waitForTimeout(600);
   const a0 = await S(() => ({ x: window.__pony.robot.x, y: window.__pony.robot.y }));
   await p.click('.mbbtn[data-btn="A"]'); await p.waitForTimeout(1800);
   const a1 = await S(() => ({ x: window.__pony.robot.x, y: window.__pony.robot.y, h: window.__pony.robot.heading }));
   check('도우미 코드 실행: A → 오른쪽 옆 이동(y·방향 그대로) 뒤 멈춤', a1.x - a0.x > 5 && Math.abs(a1.y - a0.y) < 0.5 && Math.abs(a1.h) < 0.5, `dx=${f(a1.x - a0.x)} dy=${f(a1.y - a0.y)} heading=${f(a1.h)}`);
   await p.click('#btnStop');
-  await p.fill('#askText', '날아서 하늘로 가'); await p.click('#askGo'); await p.waitForTimeout(300);
+  await p.fill('#askText', '날아서 하늘로 가'); await p.click('#askBtn'); await p.waitForTimeout(300);
   const unk = await S(() => document.getElementById('askOut').innerText);
   check('도우미: 모르는 말은 코드 없이 경고', /알아듣지 못/.test(unk), unk.slice(0, 60));
   await p.setViewportSize({ width: 390, height: 844 });

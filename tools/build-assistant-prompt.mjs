@@ -6,13 +6,13 @@
 // 서버 함수가 쓰는 법(이 파일은 함수를 만들지도 배포하지도 않는다 — docs 메모):
 //   1) 서버 함수(예: netlify/functions/ponybot-assistant.mjs)는 로보독 함수의 게이트(수업 코드·속도 제한·길이 제한)를 그대로 쓰고,
 //      SYSTEM 만 buildSystemPrompt(blocks, policy, '포니봇')로 바꾼다. 출력 형식은 OUTPUT_SCHEMA(json_schema)로 강제한다.
-//   2) 모델 응답의 code 는 반드시 checkPonyCode(code, policy)(bridge/ponybot/sim/assistant.js → validateCode)로 서버에서 다시 검사한다.
+//   2) 모델 응답의 code 는 반드시 checkPonyCode(code, policy)(bridge/sim/kits/ponybot/assistant.js → validateCode)로 서버에서 다시 검사한다.
 //      오류(E1 없는 블록·E2 없는 enum·E3 범위·E4 인자 수·E5 문법)나 정책 위반(W3 한도·W4 금지)이면 code 를 비우고 이유를 돌려준다.
 //   3) 키가 없거나·수업 코드가 틀리거나·모델 호출이 실패하거나·검사에 걸리면 클라이언트는 ponyAssistant(text, policy)(규칙 모드)로 대신 만든다.
 //   프롬프트의 "부탁"만으로는 안전하지 않다 — 정책 값(속도 한도 등)은 모델에 맡기지 말고 2)의 결정적 검사로 막는다.
 //
 // 이 파일은 node·브라우저·번들러 어디서나 쓸 수 있게 node 모듈을 import 하지 않는다.
-import { blockText } from '../bridge/ponybot/sim/assistant.js';
+import { blockText } from '../bridge/sim/kits/ponybot/assistant.js';
 
 export const OUTPUT_SCHEMA = {
   type: 'object', additionalProperties: false, required: ['code', 'explanation', 'warnings'],

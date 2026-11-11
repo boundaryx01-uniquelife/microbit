@@ -1,8 +1,8 @@
 // AI 포니봇(boundaryX · micro:bit 메카넘 4바퀴) 시뮬레이터 — 로봇 모델 + 블록 API + 실행기
 // 기준 소스: github.com/boundary-x/ai_ponybot_basic v1.3.1 (kits/ponybot/blocks.json). 구현(PWM 표)을 읽어 만들었음.
 // ※ 움직임(속도·가감속·크기·센서 위치)은 실물 측정값이 아닌 '추정'입니다. 실측하면 EST 만 고치면 됩니다.
-import { Runner, addAsyncNs } from '../../sim/runtime.js';
-import { emptyProps, assignProps, addProp, removeProp, hitTest, colorAt, colorRGB, obstacleHit, raycast as propsRaycast, roundedRectTrack } from '../../sim/props.js';
+import { Runner, addAsyncNs } from '../../runtime.js';
+import { emptyProps, assignProps, addProp, removeProp, hitTest, colorAt, colorRGB, obstacleHit, raycast as propsRaycast, roundedRectTrack } from '../../props.js';
 
 const clamp = (v, a, b) => Math.min(b, Math.max(a, v));
 const RAD = Math.PI / 180;
@@ -143,6 +143,7 @@ export class PonyWorld {
     this.walls = true; this.floor.bg = WHITE; this.sceneId = 'map'; this.scene = { title: '지도', hint: '', w: this.size.w, h: this.size.h };
   }
   get obstacles() { return this.props.boxes; }
+  get table() { return this.size; }   // 공용 화면(로보독 월드의 이름)이 읽는 별칭
   addBox(x, y) { return addProp(this.props, 'box', x, y); }                      // (옛 호출용) x,y 를 중심으로 12×12 상자
   removeBoxAt(x, y) { const h = hitTest(this.props, x, y, 0.1, { items: true }); return h && h.kind === 'box' ? removeProp(this.props, 'box', h.prop) : false; }
   clearBoxes() { this.props.boxes.length = 0; }
