@@ -36,7 +36,8 @@ async function startServer() {
   const errs = [];
   p.on('pageerror', e => errs.push('pageerror: ' + e.message));
   p.on('console', m => { if (m.type() === 'error' && !/aiPonybot\.Mecanum/.test(m.text())) errs.push('console: ' + m.text()); });   // 일부러 낸 enum 오류는 제외
-  p.on('requestfailed', r => errs.push('requestfailed: ' + r.url()));
+  // 장면을 빨리 바꾸면 이전 그림 요청이 취소(ERR_ABORTED)됨 — 실패가 아니므로 제외. 다른 실패(404 등)는 그대로 잡음
+  p.on('requestfailed', r => { const ft = (r.failure() && r.failure().errorText) || ''; if (!/ERR_ABORTED/.test(ft)) errs.push('requestfailed: ' + r.url() + ' ' + ft); });
   await p.goto(URL);
   await p.waitForFunction(() => window.__ponyReady && window.Babel, null, { timeout: 30000 });
 
