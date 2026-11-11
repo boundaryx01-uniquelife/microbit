@@ -75,10 +75,10 @@ export function buildPonyModel() {
   const mats = {
     black: std(0x16181b, { roughness: 0.55 }), dark: std(0x0d0e10, { roughness: 0.7 }), cover: std(0x1d2024, { roughness: 0.75 }),
     pcb: std(0x15181c, { roughness: 0.5, metalness: 0.15 }), gold: std(0xc9a64a, { metalness: 0.8, roughness: 0.35 }), silver: std(0xcfd5da, { metalness: 0.8, roughness: 0.3 }),
-    gun: std(0x5b5a55, { metalness: 0.6, roughness: 0.4 }), gun2: std(0x3d3d3a, { metalness: 0.5, roughness: 0.5 }),
+    gun: std(0x8a8880, { metalness: 0.5, roughness: 0.35 }), gun2: std(0x55554f, { metalness: 0.5, roughness: 0.5 }),
     rubber: std(0x1f2325, { roughness: 0.9 }), white: std(0xf2f2f2, { roughness: 0.5 }),
-    cap: new T.MeshStandardMaterial({ color: 0x9fb8b4, roughness: 0.25, metalness: 0.2, transparent: true, opacity: 0.7,
-      map: canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#c8dcd8'; g.fillRect(0, 0, w, h); g.strokeStyle = '#5d7570'; g.lineWidth = 2; for (let i = -h; i < w + h; i += 12) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h, h); g.moveTo(i + h, 0); g.lineTo(i, h); g.stroke(); } }) }),
+    cap: new T.MeshStandardMaterial({ color: 0xffffff, roughness: 0.25, metalness: 0.2, transparent: true, opacity: 0.85,
+      map: canvasTex(128, 128, (g, w, h) => { g.fillStyle = '#b9d3cf'; g.fillRect(0, 0, w, h); g.strokeStyle = '#5d7570'; g.lineWidth = 2; for (let i = -h; i < w + h; i += 12) { g.beginPath(); g.moveTo(i, 0); g.lineTo(i + h, h); g.moveTo(i + h, 0); g.lineTo(i, h); g.stroke(); } }) }),
     purple: std(0x8e86b4, { roughness: 0.3 }),
   };
   const Y0 = BODY.pcbY, YC = BODY.coverY;
@@ -107,7 +107,7 @@ export function buildPonyModel() {
   // OLED (보라빛 회색 작은 화면) — 캔버스 그림을 매 프레임 필요할 때만 갱신
   P.oledCanvas = document.createElement('canvas'); P.oledCanvas.width = 128; P.oledCanvas.height = 64;
   P.oledTex = new T.CanvasTexture(P.oledCanvas); P.oledTex.colorSpace = T.SRGBColorSpace; P.oledTex.magFilter = T.NearestFilter; P.oledTex.minFilter = T.LinearFilter;
-  root.add(box(2.7, 0.18, 1.5, std(0x22252b), 0, YC + 0.1, 7.0));
+  root.add(box(3.0, 0.18, 1.7, mats.purple, 0, YC + 0.1, 7.0));
   const scr = new T.Mesh(new T.PlaneGeometry(2.3, 1.15), new T.MeshBasicMaterial({ map: P.oledTex }));
   scr.rotation.x = -Math.PI / 2; scr.position.set(0, YC + 0.21, 7.0); root.add(scr); P.oledScreen = scr;
   // 배터리 상자(앞쪽 가운데, 둥근 검은 상자) + 뚜껑 줄

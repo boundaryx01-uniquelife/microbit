@@ -81,12 +81,26 @@ export class PonyView {
       if (isFinite(d)) { g.fillStyle = '#2456e5'; g.beginPath(); g.arc(ox + Math.sin(R.heading * RAD) * d, oy - Math.cos(R.heading * RAD) * d, 1.2, 0, 7); g.fill(); }
     }
     g.save(); g.translate(R.x, R.y); g.rotate(R.heading * RAD);
-    // 차체 (앞 = 위)
-    g.fillStyle = '#2d353f'; g.strokeStyle = '#0e1216'; g.lineWidth = 0.5;
-    g.beginPath(); g.roundRect(-EST.bodyWid / 2, -EST.bodyLen / 2, EST.bodyWid, EST.bodyLen, 1.5); g.fill(); g.stroke();
-    g.fillStyle = '#4a90ff'; g.fillRect(-EST.bodyWid / 2 + 1, -EST.bodyLen / 2 - 0.4, EST.bodyWid - 2, 1.2);       // 앞(초음파 쪽)
-    g.fillStyle = '#d7dce4'; g.beginPath(); g.arc(-2, -EST.bodyLen / 2 + 0.3, 1.5, 0, 7); g.arc(2, -EST.bodyLen / 2 + 0.3, 1.5, 0, 7); g.fill();  // 초음파 눈 2개
-    g.fillStyle = '#111'; g.fillRect(-2.6, -2.5, 5.2, 4.2);  // 마이크로비트 자리
+    // 차체 — 사진(top.jpg) 모양: 검은 기판 + X 모양 덮개, 가운데 앞쪽 배터리 상자, 뒤쪽 OLED·마이크로비트 슬롯, 맨 앞 초음파 막대 (앞 = 위)
+    const poly = (right, fill, stroke) => {
+      const pts = [...right, ...right.slice().reverse().map(([u, v]) => [-u, v])];
+      g.beginPath(); pts.forEach(([u, v], i) => (i ? g.lineTo(u, -v) : g.moveTo(u, -v))); g.closePath();
+      g.fillStyle = fill; g.fill(); if (stroke) { g.strokeStyle = stroke; g.lineWidth = 0.3; g.stroke(); }
+    };
+    poly([[4.4, -8.5], [4.6, -4], [5.4, -2], [5.4, 8.4], [5.0, 8.9]], '#15181c', '#05070a');             // 기판
+    g.fillStyle = '#2a3038'; [[-4.2, -1.0], [-4.2, -0.3], [-4.2, 0.4], [-4.2, 1.1]].forEach(([u, v]) => { g.beginPath(); g.arc(u, -v, 0.3, 0, 7); g.fill(); });   // 둥근 구멍
+    poly([[4.3, -8.5], [3.6, -6], [2.8, -4], [1.95, -2.5], [1.95, -0.8], [3.5, 2], [4.6, 4], [4.7, 8.8]], '#23272c', '#0b0d10');   // 덮개
+    g.strokeStyle = '#0f1114'; g.lineWidth = 0.35; g.beginPath(); g.moveTo(-4.2, 8.3); g.lineTo(4.5, -8.4); g.moveTo(4.2, 8.3); g.lineTo(-4.5, -8.4); g.stroke();   // X 능선
+    g.strokeStyle = '#6d747d'; g.lineWidth = 0.35; g.beginPath(); g.moveTo(-0.6, -3.7 + 8); g.lineTo(0.6, -4.9 + 8); g.moveTo(0.6, -3.7 + 8); g.lineTo(-0.6, -4.9 + 8); g.stroke();   // 작은 X 로고
+    g.fillStyle = '#050607'; g.fillRect(-2.6, -(-4.9) - 0.35, 5.2, 0.7);                                   // 마이크로비트 슬롯
+    g.fillStyle = '#8e86b4'; g.fillRect(-1.15, 7.0 - 0.6, 2.3, 1.2);                                       // OLED
+    g.fillStyle = '#0b0c0e'; g.beginPath(); g.roundRect(-2, -9.3, 4, 9, 0.9); g.fill();                    // 배터리 상자
+    g.strokeStyle = '#5a636e'; g.lineWidth = 0.35; g.stroke();
+    g.fillStyle = '#111214'; g.fillRect(-1.35, -0.1, 2.7, 2.0);                                            // 둥근 거치대
+    g.fillStyle = '#6f7378'; g.beginPath(); g.arc(0, 0.9, 0.8, 0, 7); g.fill(); g.fillStyle = '#0b0c0e'; g.beginPath(); g.arc(0, 0.9, 0.62, 0, 7); g.fill();
+    g.fillStyle = '#16181b'; g.fillRect(-3.7, -9.55, 7.4, 1.3);                                             // 초음파 막대
+    for (const u of [-1.75, 1.75]) { g.beginPath(); g.arc(u, -9.35, 0.85, 0, 7); g.fillStyle = '#cfd5da'; g.fill(); g.beginPath(); g.arc(u, -9.35, 0.62, 0, 7); g.fillStyle = '#24322f'; g.fill(); }
+    g.fillStyle = '#d8d8d8'; [[3.4, -8.3], [-3.4, -8.3]].forEach(([u, v]) => g.fillRect(u - 0.3, v - 0.3, 0.6, 0.6));   // 앞 모서리 L1·L4 불빛
     // 바퀴 4개 (속도 부호로 색)
     const pos = WHEEL_XY();
     for (const name of ['FL', 'FR', 'RL', 'RR']) {

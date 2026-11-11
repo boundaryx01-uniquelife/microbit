@@ -35,7 +35,8 @@ async function startServer() {
     await p.route('**/api/robodog-assistant', r => r.fulfill({ json: { ok: true, configured: false, needsCode: false } }));   // 로컬 정적 서버에는 도우미 서버 함수가 없음
     p.on('pageerror', e => { if (!/makecode\.(com|microbit\.org)/.test(e.stack || '')) errs.push('pageerror: ' + e.message); });
     p.on('console', m => { if (m.type() === 'error' && !/makecode/.test(JSON.stringify(m.location() || {}))) errs.push('console: ' + m.text()); });
-    p.on('requestfailed', r => { const ft = (r.failure() && r.failure().errorText) || ''; if (!/ERR_ABORTED/.test(ft) && !/makecode|pxt|githubusercontent|cdn/.test(r.url())) errs.push('requestfailed: ' + r.url() + ' ' + ft); });
+    // MakeCode 편집기 자체 요청(확장·CDN·사용 통계 dc.services.visualstudio.com)은 학교망·샌드박스에 따라 막힐 수 있어 제외. 우리 페이지 오류는 그대로 잡음
+    p.on('requestfailed', r => { const ft = (r.failure() && r.failure().errorText) || ''; if (!/ERR_ABORTED/.test(ft) && !/makecode|pxt|githubusercontent|cdn|dc\.services\.visualstudio\.com/.test(r.url())) errs.push('requestfailed: ' + r.url() + ' ' + ft); });
     p.on('dialog', d => d.accept());
     p.errs = errs; return p;
   };
@@ -66,7 +67,7 @@ async function startServer() {
   });
   const up = await ui(pony), ud = await ui(dog);
   check('포니봇 화면: 제목·마스코트·MakeCode/글자 코드 탭·예제·실행·도우미·장면·OLED·바퀴표·지도·로그', /포니봇/.test(up.title) && up.kit === 'ponybot' && up.brandImg && up.mbTab && up.jsTab && up.examples && up.run && up.reset && up.ask && up.scene && up.oled && up.wheel && up.map && up.pe && up.pPSensor && !up.pSensor && up.log && up.examplesN === 7, JSON.stringify(up));
-  check('포니봇: 3D 토글·자동 시연 숨김, "3D는 실물 사진을 받은 뒤 추가" 안내', !up.tab3d && !up.demo && /3D는 실물 사진을 받은 뒤 추가/.test(up.no3d), up.no3d);
+  check('포니봇: 3D 토글 보임(사진 기준 3D 모형), 자동 시연 숨김, "3D 준비 중" 안내 없음', up.tab3d && !up.demo && !/3D는 실물 사진을 받은 뒤 추가/.test(up.no3d) && !up.no3d, up.no3d);
   check('로보독 화면(기본): 3D 토글·자동 시연·로보독 센서 패널, 포니봇 전용 칸 없음', /로보독/.test(ud.title) && ud.kit === 'robodog' && ud.tab3d && ud.demo && ud.pSensor && !ud.pPSensor && !ud.scene && !ud.oled && ud.examplesN > 10, JSON.stringify(ud));
 
   // ---- 3. 포니봇: 실행 뒤 안내 + 안내한 버튼을 누르면 움직임 ----

@@ -30,7 +30,7 @@ async function startServer() {
   BASE = BASE.replace(/\/?$/, '/');
   const URL = BASE + 'sim/?kit=ponybot&tab=js';   // 글자 코드 탭으로 열어 MakeCode 창을 안 띄움(MakeCode 는 tests/sim-unified.js 가 시험)
 
-  const b = await chromium.launch();
+  const b = await chromium.launch({ args: ['--use-gl=swiftshader', '--enable-unsafe-swiftshader'] });
   const ctx = await b.newContext({ viewport: { width: 1400, height: 950 } });
   const p = await ctx.newPage();
   const errs = [];
@@ -123,7 +123,7 @@ async function startServer() {
     const wall = P.api.ping(1), inch = P.api.ping(2), us = P.api.ping(0);
     P.setScene('free'); P.setPose(150, 100, 0);
     const none = P.api.ping(1), noneUs = P.api.ping(0), noneMax = P.api.ping(1, 120);
-    P.world.addBox(150, 40);                                          // 앞 상자: 앞면 y=46, 센서 y=92 → 46cm
+    P.world.addBox(150, 40);                                          // 앞 상자: 앞면 y=46, 센서 y=100-9.6=90.4 → 44.4cm
     const box = P.api.ping(1);
     P.setPose(150, 100, 90); const side = P.api.ping(1);              // 오른쪽엔 아무것도 없음
     P.setScene('bowling'); P.setPose(70, 238, 0); const wallB = P.api.ping(1);   // 앞 핀(y=28±3.5) 맞음
@@ -132,7 +132,7 @@ async function startServer() {
   check('벽(책) 앞 ping ≈ 참 거리(191.9cm)', near(pg.wall, 191.9, 1), `ping=${pg.wall} 인치=${pg.inch} µs=${pg.us}`);
   check('앞에 아무것도 없으면 ping = 500(최댓값, 0 아님)', pg.none === 500 && pg.side === 500, `none=${pg.none} side=${pg.side} µs=${pg.noneUs}`);
   check('maxCmDistance 인자 존중(120 → 없으면 120)', pg.noneMax === 120, `${pg.noneMax}`);
-  check('상자 앞 ping ≈ 46cm', near(pg.box, 46, 1), `${pg.box}`);
+  check('상자 앞 ping ≈ 44.4cm', near(pg.box, 44.4, 1), `${pg.box}`);
   check('볼링 핀(원) 감지', pg.wallB > 150 && pg.wallB < 190, `${pg.wallB}`);
 
   // ---- 7. 라인·색 센서 ----
@@ -471,6 +471,36 @@ async function startServer() {
   check('390px 가로 스크롤 없음', sw.sw <= sw.iw && sw.bw <= sw.iw, JSON.stringify(sw));
   await p.screenshot({ path: path.join(OUT, 'ponybot_sim_390.png'), fullPage: true });
   await p.screenshot({ path: path.join(SHOT, 'mobile390.png'), fullPage: true });
+
+  // ---- 7. 3D 모형 (사진 기준 어림 모형) — 현재 390px 폭 ----
+  const tab3 = await S(() => { const t = document.getElementById('tab3d'), r = t.getBoundingClientRect(); return { vis: r.width > 0 && r.height > 0, tab2: document.getElementById('tab2d').getBoundingClientRect().width > 0 }; });
+  check('3D 토글이 포니봇에도 보임(3D 보기·2D 보기)', tab3.vis && tab3.tab2, JSON.stringify(tab3));
+  await S(() => { window.__pony.setScene('free'); window.__pony.setPose(150, 100, 0); document.getElementById('tab3d').click(); });
+  await p.waitForFunction(() => window.__sim.view3d() && window.__sim.view3d().ready, null, { timeout: 20000 });
+  await p.waitForTimeout(800);
+  const px = () => S(() => {
+    const v = window.__sim.view3d(), src = v.renderer.domElement, c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+    const g = c.getContext('2d'); g.drawImage(src, 0, 0); const d = g.getImageData(0, 0, c.width, c.height).data; let dark = 0, tot = 0;
+    for (let i = 0; i < d.length; i += 16) { tot++; if (d[i] + d[i + 1] + d[i + 2] < 210) dark++; }
+    return { w: c.width, h: c.height, dark, tot };
+  });
+  const r3 = await px();
+  check('3D 그림이 비어 있지 않음(검은 로봇 픽셀 있음)', r3.w > 100 && r3.dark > 150 && r3.dark < r3.tot * 0.9, JSON.stringify(r3));
+  const sw3 = await S(() => ({ sw: document.documentElement.scrollWidth, iw: window.innerWidth, bw: document.body.scrollWidth }));
+  check('3D 보기에서도 390px 가로 스크롤 없음', sw3.sw <= sw3.iw && sw3.bw <= sw3.iw, JSON.stringify(sw3));
+  const wh0 = await S(() => { const m = window.__sim.view3d().model; window.__pony.runner.stop(); window.__pony.api.stopAllMotors(); window.__pony.setPose(150, 100, 0); window.__pony.fastForward(1); return Object.fromEntries(Object.entries(m.wheels).map(([k, w]) => [k, w.spin.rotation.x])); });
+  await S(() => window.__pony.api.runMecanum(2, 150));
+  await p.waitForTimeout(700);
+  const wh1 = await S(() => { const m = window.__sim.view3d().model; return Object.fromEntries(Object.entries(m.wheels).map(([k, w]) => [k, w.spin.rotation.x])); });
+  check('앞으로 가면 4바퀴 3D 회전각이 모두 바뀜(앞 = 각도 감소)', ['FL', 'FR', 'RL', 'RR'].every(k => wh1[k] < wh0[k] - 0.3), JSON.stringify({ wh0, wh1 }));
+  await S(() => window.__pony.api.stopAllMotors());
+  const ol0 = await S(() => { const v = window.__sim.view3d(); const d = v.model.oledCanvas.getContext('2d').getImageData(0, 0, 128, 64).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] > 100) n++; return { n, ver: v.oledVer }; });
+  await S(() => { window.__pony.api.clear(); window.__pony.api.showString('HELLO3D', 0, 0, 1); });
+  await p.waitForTimeout(400);
+  const ol1 = await S(() => { const v = window.__sim.view3d(); const d = v.model.oledCanvas.getContext('2d').getImageData(0, 0, 128, 64).data; let n = 0; for (let i = 0; i < d.length; i += 4) if (d[i] > 100) n++; return { n, ver: v.oledVer, tex: v.model.oledTex.image === v.model.oledCanvas }; });
+  check('코드가 OLED에 글자를 쓰면 3D OLED 그림도 바뀜', ol1.n > ol0.n + 30 && ol1.ver !== ol0.ver && ol1.tex, JSON.stringify({ ol0, ol1 }));
+  await p.screenshot({ path: path.join(OUT, 'ponybot_sim_390_3d.png'), fullPage: true });
+  await S(() => document.getElementById('tab2d').click());
 
   check('페이지 오류·콘솔 오류 0', errs.length === 0, errs.slice(0, 3).join(' | '));
   await b.close();
