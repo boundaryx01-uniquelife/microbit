@@ -60,7 +60,10 @@ check('"빠르게"는 숫자를 지어내지 않고 기본 속도 + 경고', spe
 // 5. 방향 어휘
 r = R('왼쪽 옆으로 1초 가'); check('왼쪽 옆 → Mecanum.Left', /Mecanum\.Left,/.test(r.code), r.code);
 r = R('오른쪽 뒤 대각선으로 1초 가'); check('대각선 → RightBackward', /Mecanum\.RightBackward/.test(r.code), r.code);
-r = R('반시계 방향으로 돌아'); check('반시계 → DirectionControl.CounterClockwise(시계와 안 섞임)', /DirectionControl\.CounterClockwise/.test(r.code) && !/DirectionControl\.Clockwise/.test(r.code), r.code);
+r = R('반시계 방향으로 돌아'); check('반시계(블록 화살표 ↶) → DirectionControl.Clockwise(코드 이름은 화살표와 반대, 시계와 안 섞임)', /DirectionControl\.Clockwise/.test(r.code) && !/DirectionControl\.CounterClockwise/.test(r.code) && /↶/.test(r.explanation), r.code + ' / ' + r.explanation);
+r = R('시계 방향으로 돌아'); check('시계(블록 화살표 ↷) → DirectionControl.CounterClockwise', /DirectionControl\.CounterClockwise/.test(r.code) && !/DirectionControl\.Clockwise/.test(r.code) && /↷/.test(r.explanation), r.code + ' / ' + r.explanation);
+r = R('왼쪽으로 돌아'); check('왼쪽으로 돌기 → ↶ = DirectionControl.Clockwise', /DirectionControl\.Clockwise/.test(r.code), r.code);
+r = R('오른쪽으로 돌아'); check('오른쪽으로 돌기 → ↷ = DirectionControl.CounterClockwise', /DirectionControl\.CounterClockwise/.test(r.code), r.code);
 r = R('90도 돌아');
 check('각도로 돌기는 만들지 않고 안내(추측 금지)', !r.code && r.warnings.some(w => /각도/.test(w)), JSON.stringify(r));
 r = R('A 버튼을 누르면 앞으로 1초 가고 춤춰');

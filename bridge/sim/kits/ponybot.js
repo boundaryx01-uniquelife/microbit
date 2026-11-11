@@ -85,8 +85,8 @@ const kit = {
   name: '포니봇',
   docTitle: '포니봇 시뮬레이터 · AI 포니봇 교실',
   codeKey: 'ponybot-sim-code',
-  supports3d: false,
-  no3dNote: '3D는 실물 사진을 받은 뒤 추가할 예정이에요. 지금은 위에서 본 2D 바닥이에요.',
+  supports3d: true, default3d: false,   // 3D 모형은 실물 사진 기준 어림 모형(처음 화면은 2D, [3D 보기]로 전환 / ?view=3d)
+  async makeView3D(container, world, robot, runner) { const { PonyView3D } = await import('./ponybot/model3d.js'); return new PonyView3D(container, world, robot, runner.oled); },
   radius: EST.radius,
   mascot: { src: OFFICIAL + 'material-pony-v2.webp', alt: 'AI 포니봇 제품 그림 (제조사 바운더리엑스 공식 자료)' },
   brand: { name: 'AI 포니봇 교실', sub: '바운더리엑스 제품 · 피지컬 AI 수업', home: '../' },
@@ -100,7 +100,7 @@ const kit = {
   ui: {   // id → innerHTML (없는 것은 로보독 기본 글)
     codeHint: '블록 코딩 화면에서 블록을 고치면 <b data-kn>포니봇</b>이 바로 움직여요. MakeCode가 안 열리면 <b>글자 코드</b> 탭에 코드를 붙여넣고 <b>▶ 실행</b>. <b>A·B 버튼이나 라디오 숫자를 눌러야</b> 움직이는 예제가 많아요.',
     mcNote: '진짜 MakeCode 편집기예요(makecode.microbit.org). <b>AI 포니봇 확장</b>(aiPonybot 블록)이 미리 들어 있어요. 블록을 고치면 오른쪽 포니봇이 그대로 움직여요. 마이크로비트에 내려받기는 편집기 아래 [다운로드]를 쓰세요. 프로젝트는 이 화면의 코드 칸에 저장돼요.',
-    estNote: '⚠ 시뮬레이터는 <b>미리 보기</b>입니다. 바퀴 속도(속도 255 ≈ 30cm/초)·가감속·크기·센서 위치·모터 번호→바퀴 위치는 확장 소스를 읽어 만든 <b>추정치</b>예요. 실제 포니봇에서 꼭 다시 확인하세요.',
+    estNote: '⚠ 시뮬레이터는 <b>미리 보기</b>입니다. 바퀴 속도(속도 255 ≈ 30cm/초)·가감속·크기·센서 위치는 <b>추정치</b>예요. 모터 번호→바퀴 위치(M1=오른쪽 앞·M2=오른쪽 뒤·M3=왼쪽 뒤·M4=왼쪽 앞)는 <b>사진 근거(기판 글자)</b>예요. 앞 = 초음파 쪽: 실물 확인(2026-11-11, 사용자). 회전 방향은 사진·블록 화살표 근거 — 실물 회전 방향 확인 권장(코드 이름 Clockwise 는 화살표 ↶(반시계)와 반대예요).',
     realSummary: '🐴 실물 포니봇으로 해 보기',
     mapNote: '장면(소품·검은 선)을 <b>내 지도</b>로 저장하고 나눌 수 있어요. 지도를 고르면 바닥 크기도 바뀌어요. 검은 선 지도는 라인 센서 예제용이에요.',
     askPlaceholder: '예) A 버튼 누르면 앞으로 2초 가',
@@ -178,13 +178,13 @@ const kit = {
     $('scene').addEventListener('change', () => { if ($('scene').value !== 'map') kit.setScene($('scene').value); });
     const wh = $('whBody');
     [1, 2, 3, 4].forEach(m => { const tr = document.createElement('tr'); tr.innerHTML = `<td>M${m}</td><td>${MOTOR_WHEEL[m]}</td><td id="wc${m}">0</td><td id="wv${m}">0</td>`; wh.appendChild(tr); });
-    $('estList').textContent = JSON.stringify(EST, null, 1).replace(/[{}"]/g, '').replace(/,$/gm, '') + '\n모터→바퀴: ' + JSON.stringify(MOTOR_WHEEL);
+    $('estList').textContent = JSON.stringify(EST, null, 1).replace(/[{}"]/g, '').replace(/,$/gm, '') + '\n모터→바퀴(사진 근거 · 앞 = 초음파 쪽은 실물 확인 2026-11-11 · 회전 방향은 실물 확인 권장): ' + JSON.stringify(MOTOR_WHEEL);
     loadAssistant(log);
     kit.setScene(world.sceneId);
   },
   // 매 그림 반복: 위에서 본 바닥(+ OLED)
-  draw({ view2d }) {
-    view2d.draw();
+  draw({ view2d, view3d, mode3d }) {
+    if (mode3d && view3d) view3d.draw(); else view2d.draw();
     const o = M.runner.oled;
     if (o.version !== M.lastOled) { M.lastOled = o.version; drawOled($('oled'), o); }
   },

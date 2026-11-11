@@ -153,9 +153,9 @@ function actionsOf(raw, st) {
   const mv = (at, member, label) => moves.push({ at, e: MOVE_ENUM, member, label, kind: 'move' });
   const tn = (at, member, label) => moves.push({ at, e: TURN_ENUM, member, label, kind: 'turn' });
   if (/뒤로\s*돌|돌아\s*서|도는\s*방향/.test(p) && degree) { /* 아래 degree 경고가 처리 */ }
-  for (const m of scan(/반시계\s*(?:방향)?(?:으로)?/)) { tn(m.index, 'CounterClockwise', '반시계 방향으로 돌기'); blank(m); }
-  for (const m of scan(/시계\s*(?:방향)?(?:으로)?/)) { tn(m.index, 'Clockwise', '시계 방향으로 돌기'); blank(m); }
-  if (turnVerb) for (const m of scan(/(왼|오른)쪽?(?:으로|\s*방향으로)?\s*(?:제자리에서\s*)?(?=\S*\s*(?:돌|회전|턴)|돌|회전|턴)/)) { tn(m.index, m[1] === '왼' ? 'CounterClockwise' : 'Clockwise', `${m[1]}쪽으로 돌기`); blank(m); }
+  for (const m of scan(/반시계\s*(?:방향)?(?:으로)?/)) { tn(m.index, 'Clockwise', '반시계 방향(↶)으로 돌기'); blank(m); }
+  for (const m of scan(/시계\s*(?:방향)?(?:으로)?/)) { tn(m.index, 'CounterClockwise', '시계 방향(↷)으로 돌기'); blank(m); }
+  if (turnVerb) for (const m of scan(/(왼|오른)쪽?(?:으로|\s*방향으로)?\s*(?:제자리에서\s*)?(?=\S*\s*(?:돌|회전|턴)|돌|회전|턴)/)) { tn(m.index, m[1] === '왼' ? 'Clockwise' : 'CounterClockwise', `${m[1]}쪽(${m[1] === '왼' ? '↶' : '↷'})으로 돌기`); blank(m); }
   if (degree) {
     st.warn('각도(N도·한 바퀴)로 돌기는 못 만들어요 — 포니봇은 각도 센서가 없어서 시간으로만 정해요. 예: "시계 방향으로 2초 동안 돌아"');
     moves.length = 0; p = p.replace(/(\d+)\s*도|한\s*바퀴|반\s*바퀴|빙글\S*|돌\S*|회전\S*|턴\S*/g, ' ');
@@ -211,7 +211,7 @@ function actionsOf(raw, st) {
     const run = `aiPonybot.${f.name}(aiPonybot.${mo.e}.${mo.member}, ${v})`;
     const block = blockText(f, { direction: glyph(mo.e, mo.member), speed: v });
     if (mo.kind === 'turn') {
-      st.warn('돌기 방향(시계/반시계)은 실물에서 맞는지 확인하세요(블록 표의 화살표 글자와 방향이 헷갈릴 수 있어요).');
+      st.warn('돌기: 코드 이름은 화살표와 반대예요(시계 방향 ↷ = CounterClockwise, 반시계 ↶ = Clockwise). 방향은 사진·블록 화살표 근거예요(앞 = 초음파 쪽은 실물 확인됨) — 실물 회전 방향 확인을 권장해요.');
     }
     let msUse = ms, continuous = false;
     if (msUse === null) {

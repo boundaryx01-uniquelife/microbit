@@ -296,11 +296,11 @@
       <div class="scenebox"><img id="sceneImg" class="scene-img" alt="" hidden><div class="t"><p class="note" id="sceneHint" style="margin:0"></p><p class="note score" id="score" style="margin:4px 0 0"></p></div></div>
     </div>
     <p class="note no3d k-ponybot" id="no3d"></p>
-    <div class="tabs k-robodog" role="tablist" aria-label="로보독 보기">
+    <div class="tabs" role="tablist" aria-label="보기 고르기">
       <button id="tab3d" role="tab" aria-selected="true">3D 보기</button>
       <button id="tab2d" role="tab" aria-selected="false">2D 보기 (가벼움)</button>
     </div>
-    <label class="row k-robodog" style="gap:6px;margin:-4px 0 6px"><input id="follow" type="checkbox" checked> 3D 카메라 따라가기</label>
+    <label class="row" style="gap:6px;margin:-4px 0 6px"><input id="follow" type="checkbox" checked> 3D 카메라 따라가기</label>
     <!-- 빠른 조작: 코드에 필요한 버튼만 로보독 화면 바로 위에(스크롤 없이 누르고 바로 보기) -->
     <div id="quick" class="quick" hidden aria-label="빠른 조작">
       <div class="qgrp k-robodog" id="qBody"><span class="qlab">🔘 본체</span><button id="qRobot" class="primary">본체 버튼 누르기</button></div>
@@ -319,7 +319,7 @@
     <div id="pane3d">
       <div id="view3d"></div>
       <p class="note">마우스 끌기 = 돌려 보기, 휠 = 확대/축소, 오른쪽 끌기 = 옮기기. 상자·물체를 끌어 옮기려면 <button id="goEdit" type="button" style="min-height:32px;padding:2px 10px">2D 보기로 가서 옮기기</button></p>
-      <canvas id="eyes3" style="width:100%;height:110px;display:block;border-radius:10px;margin-top:6px" aria-label="로보독 눈 LED"></canvas>
+      <canvas id="eyes3" class="k-robodog" style="width:100%;height:110px;display:block;border-radius:10px;margin-top:6px" aria-label="로보독 눈 LED"></canvas>
     </div>
 
     <details class="fold" id="ctrlBox" open>
@@ -481,7 +481,7 @@ sel.innerHTML = `<option value="">${escH(KIT.examplePlaceholder)}</option>` + GR
   for (const [id, html] of Object.entries(KIT.ui || {})) { const el = $(id); if (el) el.innerHTML = html; }
   if (KIT.ui && KIT.ui.askPlaceholder) $('askText').placeholder = KIT.ui.askPlaceholder;
   document.querySelectorAll('[data-kn]').forEach(e => { e.textContent = KIT.name; });
-  if (!KIT.supports3d) $('no3d').textContent = KIT.no3dNote || '';
+  if (!KIT.supports3d) $('no3d').textContent = KIT.no3dNote || ''; else $('no3d').hidden = true;
 })();
 // ---------- 실행 뒤 안내: 지금 무엇을 눌러야 하는지 (그 버튼을 깜빡여 줌) ----------
 let curExample = null;   // 고른 예제와 그때의 코드(코드를 고치면 예제 설명은 쓰지 않음)
@@ -642,7 +642,7 @@ $('btnFloor').onclick = () => setTable(false);
 let spaceSize = '200x140';
 try { const v = localStorage.getItem('sim-space'); if (v && $('spaceSize').querySelector(`option[value="${v}"]`)) spaceSize = v; } catch (e) {}
 function resetCamera() {
-  if (view3d && view3d.ready) { view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y); }
+  if (view3d && view3d.ready) { if (view3d.resetCam) view3d.resetCam(); else { view3d.camera.position.set(world.start.x + 20, 17, world.start.y - 26); view3d.controls.target.set(world.start.x, 4, world.start.y); } }
 }
 function applySpace(v, { moveCam = true } = {}) {
   const [w, h] = v.split('x').map(Number);
@@ -736,15 +736,15 @@ async function showTab(is3d) {
   $('pane2d').classList.toggle('hidden', is3d); $('pane3d').classList.toggle('hidden', !is3d);
   if (is3d && !view3d) {
     try {
-      const { View3D } = await import('./view3d.js');
-      view3d = new View3D($('view3d'), world, robot); view3d.init();
+      const v = KIT.makeView3D ? await KIT.makeView3D($('view3d'), world, robot, runner) : new (await import('./view3d.js')).View3D($('view3d'), world, robot);
+      v.init(); view3d = v;
     } catch (e) { log('3D를 켤 수 없어요(그래픽 가속 확인): ' + e.message, 'error'); showTab(false); }
   }
   if (view3d) { view3d.follow = $('follow').checked; view3d.resize(); if (danceOn) danceCam(); }
 }
 $('tab2d').onclick = () => showTab(false);
 $('tab3d').onclick = () => showTab(true);
-showTab(KIT.supports3d && new URLSearchParams(location.search).get('view') !== '2d');   // 처음 화면·시연은 3D가 기본, 그래픽 가속이 없으면 2D로
+showTab(KIT.supports3d && (KIT.default3d === false ? new URLSearchParams(location.search).get('view') === '3d' : new URLSearchParams(location.search).get('view') !== '2d'));   // 처음 화면·시연은 3D가 기본, 그래픽 가속이 없으면 2D로
 $('follow').onchange = (e) => { if (view3d) view3d.follow = e.target.checked && !danceOn; };
 
 // ---------- 그리기 반복 ----------
