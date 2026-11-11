@@ -211,7 +211,7 @@ function actionsOf(raw, st) {
     const run = `aiPonybot.${f.name}(aiPonybot.${mo.e}.${mo.member}, ${v})`;
     const block = blockText(f, { direction: glyph(mo.e, mo.member), speed: v });
     if (mo.kind === 'turn') {
-      st.warn('돌기: 코드 이름은 화살표와 반대예요(시계 방향 ↷ = CounterClockwise, 반시계 ↶ = Clockwise). 방향은 사진(기판 글자)으로 정했어요 — 실물에서 3초 시험해 확인하세요.');
+      st.warn('돌기: 코드 이름은 화살표와 반대예요(시계 방향 ↷ = CounterClockwise, 반시계 ↶ = Clockwise). 방향은 사진·블록 화살표 근거예요(앞 = 초음파 쪽은 실물 확인됨) — 실물 회전 방향 확인을 권장해요.');
     }
     let msUse = ms, continuous = false;
     if (msUse === null) {

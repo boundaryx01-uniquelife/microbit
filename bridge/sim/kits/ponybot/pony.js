@@ -23,7 +23,7 @@ export const EST = {
   chassisH: 4,        // 차체 높이(바닥~배터리 상자 윗면) cm — 추정
   batteryBox: [4, 9, 3],  // 배터리 상자 폭·길이·높이 cm — 추정
   radius: 9,          // 충돌 반경(원) cm — 추정
-  sonarOffset: 9,     // 몸 중심 → 초음파 센서(앞면) cm — 추정
+  sonarOffset: 9.6,     // 몸 중심 → 초음파 센서(앞면) cm — 추정
   sonarMin: 2, sonarRealMax: 400, // 실제 HC-SR04류가 읽는 범위 cm — 추정 (ping 의 maxCmDistance 와 별개)
   lineForward: 7, lineHalfGap: 2.5,   // 라인 센서 2개의 위치(몸 중심 앞쪽, 좌우 간격의 절반) cm — 추정
   lineOnBlack: true,  // 검은 선 위에서 1 을 읽는다고 가정 — 확인 필요(소스는 핀 값만 돌려줌)
@@ -34,7 +34,7 @@ export const EST = {
 EST.k = (EST.track + EST.axle) / 2;
 
 // ------------------------------------------------------------
-// 모터 번호 → 바퀴 위치 (사진 근거 — "앞으로"가 초음파 쪽인지는 실물 3초 확인 필요)
+// 모터 번호 → 바퀴 위치 (사진·블록 화살표 근거). 앞 = 초음파 쪽: 실물 확인(2026-11-11, 사용자). 회전 방향(↶ = 반시계)은 아직 실물 회전 확인 권장
 //  근거 1) 실물 사진(kits/ponybot/photos/, README.md): 기판 글자 — 초음파(앞) 쪽에서 사진 왼쪽 = M1·L1, 오른쪽 = M4·L4
 //          (글자는 180° 뒤집혀 인쇄). 앞을 보면 M1 = 오른쪽 앞(FR), M4 = 왼쪽 앞(FL). top.jpg 앞 모서리 표시도 왼쪽 "1", 오른쪽 "4".
 //  근거 2) 확장 소스(main.ts) 대각선 쌍: ↖(LeftForward)는 M1+M3 = {FR,RL}, ↗ 는 M2+M4 = {FL,RR} ⇒ M3 = RL, M2 = RR.

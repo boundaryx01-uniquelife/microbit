@@ -119,7 +119,7 @@ async function startServer() {
   // ---- 6. 초음파 ----
   const pg = await S(() => {
     const P = window.__pony; P.runner.stop();
-    P.setScene('relay'); P.setPose(60, 224, 0);                       // 책 앞면 y=22.5, 앞면 센서 y=224-sonarOffset(9)=215
+    P.setScene('relay'); P.setPose(60, 224, 0);                       // 책 앞면 y=22.5, 앞면 센서 y=224-sonarOffset(9.6)=214.4
     const wall = P.api.ping(1), inch = P.api.ping(2), us = P.api.ping(0);
     P.setScene('free'); P.setPose(150, 100, 0);
     const none = P.api.ping(1), noneUs = P.api.ping(0), noneMax = P.api.ping(1, 120);
@@ -129,7 +129,7 @@ async function startServer() {
     P.setScene('bowling'); P.setPose(70, 238, 0); const wallB = P.api.ping(1);   // 앞 핀(y=28±3.5) 맞음
     return { wall, inch, us, none, noneUs, noneMax, box, side, wallB };
   });
-  check('벽(책) 앞 ping ≈ 참 거리(192.5cm)', near(pg.wall, 192.5, 1), `ping=${pg.wall} 인치=${pg.inch} µs=${pg.us}`);
+  check('벽(책) 앞 ping ≈ 참 거리(191.9cm)', near(pg.wall, 191.9, 1), `ping=${pg.wall} 인치=${pg.inch} µs=${pg.us}`);
   check('앞에 아무것도 없으면 ping = 500(최댓값, 0 아님)', pg.none === 500 && pg.side === 500, `none=${pg.none} side=${pg.side} µs=${pg.noneUs}`);
   check('maxCmDistance 인자 존중(120 → 없으면 120)', pg.noneMax === 120, `${pg.noneMax}`);
   check('상자 앞 ping ≈ 46cm', near(pg.box, 46, 1), `${pg.box}`);
