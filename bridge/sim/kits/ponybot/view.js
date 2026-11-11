@@ -1,6 +1,6 @@
 // 포니봇 2D 위에서 보기 + OLED·5x5 LED 그리기 (월드 좌표: x 오른쪽, y 아래, heading 0=위 시계 +, cm)
 import { EST, WHEEL_XY, MOTOR_WHEEL } from './pony.js';
-import { drawProps } from '../../sim/props.js';
+import { drawProps } from '../../props.js';
 
 const RAD = Math.PI / 180;
 const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
