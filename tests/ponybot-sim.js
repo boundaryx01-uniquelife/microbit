@@ -72,9 +72,9 @@ async function startServer() {
   check('뒤로 → y 증가', near(r.dy, dF, 0.05) && near(r.dx, 0, 0.01), `dy=${f(r.dy)}`);
   r = await move(A, POSE, 'aiPonybot.runNormal(3, 80)', 1);
   const wv = 80 / 255 * EST.maxCmPerSec, dhExp = (wv - wv * wv / (2 * EST.accel)) / EST.k * 180 / Math.PI;   // 가감속 포함 예상 회전각
-  check('runNormal Clockwise 1초 → heading 증가(시계)·제자리', r.dh > 30 && near(r.dh, dhExp, 0.5) && Math.hypot(r.dx, r.dy) < 0.05, `dh=${f(r.dh)}° (예상 ${f(dhExp)}°) 위치변화=${f(Math.hypot(r.dx, r.dy))}`);
+  check('runNormal Clockwise(블록 화살표 ↶ = 반시계) 1초 → heading 감소·제자리', r.dh < -30 && near(r.dh, -dhExp, 0.5) && Math.hypot(r.dx, r.dy) < 0.05, `dh=${f(r.dh)}° (예상 ${f(dhExp)}°) 위치변화=${f(Math.hypot(r.dx, r.dy))}`);
   r = await move(A, POSE, 'aiPonybot.runNormal(4, 80)', 1);
-  check('runNormal CounterClockwise → heading 감소', r.dh < -30, `dh=${f(r.dh)}`);
+  check('runNormal CounterClockwise(블록 화살표 ↷ = 시계) → heading 증가', r.dh > 30, `dh=${f(r.dh)}`);
   r = await move(A, POSE, 'aiPonybot.runMecanum(1, 80)', 1);
   check('대각선 ↖ → 왼쪽 위로, 성분이 앞 이동의 절반', r.dx < 0 && r.dy < 0 && near(-r.dy, dF / 2, 0.1) && near(-r.dx, dF / 2, 0.1) && near(r.dh, 0, 0.01), `dx=${f(r.dx)} dy=${f(r.dy)} (앞 ${f(dF)})`);
   r = await move(A, POSE, 'aiPonybot.runMecanum(3, 80)', 1);
@@ -107,7 +107,7 @@ async function startServer() {
     }
     return out;
   });
-  check('runMotor Clockwise: M1=RL, M2=FL, M3=FR, M4=RR 만 전진', mm[1] === 'RL' && mm[2] === 'FL' && mm[3] === 'FR' && mm[4] === 'RR', JSON.stringify(mm));
+  check('runMotor Clockwise: M1=FR, M2=RR, M3=RL, M4=FL 만 전진(사진 근거)', mm[1] === 'FR' && mm[2] === 'RR' && mm[3] === 'RL' && mm[4] === 'FL', JSON.stringify(mm));
   const cl = await S(() => {
     const P = window.__pony; P.setScene('free'); P.setPose(150, 100, 0); P.api.stopAllMotors();
     P.api.runMecanum(2, 255); const p1 = P.state().pwm.slice(); P.api.runMecanum(2, 300); const p2 = P.state().pwm.slice();
@@ -119,7 +119,7 @@ async function startServer() {
   // ---- 6. 초음파 ----
   const pg = await S(() => {
     const P = window.__pony; P.runner.stop();
-    P.setScene('relay'); P.setPose(60, 224, 0);                       // 책 앞면 y=22.5, 앞면 센서 y=216
+    P.setScene('relay'); P.setPose(60, 224, 0);                       // 책 앞면 y=22.5, 앞면 센서 y=224-sonarOffset(9)=215
     const wall = P.api.ping(1), inch = P.api.ping(2), us = P.api.ping(0);
     P.setScene('free'); P.setPose(150, 100, 0);
     const none = P.api.ping(1), noneUs = P.api.ping(0), noneMax = P.api.ping(1, 120);
@@ -129,7 +129,7 @@ async function startServer() {
     P.setScene('bowling'); P.setPose(70, 238, 0); const wallB = P.api.ping(1);   // 앞 핀(y=28±3.5) 맞음
     return { wall, inch, us, none, noneUs, noneMax, box, side, wallB };
   });
-  check('벽(책) 앞 ping ≈ 참 거리(193.5cm)', near(pg.wall, 193.5, 1), `ping=${pg.wall} 인치=${pg.inch} µs=${pg.us}`);
+  check('벽(책) 앞 ping ≈ 참 거리(192.5cm)', near(pg.wall, 192.5, 1), `ping=${pg.wall} 인치=${pg.inch} µs=${pg.us}`);
   check('앞에 아무것도 없으면 ping = 500(최댓값, 0 아님)', pg.none === 500 && pg.side === 500, `none=${pg.none} side=${pg.side} µs=${pg.noneUs}`);
   check('maxCmDistance 인자 존중(120 → 없으면 120)', pg.noneMax === 120, `${pg.noneMax}`);
   check('상자 앞 ping ≈ 46cm', near(pg.box, 46, 1), `${pg.box}`);

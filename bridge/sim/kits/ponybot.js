@@ -100,7 +100,7 @@ const kit = {
   ui: {   // id → innerHTML (없는 것은 로보독 기본 글)
     codeHint: '블록 코딩 화면에서 블록을 고치면 <b data-kn>포니봇</b>이 바로 움직여요. MakeCode가 안 열리면 <b>글자 코드</b> 탭에 코드를 붙여넣고 <b>▶ 실행</b>. <b>A·B 버튼이나 라디오 숫자를 눌러야</b> 움직이는 예제가 많아요.',
     mcNote: '진짜 MakeCode 편집기예요(makecode.microbit.org). <b>AI 포니봇 확장</b>(aiPonybot 블록)이 미리 들어 있어요. 블록을 고치면 오른쪽 포니봇이 그대로 움직여요. 마이크로비트에 내려받기는 편집기 아래 [다운로드]를 쓰세요. 프로젝트는 이 화면의 코드 칸에 저장돼요.',
-    estNote: '⚠ 시뮬레이터는 <b>미리 보기</b>입니다. 바퀴 속도(속도 255 ≈ 30cm/초)·가감속·크기·센서 위치·모터 번호→바퀴 위치는 확장 소스를 읽어 만든 <b>추정치</b>예요. 실제 포니봇에서 꼭 다시 확인하세요.',
+    estNote: '⚠ 시뮬레이터는 <b>미리 보기</b>입니다. 바퀴 속도(속도 255 ≈ 30cm/초)·가감속·크기·센서 위치는 <b>추정치</b>예요. 모터 번호→바퀴 위치(M1=오른쪽 앞·M2=오른쪽 뒤·M3=왼쪽 뒤·M4=왼쪽 앞)는 <b>사진 근거(기판 글자)</b>예요 — “앞으로”가 초음파 쪽으로 가는지 실물에서 3초 확인해 주세요. 코드 이름 Clockwise 는 화살표 ↶(반시계)와 반대예요.',
     realSummary: '🐴 실물 포니봇으로 해 보기',
     mapNote: '장면(소품·검은 선)을 <b>내 지도</b>로 저장하고 나눌 수 있어요. 지도를 고르면 바닥 크기도 바뀌어요. 검은 선 지도는 라인 센서 예제용이에요.',
     askPlaceholder: '예) A 버튼 누르면 앞으로 2초 가',
@@ -178,7 +178,7 @@ const kit = {
     $('scene').addEventListener('change', () => { if ($('scene').value !== 'map') kit.setScene($('scene').value); });
     const wh = $('whBody');
     [1, 2, 3, 4].forEach(m => { const tr = document.createElement('tr'); tr.innerHTML = `<td>M${m}</td><td>${MOTOR_WHEEL[m]}</td><td id="wc${m}">0</td><td id="wv${m}">0</td>`; wh.appendChild(tr); });
-    $('estList').textContent = JSON.stringify(EST, null, 1).replace(/[{}"]/g, '').replace(/,$/gm, '') + '\n모터→바퀴: ' + JSON.stringify(MOTOR_WHEEL);
+    $('estList').textContent = JSON.stringify(EST, null, 1).replace(/[{}"]/g, '').replace(/,$/gm, '') + '\n모터→바퀴(사진 근거 — 앞 방향은 실물 3초 확인 필요): ' + JSON.stringify(MOTOR_WHEEL);
     loadAssistant(log);
     kit.setScene(world.sceneId);
   },

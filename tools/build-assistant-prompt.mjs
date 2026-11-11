@@ -26,6 +26,9 @@ function typeOf(ns, p) {
   return p.type || (p.default !== undefined && !isNaN(Number(p.default)) ? 'number' : 'any');
 }
 
+// 돌기 enum(DirectionControl.Clockwise = ↶)이 있는 블록 표인지
+const hasTurnEnum = (blocks) => (blocks.namespaces || []).some(ns => (ns.enums || []).some(e => e.name === 'DirectionControl' && e.members.some(m => m.name === 'Clockwise' && m.block_en === '↶')));
+
 // 블록 한 줄 = 함수 시그니처 + 범위·기본값 + 한국어 블록 이름. 숨김(hidden) 함수는 뺀다.
 export function buildBlockSyntax(blocks) {
   const out = [];
@@ -84,6 +87,7 @@ export function buildSystemPrompt(blocks, policy = {}, kitName = '교구') {
       '- 거리센서(ping)는 반사가 없으면 0 또는 최댓값(기본 500)을 돌려준다. 이 값은 "아주 멀다"가 아니라 "못 읽음"으로 보고 멈춘다.',
       '- 포니봇 화면(OLED)에는 영어·숫자만 쓴다(한글은 확인 전). 컬러센서 블록은 aiPonybot.initColorSensor 로 초기화한 뒤 쓴다.',
       '- 개인정보(이름·학교·전화번호)는 코드·설명에 넣지 않는다.',
+      ...(hasTurnEnum(blocks) ? ['- 돌기(DirectionControl): enum 이름은 블록 화살표와 반대다. 반시계 ↶ = DirectionControl.Clockwise, 시계 ↷ = DirectionControl.CounterClockwise. 학생이 말한 방향(시계·반시계·왼쪽·오른쪽)은 이름이 아니라 화살표 기준으로 고른다. 화살표가 실물과 맞는다는 것은 사진(기판 글자) 근거이며 실물 3초 시험이 필요하다고 warnings 에 적는다.'] : []),
     ].join('\n'),
     '# 블록 문법 (이 표에서만 고른다)',
     buildBlockSyntax(blocks),
