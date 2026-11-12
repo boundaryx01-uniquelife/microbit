@@ -212,6 +212,34 @@
   .livedock table.wh { font-size: 11.5px; } .livedock table.wh th, .livedock table.wh td { padding: 2px 3px; white-space: nowrap; }
   @media (max-width: 420px) { .livedock { grid-template-columns: minmax(0, 1fr); } .livedock #pMb, .livedock #pPOled, .livedock #pPSensor, .livedock #pPWheel { grid-column: 1; grid-row: auto; } }
   html[data-kit="ponybot"] body:has(#pane2d.hidden) #peBar { display: none; }   /* 3D 보기에서는 물체 놓기 도구 숨김(2D에서만 편집) */
+  /* ---- 미션 모드 ---- */
+  body.mission-mode #assist, body.mission-mode #examples, body.mission-mode label[for=examples] { display: none; }
+  .mission { border: 2px solid var(--accent); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; background: var(--card); }
+  @media (min-width: 981px) { .mission { position: sticky; top: 6px; z-index: 5; box-shadow: 0 6px 18px rgba(0,0,0,.12); } }   /* 코드를 내려 보는 동안에도 목표·확인 칸이 보이게 */
+  .mission.passed { border-color: var(--ok); }
+  .m-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .m-head h2 { margin: 0; font-size: 20px; flex: 1; }
+  .m-tag { background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 2px 12px; font-weight: 800; font-size: 13px; }
+  .m-back, .m-go { font-weight: 700; }
+  .m-story { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+  .m-goal { margin: 6px 0 8px; font-size: 16.5px; line-height: 1.5; }
+  .m-goal b { background: var(--accent-soft); border-radius: 6px; padding: 1px 8px; margin-right: 6px; }
+  .m-predict { border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px 8px; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .m-predict legend { font-weight: 700; font-size: 14.5px; padding: 0 6px; }
+  .m-predict label { font-size: 15px; }
+  .m-pmsg { flex-basis: 100%; margin: 2px 0 0; font-size: 14.5px; }
+  .m-checks ul { list-style: none; margin: 6px 0 4px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 4px 14px; }
+  .m-checks li { font-size: 15px; display: flex; gap: 6px; align-items: baseline; }
+  .m-checks li small { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .m-checks li .m-ic { font-weight: 900; color: var(--muted); width: 1.1em; }
+  .m-checks li.ok { color: var(--ok); font-weight: 700; } .m-checks li.ok .m-ic { color: var(--ok); }
+  .m-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+  .m-foot .est { margin-left: auto; font-size: 12.5px; }
+  .m-hints { margin: 6px 0 0; padding-left: 22px; font-size: 15px; line-height: 1.5; }
+  .m-hints:empty { display: none; }
+  .m-result { margin-top: 8px; padding: 10px 12px; border-radius: 10px; font-size: 15.5px; line-height: 1.55; }
+  .m-result.ok { background: var(--ok-soft); border: 2px solid var(--ok); }
+  .m-real { font-size: 14px; }
   #top2d { overscroll-behavior: contain; }
   .scenebar { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
   .scenebox { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; margin-top: 6px; }
@@ -1291,6 +1319,23 @@ $('tab2d').setAttribute('aria-controls', 'pane2d'); $('tab3d').setAttribute('ari
 // 처음 화면: 저장된 코드가 어느 예제와 같으면 그 예제의 장면으로(포니봇은 예제마다 장면이 달라요)
 { const ex0 = EXAMPLES.find(e => e.code === $('code').value); if (ex0) curExample = { ex: ex0, code: ex0.code }; if (KIT.onExample) KIT.onExample(ex0 || null, kctx); }
 Object.assign(kctx, { autoSetup, applyField, runCode, loadExample: (id) => applyExample(EXAMPLES.find(e => e.id === id) || EXAMPLES[0]) });
+// ---------- 미션 모드(?mission=<id>): 수업 슬라이드에서 넘어옴. 로봇 행동으로 통과를 판정 ----------
+{ const q = new URLSearchParams(location.search), mid = q.get('mission');
+  if (mid && KIT.loadMissions) {
+    const mission = (await KIT.loadMissions()).find((x) => x.id === mid);
+    if (mission) {
+      const { attachMission } = await import('./mission.js');
+      const back = q.get('back'), backUrl = back && /^\.\.\/lessons\/\?[\w=%&.\-]*(#\d+)?$/.test(back) ? back : '';   // 같은 사이트의 수업 슬라이드로만 돌아감
+      const codeKey = 'pai:mission-code:' + mid;
+      const applyCode = (code) => { applyExample({ id: 'mission:' + mid, title: mission.title, code, scene: mission.scene, how: mission.goal }); $('howto').hidden = true; };
+      let saved = null; try { saved = localStorage.getItem(codeKey); } catch (e) {}
+      applyCode(saved || mission.code);
+      setInterval(() => { try { localStorage.setItem(codeKey, $('code').value); } catch (e) {} }, 1500);
+      document.body.classList.add('mission-mode');
+      window.__mission = attachMission(mission, { robot, runner, host: $('assist').parentElement, applyCode, backUrl });
+    }
+  }
+}
 if (KIT.expose) KIT.expose(kctx);   // 포니봇 자동 시험용 window.__pony
 window.__sim = { runner, robot, world, editor, view2d, mapLib, PROPS, autoSetup, applyField, camEmuState: () => ({ on: $('camEmu').checked, last: camLast }), showTab, showCodeTab, mcState: () => ({ mcReady, mcFromEditor }), playDemo: (i) => playDemo(DEMOS[i]), stopDemo, view3d: () => view3d, aiMode: () => aiOn };   // 자동 시험용
 </script>

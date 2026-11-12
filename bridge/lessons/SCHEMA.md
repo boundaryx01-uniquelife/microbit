@@ -49,6 +49,15 @@
   "notes": "[시험 7'] 진행: [USB 마이크로비트 연결] → \"BBC micro:bit\" 선택 → 카드 보여 주기 / 주의: 로보독은 바닥이나 울타리 안에서" }
 ```
 
+## 눌러 보는 장 (웹 전용 — PPT 에서는 정지 화면으로 바뀜)
+| type | 필드 | 설명 |
+|---|---|---|
+| `story` | `image`, `alt`, `bubbles: [{who, text, x, y}]`, `caption`, `ask` | 그림 위 말풍선(x·y = 그림 안 가운데 위치 %, 그림 밖으로 나가지 않게), 오른쪽에 한 줄 설명. PPT: image 장 |
+| `quiz` | `q`, `choices: [{t, ok, why}]`, `image?` | 보기를 누르면 맞음/틀림과 **보기마다 다른 설명**. 정답은 하나. PPT: points 장 + 노트에 정답 |
+| `mission` | `mission`(미션 id), `goal`, `image?`, `star?`, `kit?` | [미션 시작]이 시뮬레이터 미션 화면(`sim/?kit=…&mission=…`)을 엶. 통과 기록(이 브라우저)을 '✓ 통과'로 표시. 미션 정의는 `bridge/sim/kits/<kit>/missions.js` |
+
+미션은 **코드 글자가 아니라 로봇이 한 일**(이동 거리·몸 방향·멈춤)로 판정한다. 시뮬레이터는 추정 모델이므로 미션 뒤에 실물 확인 장을 둔다.
+
 ## 글자 강조
 `image` 형식의 `points`·`callout` 안에서 `**낱말**` 로 감싸면 웹은 노란 형광펜, PPT 는 그냥 글자(표시 `**` 는 자동 제거).
 
@@ -60,3 +69,4 @@
 story_hello · story_card · story_microbit · story_walk · story_stop · sim_robodog3d · sim_page(시뮬레이터 전체, 작게 보임) · ai_start · ai_green · ai_orange(AI 전체 화면, 작게 보임)
 확대본(권장): ai_start_crop(사진 모으기 칸 2개) · ai_green_crop · ai_orange_crop(카메라 + '노랑 100%' 결과) · sim_examples · sim_controls(실행·정지 줄) · robodog_eyes_3(로보독 눈에 모둠번호 3, 시뮬레이터 3D 캡처)
 그림 아이콘(직접 그린 평면 그림, 말 통일: 눈=파랑 icon_eye · 뇌=주황 icon_brain · 몸=초록 icon_body, 연결 USB=회색): icon_vacuum · icon_car · icon_delivery · icon_guide(안내견+신호등) · icon_think(물음표) · icon_change(속도 30→15) · icon_samenum(번호 3=3) · icon_teachcards(모둠 카드 1·2·3+빈 책상) · icon_numshow(눈에 번호 보이기) · icon_flash(다운로드→꽂기→켜기) · icon_debug(AI? 코드?) · sim_run(시뮬레이터 실행 화면 캡처)
+포니봇 이야기 그림(제조사 바운더리엑스 활동 그림, 허락 범위 안에서 사용 — 원본·출처 `bridge/ponybot/assets/official/SOURCE.md`): pony_hero · pony_race · pony_relay · pony_circuit · pony_bowling · pony_robot

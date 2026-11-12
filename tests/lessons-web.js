@@ -127,7 +127,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   check('움직임 줄이기: 슬라이드 애니메이션 없음', await dp.evaluate(() => getComputedStyle(document.querySelector('.slide')).animationName === 'none'));
 
   // 모든 수업·모든 장: 본문 글자 20px 이상, 자동 축소 0.85 이상, 바닥글 13px 이상, 그림 불러오기
-  const EXPECT = { '2차시': 25, '4차시': 48, 'ponybot_4차시': 50, '8차시': 91, '예제': 18 };
+  const EXPECT = { '2차시': 25, '4차시': 48, 'ponybot_4차시': 52, '8차시': 91, '예제': 18 };
   for (const id of ['2차시', '4차시', 'ponybot_4차시', '8차시', '예제']) {
     const q = await ctx.newPage(); q.on('pageerror', e => errs.push(id + ': ' + e.message));
     await q.goto(L + '?l=' + encodeURIComponent(id)); await q.waitForSelector('.slide');
