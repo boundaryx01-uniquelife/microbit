@@ -195,7 +195,7 @@ const kit = {
     M.lastSlow = now;
     const { robot, world } = M, api = M.api;
     const d = api.ping(1);
-    $('psDist').textContent = d + ' cm' + (d >= 500 ? ' (못 읽음=500)' : '');
+    $('psDist').textContent = d >= 500 ? '500(못 읽음)' : d + ' cm';
     const l = robot.lineRaw(0), r = robot.lineRaw(1);
     $('psL').classList.toggle('on', !!l); $('psR').classList.toggle('on', !!r); $('psLv').textContent = l; $('psRv').textContent = r;
     const c = robot.colorRGB(); $('psSw').style.background = `rgb(${c})`; $('psRgb').textContent = c.map(Math.round).join(', ');

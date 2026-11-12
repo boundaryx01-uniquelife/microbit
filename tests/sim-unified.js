@@ -91,10 +91,10 @@ async function startServer() {
   await pony.evaluate(() => window.__pony.loadExample('03_ai-traffic-ponybot'));
   await pony.click('#btnRun'); await pony.waitForTimeout(2800);
   const r1 = await pony.evaluate(() => ({ text: document.getElementById('guideText').textContent, on: [...document.querySelectorAll('#radioBtns .guide-on')].map(e => e.textContent), qon: [...document.querySelectorAll('#qNums .guide-on')].map(e => e.textContent) }));
-  check('03 라디오 예제 → 라디오 숫자 3 · 1 안내와 숫자 버튼 깜빡임(빠른 조작 칸 포함)', /라디오 숫자 1 · 3/.test(r1.text) && r1.on.join() === '1,3' && r1.qon.join() === '1,3', JSON.stringify(r1));
-  await pony.click('#qNums button[data-n="3"]'); await pony.waitForTimeout(1200);
+  check('03 라디오 예제 → 라디오 숫자 3 · 1 안내와 미리보기 아래 숫자 줄(0~9)의 버튼 깜빡임', /라디오 숫자 1 · 3/.test(r1.text) && r1.on.join() === '1,3', JSON.stringify(r1));
+  await pony.click('#radioBtns button:nth-child(4)'); await pony.waitForTimeout(1200);
   const r2 = await pony.evaluate(() => window.__pony.robot.pwm.slice());
-  check('03 빠른 조작의 숫자 3 → 출발(모터 전진)', r2.every(v => v > 0), String(r2));
+  check('03 라디오 숫자 줄의 3 → 출발(모터 전진)', r2.every(v => v > 0), String(r2));
   await pony.click('#btnStop');
   // 직접 만든 코드에도(예제가 아님) 입력 안내
   await pony.evaluate(() => { document.getElementById('code').value = 'input.onButtonPressed(Button.B, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Left, 80)\n})'; });

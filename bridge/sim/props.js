@@ -482,7 +482,7 @@ export function attachEditor(canvas, opts) {
     if (ed.sel && (ed.sel.kind === 'object' || ed.sel.kind === 'chip')) { ed.sel.prop.color = c; fire('recolor', { kind: ed.sel.kind }); }
     refresh();
   };
-  const HINT = { select: '끌어서 옮겨요. 빈 곳을 누르면 선택이 풀려요. Delete 키로 지워요.', box: '바닥을 눌러 상자(장애물)를 놓아요.', object: '바닥을 눌러 색 물체를 세워요. 아래에서 색을 고르세요.', chip: '바닥을 눌러 컬러칩을 붙여요. 아래에서 색을 고르세요.', track: '점을 끌어 옮겨요. 선을 두 번 누르거나 길게 누르면 점이 늘어요. 빈 곳을 누르면 끝에 점이 더해져요.', erase: '지울 소품을 눌러요. 선의 점을 누르면 그 점만, 선 몸을 누르면 선 전체가 지워져요.' };
+  const HINT = { select: '끌어서 옮겨요. 빈 곳을 누르면 선택이 풀려요. Delete 키로 지워요.', box: '바닥을 눌러 상자(장애물)를 놓아요.', object: '바닥을 눌러 색 물체를 세워요. 아래에서 색을 고르세요.', chip: '바닥을 눌러 컬러칩을 붙여요. 아래에서 색을 고르세요.', track: '점이 3개 이상이면 시작점(초록)을 눌러 고리로 닫을 수 있어요. 점을 끌어 옮겨요. 선을 두 번 누르거나 길게 누르면 점이 늘어요. 빈 곳을 누르면 끝에 점이 더해져요.', erase: '지울 소품을 눌러요. 선의 점을 누르면 그 점만, 선 몸을 누르면 선 전체가 지워져요.' };
 
   ed.addAt = (kind, x, y, color) => {
     const p = clampPt(x, y), prop = addProp(props(), kind, p.x, p.y, { color: color || ed.color });
@@ -541,7 +541,12 @@ export function attachEditor(canvas, opts) {
     }
     if (tool === 'track') {
       const h = hitTest(P, p.x, p.y, tol, { items: false, points: true });
-      if (h && h.part === 'point') { ed.activeTrack = h.prop; ed.sel = { kind: 'track', prop: h.prop, part: 'point', index: h.index }; drag = { type: 'point', t: h.prop, i: h.index, moved: false }; refresh(); return; }
+      if (h && h.part === 'point') {
+        ed.activeTrack = h.prop; ed.sel = { kind: 'track', prop: h.prop, part: 'point', index: h.index };
+        // 열린 선의 시작점(초록)을 끌지 않고 누르기만 하면 고리로 닫음(점 3개 이상)
+        const cc = h.index === 0 && !h.prop.closed && h.prop.pts.length >= 3;
+        drag = { type: 'point', t: h.prop, i: h.index, moved: false, closeCand: cc, x0: p.x, y0: p.y }; refresh(); return;
+      }
       if (h && h.part === 'seg') {
         ed.activeTrack = h.prop; ed.sel = { kind: 'track', prop: h.prop, part: 'body' }; refresh();
         const ins = () => { const i = insertTrackPoint(h.prop, p.x, p.y); ed.sel.index = i; drag = { type: 'point', t: h.prop, i, moved: true }; fire('track'); };
@@ -581,6 +586,7 @@ export function attachEditor(canvas, opts) {
       setPropCenter(drag.kind, prop, c.x, c.y);
       if (blockedByRobot(drag.kind, prop)) { setPropCenter(drag.kind, prop, old.x, old.y); say('로봇 위에는 놓을 수 없어요.'); } else drag.moved = true;
     } else if (drag.type === 'point') {
+      if (drag.closeCand && !drag.moved && Math.hypot(p.x - drag.x0, p.y - drag.y0) < 3) return;   // 살짝 흔들린 건 끌기가 아님
       const c = clampPt(p.x, p.y); drag.t.pts[drag.i] = [round2(c.x), round2(c.y)]; drag.moved = true;
     } else if (drag.type === 'track') {
       const dx = p.x - drag.last.x, dy = p.y - drag.last.y; drag.last = p; drag.t.pts = drag.t.pts.map(([x, y]) => [round2(x + dx), round2(y + dy)]); drag.moved = true;
@@ -588,7 +594,8 @@ export function attachEditor(canvas, opts) {
   };
   const up = () => {
     if (press) { clearTimeout(press.timer); press = null; }
-    if (drag && drag.moved) fire('move', { type: drag.type });
+    if (drag && drag.closeCand && !drag.moved) { drag.t.closed = true; say('선을 고리로 닫았어요. 다시 열려면 시작점을 끌거나 [선 열기]를 누르세요.'); fire('track'); }
+    else if (drag && drag.moved) fire('move', { type: drag.type });
     drag = null;
   };
   canvas.style.touchAction = 'none';
@@ -611,6 +618,12 @@ export function attachEditor(canvas, opts) {
     for (const t of props().tracks) {
       const isAct = t === act, sel = ed.sel && ed.sel.prop === t;
       if (sel || (ed.tool === 'track' && isAct)) { g.strokeStyle = 'rgba(36,86,229,.55)'; g.lineWidth = Math.max(0.6, t.width * 0.3); g.setLineDash([2, 1.5]); g.beginPath(); t.pts.forEach(([x, y], i) => (i ? g.lineTo(x, y) : g.moveTo(x, y))); if (t.closed) g.closePath(); g.stroke(); g.setLineDash([]); }
+      if (ed.tool === 'track' && isAct && !t.closed && t.pts.length >= 3) {   // 누르면 닫히는 자리 표시(시작점 둘레 고리 + 끝점→시작점 점선)
+        const [fx, fy] = t.pts[0], [lx, ly] = t.pts[t.pts.length - 1];
+        g.save(); g.strokeStyle = 'rgba(31,164,99,.85)'; g.lineWidth = 0.6; g.setLineDash([1.5, 1.5]);
+        g.beginPath(); g.moveTo(lx, ly); g.lineTo(fx, fy); g.stroke(); g.setLineDash([]);
+        g.lineWidth = 0.9; g.beginPath(); g.arc(fx, fy, 3.6, 0, 7); g.stroke(); g.restore();
+      }
       if (showPts) t.pts.forEach(([x, y], i) => {
         const on = sel && ed.sel.part === 'point' && ed.sel.index === i;
         g.beginPath(); g.arc(x, y, on ? 2.4 : 1.8, 0, 7); g.fillStyle = i === 0 ? '#1fa463' : '#fff'; g.fill(); g.strokeStyle = '#2456e5'; g.lineWidth = 0.6; g.stroke();
@@ -634,6 +647,10 @@ export function attachEditor(canvas, opts) {
       const b = el('button', { type: 'button', 'data-tool': id, text: label, 'aria-pressed': 'false' });
       b.addEventListener('click', () => ed.setTool(id)); toolBtns.push(b); bar.appendChild(b);
     }
+    const closeBtn = el('button', { type: 'button', id: 'pe-closebtn', text: '↺ 선 닫기', title: '지금 선의 끝을 시작점에 이어 고리(loop)로 만들어요(점 3개 이상)' });
+    closeBtn.addEventListener('click', () => { const t = pressedTrack(); if (!t) { say('먼저 [선 편집]으로 선을 그리거나 고르세요.'); return; } if (!t.closed && t.pts.length < 3) { say('점이 3개 이상이어야 닫을 수 있어요.'); return; } ed.setClosed(!t.closed); say(t.closed ? '선을 고리로 닫았어요.' : '선을 열었어요.'); });
+    panels.push(() => { const t = pressedTrack(); closeBtn.textContent = t && t.closed ? '↻ 선 열기' : '↺ 선 닫기'; closeBtn.hidden = ed.tool !== 'track'; });
+    bar.appendChild(closeBtn);
     const cols = el('span', { class: 'pe-colors', role: 'group', 'aria-label': '색 고르기' });
     for (const c of COLOR_NAMES) {
       const b = el('button', { type: 'button', 'data-color': c, 'aria-label': COLORS[c].ko, title: COLORS[c].ko, style: `background:${rgbS(COLORS[c].rgb)};border:2px solid ${c === 'white' ? '#999' : 'rgba(0,0,0,.35)'}` });
