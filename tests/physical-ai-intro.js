@@ -70,7 +70,9 @@ const inkStats = (sel) => (s) => {
   // 카드 링크
   const links = await p.$$eval('.kit a', (as) => [...new Set(as.map((a) => a.getAttribute('href')))]);
   const need = ['robodog/', 'ponybot/', 'sim/?kit=ponybot', 'ai.html', 'docs/', 'sim/', 'ai.html?kit=ponybot', 'lessons/?l=ponybot_4차시'];
-  check('카드 링크 갖춤(로보독·포니봇·포니봇 시뮬레이터·AI 브리지·수업)', need.every((h) => links.includes(h)), JSON.stringify(links));
+  // 운영(Netlify)은 'pretty URLs'로 ai.html 을 /ai 로 바꿔 내보냄 — 같은 페이지로 봄(열리는지는 아래에서 따로 확인)
+  const norm = (h) => h.replace(/^\/ai(?=$|\?)/, 'ai.html');
+  check('카드 링크 갖춤(로보독·포니봇·포니봇 시뮬레이터·AI 브리지·수업)', need.every((h) => links.map(norm).includes(h)), JSON.stringify(links));
   const broken = [];
   for (const h of [...links, 'lessons/', 'assets/intro/physical-ai.mp4', 'ponybot/assets/official/material-pony-v2.webp']) { const r = await p.request.get(BASE + h); if (!r.ok()) broken.push(h + ' ' + r.status()); }
   check('카드·영상·사진 링크가 모두 열림', broken.length === 0, broken.join(', '));
