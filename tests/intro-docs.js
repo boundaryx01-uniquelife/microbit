@@ -1,6 +1,7 @@
 // 첫 화면(인트로 영상 intro.mp4 + 시작 카드)·수업 자료 페이지 시험: node tests/intro-docs.js [기본주소]
 const { chromium } = require('playwright');
 const BASE = (process.argv[2] || 'http://127.0.0.1:8765/').replace(/\/?$/, '/');
+const HOME = BASE + 'robodog/'; // 로보독 첫 화면(인트로 영상). 사이트 / 는 교구 선택 화면
 const results = [];
 const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ? 'PASS' : 'FAIL'}  ${name} ${ok ? '' : detail}`); };
 const fs = require('fs');
@@ -14,7 +15,7 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
   const p = await ctx.newPage(); watch(p);
   const cls = (q, c) => q.evaluate((c) => document.getElementById('stage').classList.contains(c), c);
   // ----- 첫 화면: 인트로 영상 한 편(intro.mp4)이 열자마자 재생 -----
-  await p.goto(BASE);
+  await p.goto(HOME);
   await p.waitForFunction(() => window.__intro && window.__intro.film.currentTime > 0.3, null, { timeout: 60000 });
   const fm = await p.evaluate(() => { const f = window.__intro.film; return { d: f.duration, w: f.videoWidth, h: f.videoHeight, muted: f.muted }; });
   check('인트로 영상(첫 산책 30초 + 엔딩 8.2초) 한 편이 자동 재생', fm.d > 37 && fm.d < 39.5 && fm.w === 1280 && fm.h === 720 && fm.muted, JSON.stringify(fm));
@@ -53,7 +54,7 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
   // ----- 화면 크기별 -----
   for (const [w, h] of [[390, 844], [1280, 720], [1920, 800]]) {
     const c2 = await b.newContext({ viewport: { width: w, height: h } }); const q = await c2.newPage(); watch(q);
-    await q.goto(BASE); await q.waitForFunction(() => window.__intro && window.__intro.film.readyState >= 2, null, { timeout: 60000 });
+    await q.goto(HOME); await q.waitForFunction(() => window.__intro && window.__intro.film.readyState >= 2, null, { timeout: 60000 });
     const fit = await q.evaluate(() => { const f = window.__intro.film, r = f.getBoundingClientRect(); return { fit: getComputedStyle(f).objectFit, w: r.width, h: r.height }; });
     check(`${w}x${h}: 영상 맞춤(${fit.fit}) — 세로 화면은 잘리지 않게 전체`, w < h ? fit.fit === 'contain' : fit.fit === 'cover', JSON.stringify(fit));
     await q.click('#skip'); await q.waitForTimeout(1200);
@@ -61,18 +62,18 @@ const noise = (t) => /GL Driver|GPU stall|WebGL/i.test(t);
     check(`${w}x${h}: 조절 버튼이 화면 안`, await q.evaluate(() => [...document.querySelectorAll('.ctl button')].filter(x => !x.hidden).every(x => { const r = x.getBoundingClientRect(); return r.left >= 0 && r.right <= innerWidth && r.height >= 36; })));
     const endR = await q.evaluate(() => { const f = document.querySelector('.foot'), fr = f.getBoundingClientRect(); return { footB: fr.bottom, footFs: parseFloat(getComputedStyle(f).fontSize), footShown: fr.height > 0, links: [...document.querySelectorAll('.cta a')].map(a => { const r = a.getBoundingClientRect(); return r.bottom <= innerHeight && r.top > 0 && r.width > 50; }) }; });
     check(`${w}x${h}: 시작 카드 링크가 화면 안, 바닥글 12px 이상`, endR.links.every(Boolean) && (!endR.footShown || (endR.footB <= h && endR.footFs >= 12)), JSON.stringify(endR));
-    check(`${w}x${h}: 시작 카드에 학생 링크(수업 코드)가 보임`, await q.evaluate(() => { const r = document.querySelector('.joinl a[href="lessons/"]').getBoundingClientRect(); return r.width > 50 && r.bottom <= innerHeight && r.top > 0; }));
+    check(`${w}x${h}: 시작 카드에 학생 링크(수업 코드)가 보임`, await q.evaluate(() => { const r = document.querySelector('.joinl a[href$="lessons/"]').getBoundingClientRect(); return r.width > 50 && r.bottom <= innerHeight && r.top > 0; }));
     await c2.close();
   }
 
   // ----- 움직임 줄이기 / 영상을 못 받을 때 -----
   const rm = await b.newContext({ reducedMotion: 'reduce', viewport: { width: 1280, height: 720 } });
-  const p3 = await rm.newPage(); watch(p3); await p3.goto(BASE);
+  const p3 = await rm.newPage(); watch(p3); await p3.goto(HOME);
   await p3.waitForFunction(() => window.__intro && document.getElementById('stage').classList.contains('ended'), null, { timeout: 30000 });
   check('움직임 줄이기: 영상 없이 바로 시작 카드(엔딩 정지 화면)', await cls(p3, 'ended') && await cls(p3, 'outro') && await p3.evaluate(() => window.__intro.film.paused));
   const nov = await b.newContext({ viewport: { width: 1366, height: 768 } });
   await nov.route('**/assets/intro/intro.mp4', (r) => r.abort());
-  const p4 = await nov.newPage(); await p4.goto(BASE); await p4.waitForTimeout(2500);
+  const p4 = await nov.newPage(); await p4.goto(HOME); await p4.waitForTimeout(2500);
   check('영상을 못 받아도 시작 카드가 보임', await cls(p4, 'ended') && await cls(p4, 'outro'));
 
   // ----- 머리말(공유 미리보기) 와 그림·영상 파일 -----

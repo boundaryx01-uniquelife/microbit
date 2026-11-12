@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Physical AI with micro:bit · 인트로 미리 보기</title>
+<meta name="robots" content="noindex">
+<link rel="stylesheet" href="../assets/fonts/pretendard.css"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<style>
+html,body{margin:0;height:100%;background:#f4f6fa;overflow:hidden;font-family:"Pretendard Variable",Pretendard,system-ui,sans-serif}
+canvas{display:block;width:100vw;height:100vh;height:100dvh}
+.bar{position:fixed;left:16px;right:16px;bottom:14px;display:flex;gap:10px;align-items:center;color:#566077;font-size:14px}
+.bar button{font:inherit;font-weight:700;padding:8px 14px;border-radius:999px;border:1px solid #c9d1df;background:#fff;color:#111827;cursor:pointer}
+.bar input{flex:1;accent-color:#2456e5}
+.bar output{min-width:4.5em;text-align:right;font-variant-numeric:tabular-nums}
+.cap .bar{display:none}
+</style></head>
+<body>
+<canvas id="c" role="img" aria-label="Physical AI with micro:bit — 보고 · 생각하고 · 움직이는 인공지능 교실 인트로 애니메이션"></canvas>
+<div class="bar"><button id="play" type="button">다시 재생</button><input id="tl" type="range" min="0" max="14" step="0.01" value="0" aria-label="시간"><output id="tv">0.00s</output></div>
+<script type="module">
+// 미리 보기·프레임 렌더용. ?t=초(그 시각에 멈춤), ?cap(조작 막대 숨김 — 영상 렌더)
+import { createIntro, DUR } from './physical-ai.js';
+const q = new URLSearchParams(location.search);
+if (q.has('cap')) document.documentElement.classList.add('cap');
+const cv = document.getElementById('c'), tl = document.getElementById('tl'), tv = document.getElementById('tv');
+await document.fonts.ready;
+try { await Promise.all(['800 100px "Pretendard Variable"', '600 100px "Pretendard Variable"', '500 100px "Pretendard Variable"'].map((f) => document.fonts.load(f, 'Physical AI with micro:bit 보고 생각하고 움직이는 인공지능 교실 카메라 초음파 센서 라인 멈춤 천천히 출발 보기 생각하기 움직이기'))); } catch (e) {}
+const intro = createIntro(cv);
+tl.max = DUR;
+const show = () => { tl.value = intro.time; tv.textContent = intro.time.toFixed(2) + 's'; if (intro.running) requestAnimationFrame(show); };
+window.__intro = intro;
+window.__seek = (t) => intro.seek(t);
+addEventListener('resize', () => intro.resize());
+tl.addEventListener('input', () => { intro.seek(+tl.value); tv.textContent = (+tl.value).toFixed(2) + 's'; });
+document.getElementById('play').addEventListener('click', () => { intro.play(); show(); });
+if (q.has('t')) intro.seek(+q.get('t'));
+else if (q.has('cap') || matchMedia('(prefers-reduced-motion: reduce)').matches) intro.seek(q.has('cap') ? 0 : DUR);
+else { intro.play(); show(); }
+window.__ready = true;
+</script>
+</body></html>

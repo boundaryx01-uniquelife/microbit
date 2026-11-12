@@ -1,221 +1,150 @@
 <!doctype html>
-<html lang="ko">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>로보독 피지컬 AI 교실</title>
-<meta name="description" content="AI가 보고, 마이크로비트가 전하고, 로보독이 움직인다 — 초·중·고 피지컬 AI 수업 자료와 시뮬레이터">
-<meta name="theme-color" content="#0a2342">
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="로보독 AI 교실">
-<meta property="og:locale" content="ko_KR">
-<meta property="og:title" content="빅아이 로보독 · 로보독의 첫 산책">
-<meta property="og:description" content="초록 카드는 '가자!', 빨간 카드는 '멈춰!' — 내가 가르친 AI로 움직이는 로보독. 30초 영상과 시뮬레이터로 시작하는 피지컬 AI 수업.">
+<html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>피지컬 AI 교실 · 마이크로비트 교구 선택</title>
+<meta name="description" content="웹캠으로 AI를 가르치고 마이크로비트로 로봇을 움직이는 피지컬 AI 수업. 교구를 골라 시작하세요.">
+<meta name="theme-color" content="#f4f6fa">
+<meta property="og:type" content="website"><meta property="og:locale" content="ko_KR">
+<meta property="og:title" content="피지컬 AI 교실 · 마이크로비트 교구 선택">
+<meta property="og:description" content="AI가 보고, 마이크로비트가 전하고, 로봇이 움직인다 — 교구별 수업 자료·AI 브리지·예제">
 <meta property="og:url" content="https://microbit-bridge.netlify.app/">
-<meta property="og:image" content="https://microbit-bridge.netlify.app/assets/intro/og.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="보름달 앞에서 LED 눈으로 웃는 빅아이 로보독과 제목">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="빅아이 로보독 · 로보독의 첫 산책">
-<meta name="twitter:description" content="초록 카드는 '가자!', 빨간 카드는 '멈춰!' — 내가 가르친 AI로 움직이는 로보독. 30초 영상과 시뮬레이터로 시작하는 피지컬 AI 수업.">
-<meta name="twitter:image" content="https://microbit-bridge.netlify.app/assets/intro/og.png">
-<link rel="stylesheet" href="assets/brand.css">
-<link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
-<link rel="preload" as="video" href="assets/intro/intro.mp4" type="video/mp4">
-<style>
-  :root {
-    --stage: #e8edf6; --table: #d9c29b; --wall: #efe6d8; --sky: #bfe3ff; --floor: #c9a77c; --rug: #6f9a9a;
-    --hdr: 58px;
+<link rel="stylesheet" href="assets/brand.css"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="intro/physical-ai.js" as="script" crossorigin>
+<script>
+// 첫 화면 인트로: 그리기 전에 모드를 정해 카드가 번쩍 보였다 사라지지 않게. ?intro=1 항상 재생, ?intro=0 정지 화면
+(function () {
+  var q = new URLSearchParams(location.search).get('intro'), seen = false, calm = false;
+  try { seen = sessionStorage.getItem('pai-intro-seen') === '1'; } catch (e) {}
+  try { calm = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var play = q === '1' || (q !== '0' && !seen && !calm);
+  if (play) {
+    document.documentElement.classList.add('pai-play');
+    setTimeout(function () { if (!window.__paiStarted) document.documentElement.classList.remove('pai-play'); }, 4000);   // 스크립트가 못 뜨면 카드부터
   }
-  @media (prefers-color-scheme: dark) {
-    :root:not([data-theme="light"]) { --stage: #141a24; --table: #4d4130; --wall: #2d2830; --sky: #243a58; --floor: #4a3a2a; --rug: #3f5f66; }
-  }
-  html, body { height: 100%; }
-  body { --page-w: 1100px; display: flex; flex-direction: column; overflow: hidden; }
-
-  /* ---------- 영상 무대: 열면 바로 재생. 스크롤 없음 ---------- */
-  .stage { position: relative; flex: 1; min-height: 0; background: var(--stage); overflow: hidden; }
-  /* 인트로 영상(intro.mp4 = 첫 산책 30초 + 엔딩 8.2초를 한 파일로). 가로는 꽉 채움, 세로(휴대폰)는 잘리지 않게 전체를 보여 줌 */
-  .stage { background: #0a2342; }
-  #film { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; background: #0a2342; }
-  /* 세로 화면(휴대폰): 영상은 잘리지 않게 전체, 위아래 빈 곳은 같은 영상을 흐리게 키워 채움 · 자막은 크게 */
-  #filmbg { position: absolute; inset: -6%; width: 112%; height: 112%; object-fit: cover; filter: blur(22px) brightness(.55) saturate(1.2); display: none; pointer-events: none; }
-  @media (max-aspect-ratio: 1/1) {
-    #film { object-fit: contain; background: transparent; object-position: 50% 42%; }
-    #filmbg { display: block; }
-    .cap b { font-size: 21px; padding: 10px 18px; }
-  }
-  .stage.outro #filmbg { display: none; }
-  .stage.tail .cap { opacity: 0; }
-  /* 엔딩 모션(ending.js): 영상이 끝나면 마지막 화면을 이어받아 재생, 시작 카드 뒤 배경으로 남음 */
-  #outro { position: absolute; inset: 0; width: 100%; height: 100%; display: block; opacity: 0; pointer-events: none; transition: opacity .3s; }
-  .stage.outro #outro { opacity: 1; }
-  .stage.outro .cap { opacity: 0; }
-  .loading { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #dbe5f5; padding: 24px; font-weight: 650; pointer-events: none; }
-  .stage.ready .loading { display: none; }
-
-  .title { position: absolute; left: 16px; top: 14px; font-size: 13px; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px);
-    border: 1px solid var(--line); border-radius: var(--r-pill); padding: 4px 12px; pointer-events: none; }
-  .ctl { position: absolute; right: 14px; top: 12px; display: flex; gap: 8px; }
-  .ctl button { font-size: 14px; min-height: 36px; padding: 6px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(6px); }
-  .ctl button:focus-visible, .cta a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
-
-  /* 자막 + 장면 진행 막대 */
-  .cap { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 16px 18px; display: flex; flex-direction: column; align-items: center; gap: 10px; pointer-events: none; transition: opacity .4s; }
-  .stage.ended .cap { opacity: 0; }
-  .cap b { max-width: min(92%, 760px); text-align: center; font-size: clamp(18px, 3vw, 30px); line-height: 1.35; padding: 10px 22px; border-radius: 18px; letter-spacing: -0.02em;
-    background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(8px); border: 1px solid var(--line); box-shadow: var(--shadow-md);
-    transition: opacity .3s ease, transform .4s cubic-bezier(.2,.9,.25,1.25); }
-  .cap.swap b { opacity: 0; transform: translateY(10px) scale(.97); }
-  .segs { display: flex; gap: 5px; width: min(92%, 760px); }
-  .segs i { flex: 1; height: 4px; border-radius: 2px; background: color-mix(in srgb, var(--muted) 35%, transparent); overflow: hidden; }
-  .segs i::after { content: ""; display: block; height: 100%; width: var(--p, 0%); background: var(--accent); }
-
-  /* 끝: 시작 카드 */
-  .end { position: absolute; left: 0; right: 0; bottom: 0; padding: 0 16px 16px; display: flex; justify-content: center; opacity: 0; transform: translateY(24px); pointer-events: none;
-    transition: opacity .6s var(--ease), transform .7s var(--ease); }
-  .stage.ended .end { opacity: 1; transform: none; pointer-events: auto; }
-  .end-in { width: min(1000px, 100%); background: color-mix(in srgb, var(--surface) 92%, transparent); backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px);
-    border: 1px solid var(--line); border-radius: 24px; padding: 18px 20px 12px; box-shadow: var(--shadow-lg); text-align: center; }
-  .end-in h1 { margin: 0; font-size: clamp(22px, 3.6vw, 38px); line-height: 1.2; letter-spacing: -0.03em; }
-  .end-in h1 em { font-style: normal; color: var(--accent); }
-  .end-in > p { margin: 6px auto 0; max-width: 560px; color: var(--muted); font-size: clamp(14px, 1.8vw, 16.5px); }
-  .cta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; margin: 14px 0 6px; text-align: left; }
-  .cta a { display: flex; flex-direction: column; text-decoration: none; color: var(--ink); background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-xl); padding: 12px 16px 10px;
-    box-shadow: var(--shadow-sm); transition: border-color .15s, transform .2s var(--ease), box-shadow .2s; }
-  .cta a:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
-  .cta a.main { background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #6a3df0)); color: var(--accent-ink); border-color: transparent; }
-  .cta .step { font-size: 12px; font-weight: 800; opacity: .8; }
-  .cta b { display: block; font-size: 17px; margin: 2px 0 2px; letter-spacing: -0.02em; }
-  .cta span { font-size: 13.5px; line-height: 1.5; color: var(--muted); }
-  .cta a.main span { color: inherit; opacity: .92; }
-  .cta .go { margin-top: auto; padding-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--accent); font-style: normal; }
-  .cta a.main .go { color: inherit; }
-  .cta .go::after { content: "→"; margin-left: 5px; }
-  .end-in > p.joinl { margin: 6px auto 0; font-size: 14.5px; }
-  .joinl a { color: var(--accent); font-weight: 700; text-decoration: none; display: inline-block; padding: 4px 0; }
-  .joinl a:hover { text-decoration: underline; }
-  .foot { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.55; }
-  .foot .partner { display: inline-block; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: var(--r-pill); padding: 0 8px; }
-
-  @media (max-width: 720px) {
-    .gnb { position: static; }
-    .cta { grid-template-columns: minmax(0, 1fr); gap: 8px; }
-    .cta span { display: none; }
-    .cta a { padding: 9px 14px 8px; flex-direction: row; align-items: center; gap: 10px; }
-    .cta .step { display: none; }
-    .cta b { margin: 0; font-size: 16px; }
-    .cta .go { margin: 0 0 0 auto; padding: 0; }
-    .end-in { padding: 14px 14px 8px; }
-    .end-in > p:not(.joinl) { display: none; }
-    .end-in > p.joinl { margin-top: 4px; font-size: 14px; }
-    .end-in > p.joinl.first { display: none; }
-    .ctl button { padding: 6px 10px; }
-  }
-  @media (prefers-reduced-motion: reduce) { .end, .cap b { transition: none; } }
-</style>
-</head>
-<body>
-<header class="gnb"><div class="gnb-in">
-  <a class="brand" href="./"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0f2a50"/><circle cx="16" cy="16.4" r="12.6" fill="#fff1c2"/><rect x="4.6" y="10.2" width="22.8" height="12.4" rx="6.2" fill="#0b0e14"/><rect x="6.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><rect x="17.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><g fill="#fff4c8"><circle cx="7.92" cy="17.68" r=".56"/><circle cx="8.78" cy="16.82" r=".56"/><circle cx="9.64" cy="15.96" r=".56"/><circle cx="10.50" cy="15.10" r=".56"/><circle cx="11.36" cy="15.96" r=".56"/><circle cx="12.22" cy="16.82" r=".56"/><circle cx="13.08" cy="17.68" r=".56"/><circle cx="18.92" cy="17.68" r=".56"/><circle cx="19.78" cy="16.82" r=".56"/><circle cx="20.64" cy="15.96" r=".56"/><circle cx="21.50" cy="15.10" r=".56"/><circle cx="22.36" cy="15.96" r=".56"/><circle cx="23.22" cy="16.82" r=".56"/><circle cx="24.08" cy="17.68" r=".56"/></g><circle cx="16" cy="14.4" r=".95" fill="#2e3850"/></svg>
-<span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>
-  <nav aria-label="주 메뉴"><a href="./" aria-current="page">처음</a><a href="sim/">시뮬레이터</a><a href="ai.html">AI 브리지</a><a href="docs/">수업 자료</a></nav>
-</div></header>
-
-<main class="stage" id="stage">
-  <video id="filmbg" src="assets/intro/intro.mp4" muted playsinline preload="none" aria-hidden="true" tabindex="-1"></video>
-  <video id="film" src="assets/intro/intro.mp4" muted playsinline preload="auto" aria-label="달빛이 비치는 밤, 방 안에서 로보독이 처음 눈을 뜨고, 아이가 초록 카드를 내밀자 함께 달빛 언덕길로 산책을 나가요. 언덕 끝에서 아이가 빨간 카드를 들자 로보독이 가르친 대로 딱 멈추고, 팔을 벌린 아이에게 돌아가요. 이어서 카메라가 보름달로 올라가고 별들이 모여 로보독의 LED 눈이 되며, 로보독이 웃는 눈을 짓고 제목 빅아이 로보독이 나와요. 약 38초 영상"></video>
-  <canvas id="outro" aria-hidden="true"></canvas>
-  <div class="loading" id="loading">로보독을 깨우는 중…</div>
-
-  <div class="title">로보독의 모험 · 첫 산책</div>
-  <div class="ctl">
-    <button id="skip" type="button">건너뛰기 ⏭</button>
-    <button id="replay" type="button" hidden>↺ 다시 보기</button>
-  </div>
-  <div class="cap" id="cap" aria-live="polite"><b id="capText"></b><div class="segs" id="segs" aria-hidden="true"></div></div>
-
-  <section class="end" id="end" aria-label="시작하기"><div class="end-in">
-    <h1>내가 가르친 <em>AI</em>로 로보독이 카드를 알아보고 멈춰요</h1>
-    <p>로봇이 없어도 시뮬레이터로 시작할 수 있어요. 우리 학교의 문제는 무엇인가요?</p>
-    <nav class="cta">
-      <a class="main" href="sim/"><div class="step">STEP 1</div><b>시뮬레이터에서 코딩</b><span>블록 코딩과 3D 로보독 미리 보기, 말로 시키면 코드를 만들어 주는 도우미</span><em class="go">시작하기</em></a>
-      <a href="ai.html"><div class="step" style="color:var(--accent)">STEP 2</div><b>AI 브리지</b><span>웹캠으로 카드를 가르치고 결과를 마이크로비트로 보내요</span><em class="go">열기</em></a>
-      <a href="docs/"><div class="step" style="color:var(--accent)">선생님께</div><b>수업 자료</b><span>처음이면 「예제 따라 하기」부터 · 2·4·8차시 수업안, 활동지, 운영 가이드</span><em class="go">보기</em></a>
-    </nav>
-    <p class="joinl first"><a href="docs/09.html">🐶 로보독이 처음이세요? <b>예제 따라 하기</b> — 시뮬레이터 → 실물에 코드 넣기까지 →</a></p>
-    <p class="joinl"><a href="lessons/">학생: 선생님이 알려 준 <b>수업 코드</b>로 슬라이드 함께 보기 →</a></p>
-    <p class="foot"><span class="partner">코코아팹 협력</span> 빅아이 로보독은 코코아팹의 제품이며, 이 교육 도구는 코코아팹과 협력해 만들었습니다. 영상 속 아이와 배경은 Gemini로 만든 상상 장면이고, 로보독은 시뮬레이터와 같은 3D 모델이에요. 수업에서는 웹캠이 카드를 알아보고 마이크로비트를 거쳐 로보독을 움직여요.</p>
-  </div></section>
-</main>
-
-<script type="module">
-// 첫 화면: 인트로 영상 한 편(intro.mp4 = '로보독의 첫 산책' 30초 + 엔딩 '별이 모여 눈이 되다' 8.2초)을 바로 재생.
-// 영상이 끝나면 엔딩 마지막 장면(ending.js, 같은 그림)이 이어받아 달·로보독이 위로 물러나고 시작 카드가 올라옴.
-// 영상은 tools/render-intro.mjs 로 다시 만들 수 있음(3D 합성·엔딩을 프레임 단위로 렌더 → ffmpeg).
-import { createEnding } from './ending.js';
-const $ = (id) => document.getElementById(id);
-const stage = $('stage'), film = $('film'), cap = $('cap'), capText = $('capText'), segs = $('segs'), skip = $('skip'), replay = $('replay');
-const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
-// 장면별 자막 [시각(초), 글] — 첫 산책 30초 구간
-const SC = [{ t: 0, text: '달빛이 비치는 밤…' }, { t: 3.0, text: '로보독이 처음 눈을 떴어요' }, { t: 6.0, text: "'같이 산책 갈래?' 초록 카드는 '가자!'" }, { t: 10, text: '달빛 언덕길, 우리의 첫 산책' },
-  { t: 20, text: '언덕 끝, 그 앞은 위험해요' }, { t: 22.2, text: '빨간 카드 — 멈춰!' }, { t: 24.6, text: '내가 가르친 대로, 딱 멈췄어요' }, { t: 26.6, text: '이리 와! 우리의 첫 산책 끝' }];
-const STORY = 30;
-segs.innerHTML = SC.map(() => '<i></i>').join('');
-const bars = [...segs.children];
-let lastI = -1, timer = 0, raf = 0;
-
-const endIn = document.querySelector('.end-in');
-let outro = null;
-try { outro = createEnding($('outro'), { inset: () => { const r = endIn.getBoundingClientRect(), sr = stage.getBoundingClientRect(); return sr.height ? (sr.bottom - r.top + 12) / sr.height : 0; } }); }
-catch (e) { console.warn('엔딩 화면을 켜지 못했어요:', e); }
-new ResizeObserver(() => { if (outro && stage.classList.contains('outro')) outro.resize(); }).observe(stage);
-
-const showEnd = () => { stage.classList.add('ended'); skip.hidden = true; replay.hidden = false; };
-const outroStill = () => { if (!outro) return; outro.stop(); outro.setFrom(null); outro.seek(outro.DUR + outro.OUT); stage.classList.add('outro'); };
-const skipAll = () => { if (stage.classList.contains('ended')) return; cancelAnimationFrame(raf); film.pause(); outroStill(); showEnd(); };
-
-const filmbg = $('filmbg'), portrait = matchMedia('(max-aspect-ratio: 1/1)');
-const syncBg = () => {   // 세로 화면에서만 배경 영상을 본 영상에 맞춰 둠(흐린 배경이라 0.3초 안 어긋남은 괜찮음)
-  if (!portrait.matches) { if (!filmbg.paused) filmbg.pause(); return; }
-  if (filmbg.preload !== 'auto') filmbg.preload = 'auto';   // 가로 화면에서는 받지 않음
-  if (Math.abs((filmbg.currentTime || 0) - (film.currentTime || 0)) > 0.3) filmbg.currentTime = film.currentTime || 0;
-  if (film.paused || film.ended) { if (!filmbg.paused) filmbg.pause(); } else if (filmbg.paused) filmbg.play().catch(() => {});
-};
-['play', 'pause', 'seeked', 'ended'].forEach((ev) => film.addEventListener(ev, syncBg));
-portrait.addEventListener && portrait.addEventListener('change', syncBg);
-function tick() {   // 자막·진행 막대(영상 시계를 따름)
-  const t = film.currentTime || 0;
-  if (portrait.matches && Math.abs((filmbg.currentTime || 0) - t) > 0.5) syncBg();
-  stage.classList.toggle('tail', t >= STORY);
-  let i = 0; while (i + 1 < SC.length && t >= SC[i + 1].t) i++;
-  if (i !== lastI) { const first = lastI < 0; lastI = i; clearTimeout(timer); cap.classList.add('swap');
-    timer = setTimeout(() => { capText.textContent = SC[i].text; cap.classList.remove('swap'); }, first ? 0 : 220); }
-  bars.forEach((b, k) => { const a = SC[k].t, e = k + 1 < SC.length ? SC[k + 1].t : STORY; b.style.setProperty('--p', Math.max(0, Math.min(1, (t - a) / (e - a))) * 100 + '%'); });
-  if (!film.paused && !film.ended) raf = requestAnimationFrame(tick);
-}
-film.addEventListener('playing', () => { stage.classList.add('ready'); cancelAnimationFrame(raf); raf = requestAnimationFrame(tick); });
-film.addEventListener('ended', () => {   // 영상 마지막 장면 = 엔딩 본편 끝. 같은 그림에서 카드 자리로 정리
-  cancelAnimationFrame(raf);
-  if (!outro) return showEnd();
-  outro.setFrom(null); outro.seek(outro.DUR); stage.classList.add('outro');
-  outro.play(null, { card: true, from: outro.DUR }); showEnd();
-});
-film.addEventListener('error', () => { $('loading').style.display = 'none'; skipAll(); replay.hidden = true; });
-const play = () => {
-  lastI = -1; if (outro) outro.stop(); stage.classList.remove('ended', 'outro', 'tail'); replay.hidden = true; skip.hidden = false;
-  film.currentTime = 0;
-  const pr = film.play(); if (pr && pr.catch) pr.catch(() => skipAll());   // 자동 재생이 막히면 시작 카드부터([다시 보기]로 재생)
-};
-skip.onclick = skipAll;
-replay.onclick = play;
-document.addEventListener('keydown', (e) => { if (e.key === 'Escape') skipAll(); });
-window.__intro = { film, outro, skipAll, play };   // 시험용
-
-// 움직임 줄이기 설정이거나 같은 탭에서 다시 오면 영상은 건너뛰고 바로 시작 카드
-let seen = false; try { seen = !!sessionStorage.getItem('intro-seen'); sessionStorage.setItem('intro-seen', '1'); } catch (e) {}
-if (reduce || seen) { stage.classList.add('ready'); skipAll(); } else play();
+})();
 </script>
-</body>
-</html>
+<style>
+body{background:var(--bg,#F4F6FA)}
+main{max-width:1100px;margin:0 auto;padding:28px 16px 56px}
+.hero h2{font-size:clamp(24px,3.6vw,34px);line-height:1.25;margin:4px 0 10px}
+.hero h2 em{font-style:normal;color:var(--accent,#2456E5)}
+.hero p{color:var(--sub,#566077);max-width:720px;margin:0 0 6px}
+.flow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 26px;padding:0;list-style:none}
+.flow li{background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);border-radius:999px;padding:6px 14px;font-size:14px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.kit{display:flex;flex-direction:column;background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);border-radius:18px;overflow:hidden}
+.kit .pic{position:relative;aspect-ratio:16/9;background:#0a2342;overflow:hidden}
+.kit .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
+.kit .pic img[src*="icon_"]{object-fit:contain;padding:14px;box-sizing:border-box;background:#eef3ff}
+.kit .body{padding:16px 18px 18px;display:flex;flex-direction:column;gap:6px;flex:1}
+.kit h2{margin:2px 0 0;font-size:22px}.kit h2 a{color:inherit;text-decoration:none}.kit h2 a:hover{color:var(--accent,#2456E5)}
+.kit p{margin:0}.vendor{color:var(--sub,#566077);font-size:14px}
+.badge{align-self:flex-start;font-size:12px;font-weight:700;padding:3px 10px;border-radius:999px;background:#e6edfd;color:#1b3fb0}
+.badge.wait{background:#fff3cd;color:#7a5b00}
+.links{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px}
+.links a{padding:8px 12px;border-radius:10px;border:1px solid var(--line,#e3e7ef);text-decoration:none;color:var(--ink,#111827);font-size:15px}
+.links a.go{background:var(--accent,#2456E5);border-color:transparent;color:#fff;font-weight:700}
+.links a:hover{border-color:var(--accent,#2456E5)}
+.kit.coming{opacity:.85}.kit.coming .pic{filter:grayscale(.6)}
+.note{color:var(--sub,#566077);font-size:14px;margin-top:auto!important;padding-top:10px}
+.links a:focus-visible,.kit h2 a:focus-visible{outline:3px solid var(--accent,#2456E5);outline-offset:2px}
+.kit .pic img.contain{object-fit:contain;background:#b9f0fd}
+.kit .pic:has(img.contain){background:#b9f0fd}
+/* ---- 인트로(Physical AI with micro:bit): 캔버스 한 장이 전체 화면 → 위쪽 로고 자리 ---- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.pai{position:relative;height:clamp(220px,24vw,300px);border-bottom:1px solid #e1e6ef;background:#f4f6fa;color-scheme:light}
+.pai-stage{position:absolute;inset:0}
+.pai-stage canvas{display:block;width:100%;height:100%}
+.pai-ui{display:none}
+.pai-replay{position:absolute;right:16px;top:14px;font:inherit;font-size:14px;font-weight:700;padding:7px 14px;border-radius:999px;border:1px solid #c9d1df;background:#fff;color:#111827;cursor:pointer}
+.pai-replay:hover{border-color:var(--accent,#2456E5);color:var(--accent,#2456E5)}
+html.pai-play{overflow:hidden}
+html.pai-play .pai-stage{position:fixed;inset:0;z-index:100;background:#f4f6fa}
+html.pai-play.pai-reveal .pai-stage{background:transparent}
+html.pai-play .pai-ui{display:block}
+html.pai-play .pai-replay{visibility:hidden}
+.pai-skip{position:absolute;right:20px;bottom:20px;font:inherit;font-size:15px;font-weight:700;padding:9px 18px;border-radius:999px;border:1px solid var(--line-strong,#c9d1df);background:rgba(255,255,255,.85);color:var(--ink,#111827);cursor:pointer;transition:opacity .3s}
+.pai-skip:hover{border-color:var(--accent,#2456E5);color:var(--accent,#2456E5)}
+.pai-bar{position:absolute;left:0;right:0;top:0;height:3px;background:transparent}
+.pai-bar i{display:block;height:100%;width:0;background:var(--accent,#2456E5)}
+html.pai-reveal .pai-ui{opacity:0;pointer-events:none;transition:opacity .25s}
+main,.site-foot{transition:opacity .7s var(--ease,ease) .45s,transform .7s var(--ease,ease) .45s}
+html.pai-play:not(.pai-reveal) main,html.pai-play:not(.pai-reveal) .site-foot,html.pai-play:not(.pai-reveal) .gnb{opacity:0;transform:translateY(18px)}
+html.pai-play:not(.pai-reveal) .gnb{transform:none}
+.gnb{transition:opacity .6s var(--ease,ease)}
+@media (max-width:640px){.pai{height:290px}.pai-replay{right:10px;top:10px;padding:6px 12px;font-size:13px}}
+@media (prefers-reduced-motion:reduce){main,.site-foot,.gnb{transition:none}}
+</style></head>
+<body><header class="gnb"><div class="gnb-in">
+<a class="brand" href="./"><span>피지컬 AI 교실<small>마이크로비트 × 로봇 교구</small></span></a>
+<nav aria-label="주 메뉴"><a href="./" aria-current="page">교구 선택</a><a href="ai.html">AI 브리지</a><a href="lessons/">수업 슬라이드</a></nav>
+</div></header>
+<section class="pai" id="pai" aria-labelledby="paiTitle">
+  <h1 id="paiTitle" class="sr-only">Physical AI with micro:bit — 보고 · 생각하고 · 움직이는 인공지능 교실</h1>
+  <div class="pai-stage" id="paiStage">
+    <canvas id="paiCanvas" role="img" aria-label="Physical AI with micro:bit. 마이크로비트 LED 점이 보고(센서), 생각하고(신경망), 움직이는(로보독·포니봇) 과정을 보여 주는 인트로"></canvas>
+    <div class="pai-ui"><div class="pai-bar"><i id="paiBar"></i></div><button class="pai-skip" id="paiSkip" type="button">건너뛰기</button></div>
+  </div>
+  <button class="pai-replay" id="paiReplay" type="button" aria-label="인트로 애니메이션 다시 보기">다시 보기</button>
+</section>
+<main>
+<section class="hero"><h2>내가 가르친 <em>AI</em>로 로봇을 움직여요</h2>
+<p>웹캠으로 카드·물건을 AI에게 가르치고, 인식한 번호를 마이크로비트가 라디오로 전해 로봇이 움직입니다. 수업에 쓰는 교구를 골라 시작하세요.</p>
+<ol class="flow" aria-label="수업 흐름"><li>① 문제 찾기</li><li>② AI 가르치기</li><li>③ 마이크로비트로 전달</li><li>④ 로봇 움직이기</li><li>⑤ 안전 점검</li></ol></section>
+<div class="grid">
+<article class="kit">
+  <div class="pic"><img src="assets/intro/og.png" alt="보름달 앞에서 LED 눈으로 웃는 빅아이 로보독" loading="lazy"></div>
+  <div class="body"><span class="badge">코코아팹 협력</span>
+  <h2><a href="robodog/">빅아이 로보독</a></h2>
+  <p class="vendor">코코아팹</p><p>다리로 걷는 로봇 강아지. 3D 시뮬레이터와 말로 코드 만드는 도우미까지</p>
+  <nav class="links" aria-label="빅아이 로보독 바로 가기"><a href="robodog/" class="go">첫 화면</a><a href="sim/">시뮬레이터</a><a href="ai.html">AI 브리지</a><a href="docs/">수업 자료</a></nav></div>
+</article>
+<article class="kit">
+  <div class="pic"><img class="contain" src="ponybot/assets/official/material-pony-v2.webp" alt="AI 포니봇 — 검은 낮은 차체에 메카넘 바퀴 4개, 배터리 상자와 앞쪽 초음파 센서" loading="lazy"></div>
+  <div class="body"><span class="badge">1차 공개 · 실물 점검 중</span>
+  <h2><a href="ponybot/">AI 포니봇</a></h2>
+  <p class="vendor">바운더리엑스(boundaryX)</p><p>메카넘 바퀴로 앞뒤·옆·대각선까지 움직이는 로봇. 거리·라인·컬러 센서와 OLED 화면</p>
+  <nav class="links" aria-label="AI 포니봇 바로 가기"><a href="ponybot/" class="go">첫 화면</a><a href="sim/?kit=ponybot">시뮬레이터</a><a href="ai.html?kit=ponybot">AI 브리지</a><a href="lessons/?l=ponybot_4차시">4차시 슬라이드</a></nav></div>
+</article>
+<article class="kit coming">
+  <div class="pic"><img src="lessons/assets/icon_car.png" alt="작은 자동차 로봇 아이콘" loading="lazy"></div>
+  <div class="body"><span class="badge wait">준비 중</span>
+  <h2>마퀸(micro:Maqueen)</h2>
+  <p class="vendor">DFRobot</p><p>두 바퀴 소형 자동차 로봇. 같은 AI 브리지로 수업할 수 있도록 준비하고 있어요</p>
+  <p class="note">자료가 준비되면 이곳에 열려요.</p></div>
+</article>
+</div>
+</main>
+<footer class="site-foot">빅아이 로보독은 코코아팹의 제품입니다. AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. · <a href="NOTICE.md">오픈소스·출처 고지</a> · <a href="assets/intro/physical-ai.mp4" type="video/mp4">인트로 영상(mp4)</a> <a href="assets/intro/physical-ai-portrait.mp4" type="video/mp4" aria-label="인트로 영상 세로판(mp4)">세로판</a></footer>
+<script type="module">
+import { createIntro, DUR, OUT } from './intro/physical-ai.js';
+const root = document.documentElement, box = document.getElementById('pai'), cv = document.getElementById('paiCanvas'), bar = document.getElementById('paiBar');
+const intro = createIntro(cv, { target: () => { const r = box.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; } });
+let state = 'hero';
+const remember = () => { try { sessionStorage.setItem('pai-intro-seen', '1'); } catch (e) {} };
+function toHero() { root.classList.remove('pai-play', 'pai-reveal'); state = 'hero'; intro.hero(); }
+function tick() {
+  if (state !== 'play') return;
+  const t = intro.time; bar.style.width = Math.min(100, t / DUR * 100) + '%';
+  if (t >= DUR - .05) root.classList.add('pai-reveal');
+  requestAnimationFrame(tick);
+}
+function play(from = 0) {
+  scrollTo(0, 0); root.classList.add('pai-play'); if (from < DUR) root.classList.remove('pai-reveal');
+  state = 'play'; remember(); intro.play(toHero, { from }); requestAnimationFrame(tick);
+}
+function skip() { if (state === 'play' && intro.time < DUR) play(DUR); }
+await document.fonts.ready;
+try { await Promise.all(['800 100px "Pretendard Variable"', '600 100px "Pretendard Variable"', '500 100px "Pretendard Variable"'].map((f) => document.fonts.load(f, 'Physical AI with micro:bit 보고 생각하고 움직이는 인공지능 교실 카메라 초음파 센서 라인 멈춤 천천히 출발 보기 생각하기 움직이기'))); } catch (e) {}
+intro.refresh();
+window.__paiStarted = true;
+if (root.classList.contains('pai-play')) play(0); else toHero();
+document.getElementById('paiSkip').addEventListener('click', skip);
+document.getElementById('paiReplay').addEventListener('click', () => play(0));
+addEventListener('keydown', (e) => { if (e.key === 'Escape') skip(); });
+addEventListener('resize', () => intro.resize());
+// 시험·렌더용
+window.__pai = { intro, get state() { return state; }, skip, play, DUR, OUT };
+window.__seek = (t) => { intro.seek(t); };
+window.__ready = true;
+</script>
+</body></html>

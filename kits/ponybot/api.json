@@ -1,0 +1,22 @@
+{
+  "_source": "boundary-x/ai_ponybot_basic v1.3.1 main.ts (블록 이름 = 확장의 한국어 block 문자열)",
+  "blocks": [
+    { "group": "모터 제어(기초)", "block": "포니봇 [↑↓↶↷] 방향 [속도]로 이동", "js": "aiPonybot.runNormal(aiPonybot.DirectionControl.Forward|Backward|Clockwise|CounterClockwise, speed)", "range": "speed 0~255", "note": "↶ 기호에 Clockwise가 연결돼 있음 → 실제 회전 방향 실물 확인" },
+    { "group": "모터 제어(기초)", "block": "메카넘 [9방향] 방향 [속도]로 이동", "js": "aiPonybot.runMecanum(aiPonybot.Mecanum.LeftForward|Forward|RightForward|Left|Stop|Right|LeftBackward|Backward|RightBackward, speed)", "range": "speed 0~255" },
+    { "group": "모터 제어(기초)", "block": "모든 모터 정지", "js": "aiPonybot.stopAllMotors()" },
+    { "group": "모터 제어(심화)", "block": "[모터 1~4] 모터 [정회전/역회전] 방향 [속도]로 회전", "js": "aiPonybot.runMotor(aiPonybot.Motor.Motor1, aiPonybot.Direction.Clockwise|CounterClockwise, speed)", "range": "speed 0~255" },
+    { "group": "모터 제어(심화)", "block": "[모터] 모터 정지", "js": "aiPonybot.stopMotor(aiPonybot.Motor.Motor1)" },
+    { "group": "서보모터 제어", "block": "[서보 1~8] 서보모터 [각도] 각도로 이동", "js": "aiPonybot.servo(aiPonybot.Servo.Servo1, degree)", "range": "0~180" },
+    { "group": "라인 감지 센서", "block": "두 라인 센서의 값이 [◌◌/●●/●◌/◌●]", "js": "aiPonybot.checkTwoLineState(aiPonybot.TwoLineState.OffOff|OnOn|OnOff|OffOn)" },
+    { "group": "라인 감지 센서", "block": "[왼쪽/오른쪽] 라인 센서의 값이 [◌/●]", "js": "aiPonybot.checkSingleLineSensor(aiPonybot.LineSensorChannel.Left, aiPonybot.LineState.On)" },
+    { "group": "라인 감지 센서", "block": "[왼쪽/오른쪽] 라인 센서 값 읽기", "js": "aiPonybot.readLineSensor(aiPonybot.LineSensorChannel.Left)", "range": "0/1" },
+    { "group": "거리 감지 센서", "block": "[센티미터] 단위로 측정한 거리", "js": "aiPonybot.ping(aiPonybot.PingUnit.Centimeters)", "range": "0~500 cm, 반사 없으면 500(최대값)을 돌려줌 — 0이 '못 읽음'이 아님" },
+    { "group": "색상 감지 센서", "block": "컬러센서 초기화 : [검은색 모듈(V1)/보라색 모듈(V2)]", "js": "aiPonybot.initColorSensor(aiPonybot.SensorVersion.V1|V2)" },
+    { "group": "색상 감지 센서", "block": "빨간색(R)/초록색(G)/파란색(B) 색상 값 읽기, 밝기(B) 값 읽기", "js": "aiPonybot.getRed()/getGreen()/getBlue()/getLight()" },
+    { "group": "색상 감지 센서", "block": "감지된 색상이 [빨간색/초록색/파란색/노란색] (임계값 40)", "js": "aiPonybot.isColorAdvanced(aiPonybot.DetectedColor.Red, 40)" },
+    { "group": "디스플레이 제어", "block": "디스플레이 화면 [ON/OFF] / 디스플레이 지우기 / 디스플레이 색상 반전", "js": "aiPonybot.display(true) / aiPonybot.clear() / aiPonybot.invert(true)" },
+    { "group": "디스플레이 제어(데이터)", "block": "문장 출력 - 내용, 위치: 열 행, 색상", "js": "aiPonybot.showString(text, column, row, 1)", "range": "열 0~120, 행 0~7, 영문·숫자만(5x7 글꼴)" },
+    { "group": "디스플레이 제어(데이터)", "block": "숫자 출력 - 내용, 위치: 열 행, 색상", "js": "aiPonybot.showNumber(n, column, row, 1)" }
+  ],
+  "notUsed": "블루투스 수신 값 분석 블록(parseUARTUnified 등)은 공식 스마트폰 앱용. 이 사이트는 라디오 경로를 쓰므로 수업에서 다루지 않음"
+}

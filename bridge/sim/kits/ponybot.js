@@ -89,10 +89,11 @@ const kit = {
   async makeView3D(container, world, robot, runner) { const { PonyView3D } = await import('./ponybot/model3d.js'); return new PonyView3D(container, world, robot, runner.oled); },
   radius: EST.radius,
   mascot: { src: OFFICIAL + 'material-pony-v2.webp', alt: 'AI 포니봇 제품 그림 (제조사 바운더리엑스 공식 자료)' },
-  brand: { name: 'AI 포니봇 교실', sub: '바운더리엑스 제품 · 피지컬 AI 수업', home: '../' },
+  brand: { name: 'AI 포니봇 교실', sub: '바운더리엑스 제품 · 피지컬 AI 수업', home: '../ponybot/' },
   nav: [
-    { text: '처음', href: '../' },
+    { text: '처음', href: '../ponybot/' },
     { text: '시뮬레이터', href: './?kit=ponybot', current: true },
+    { text: 'AI 브리지 ↗', href: '../ai.html?kit=ponybot', ext: true, title: '새 탭에서 열기' },
     { text: '공식 확장 ↗', href: EXT_REPO, ext: true, title: '새 탭에서 열기(GitHub)' },
   ],
   badge: { text: '움직임 추정 · 실물과 다를 수 있음', title: '속도·회전·크기·센서 위치는 실물 측정값이 아닌 추정치예요' },

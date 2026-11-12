@@ -1,0 +1,35 @@
+{
+  "slug": "robodog",
+  "name": "빅아이 로보독",
+  "vendor": "코코아팹",
+  "page": false,
+  "_note": "로보독 사이트는 기존 파일(bridge/robodog/index.html, sim/, docs/)을 그대로 쓴다. 이 파일은 메인 교구 카드용",
+  "hub": {
+    "order": 1,
+    "status": "ready",
+    "home": "robodog/",
+    "image": "assets/intro/og.png",
+    "imageAlt": "보름달 앞에서 LED 눈으로 웃는 빅아이 로보독",
+    "tagline": "다리로 걷는 로봇 강아지. 3D 시뮬레이터와 말로 코드 만드는 도우미까지",
+    "badge": "코코아팹 협력",
+    "links": [
+      [
+        "첫 화면",
+        "robodog/"
+      ],
+      [
+        "시뮬레이터",
+        "sim/"
+      ],
+      [
+        "AI 브리지",
+        "ai.html"
+      ],
+      [
+        "수업 자료",
+        "docs/"
+      ]
+    ]
+  },
+  "josaEun": "은"
+}
