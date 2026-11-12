@@ -490,11 +490,11 @@ if (KIT.id === 'ponybot') {
   $('pane3d').after(strip);
   const dock = document.createElement('div'); dock.id = 'liveDock'; dock.className = 'livedock'; dock.setAttribute('aria-label', '마이크로비트 LED·OLED·센서·바퀴 명령');
   strip.after(dock); dock.append($('pMb'), $('pPOled'), $('pPSensor'), $('pPWheel'));
-  dock.after($('peBar'));   // 선택/상자/선 편집 도구(2D 보기일 때만 보임)
-  const det = document.createElement('details'); det.id = 'sceneDetails'; det.className = 'fold';
-  det.innerHTML = '<summary><span>장면 설명·점수</span></summary>';
-  det.append($('sceneBar').querySelector('.scenebox'), $('no3d'));
-  $('peBar').after(det);
+  // 편집 도구(선택·상자·선 편집…)와 장면 설명은 라디오 줄 바로 아래 접이식으로 — 열어도 2D 화면이 안 가려지고, 내려가 찾을 필요가 없음
+  const edit = document.createElement('details'); edit.id = 'editBox'; edit.className = 'fold';
+  edit.innerHTML = '<summary><span>✏ 물체 놓기·선 편집·장면 설명</span></summary>';
+  edit.append($('peBar'), $('sceneBar').querySelector('.scenebox'), $('no3d'));
+  strip.after(edit);
   // 보기 조작: 3D·2D 모두 같은 단추
   const zoom3d = (f) => { const v = view3d; if (!v) return; const t = v.controls.target; v.camera.position.sub(t).multiplyScalar(1 / f).add(t); v.controls.update(); };
   syncViewCtl = () => {

@@ -53,10 +53,13 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   await p.click('#viewCtl [data-v="fit"]');
 
   // ---- 선 닫기(고리)
+  check('편집 도구 접이식이 라디오 줄 바로 아래(내려가 찾지 않아도 됨)', await S(() => { const e = document.getElementById('editBox'), r = document.getElementById('radioStrip').getBoundingClientRect(); return !!e && e.getBoundingClientRect().top - r.bottom < 30 && e.getBoundingClientRect().bottom < innerHeight; }));
+  await S(() => { document.getElementById('editBox').open = true; });   // 편집 도구 열기
+  const topBefore = await S(() => document.getElementById('top2d').getBoundingClientRect().top);
   await p.click('[data-tool="track"]');
   const sc = (x, y) => S(([x, y]) => window.__pony.view.toScreen(x, y), [x, y]);
   const clickW = async (x, y) => { const s = await sc(x, y); await p.mouse.click(s.x, s.y); await p.waitForTimeout(60); };
-  await S(() => { window.__pony.props.tracks.length = 0; });
+  await S(() => { window.__pony.editor.clearTracks(); });
   for (const [x, y] of [[60, 40], [140, 40], [140, 100], [60, 100]]) await clickW(x, y);
   const open = await S(() => { const t = window.__pony.props.tracks[0]; return { n: t.pts.length, closed: !!t.closed }; });
   check('선 4점을 그리면 아직 열려 있음', open.n === 4 && !open.closed, JSON.stringify(open));
@@ -66,10 +69,11 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   const onLoop = await S(() => { const P = window.__pony; return P.PROPS.onLine(P.props, 60, 70) && P.PROPS.onLine(P.props, 100, 40) && P.PROPS.onLine(P.props, 140, 70) && P.PROPS.onLine(P.props, 100, 100); });
   check('닫힌 선의 네 변 모두 라인 센서가 검정으로 읽음(마지막→처음 변 포함)', onLoop);
   await p.click('#pe-closebtn');
+  check('편집 도구를 눌러도 2D 화면 위치가 그대로(화면이 밀려 사라지지 않음)', Math.abs(await S(() => document.getElementById('top2d').getBoundingClientRect().top) - topBefore) < 3);
   check('[선 열기] 단추로 다시 열림', await S(() => !window.__pony.props.tracks[0].closed));
   await p.click('#pe-closebtn');
   check('[선 닫기] 단추로 다시 닫힘', await S(() => !!window.__pony.props.tracks[0].closed));
-  await S(() => { window.__pony.props.tracks.length = 0; });
+  await S(() => { window.__pony.editor.clearTracks(); });
   for (const [x, y] of [[60, 40], [140, 40]]) await clickW(x, y);
   await clickW(60, 40);
   check('점이 2개일 때는 닫히지 않음(3개 이상 필요)', await S(() => { const t = window.__pony.props.tracks[0]; return !t.closed; }));
