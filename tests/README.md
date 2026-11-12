@@ -10,10 +10,14 @@ Playwright(크로미움)가 필요합니다.
 | `assistant-ui.js` | 로보독 도우미 화면 25항목(규칙 도우미, AI 응답·실패 시 전환, 빈 입력·오류 안내, 편집기 화면 배치) — AI 서버 응답은 가짜로 대신 | 위 서버 실행 후 `node tests/assistant-ui.js` |
 | `rule-assistant.mjs` | 규칙 도우미 안전 규칙 50항목(속도 30, 계속 걷기 자동 멈춤, 거리 0 멈춤, 라디오 2초 감시, 모르는 버튼 거절 등) | `node tests/rule-assistant.mjs` |
 | `intro-docs.js` | 첫 화면 44항목(인트로 영상 자동 재생·자막·건너뛰기·다시 보기·엔딩 정지 화면·움직임 줄이기·영상 못 받을 때·화면 크기별 시작 카드·공유 미리보기)과 수업 자료 페이지(링크·내려받기·인쇄) | 위 서버 실행 후 `node tests/intro-docs.js` |
+| `physical-ai-intro.js` | 사이트 첫 화면(교구 선택) 인트로 'Physical AI with micro:bit' 25항목(미리 보기 시각별 장면·결정성, 전체 화면 재생→건너뛰기·Esc→카드, 카드 자리 고정, 다시 보기, 같은 탭 재방문·움직임 줄이기 정지 로고, 390px, 카드 링크·포니봇 공식 그림, mp4) | 위 서버 실행 후 `node tests/physical-ai-intro.js` |
 | `assistant-function.mjs` | 도우미 서버 함수 23항목(가짜 Claude API 서버, 요금 없음) | `node tests/assistant-function.mjs` |
 | `lessons-web.js` | 웹 슬라이드 뷰어 87항목(목록·넘기기·교사 모드·함께 보기·휴대폰) | 위 서버 실행 후 `node tests/lessons-web.js` |
 | `lesson-sync.js` | 슬라이드 함께 보기(교사 → 학생 화면 따라가기) 19항목 | 위 서버 실행 후 `node tests/lesson-sync.js` |
 | `sim-layout.js` · `sim-devices.js` · `sim-examples.js` | 시뮬레이터 화면 배치 7 · 장치(버튼·센서) 17 · 예제 28항목 | 위 서버 실행 후 각각 `node tests/<이름>.js` |
+| `ponybot-sim.js` | 포니봇(통합 시뮬레이터 `/sim/?kit=ponybot`) 73항목(메카넘 앞·옆·대각선·회전 수치, 거리 500=못 읽음, 라인·색 센서, 예제 7개, 지도·편집기, 도우미 코드 실행, 390px) — 서버를 스스로 띄움 | `node tests/ponybot-sim.js` |
+| `sim-unified.js` | 교구 고르기 시험: 옛 `/ponybot/sim/` 넘김, 두 교구 화면 요소·오류 0·390px, 실행 뒤 입력 안내(A 버튼·라디오·본체 버튼)와 눌렀을 때 움직임, 진짜 MakeCode 편집기에서 포니봇 예제 7개가 블록으로 보임(인터넷 필요, `--no-makecode` 로 건너뜀) — 서버를 스스로 띄움 | `node tests/sim-unified.js` |
+| `ponybot-assistant.mjs` | 포니봇 말로 코드 만들기 76항목(블록 표 검사·범위 밖 자르기·정책 null=한도 없음·모르는 말 경고·프롬프트 생성·복사본 동기) | `node tests/ponybot-assistant.mjs` |
 | `sim-compare.js` · `sim-dance-shots.js` | 2D·3D 비교, 춤 동작 화면 캡처(육안 확인) | 위 서버 실행 후 |
 | `sim-shots.js` | 3D 자세 화면 캡처(육안 확인) | `node tests/sim-shots.js` |
 | `build-sim-examples.js` | `makecode/*.ts` → `bridge/sim/examples.js` 생성 | 예제를 고친 뒤 실행 |

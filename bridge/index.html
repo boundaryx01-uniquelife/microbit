@@ -2,17 +2,31 @@
 <html lang="ko"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>피지컬 AI 교실 · 마이크로비트 교구 선택</title>
 <meta name="description" content="웹캠으로 AI를 가르치고 마이크로비트로 로봇을 움직이는 피지컬 AI 수업. 교구를 골라 시작하세요.">
-<meta name="theme-color" content="#0a2342">
+<meta name="theme-color" content="#f4f6fa">
 <meta property="og:type" content="website"><meta property="og:locale" content="ko_KR">
 <meta property="og:title" content="피지컬 AI 교실 · 마이크로비트 교구 선택">
 <meta property="og:description" content="AI가 보고, 마이크로비트가 전하고, 로봇이 움직인다 — 교구별 수업 자료·AI 브리지·예제">
 <meta property="og:url" content="https://microbit-bridge.netlify.app/">
 <link rel="stylesheet" href="assets/brand.css"><link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="intro/physical-ai.js" as="script" crossorigin>
+<script>
+// 첫 화면 인트로: 그리기 전에 모드를 정해 카드가 번쩍 보였다 사라지지 않게. ?intro=1 항상 재생, ?intro=0 정지 화면
+(function () {
+  var q = new URLSearchParams(location.search).get('intro'), seen = false, calm = false;
+  try { seen = sessionStorage.getItem('pai-intro-seen') === '1'; } catch (e) {}
+  try { calm = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  var play = q === '1' || (q !== '0' && !seen && !calm);
+  if (play) {
+    document.documentElement.classList.add('pai-play');
+    setTimeout(function () { if (!window.__paiStarted) document.documentElement.classList.remove('pai-play'); }, 4000);   // 스크립트가 못 뜨면 카드부터
+  }
+})();
+</script>
 <style>
 body{background:var(--bg,#F4F6FA)}
 main{max-width:1100px;margin:0 auto;padding:28px 16px 56px}
-.hero h1{font-size:clamp(26px,4.4vw,40px);line-height:1.25;margin:4px 0 10px}
-.hero h1 em{font-style:normal;color:var(--accent,#2456E5)}
+.hero h2{font-size:clamp(24px,3.6vw,34px);line-height:1.25;margin:4px 0 10px}
+.hero h2 em{font-style:normal;color:var(--accent,#2456E5)}
 .hero p{color:var(--sub,#566077);max-width:720px;margin:0 0 6px}
 .flow{display:flex;flex-wrap:wrap;gap:8px;margin:14px 0 26px;padding:0;list-style:none}
 .flow li{background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);border-radius:999px;padding:6px 14px;font-size:14px}
@@ -33,13 +47,47 @@ main{max-width:1100px;margin:0 auto;padding:28px 16px 56px}
 .kit.coming{opacity:.85}.kit.coming .pic{filter:grayscale(.6)}
 .note{color:var(--sub,#566077);font-size:14px;margin-top:auto!important;padding-top:10px}
 .links a:focus-visible,.kit h2 a:focus-visible{outline:3px solid var(--accent,#2456E5);outline-offset:2px}
+.kit .pic img.contain{object-fit:contain;background:#b9f0fd}
+.kit .pic:has(img.contain){background:#b9f0fd}
+/* ---- 인트로(Physical AI with micro:bit): 캔버스 한 장이 전체 화면 → 위쪽 로고 자리 ---- */
+.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
+.pai{position:relative;height:clamp(220px,24vw,300px);border-bottom:1px solid #e1e6ef;background:#f4f6fa;color-scheme:light}
+.pai-stage{position:absolute;inset:0}
+.pai-stage canvas{display:block;width:100%;height:100%}
+.pai-ui{display:none}
+.pai-replay{position:absolute;right:16px;top:14px;font:inherit;font-size:14px;font-weight:700;padding:7px 14px;border-radius:999px;border:1px solid #c9d1df;background:#fff;color:#111827;cursor:pointer}
+.pai-replay:hover{border-color:var(--accent,#2456E5);color:var(--accent,#2456E5)}
+html.pai-play{overflow:hidden}
+html.pai-play .pai-stage{position:fixed;inset:0;z-index:100;background:#f4f6fa}
+html.pai-play.pai-reveal .pai-stage{background:transparent}
+html.pai-play .pai-ui{display:block}
+html.pai-play .pai-replay{visibility:hidden}
+.pai-skip{position:absolute;right:20px;bottom:20px;font:inherit;font-size:15px;font-weight:700;padding:9px 18px;border-radius:999px;border:1px solid var(--line-strong,#c9d1df);background:rgba(255,255,255,.85);color:var(--ink,#111827);cursor:pointer;transition:opacity .3s}
+.pai-skip:hover{border-color:var(--accent,#2456E5);color:var(--accent,#2456E5)}
+.pai-bar{position:absolute;left:0;right:0;top:0;height:3px;background:transparent}
+.pai-bar i{display:block;height:100%;width:0;background:var(--accent,#2456E5)}
+html.pai-reveal .pai-ui{opacity:0;pointer-events:none;transition:opacity .25s}
+main,.site-foot{transition:opacity .7s var(--ease,ease) .45s,transform .7s var(--ease,ease) .45s}
+html.pai-play:not(.pai-reveal) main,html.pai-play:not(.pai-reveal) .site-foot,html.pai-play:not(.pai-reveal) .gnb{opacity:0;transform:translateY(18px)}
+html.pai-play:not(.pai-reveal) .gnb{transform:none}
+.gnb{transition:opacity .6s var(--ease,ease)}
+@media (max-width:640px){.pai{height:290px}.pai-replay{right:10px;top:10px;padding:6px 12px;font-size:13px}}
+@media (prefers-reduced-motion:reduce){main,.site-foot,.gnb{transition:none}}
 </style></head>
 <body><header class="gnb"><div class="gnb-in">
 <a class="brand" href="./"><span>피지컬 AI 교실<small>마이크로비트 × 로봇 교구</small></span></a>
 <nav aria-label="주 메뉴"><a href="./" aria-current="page">교구 선택</a><a href="ai.html">AI 브리지</a><a href="lessons/">수업 슬라이드</a></nav>
 </div></header>
+<section class="pai" id="pai" aria-labelledby="paiTitle">
+  <h1 id="paiTitle" class="sr-only">Physical AI with micro:bit — 보고 · 생각하고 · 움직이는 인공지능 교실</h1>
+  <div class="pai-stage" id="paiStage">
+    <canvas id="paiCanvas" role="img" aria-label="Physical AI with micro:bit. 마이크로비트 LED 점이 보고(센서), 생각하고(신경망), 움직이는(로보독·포니봇) 과정을 보여 주는 인트로"></canvas>
+    <div class="pai-ui"><div class="pai-bar"><i id="paiBar"></i></div><button class="pai-skip" id="paiSkip" type="button">건너뛰기</button></div>
+  </div>
+  <button class="pai-replay" id="paiReplay" type="button" aria-label="인트로 애니메이션 다시 보기">다시 보기</button>
+</section>
 <main>
-<section class="hero"><h1>내가 가르친 <em>AI</em>로 로봇을 움직여요</h1>
+<section class="hero"><h2>내가 가르친 <em>AI</em>로 로봇을 움직여요</h2>
 <p>웹캠으로 카드·물건을 AI에게 가르치고, 인식한 번호를 마이크로비트가 라디오로 전해 로봇이 움직입니다. 수업에 쓰는 교구를 골라 시작하세요.</p>
 <ol class="flow" aria-label="수업 흐름"><li>① 문제 찾기</li><li>② AI 가르치기</li><li>③ 마이크로비트로 전달</li><li>④ 로봇 움직이기</li><li>⑤ 안전 점검</li></ol></section>
 <div class="grid">
@@ -51,11 +99,11 @@ main{max-width:1100px;margin:0 auto;padding:28px 16px 56px}
   <nav class="links" aria-label="빅아이 로보독 바로 가기"><a href="robodog/" class="go">첫 화면</a><a href="sim/">시뮬레이터</a><a href="ai.html">AI 브리지</a><a href="docs/">수업 자료</a></nav></div>
 </article>
 <article class="kit">
-  <div class="pic"><img src="lessons/assets/icon_delivery.png" alt="바퀴 달린 로봇 아이콘" loading="lazy"></div>
+  <div class="pic"><img class="contain" src="ponybot/assets/official/material-pony-v2.webp" alt="AI 포니봇 — 검은 낮은 차체에 메카넘 바퀴 4개, 배터리 상자와 앞쪽 초음파 센서" loading="lazy"></div>
   <div class="body"><span class="badge">1차 공개 · 실물 점검 중</span>
   <h2><a href="ponybot/">AI 포니봇</a></h2>
   <p class="vendor">바운더리엑스(boundaryX)</p><p>메카넘 바퀴로 앞뒤·옆·대각선까지 움직이는 로봇. 거리·라인·컬러 센서와 OLED 화면</p>
-  <nav class="links" aria-label="AI 포니봇 바로 가기"><a href="ponybot/" class="go">첫 화면</a><a href="ai.html?kit=ponybot">AI 브리지</a><a href="lessons/?l=ponybot_4차시">4차시 슬라이드</a></nav></div>
+  <nav class="links" aria-label="AI 포니봇 바로 가기"><a href="ponybot/" class="go">첫 화면</a><a href="sim/?kit=ponybot">시뮬레이터</a><a href="ai.html?kit=ponybot">AI 브리지</a><a href="lessons/?l=ponybot_4차시">4차시 슬라이드</a></nav></div>
 </article>
 <article class="kit coming">
   <div class="pic"><img src="lessons/assets/icon_car.png" alt="작은 자동차 로봇 아이콘" loading="lazy"></div>
@@ -66,5 +114,37 @@ main{max-width:1100px;margin:0 auto;padding:28px 16px 56px}
 </article>
 </div>
 </main>
-<footer class="site-foot">빅아이 로보독은 코코아팹의 제품입니다. AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. · <a href="NOTICE.md">오픈소스·출처 고지</a></footer>
+<footer class="site-foot">빅아이 로보독은 코코아팹의 제품입니다. AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. · <a href="NOTICE.md">오픈소스·출처 고지</a> · <a href="assets/intro/physical-ai.mp4" type="video/mp4">인트로 영상(mp4)</a> <a href="assets/intro/physical-ai-portrait.mp4" type="video/mp4" aria-label="인트로 영상 세로판(mp4)">세로판</a></footer>
+<script type="module">
+import { createIntro, DUR, OUT } from './intro/physical-ai.js';
+const root = document.documentElement, box = document.getElementById('pai'), cv = document.getElementById('paiCanvas'), bar = document.getElementById('paiBar');
+const intro = createIntro(cv, { target: () => { const r = box.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; } });
+let state = 'hero';
+const remember = () => { try { sessionStorage.setItem('pai-intro-seen', '1'); } catch (e) {} };
+function toHero() { root.classList.remove('pai-play', 'pai-reveal'); state = 'hero'; intro.hero(); }
+function tick() {
+  if (state !== 'play') return;
+  const t = intro.time; bar.style.width = Math.min(100, t / DUR * 100) + '%';
+  if (t >= DUR - .05) root.classList.add('pai-reveal');
+  requestAnimationFrame(tick);
+}
+function play(from = 0) {
+  scrollTo(0, 0); root.classList.add('pai-play'); if (from < DUR) root.classList.remove('pai-reveal');
+  state = 'play'; remember(); intro.play(toHero, { from }); requestAnimationFrame(tick);
+}
+function skip() { if (state === 'play' && intro.time < DUR) play(DUR); }
+await document.fonts.ready;
+try { await Promise.all(['800 100px "Pretendard Variable"', '600 100px "Pretendard Variable"', '500 100px "Pretendard Variable"'].map((f) => document.fonts.load(f, 'Physical AI with micro:bit 보고 생각하고 움직이는 인공지능 교실 카메라 초음파 센서 라인 멈춤 천천히 출발 보기 생각하기 움직이기'))); } catch (e) {}
+intro.refresh();
+window.__paiStarted = true;
+if (root.classList.contains('pai-play')) play(0); else toHero();
+document.getElementById('paiSkip').addEventListener('click', skip);
+document.getElementById('paiReplay').addEventListener('click', () => play(0));
+addEventListener('keydown', (e) => { if (e.key === 'Escape') skip(); });
+addEventListener('resize', () => intro.resize());
+// 시험·렌더용
+window.__pai = { intro, get state() { return state; }, skip, play, DUR, OUT };
+window.__seek = (t) => { intro.seek(t); };
+window.__ready = true;
+</script>
 </body></html>

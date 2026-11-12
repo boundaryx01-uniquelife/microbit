@@ -1,0 +1,16 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>포니봇 시뮬레이터로 이동</title>
+<meta http-equiv="refresh" content="1;url=../../sim/?kit=ponybot">
+<script>
+// 포니봇 시뮬레이터는 로보독과 같은 화면(bridge/sim/)으로 합쳐졌어요. 주소의 ? 값과 # 값은 그대로 넘겨요.
+try { location.replace('../../sim/?kit=ponybot' + (location.search ? '&' + location.search.slice(1).replace(/(^|&)kit=[^&]*/g, '').replace(/^&/, '') : '') + location.hash); } catch (e) {}
+</script>
+</head>
+<body>
+<p>포니봇 시뮬레이터는 새 주소로 옮겼어요. 자동으로 안 넘어가면 <a href="../../sim/?kit=ponybot">여기를 누르세요</a>.</p>
+</body>
+</html>
