@@ -69,4 +69,4 @@
 story_hello · story_card · story_microbit · story_walk · story_stop · sim_robodog3d · sim_page(시뮬레이터 전체, 작게 보임) · ai_start · ai_green · ai_orange(AI 전체 화면, 작게 보임)
 확대본(권장): ai_start_crop(사진 모으기 칸 2개) · ai_green_crop · ai_orange_crop(카메라 + '노랑 100%' 결과) · sim_examples · sim_controls(실행·정지 줄) · robodog_eyes_3(로보독 눈에 모둠번호 3, 시뮬레이터 3D 캡처)
 그림 아이콘(직접 그린 평면 그림, 말 통일: 눈=파랑 icon_eye · 뇌=주황 icon_brain · 몸=초록 icon_body, 연결 USB=회색): icon_vacuum · icon_car · icon_delivery · icon_guide(안내견+신호등) · icon_think(물음표) · icon_change(속도 30→15) · icon_samenum(번호 3=3) · icon_teachcards(모둠 카드 1·2·3+빈 책상) · icon_numshow(눈에 번호 보이기) · icon_flash(다운로드→꽂기→켜기) · icon_debug(AI? 코드?) · sim_run(시뮬레이터 실행 화면 캡처)
-포니봇 이야기 그림(제조사 바운더리엑스 활동 그림, 허락 범위 안에서 사용 — 원본·출처 `bridge/ponybot/assets/official/SOURCE.md`): pony_hero · pony_race · pony_relay · pony_circuit · pony_bowling · pony_robot · pony_icon(둥근 아이콘 — flow·cards 의 icon 용)
+포니봇 이야기 그림(제조사 바운더리엑스 활동 그림, 허락 범위 안에서 사용 — 원본·출처 `bridge/ponybot/assets/official/SOURCE.md`): pony_hero · pony_race · pony_relay · pony_circuit · pony_bowling · pony_robot · 둥근 부품 아이콘(제품 그림에서 자름): pony_eye(초음파 거리센서 = 눈) · pony_brain(마이크로비트 = 뇌) · pony_body(메카넘 바퀴 = 몸)
