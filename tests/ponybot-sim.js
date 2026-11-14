@@ -270,7 +270,7 @@ async function startServer() {
   const tool = async (t) => { await p.evaluate((t) => document.querySelector(`.pe-bar [data-tool="${t}"]`).click(), t); };
   const swatch = async (c) => { await p.evaluate((c) => document.querySelector(`.pe-colors [data-color="${c}"]`).click(), c); };
   const pc = async (fn, arg) => S(fn, arg);
-  const reset = async (scene = 'free') => { await S((scene) => { const P = window.__pony; P.runner.stop(); P.setScene(scene); P.editor.setTool('select'); }, scene); };
+  const reset = async (scene = 'free') => { await S((scene) => { const P = window.__pony; P.runner.stop(); P.setScene(scene); P.editor.setTool('select'); }, scene); await p.waitForTimeout(120); };   // 정지 뒤 자동 확대가 풀리는 한 프레임을 기다림
   await S(() => document.getElementById('top2d').scrollIntoView({ block: 'center' }));
 
   // 1) 도우미 → 실행 → 빨간 칩이 앞에 생기고 로봇이 그 위에서 멈춤
@@ -308,6 +308,7 @@ async function startServer() {
   // 실행 중에도 끌 수 있음
   await S(() => { window.__pony.props.boxes.length = 0; window.__pony.editor.addAt('box', 60, 40); document.getElementById('code').value = 'basic.forever(function () { basic.pause(50) })'; });
   await clickRun(); await p.waitForTimeout(200);
+  await S(() => window.__pony.view.reset());   // 실행하면 로봇 쪽으로 자동 확대되므로 [전체]를 눌러 장면 전체를 보고 끎
   await dragW([60, 40], [100, 60]);
   const runDrag = await S(() => ({ x: window.__pony.props.boxes[0].x, running: window.__pony.runner.running }));
   check('프로그램이 도는 중에도 소품을 끌어 옮길 수 있음', runDrag.running && runDrag.x > 80, JSON.stringify(runDrag));

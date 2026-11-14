@@ -84,6 +84,24 @@ function imgSize(name) {
 }
 
 // ---------- 그리기 도구 ----------
+// 웹 슬라이드의 눌러 보는 장을 PPT용 정지 화면으로 바꿈(같은 내용, 기존 틀 사용). 정답·미션 주소는 화면과 노트에 글로 남김
+const plain = (t) => String(t || '').replace(/\*\*/g, '');
+function staticForm(d) {
+  if (d.type === 'story') {
+    const pts = [plain(d.caption), ...(d.bubbles || []).map((b) => `${b.who ? b.who + ': ' : ''}"${b.text}"`)].filter(Boolean).slice(0, 3);
+    return { ...d, type: 'image', points: pts, callout: d.ask || undefined };
+  }
+  if (d.type === 'quiz') {
+    const ok = d.choices.findIndex((c) => c.ok);
+    return { ...d, type: 'points', items: d.choices.map((c, i) => ({ text: c.t, badge: String(i + 1), color: ['blue', 'orange', 'green', 'gray'][i % 4] })), image: undefined,
+      footer: plain(d.q), notes: (d.notes || '') + ` (정답: ${ok + 1}번 — ${d.choices[ok] ? d.choices[ok].why || '' : ''})` };
+  }
+  if (d.type === 'mission') {
+    return { ...d, type: 'code', steps: [{ text: '목표: ' + plain(d.goal) }, { text: '예상 → 블록 고쳐 실행 → 로봇이 한 일로 자동 확인' }, { text: '웹 슬라이드의 [미션 시작]을 눌러요', sub: `sim/?kit=${d.kit || 'ponybot'}&mission=${d.mission}` }],
+      tip: '시뮬레이터가 판정해요. 통과한 뒤 실물 포니봇으로 다시 확인해요.' };
+  }
+  return d;
+}
 function build(data) {
   const pres = new pptxgen();
   pres.layout = 'LAYOUT_WIDE';
@@ -462,6 +480,7 @@ function build(data) {
 
   // ---------- 슬라이드 만들기 ----------
   slides.forEach((d, idx) => {
+    d = staticForm(d);   // 웹 전용 장(이야기·퀴즈·미션)은 PPT에서 정지 화면으로
     const ch = d.ch || 1, type = d.type;
     curSlideLabel = `슬라이드 ${idx + 1}(${type})`;
     let r = R[type];

@@ -86,6 +86,7 @@ const kit = {
   docTitle: '포니봇 시뮬레이터 · AI 포니봇 교실',
   codeKey: 'ponybot-sim-code',
   supports3d: true, default3d: false,   // 3D 모형은 실물 사진 기준 어림 모형(처음 화면은 2D, [3D 보기]로 전환 / ?view=3d)
+  async loadMissions() { return (await import('./ponybot/missions.js')).MISSIONS; },
   async makeView3D(container, world, robot, runner) { const { PonyView3D } = await import('./ponybot/model3d.js'); return new PonyView3D(container, world, robot, runner.oled); },
   radius: EST.radius,
   mascot: { src: OFFICIAL + 'material-pony-v2.webp', alt: 'AI 포니봇 제품 그림 (제조사 바운더리엑스 공식 자료)' },
@@ -195,7 +196,7 @@ const kit = {
     M.lastSlow = now;
     const { robot, world } = M, api = M.api;
     const d = api.ping(1);
-    $('psDist').textContent = d + ' cm' + (d >= 500 ? ' (못 읽음=500)' : '');
+    $('psDist').textContent = d >= 500 ? '500(못 읽음)' : d + ' cm';
     const l = robot.lineRaw(0), r = robot.lineRaw(1);
     $('psL').classList.toggle('on', !!l); $('psR').classList.toggle('on', !!r); $('psLv').textContent = l; $('psRv').textContent = r;
     const c = robot.colorRGB(); $('psSw').style.background = `rgb(${c})`; $('psRgb').textContent = c.map(Math.round).join(', ');

@@ -175,6 +175,72 @@
   html:not([data-kit="ponybot"]) .k-ponybot, html[data-kit="ponybot"] .k-robodog { display: none !important; }
   .brand img { width: 32px; height: 32px; flex: none; border-radius: 9px; object-fit: cover; background: #b3ecff; }
   html[data-kit="ponybot"] #top2d { max-height: none; margin: 0 auto; }
+  /* 포니봇: 한 화면에 — 보기 조작 줄 / 움직임 / 라디오 0~9 / [마이크로비트|OLED] / [센서|바퀴 명령] ; 편집 도구·장면 설명은 그 아래 */
+  html[data-kit="ponybot"] body.mc-mode main { grid-template-columns: minmax(0, 1fr) 12px minmax(360px, 470px); }
+  html[data-kit="ponybot"] body.mc-mode main.sized { grid-template-columns: minmax(0, 1fr) 12px var(--rw); }
+  .tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
+  .viewctl { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-left: auto; }
+  @media (min-width: 421px) { .tabs { flex-wrap: nowrap; } .tabs button, .viewctl, .viewctl .vfollow { white-space: nowrap; } .viewctl { flex-wrap: nowrap; } }
+  .viewctl button { min-width: 38px; padding: 6px 10px; font-size: 15px; }
+  .viewctl .vfollow { display: inline-flex; align-items: center; gap: 4px; font-size: 13.5px; }
+  html[data-kit="ponybot"] #quick { display: none !important; }       /* 라디오·A/B 는 아래 줄에 항상 보이므로 빠른 조작 줄은 숨김 */
+  html[data-kit="ponybot"] #followRow { display: none; }              /* 3D 카메라 따라가기는 위쪽 '로봇 따라가기'로 */
+  .radiostrip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 8px 0 0; }
+  .radiostrip .rlab { font-weight: 700; font-size: 13.5px; }
+  .radiostrip { flex-wrap: nowrap; }
+  @media (max-width: 480px) { .radiostrip, .radiostrip #radioBtns { flex-wrap: wrap; } } .radiostrip #radioBtns { display: flex; flex-wrap: nowrap; gap: 3px; margin: 0; }
+  .radiostrip #radioBtns button { min-width: 0; width: 28px; min-height: 36px; padding: 4px 0; flex: 0 0 auto; }
+  .radiostrip label { font-size: 13px; }
+  .livedock { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 8px; margin: 8px 0 10px; align-items: stretch; }
+  .livedock .panel { margin: 0; min-width: 0; padding: 8px; }
+  .livedock #pMb { grid-column: 1; grid-row: 1; }
+  .livedock #pPOled { grid-column: 2; grid-row: 1; }
+  .livedock #pPSensor { grid-column: 1; grid-row: 2; }
+  .livedock #pPWheel { grid-column: 2; grid-row: 2; }
+  .livedock #oled { width: 100%; max-width: 300px; }
+  .livedock #mbled { width: 72px; height: 72px; }
+  .livedock .mb { grid-template-columns: auto auto auto; gap: 5px; justify-content: center; }
+  .livedock .mbbtn { width: 36px; height: 36px; }
+  .livedock #btnAB { display: none; }
+  .livedock .note { display: none; }
+  .livedock details { display: none; }
+  .livedock .ph { margin-bottom: 4px; }
+  .livedock .kv { font-size: 12px; gap: 3px 6px; grid-template-columns: auto minmax(0, 1fr); }
+  .livedock .kv > span { white-space: nowrap; }
+  #pPSensor .kv > :nth-last-child(-n+4) { display: none; }   /* 위치·몸 속도는 바퀴 명령 표에서 알 수 있어 숨김 */
+  .livedock #pPWheel { overflow-x: auto; }
+  .livedock table.wh { font-size: 11.5px; } .livedock table.wh th, .livedock table.wh td { padding: 2px 3px; white-space: nowrap; }
+  @media (max-width: 420px) { .livedock { grid-template-columns: minmax(0, 1fr); } .livedock #pMb, .livedock #pPOled, .livedock #pPSensor, .livedock #pPWheel { grid-column: 1; grid-row: auto; } }
+  html[data-kit="ponybot"] body:has(#pane2d.hidden) #peBar { display: none; }   /* 3D 보기에서는 물체 놓기 도구 숨김(2D에서만 편집) */
+  /* ---- 미션 모드 ---- */
+  body.mission-mode #assist, body.mission-mode #examples, body.mission-mode label[for=examples] { display: none; }
+  .mission { border: 2px solid var(--accent); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; background: var(--card); }
+  @media (min-width: 981px) { .mission { position: sticky; top: 6px; z-index: 5; box-shadow: 0 6px 18px rgba(0,0,0,.12); } }   /* 코드를 내려 보는 동안에도 목표·확인 칸이 보이게 */
+  .mission.passed { border-color: var(--ok); }
+  .m-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  .m-head h2 { margin: 0; font-size: 20px; flex: 1; }
+  .m-tag { background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 2px 12px; font-weight: 800; font-size: 13px; }
+  .m-back, .m-go { font-weight: 700; }
+  .m-story { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
+  .m-goal { margin: 6px 0 8px; font-size: 16.5px; line-height: 1.5; }
+  .m-goal b { background: var(--accent-soft); border-radius: 6px; padding: 1px 8px; margin-right: 6px; }
+  .m-predict { border: 1px solid var(--line); border-radius: 10px; padding: 6px 12px 8px; margin: 0 0 8px; display: flex; flex-wrap: wrap; gap: 4px 16px; }
+  .m-predict legend { font-weight: 700; font-size: 14.5px; padding: 0 6px; }
+  .m-predict label { font-size: 15px; }
+  .m-pmsg { flex-basis: 100%; margin: 2px 0 0; font-size: 14.5px; }
+  .m-checks ul { list-style: none; margin: 6px 0 4px; padding: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 4px 14px; }
+  .m-checks li { font-size: 15px; display: flex; gap: 6px; align-items: baseline; }
+  .m-checks li small { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .m-checks li .m-ic { font-weight: 900; color: var(--muted); width: 1.1em; }
+  .m-checks li.ok { color: var(--ok); font-weight: 700; } .m-checks li.ok .m-ic { color: var(--ok); }
+  .m-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
+  .m-foot .est { margin-left: auto; font-size: 12.5px; }
+  .m-hints { margin: 6px 0 0; padding-left: 22px; font-size: 15px; line-height: 1.5; }
+  .m-hints:empty { display: none; }
+  .m-result { margin-top: 8px; padding: 10px 12px; border-radius: 10px; font-size: 15.5px; line-height: 1.55; }
+  .m-result.ok { background: var(--ok-soft); border: 2px solid var(--ok); }
+  .m-real { font-size: 14px; }
+  #top2d { overscroll-behavior: contain; }
   .scenebar { border: 1px solid var(--line); border-radius: 12px; padding: 8px 10px; margin-bottom: 8px; }
   .scenebox { display: flex; gap: 10px; align-items: flex-start; flex-wrap: wrap; margin-top: 6px; }
   .scenebox .t { flex: 1 1 160px; min-width: 0; }
@@ -300,7 +366,7 @@
       <button id="tab3d" role="tab" aria-selected="true">3D 보기</button>
       <button id="tab2d" role="tab" aria-selected="false">2D 보기 (가벼움)</button>
     </div>
-    <label class="row" style="gap:6px;margin:-4px 0 6px"><input id="follow" type="checkbox" checked> 3D 카메라 따라가기</label>
+    <label class="row" id="followRow" style="gap:6px;margin:-4px 0 6px"><input id="follow" type="checkbox" checked> 3D 카메라 따라가기</label>
     <!-- 빠른 조작: 코드에 필요한 버튼만 로보독 화면 바로 위에(스크롤 없이 누르고 바로 보기) -->
     <div id="quick" class="quick" hidden aria-label="빠른 조작">
       <div class="qgrp k-robodog" id="qBody"><span class="qlab">🔘 본체</span><button id="qRobot" class="primary">본체 버튼 누르기</button></div>
@@ -436,6 +502,46 @@ const { examples: EXAMPLES, groups: GROUPS, detectDevices, DEVICE_INFO, runHint 
 
 const $ = (id) => document.getElementById(id);
 const { world, robot } = KIT.createModel();
+let syncViewCtl = () => {};
+if (KIT.id === 'ponybot') {
+  // 오른쪽 칸을 '실물 화면' 순서로:
+  //  [3D|2D  − ＋ 전체 보기 로봇 따라가기] → 움직임 화면 → 라디오 0~9(한 줄) → [마이크로비트 | OLED] → [센서 | 바퀴 명령] → 편집 도구·장면 설명
+  const tabs = $('tab3d').parentElement;
+  $('tab3d').textContent = '3D'; $('tab2d').textContent = '2D';
+  const ctl = document.createElement('div'); ctl.id = 'viewCtl'; ctl.className = 'viewctl'; ctl.setAttribute('aria-label', '보기 조작');
+  ctl.innerHTML = '<button type="button" data-v="out" aria-label="축소" title="축소">−</button><button type="button" data-v="in" aria-label="확대" title="확대">＋</button>' +
+    '<button type="button" data-v="fit" title="전체 화면으로 처음 시점" aria-label="전체 화면 보기">전체</button>' +
+    '<label class="vfollow"><input type="checkbox" id="vfollow"> 로봇 따라가기</label>';
+  tabs.append(ctl);
+  const strip = document.createElement('div'); strip.id = 'radioStrip'; strip.className = 'radiostrip'; strip.setAttribute('aria-label', '라디오 숫자 보내기');
+  strip.innerHTML = '<span class="rlab" title="라디오로 숫자 보내기(AI 브리지 대신)">📡</span>'; const repLabel = $('radioRepeat').closest('label'); repLabel.lastChild.textContent = ' 계속'; repLabel.title = '마지막 숫자를 0.5초마다 계속 보내요'; strip.append($('radioBtns'), repLabel);
+  $('pane3d').after(strip);
+  const dock = document.createElement('div'); dock.id = 'liveDock'; dock.className = 'livedock'; dock.setAttribute('aria-label', '마이크로비트 LED·OLED·센서·바퀴 명령');
+  strip.after(dock); dock.append($('pMb'), $('pPOled'), $('pPSensor'), $('pPWheel'));
+  // 편집 도구(선택·상자·선 편집…)와 장면 설명은 라디오 줄 바로 아래 접이식으로 — 열어도 2D 화면이 안 가려지고, 내려가 찾을 필요가 없음
+  const edit = document.createElement('details'); edit.id = 'editBox'; edit.className = 'fold';
+  edit.innerHTML = '<summary><span>✏ 물체 놓기·선 편집·장면 설명</span></summary>';
+  edit.append($('peBar'), $('sceneBar').querySelector('.scenebox'), $('no3d'));
+  strip.after(edit);
+  // 보기 조작: 3D·2D 모두 같은 단추
+  const zoom3d = (f) => { const v = view3d; if (!v) return; const t = v.controls.target; v.camera.position.sub(t).multiplyScalar(1 / f).add(t); v.controls.update(); };
+  syncViewCtl = () => {
+    const f = mode3d ? !!(view3d && view3d.follow) : !!(view2d && view2d.follow);
+    if ($('vfollow').checked !== f) $('vfollow').checked = f;
+  };
+  ctl.addEventListener('click', (e) => {
+    const b = e.target.closest('button'); if (!b) return;
+    const k = b.dataset.v, f = k === 'in' ? 1.4 : k === 'out' ? 1 / 1.4 : 1;
+    if (mode3d) { if (k === 'fit') { if (view3d && view3d.resetCam) view3d.resetCam(); } else zoom3d(f); }
+    else if (k === 'fit') view2d.reset(); else view2d.zoomBy(f);
+    syncViewCtl();
+  });
+  $('vfollow').addEventListener('change', (e) => {
+    if (mode3d) { $('follow').checked = e.target.checked; $('follow').dispatchEvent(new Event('change')); }
+    else view2d.setFollow(e.target.checked);
+    syncViewCtl();
+  });
+}
 if (!world.aiClass) world.aiClass = { ...EST.aiClassDefault };   // (숨은) AI 카메라 설정 칸이 읽음 — 포니봇에는 쓰이지 않음
 const logEl = $('log');
 function runMsg(text, kind) { const el = $('runMsg'); el.textContent = text; el.className = kind || ''; }
@@ -564,7 +670,7 @@ $('needs').addEventListener('click', (e) => {
 
 // 코드가 읽는 센서에 맞춰 '없는 것만' 장면에 채움(어댑터가 규칙을 가짐). 사용자가 놓거나 옮긴 것은 그대로 둠
 function autoSetup(code) {
-  if (demoActive) return [];
+  if (demoActive || window.__noAutoSetup) return [];
   return KIT.autoSetup(code, kctx);
 }
 async function runCode(code, msg) {
@@ -573,7 +679,7 @@ async function runCode(code, msg) {
   const devs = applyDevices(code, { keepScene: !!demoActive });
   autoSetup(code);
   const ok = await runner.start(code);
-  if (ok) { runMsg('▶ 실행 중 — ' + runHint(devs), 'ok'); log(msg || '실행 시작 — ' + runHint(devs)); showGuide(code); showRobot(); }
+  if (ok) { runMsg('▶ 실행 중 — ' + runHint(devs), 'ok'); log(msg || '실행 시작 — ' + runHint(devs)); showGuide(code); showRobot(); if (view2d.autoZoom) view2d.autoZoom(); }
   return ok;
 }
 $('btnRun').onclick = () => runCode($('code').value);
@@ -670,6 +776,7 @@ const editor = PROPS.attachEditor($('top2d'), {
 });
 kctx.editor = editor;
 view2d.editor = editor;
+view2d.onChange = () => syncViewCtl();
 editor.buildToolbar($('peBar'));
 $('top2d').addEventListener('pointerdown', (e) => { if (e.isTrusted) stopDemo(); }, true);
 function applyField(f) {   // 지도 불러오기: 공간 크기·시작 자리·소품을 바꾸고 로보독을 시작 자리로
@@ -741,6 +848,7 @@ async function showTab(is3d) {
     } catch (e) { log('3D를 켤 수 없어요(그래픽 가속 확인): ' + e.message, 'error'); showTab(false); }
   }
   if (view3d) { view3d.follow = $('follow').checked; view3d.resize(); if (danceOn) danceCam(); }
+  syncViewCtl();
 }
 $('tab2d').onclick = () => showTab(false);
 $('tab3d').onclick = () => showTab(true);
@@ -770,6 +878,7 @@ function frame(now) {
   if (ledDirty) { drawLed(); ledDirty = false; }
   KIT.updatePanels({ robot, world, devs: curDevs, camEmuOn: $('camEmu').checked, camLast }, now);
   view2d.showCam = world.camView;
+  if (view2d.autoView) view2d.autoView(runner.running);
   requestAnimationFrame(frame);
 }
 window.addEventListener('resize', () => { ledDirty = true; });
@@ -1053,7 +1162,7 @@ window.addEventListener('message', (ev) => {
       $('mcStatus').textContent = '저장됨 ' + new Date().toLocaleTimeString('ko-KR', { hour12: false });
       if ($('mcAutoRun').checked) {
         clearTimeout(mcRunTimer);
-        mcRunTimer = setTimeout(() => runCode(code, 'MakeCode에서 고친 코드를 실행해요'), 1200);
+        mcRunTimer = setTimeout(() => runCode(code, 'MakeCode에서 고친 코드를 실행해요'), 250);   // 저장 알림이 연달아 올 때만 모으는 짧은 디바운스
       }
     }
   }
@@ -1210,6 +1319,25 @@ $('tab2d').setAttribute('aria-controls', 'pane2d'); $('tab3d').setAttribute('ari
 // 처음 화면: 저장된 코드가 어느 예제와 같으면 그 예제의 장면으로(포니봇은 예제마다 장면이 달라요)
 { const ex0 = EXAMPLES.find(e => e.code === $('code').value); if (ex0) curExample = { ex: ex0, code: ex0.code }; if (KIT.onExample) KIT.onExample(ex0 || null, kctx); }
 Object.assign(kctx, { autoSetup, applyField, runCode, loadExample: (id) => applyExample(EXAMPLES.find(e => e.id === id) || EXAMPLES[0]) });
+// ---------- 미션 모드(?mission=<id>): 수업 슬라이드에서 넘어옴. 로봇 행동으로 통과를 판정 ----------
+{ const q = new URLSearchParams(location.search), mid = q.get('mission');
+  if (mid && KIT.loadMissions) {
+    const mission = (await KIT.loadMissions()).find((x) => x.id === mid);
+    if (mission) {
+      const { attachMission } = await import('./mission.js');
+      const back = q.get('back'), backUrl = back && /^\.\.\/lessons\/\?[\w=%&.\-]*(#\d+)?$/.test(back) ? back : '';   // 같은 사이트의 수업 슬라이드로만 돌아감
+      const codeKey = 'pai:mission-code:' + mid;
+      const applyCode = (code) => { applyExample({ id: 'mission:' + mid, title: mission.title, code, scene: mission.scene, how: mission.goal }); $('howto').hidden = true; };
+      let saved = null; try { saved = localStorage.getItem(codeKey); } catch (e) {}
+      window.__noAutoSetup = !!mission.noAuto;   // 빈 바닥 미션: 코드가 거리를 읽어도 상자를 자동으로 놓지 않음(코드를 넣기 전에 정함)
+      if (mission.noAuto && KIT.setScene) KIT.setScene(mission.scene);
+      applyCode(saved || mission.code);
+      setInterval(() => { try { localStorage.setItem(codeKey, $('code').value); } catch (e) {} }, 1500);
+      document.body.classList.add('mission-mode');
+      window.__mission = attachMission(mission, { robot, runner, host: $('assist').parentElement, applyCode, backUrl });
+    }
+  }
+}
 if (KIT.expose) KIT.expose(kctx);   // 포니봇 자동 시험용 window.__pony
 window.__sim = { runner, robot, world, editor, view2d, mapLib, PROPS, autoSetup, applyField, camEmuState: () => ({ on: $('camEmu').checked, last: camLast }), showTab, showCodeTab, mcState: () => ({ mcReady, mcFromEditor }), playDemo: (i) => playDemo(DEMOS[i]), stopDemo, view3d: () => view3d, aiMode: () => aiOn };   // 자동 시험용
 </script>

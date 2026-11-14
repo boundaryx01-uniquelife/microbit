@@ -114,6 +114,32 @@
     core: function (s) {
       return '<ol class="core">' + s.items.map(function (t, i) { return '<li>' + circle(i + 1, 'yellow') + '<span>' + esc(t) + '</span></li>'; }).join('') + '</ol>';
     },
+    // 이야기 장면: 그림 위에 말풍선(x·y = 그림 안 가운데 위치 %), 오른쪽에 한 줄 설명
+    story: function (s) {
+      var bub = (s.bubbles || []).map(function (b) {
+        return '<div class="bub" style="left:' + (+b.x || 50) + '%;top:' + (+b.y || 12) + '%"><b>' + esc(b.who || '') + '</b><span>' + esc(b.text) + '</span></div>';
+      }).join('');
+      return '<div class="story"><div class="scene">' + img(s.image, s.alt || s.title) + bub + '</div>' +
+        '<div class="stx">' + (s.caption ? '<p class="cap2">' + hl(s.caption) + '</p>' : '') + (s.ask ? '<p class="ask">' + esc(s.ask) + '</p>' : '') + '</div></div>';
+    },
+    // 퀴즈: 보기를 누르면 맞음/틀림과 보기마다 다른 설명
+    quiz: function (s) {
+      var ch = s.choices.map(function (c, i) {
+        return '<button type="button" class="qz" data-quiz="' + i + '" data-ok="' + (c.ok ? 1 : 0) + '"><span class="qn">' + (i + 1) + '</span><span class="qt2">' + esc(c.t) + '</span><span class="qw">' + esc(c.why || '') + '</span></button>';
+      }).join('');
+      return '<div class="quiz' + (s.image ? ' has-img' : '') + '"><div class="qcol"><p class="qq">' + hl(s.q) + '</p><div class="qzs">' + ch + '</div></div>' + img(s.image, s.title) + '</div>';
+    },
+    // 미션: 시뮬레이터에서 예상 → 실행 → 로봇 행동으로 자동 확인. 통과 기록(이 브라우저)을 보여 줌
+    mission: function (s) {
+      var st = null; try { st = JSON.parse(localStorage.getItem('pai:mission:' + s.mission) || 'null'); } catch (e) { st = null; }
+      var badge = st && st.pass ? '<span class="mbadge ok">✓ 통과' + (st.predictRight === true ? ' · 예상도 맞음' : '') + '</span>' : '<span class="mbadge">아직 안 풀었어요</span>';
+      var back = '../lessons/?l=' + encodeURIComponent(id) + '#' + (s._n || 1);
+      var href = '../sim/?kit=' + encodeURIComponent(s.kit || 'ponybot') + '&mission=' + encodeURIComponent(s.mission) + '&back=' + encodeURIComponent(back);
+      var steps = ['① 예상해요', '② 블록을 고쳐 실행해요', '③ 로봇이 한 일로 자동 확인'].map(function (t, i) { return '<li>' + circle(i + 1, ['blue', 'orange', 'green'][i]) + '<span>' + esc(t.slice(2)) + '</span></li>'; }).join('');
+      return '<div class="msn' + (s.image ? ' has-img' : '') + '"><div class="mcol"><p class="mgoal"><b>목표</b>' + hl(s.goal) + '</p><ol class="msteps">' + steps + '</ol>' +
+        '<div class="mgo"><a class="mstart" href="' + esc(href) + '">' + (s.star ? '도전 시작 →' : '미션 시작 →') + '</a>' + badge + '</div>' +
+        '<p class="mnote">시뮬레이터가 판정해요. 통과한 뒤 실물 포니봇으로 다시 확인해요.</p></div>' + img(s.image, s.title) + '</div>';
+    },
     checklist: function (s) {
       var n = s.items.length, grid = n === 4 && s.items.every(function (t) { return String(t).length <= 12; });
       return '<ul class="chk ' + (grid ? 'grid' : 'list') + ' n' + n + '">' + s.items.map(function (t) { return '<li><span class="box" aria-hidden="true"></span><span>' + esc(t) + '</span></li>'; }).join('') + '</ul>';
@@ -128,7 +154,7 @@
     return slides.map(function (s) { seen[s.ch] = (seen[s.ch] || 0) + 1; return { n: seen[s.ch], of: cnt[s.ch] }; });
   }
   function slideHTML(s, i, total, ctx) {
-    var fn = R[s.type] || R.points;
+    var fn = R[s.type] || R.points; s._n = i + 1;
     var plain = (s.type === 'cover');
     var head = plain ? '' : '<h2 class="st">' + esc(s.title) + '</h2>';
     var pos = ctx.pos[i];
@@ -164,6 +190,12 @@
 
     function fromHash() { var n = parseInt((location.hash || '').replace('#', ''), 10); return n >= 1 && n <= total ? n - 1 : 0; }
 
+    $('stage').addEventListener('click', function (e) {   // 퀴즈 보기 누르기
+      var b = e.target.closest ? e.target.closest('.qz') : null; if (!b) return;
+      b.classList.add(b.getAttribute('data-ok') === '1' ? 'right' : 'wrong'); b.setAttribute('aria-pressed', 'true');
+      if (b.getAttribute('data-ok') === '1') b.parentNode.classList.add('solved');
+      shrink();
+    });
     function render() {
       var s = slides[cur];
       $('stage').innerHTML = slideHTML(s, cur, total, ctx);
