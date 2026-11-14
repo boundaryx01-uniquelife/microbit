@@ -9,10 +9,17 @@ export function attachMission(mission, ctx) {
   const { robot, runner, host, applyCode, backUrl } = ctx;
   // ---- 측정
   let m = null, prevRun = false, lastT = performance.now(), passed = false, hintN = 0, picked = null;
-  const fresh = () => ({ pressed: { A: false, B: false }, x0: robot.x, y0: robot.y, h0: robot.heading, forward: 0, side: 0, maxForward: 0, maxSide: 0, minSide: 0, path: 0, headDev: 0, moved: false, still: 0, home: 0, bumped: false, px: robot.x, py: robot.y });
+  const fresh = () => ({ pressed: { A: false, B: false }, x0: robot.x, y0: robot.y, h0: robot.heading, forward: 0, side: 0, maxForward: 0, maxSide: 0, minSide: 0, path: 0, headDev: 0, moved: false, still: 0, home: 0, bumped: false, px: robot.x, py: robot.y,
+    t: 0, tA: -1, dist: 500, minDist: 500,                       // 실행 뒤 지난 초, A 버튼 뒤 지난 초, 앞 물체까지 참 거리(cm, 없으면 500)
+    radio: {}, lastRadio: null, sinceRadio: -1, seg: {}, cur: null });   // 받은 라디오 숫자별 횟수, 마지막 숫자, 그 뒤 지난 초, 숫자별 '받은 뒤 움직인 만큼'
   m = fresh();
   const origPress = runner.press.bind(runner);
-  runner.press = (btn) => { if (runner.running && m) { if (btn === 'AB') m.pressed.A = m.pressed.B = true; else m.pressed[btn] = true; } return origPress(btn); };
+  runner.press = (btn) => { if (runner.running && m) { if (btn === 'AB') m.pressed.A = m.pressed.B = true; else m.pressed[btn] = true; if (btn !== 'B' && m.tA < 0) m.tA = 0; } return origPress(btn); };
+  const origRadio = runner.radioReceive.bind(runner);
+  runner.radioReceive = (n) => {
+    if (runner.running && m) { m.radio[n] = (m.radio[n] || 0) + 1; m.lastRadio = n; m.sinceRadio = 0; m.seg[n] = { x: robot.x, y: robot.y, dx: 0, dy: 0, moved: false, done: false }; m.cur = n; }
+    return origRadio(n);
+  };
   function sample(now) {
     const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
     if (runner.running && !prevRun) { m = fresh(); if (!passed) setResult(''); }
@@ -26,6 +33,10 @@ export function attachMission(mission, ctx) {
     const moving = robot.pwm.some((v) => v !== 0) || step / Math.max(dt, 1e-3) > 0.5;
     if (moving) { m.moved = true; m.still = 0; } else if (m.moved) m.still += dt;
     m.home = Math.hypot(dx, dy); if (robot.bumped) m.bumped = true;
+    if (runner.running) { m.t += dt; if (m.tA >= 0) m.tA += dt; if (m.sinceRadio >= 0) m.sinceRadio += dt; }
+    const d = robot.sonarTrue(); m.dist = isFinite(d) ? d : 500; m.minDist = Math.min(m.minDist, m.dist);
+    const sg = m.cur !== null ? m.seg[m.cur] : null;
+    if (sg && !sg.done) { sg.dx = robot.x - sg.x; sg.dy = robot.y - sg.y; if (moving) sg.moved = true; else if (sg.moved && m.still >= 0.7) sg.done = true; }
     render();
     requestAnimationFrame(sample);
   }
@@ -39,7 +50,7 @@ export function attachMission(mission, ctx) {
     <fieldset class="m-predict"><legend>① 먼저 예상해요 — ${esc(p.q)}</legend>
       ${p.choices.map((c, i) => `<label><input type="radio" name="mpredict" value="${i}"> ${esc(c)}</label>`).join('')}
       <p class="m-pmsg" id="mPredictMsg" aria-live="polite"></p></fieldset>
-    <div class="m-checks"><b>② 실행하고 확인해요</b> <span class="note" style="margin:0">▶ 실행을 누른 뒤 오른쪽 A 버튼 · 로봇이 한 일로 자동 확인</span>
+    <div class="m-checks"><b>② 실행하고 확인해요</b> <span class="note" style="margin:0">${esc(mission.how || '▶ 실행을 누른 뒤 오른쪽 A 버튼')} · 로봇이 한 일로 자동 확인</span>
       <ul id="mChecks">${mission.checks.map((c, i) => `<li data-i="${i}"><span class="m-ic" aria-hidden="true">○</span> <span>${esc(c.label)}</span> <small></small></li>`).join('')}</ul></div>
     <div class="m-foot"><button type="button" id="mHint">💡 도움말 (0/3)</button><button type="button" id="mReset">미션 코드로 되돌리기</button><span class="est" id="mSim">시뮬레이터 판정 · 실물 확인은 따로</span></div>
     <ol class="m-hints" id="mHints" aria-live="polite"></ol>
@@ -80,6 +91,7 @@ export function attachMission(mission, ctx) {
     $('mHint').textContent = `💡 도움말 (${hintN}/${mission.hints.length})`; if (hintN >= mission.hints.length) $('mHint').disabled = true;
   };
   $('mReset').onclick = () => { if (confirm('미션 처음 코드로 되돌릴까요? 지금 고친 코드는 사라져요.')) applyCode(mission.code); };
+  window.__noAutoSetup = !!mission.noAuto;   // 빈 바닥 미션: 코드가 거리를 읽어도 상자를 자동으로 놓지 않음
   requestAnimationFrame(sample);
   return { get metrics() { return m; }, get passed() { return passed; }, mission };
 }

@@ -670,7 +670,7 @@ $('needs').addEventListener('click', (e) => {
 
 // 코드가 읽는 센서에 맞춰 '없는 것만' 장면에 채움(어댑터가 규칙을 가짐). 사용자가 놓거나 옮긴 것은 그대로 둠
 function autoSetup(code) {
-  if (demoActive) return [];
+  if (demoActive || window.__noAutoSetup) return [];
   return KIT.autoSetup(code, kctx);
 }
 async function runCode(code, msg) {
@@ -1329,6 +1329,8 @@ Object.assign(kctx, { autoSetup, applyField, runCode, loadExample: (id) => apply
       const codeKey = 'pai:mission-code:' + mid;
       const applyCode = (code) => { applyExample({ id: 'mission:' + mid, title: mission.title, code, scene: mission.scene, how: mission.goal }); $('howto').hidden = true; };
       let saved = null; try { saved = localStorage.getItem(codeKey); } catch (e) {}
+      window.__noAutoSetup = !!mission.noAuto;   // 빈 바닥 미션: 코드가 거리를 읽어도 상자를 자동으로 놓지 않음(코드를 넣기 전에 정함)
+      if (mission.noAuto && KIT.setScene) KIT.setScene(mission.scene);
       applyCode(saved || mission.code);
       setInterval(() => { try { localStorage.setItem(codeKey, $('code').value); } catch (e) {} }, 1500);
       document.body.classList.add('mission-mode');
