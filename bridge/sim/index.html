@@ -282,7 +282,7 @@
     <div class="assist" id="assist">
       <div class="askbar">
         <label for="askText" class="asklabel"><span class="stepno">1</span>🤖 말로 만들기 <span id="askMode" class="badge">확인 중…</span></label>
-        <textarea id="askText" rows="1" maxlength="600" aria-label="로보독에게 시킬 일"
+        <textarea id="askText" rows="1" maxlength="600" aria-label="로봇에게 시킬 일"
           placeholder="예) 본체 버튼 누르면 멍멍 짖어"></textarea>
         <button id="askBtn" class="primary">코드 만들기</button>
       </div>
@@ -1208,7 +1208,7 @@ if (ASSIST.ai) {
     $('askClass').disabled = !r.available;
     $('askClass').placeholder = r.available ? '코드 입력' : '관리자 설정 필요';
   });
-} else {   // AI 서버가 없는 교구: 규칙 도우미만
+} else {   // (표준 아님) AI 모드는 모든 교구 필수 — 서버 함수를 아직 못 붙인 교구만 임시로 규칙 도우미만
   $('askCodeRow').classList.add('hidden'); $('askFix').closest('label').classList.add('hidden');
   $('askMode').textContent = '규칙 도우미'; $('askNote').textContent = ASSIST.ruleNote;
 }
@@ -1238,7 +1238,7 @@ function showAnswer(r, source) {
 }
 $('askBtn').onclick = async () => {
   const text = $('askText').value.trim();
-  if (!text) { showAnswer({ code: '', explanation: '먼저 로보독에게 시킬 일을 한 줄 적어 주세요. 예: "앞으로 2초 걷고 인사해"', warnings: [] }, '✏️'); $('askText').focus(); return; }
+  if (!text) { showAnswer({ code: '', explanation: `먼저 ${KIT.name || '로보독'}에게 시킬 일을 한 줄 적어 주세요. ${(KIT.ui && KIT.ui.askPlaceholder) || '예: "앞으로 2초 걷고 인사해"'}`, warnings: [] }, '✏️'); $('askText').focus(); return; }
   const btn = $('askBtn'); btn.disabled = true; btn.textContent = aiOn ? 'AI가 만드는 중…' : '만드는 중…';
   try {
     if (aiAvail && !aiOn) {   // AI는 켜져 있지만 수업 코드가 없음 → 코드를 넣기 전에는 AI를 쓰지 않고 규칙 도우미로

@@ -41,6 +41,7 @@ description: 마이크로비트에 꽂는 피지컬 교구(로봇·자동차·�
 - [ ] `kits/<slug>/kit.json`에 `hub`(order·status·home·tagline·links) 추가 → `node tools/build-kit.mjs`로 사이트 메인(`/`, 교구 선택)에 카드가 생김. 준비 중 교구는 `status: "coming"`, 자체 첫 화면은 `page: true`
 - [ ] `kit/` 설정 + 교구 이름이 사이트 문구·메타·로고·NOTICE에 반영(옛 교구 이름 grep 0건, 의도된 출처 표기 제외)
 - [ ] 예제 `.ts`가 MakeCode에서 블록으로 변환(`tests/makecode-blocks.js`) · 시뮬레이터 예제 시험
+- [ ] 도우미 AI 모드(필수): `/api/<slug>-assistant` 서버 함수 + 어댑터 `ai: true` — 로보독과 같은 키·수업 코드, 형태는 `microbit-sim-builder` 참고
 - [ ] 도우미 안전 규칙 시험(`tests/rule-assistant.mjs` 교구 수치로)
 - [ ] 수업 슬라이드·PPT·문서 빌드 경고 0, 아이콘·카드 정렬 확인
 - [ ] 운영 주소에서 전체 시험 통과 + "실물 미검증 항목" 목록을 사용자에게
