@@ -95,6 +95,15 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   await m.goto(BASE + 'sim/?kit=ponybot'); await m.waitForFunction(() => window.__pony && window.__pony.view, null, { timeout: 60000 }); await m.waitForTimeout(1200);
   check('390px: 가로 스크롤 없음', await m.evaluate(() => document.documentElement.scrollWidth <= innerWidth), String(await m.evaluate(() => document.documentElement.scrollWidth)));
   check('페이지 오류 없음', errs.length === 0, errs.slice(0, 2).join(' | '));
+  // ---- 휴대폰 가로·태블릿 세로(391~980px): 한 줄 구성(코딩 칸이 찌그러지지 않게)
+  for (const w of [620, 800]) {
+    const q = await b.newPage({ viewport: { width: w, height: 900 } });
+    await q.route('**/api/*-assistant', (r) => r.fulfill({ json: { ok: true, configured: false, needsCode: true } }));
+    await q.goto(BASE + 'sim/?kit=ponybot'); await q.waitForFunction(() => window.__pony, null, { timeout: 60000 }); await q.waitForTimeout(500);
+    const g = await q.evaluate(() => ({ cols: getComputedStyle(document.querySelector('main')).gridTemplateColumns.split(' ').length, sw: document.documentElement.scrollWidth, ask: document.getElementById('askText').getBoundingClientRect().width }));
+    check(`${w}px: 한 줄 구성(열 1개)·가로 넘침 없음·말로 만들기 칸이 넓음`, g.cols === 1 && g.sw <= w && g.ask > w * 0.5, JSON.stringify(g));
+    await q.close();
+  }
   await b.close();
   const pass = results.filter(Boolean).length;
   console.log(`\n결과: ${pass} 통과 / ${results.length - pass} 실패 (총 ${results.length})`);
