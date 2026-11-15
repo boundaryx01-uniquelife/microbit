@@ -32,7 +32,7 @@ async function startServer() {
   const newPage = async (viewport = { width: 1400, height: 950 }) => {
     const ctx = await b.newContext({ viewport });
     const p = await ctx.newPage(); const errs = [];
-    await p.route('**/api/robodog-assistant', r => r.fulfill({ json: { ok: true, configured: false, needsCode: false } }));   // 로컬 정적 서버에는 도우미 서버 함수가 없음
+    await p.route('**/api/*-assistant', r => r.fulfill({ json: { ok: true, configured: false, needsCode: false } }));   // 로컬 정적 서버에는 도우미 서버 함수가 없음
     p.on('pageerror', e => { if (!/makecode\.(com|microbit\.org)/.test(e.stack || '')) errs.push('pageerror: ' + e.message); });
     p.on('console', m => { if (m.type() === 'error' && !/makecode/.test(JSON.stringify(m.location() || {}))) errs.push('console: ' + m.text()); });
     // MakeCode 편집기 자체 요청(확장·CDN·사용 통계 dc.services.visualstudio.com)은 학교망·샌드박스에 따라 막힐 수 있어 제외. 우리 페이지 오류는 그대로 잡음
@@ -91,10 +91,10 @@ async function startServer() {
   await pony.evaluate(() => window.__pony.loadExample('03_ai-traffic-ponybot'));
   await pony.click('#btnRun'); await pony.waitForTimeout(2800);
   const r1 = await pony.evaluate(() => ({ text: document.getElementById('guideText').textContent, on: [...document.querySelectorAll('#radioBtns .guide-on')].map(e => e.textContent), qon: [...document.querySelectorAll('#qNums .guide-on')].map(e => e.textContent) }));
-  check('03 라디오 예제 → 라디오 숫자 3 · 1 안내와 숫자 버튼 깜빡임(빠른 조작 칸 포함)', /라디오 숫자 1 · 3/.test(r1.text) && r1.on.join() === '1,3' && r1.qon.join() === '1,3', JSON.stringify(r1));
-  await pony.click('#qNums button[data-n="3"]'); await pony.waitForTimeout(1200);
+  check('03 라디오 예제 → 라디오 숫자 3 · 1 안내와 미리보기 아래 숫자 줄(0~9)의 버튼 깜빡임', /라디오 숫자 1 · 3/.test(r1.text) && r1.on.join() === '1,3', JSON.stringify(r1));
+  await pony.click('#radioBtns button:nth-child(4)'); await pony.waitForTimeout(1200);
   const r2 = await pony.evaluate(() => window.__pony.robot.pwm.slice());
-  check('03 빠른 조작의 숫자 3 → 출발(모터 전진)', r2.every(v => v > 0), String(r2));
+  check('03 라디오 숫자 줄의 3 → 출발(모터 전진)', r2.every(v => v > 0), String(r2));
   await pony.click('#btnStop');
   // 직접 만든 코드에도(예제가 아님) 입력 안내
   await pony.evaluate(() => { document.getElementById('code').value = 'input.onButtonPressed(Button.B, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Left, 80)\n})'; });

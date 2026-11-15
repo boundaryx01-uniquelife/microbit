@@ -3,7 +3,7 @@
   publish = "bridge"
   command = ""
 
-# /api/robodog-assistant — Claude API 키(ANTHROPIC_API_KEY)는 Netlify 환경 변수에만 둠
+# /api/robodog-assistant · /api/ponybot-assistant — 같은 Claude API 키(ANTHROPIC_API_KEY)·수업 코드(ASSISTANT_CLASS_CODE)를 씀. Netlify 환경 변수에만 둠
 [functions]
   directory = "netlify/functions"
   node_bundler = "esbuild"

@@ -56,8 +56,8 @@
     "order": 2,
     "status": "ready",
     "home": "ponybot/",
-    "image": "lessons/assets/icon_delivery.png",
-    "imageAlt": "바퀴 달린 로봇 아이콘",
+    "image": "ponybot/assets/official/material-pony-v2.webp",
+    "imageAlt": "AI 포니봇 제품 그림 (제조사 바운더리엑스 제공)",
     "tagline": "메카넘 바퀴로 앞뒤·옆·대각선까지 움직이는 로봇. 거리·라인·컬러 센서와 OLED 화면",
     "badge": "1차 공개 · 실물 점검 중",
     "links": [

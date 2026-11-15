@@ -175,6 +175,8 @@ export class PonyView3D extends View3D {
     this.fan.rotation.x = -Math.PI / 2; this.fan.position.y = 0.3; this.scene.add(this.fan);
     this.pinGroup = new T.Group(); this.scene.add(this.pinGroup);
     this.model = buildPonyModel(); this.scene.add(this.model.root);
+    this.renderer.shadowMap.autoUpdate = false;   // 그림자는 로봇·물체가 바뀔 때만 다시 그림(가만히 있을 때 매 프레임 그리지 않음)
+    this.shadowSig = '';
   }
   resetCam() { const s = this.world.start; this.camera.position.set(s.x + 22, 15, s.y - 25); this.controls.target.set(s.x, 2.5, s.y); this.controls.update(); }
   // 바닥: 장면 크기·색·벽·구역·표시선 (책상·다리 없음)
@@ -256,6 +258,8 @@ export class PonyView3D extends View3D {
       t.x += dx * 0.08; t.z += dz * 0.08; this.camera.position.x += dx * 0.08; this.camera.position.z += dz * 0.08;
     }
     this.controls.update();
+    const sig = `${R.x.toFixed(1)},${R.y.toFixed(1)},${R.heading.toFixed(0)},${this.obsKey.length},${this.tableKey}`;
+    if (sig !== this.shadowSig) { this.shadowSig = sig; this.renderer.shadowMap.needsUpdate = true; }
     this.renderer.render(this.scene, this.camera);
   }
 }

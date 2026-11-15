@@ -14,8 +14,8 @@ export class View3D {
   init() {
     if (this.ready) return;
     const W = this.world;
-    const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
-    r.setPixelRatio(Math.min(2, window.devicePixelRatio || 1));
+    const r = this.renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });   // 그림 픽셀을 읽는 시험·캡처가 있어 유지
+    r.setPixelRatio(Math.min(1.5, window.devicePixelRatio || 1));   // 레티나에서 픽셀 수가 4배가 되지 않게 상한 1.5
     r.shadowMap.enabled = true;
     this.container.appendChild(r.domElement);
     const scene = this.scene = new THREE.Scene();

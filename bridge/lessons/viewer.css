@@ -317,3 +317,47 @@ body.fluid .split.code .steps small, body.fluid .split .pts small { font-size: 1
 body.fluid .split.tbl .rows li { font-size: 1.1em; }
 .chk.n4 li { padding: .35em .8em; } .chk.n4 { gap: 12px; }
 body.fluid .ovhead small { display: none; } body.fluid .ovhead h2 { font-size: 22px; } .ovhead .btn { white-space: nowrap; }
+
+/* ---- 이야기 · 퀴즈 · 미션 (2026-11: 제조사 교안 분석 뒤 추가) ---- */
+.story { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(0, 1fr); gap: 34px; align-items: center; min-height: 0; flex: 1 1 auto; }
+.story .scene { position: relative; align-self: center; border-radius: 22px; overflow: hidden; box-shadow: var(--shadow-lg, 0 10px 30px rgba(0,0,0,.14)); }
+.story .scene .pic { display: block; width: 100%; height: auto; max-height: 500px; object-fit: cover; }
+.story .bub { position: absolute; transform: translate(-50%, -50%); max-width: 56%; background: #fff; color: #111827; border: 3px solid #2456e5; border-radius: 20px; padding: .45em .8em; font-size: 1.05em; line-height: 1.35; box-shadow: 0 4px 12px rgba(0,0,0,.18); }
+.story .bub b { display: block; font-size: .92em; color: #2456e5; }
+.story .cap2 { font-size: 1.75em; font-weight: 750; line-height: 1.4; margin: 0 0 .6em; }
+.story .cap2 em { font-style: normal; color: var(--accent); }
+.story .ask { font-size: 1.3em; margin: 0; padding: .6em .9em; border-radius: 16px; background: var(--surface-2); }
+.quiz { display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px; align-items: center; min-height: 0; flex: 1 1 auto; }
+.quiz.has-img { grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); }
+.quiz.has-img > .pic { max-height: 420px; border-radius: 20px; }
+.quiz .qq { font-size: 1.7em; font-weight: 750; line-height: 1.4; margin: 0 0 .7em; }
+.quiz .qq em { font-style: normal; color: var(--accent); }
+.qzs { display: grid; gap: 12px; }
+.qz { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 2px 14px; align-items: center; text-align: left; font: inherit; font-size: 1.25em; padding: .55em .8em; border-radius: 16px; border: 3px solid var(--line-strong, #c9d1df); background: var(--surface); color: var(--ink); cursor: pointer; }
+.qz:hover { border-color: var(--accent); }
+.qz:focus-visible { outline: 4px solid var(--accent); outline-offset: 2px; }
+.qz .qn { grid-row: 1 / 3; display: inline-grid; place-items: center; width: 1.9em; height: 1.9em; border-radius: 50%; background: var(--surface-2); font-weight: 800; }
+.qz .qt2 { font-weight: 700; }
+.qz .qw { display: none; grid-column: 2; font-size: .8em; line-height: 1.4; }
+.qz.right { border-color: #1fa463; background: #e7f6ee; color: #111827; } .qz.right .qn { background: #1fa463; color: #fff; }
+.qz.wrong { border-color: #e5484d; background: #fdecec; color: #111827; } .qz.wrong .qn { background: #e5484d; color: #fff; }
+.qz.right:hover { border-color: #1fa463; } .qz.wrong:hover { border-color: #e5484d; }
+.qz.right .qw, .qz.wrong .qw { display: block; }
+.msn { display: grid; grid-template-columns: minmax(0, 1fr); gap: 34px; align-items: center; min-height: 0; flex: 1 1 auto; }
+.msn.has-img { grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr); }
+.msn.has-img > .pic { max-height: 440px; border-radius: 20px; }
+.mgoal { font-size: 1.6em; font-weight: 750; line-height: 1.4; margin: 0 0 .7em; }
+.mgoal b { display: inline-block; font-size: .7em; background: var(--accent); color: #fff; border-radius: 999px; padding: .1em .8em; margin-right: .6em; vertical-align: .15em; }
+.mgoal em { font-style: normal; color: var(--accent); }
+.msteps { list-style: none; margin: 0 0 .9em; padding: 0; display: grid; gap: 10px; font-size: 1.2em; }
+.msteps li { display: flex; align-items: center; gap: 12px; }
+.mgo { display: flex; flex-wrap: wrap; align-items: center; gap: 16px; }
+.mstart { display: inline-block; font-size: 1.45em; font-weight: 800; padding: .5em 1.2em; border-radius: 999px; background: var(--accent); color: #fff !important; text-decoration: none; box-shadow: 0 8px 20px rgba(36,86,229,.35); }
+.mstart:focus-visible { outline: 4px solid #111827; outline-offset: 3px; }
+.mbadge { font-size: 1.05em; font-weight: 750; padding: .35em .9em; border-radius: 999px; background: var(--surface-2); }
+.mbadge.ok { background: #1fa463; color: #fff; }
+.mnote { margin: .8em 0 0; font-size: .95em; color: var(--muted, #566077); }
+body.fluid .story, body.fluid .quiz.has-img, body.fluid .msn.has-img { grid-template-columns: minmax(0, 1fr); gap: 16px; }
+body.fluid .story .bub { font-size: .8em; max-width: 78%; }
+body.fluid .story .cap2, body.fluid .quiz .qq, body.fluid .mgoal { font-size: 1.25em; }
+body.fluid .qz, body.fluid .msteps, body.fluid .mstart { font-size: 1.05em; }

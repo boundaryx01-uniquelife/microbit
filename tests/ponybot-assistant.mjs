@@ -129,6 +129,20 @@ check('문법 오류 거절(E5)', !c.ok && c.errors.some(e => e.code === 'E5'), 
 r = R('앞으로 가', pol({ forbid: ['aiPonybot.runMecanum'] }));
 check('규칙 모드도 forbid에 걸리면 코드 대신 이유', !r.code && /검사/.test(r.explanation), JSON.stringify(r));
 
+// 9.5 조합 문장: 선 따라가기 + 색·거리 조건을 한 반복 안에
+r = R('A 버튼을 누르면 검은 선을 따라가다가 초록색이 보이면 2초 쉬었다가 다시 가고, 빨간색이 보이면 멈추고 OLED에 "RED" 라고 써. 앞이 15cm보다 가까우면 기다려');
+check('선 따라가기: 반복이 하나(조건들이 서로 싸우지 않음)', (r.code.match(/basic\.forever/g) || []).length === 1, r.code);
+check('선 따라가기: 라인 규칙 ●◌ → Clockwise(↶), ◌● → CounterClockwise(↷), 그 밖 앞으로', /TwoLineState\.OnOff\)\) \{\s*aiPonybot\.runNormal\(aiPonybot\.DirectionControl\.Clockwise/.test(r.code) && /TwoLineState\.OffOn\)\) \{\s*aiPonybot\.runNormal\(aiPonybot\.DirectionControl\.CounterClockwise/.test(r.code) && /\} else \{\s*aiPonybot\.runMecanum\(aiPonybot\.Mecanum\.Forward/.test(r.code));
+check('선 따라가기: 초록 = 2초 쉬고 다시 출발(달리기 유지), 빨강 = 멈춤 + OLED "RED" + 달리기 끝', /DetectedColor\.Green[\s\S]*?basic\.pause\(2000\)[\s\S]*?runMecanum[\s\S]*?DetectedColor\.Red[\s\S]*?showString\("RED"[\s\S]*?달리는중 = false/.test(r.code), r.code);
+check('선 따라가기: 거리 15cm 조건이 맨 앞(막히면 기다림), 500은 막힘으로 보지 않음', /거리 > 0 && 거리 < 15/.test(r.code) && r.code.indexOf('거리 < 15') < r.code.indexOf('DetectedColor'));
+check('선 따라가기: A 출발·B 멈춤, 컬러센서 초기화', /Button\.A[\s\S]*?달리는중 = true/.test(r.code) && /Button\.B[\s\S]*?달리는중 = false/.test(r.code) && /initColorSensor/.test(r.code));
+r = R('시작하면 속도 60으로 선을 따라가');
+check('선 따라가기(조건 없음): 시작하자마자 달림, 속도 60, 색·거리 블록 없음', /let 속도 = 60/.test(r.code) && /let 달리는중 = true/.test(r.code) && !/isColorAdvanced|ping\(/.test(r.code), r.code);
+r = R('A 버튼을 누르면 선을 따라가다가 빨간색이 보이면 멈추고 OLED에 "빨강" 이라고 써');
+check('선 따라가기: OLED에 한글은 넣지 않고 경고', !/showString\("빨강"/.test(r.code) && r.warnings.some(w => /영어·숫자만/.test(w)), JSON.stringify(r.warnings));
+r = R('A 버튼을 누르면 속도 300으로 선을 따라가', pol({ maxSpeed: 120 }));
+check('선 따라가기: 한도(maxSpeed 120)를 넘는 속도는 한도로', /let 속도 = 120/.test(r.code) && r.warnings.some(w => /한도/.test(w)), r.code.slice(0, 120));
+
 // 10. AI 프롬프트 빌더
 const visible = blocks.namespaces[0].functions.filter(f => !f.hidden);
 const syn = buildBlockSyntax(blocks), sys = buildSystemPrompt(blocks, policy, '포니봇');

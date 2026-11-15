@@ -3,10 +3,16 @@ import { EST, WHEEL_XY, MOTOR_WHEEL } from './pony.js';
 import { drawProps } from '../../props.js';
 
 const RAD = Math.PI / 180;
+const MAX_ZOOM = 10;
 const rgb = (c, a = 1) => `rgba(${c[0]},${c[1]},${c[2]},${a})`;
 
 export class PonyView {
-  constructor(canvas, world, robot) { this.cv = canvas; this.world = world; this.robot = robot; this.showBeam = true; this.pad = 14; this.editor = null; }
+  constructor(canvas, world, robot) {
+    this.cv = canvas; this.world = world; this.robot = robot; this.showBeam = true; this.pad = 14; this.editor = null;
+    // 보기(확대·이동): zoom 1 = 장면 전체, ox·oy = 화면 왼쪽 위의 월드 좌표(cm)
+    this.zoom = 1; this.ox = 0; this.oy = 0; this.follow = false; this.userView = false;
+    this.attachView();
+  }
   fit() {   // 장면 크기에 맞게 비율·해상도를 맞춤
     const { w, h } = this.world.size, cv = this.cv;
     cv.style.aspectRatio = `${w} / ${h}`;
@@ -14,18 +20,90 @@ export class PonyView {
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     const cw = Math.max(200, Math.round(cv.clientWidth * dpr)), ch = Math.round(cw * h / w);
     if (cv.width !== cw || cv.height !== ch) { cv.width = cw; cv.height = ch; }
-    this.k = cv.width / w;   // 1cm 당 화면 픽셀
+    this.k = cv.width / w;   // 1cm 당 화면 픽셀(확대 전)
+  }
+  clampView() {
+    const { w, h } = this.world.size;
+    this.zoom = Math.min(MAX_ZOOM, Math.max(1, this.zoom));
+    const vw = w / this.zoom, vh = h / this.zoom;
+    this.ox = Math.min(Math.max(0, this.ox), w - vw); this.oy = Math.min(Math.max(0, this.oy), h - vh);
+  }
+  setZoom(z, fx = 0.5, fy = 0.5) {   // (fx,fy) = 화면 안 비율 위치(커서) — 그 아래 월드 점을 고정
+    const { w, h } = this.world.size, p = { x: this.ox + fx * w / this.zoom, y: this.oy + fy * h / this.zoom };
+    this.zoom = z; this.clampView();
+    this.ox = p.x - fx * w / this.zoom; this.oy = p.y - fy * h / this.zoom; this.clampView();
+  }
+  reset() { this.zoom = 1; this.ox = this.oy = 0; this.follow = false; this.userView = true; this.autoApplied = false; this.syncBar(); }
+  autoZoom() {   // 코드를 실행하면 로봇이 작아 보이지 않게 한 번 확대(직접 보기를 바꿨으면 건드리지 않음)
+    if (this.userView || this.zoom > 1) return;
+    this.zoom = Math.min(4, Math.max(1.5, this.world.size.w / 90)); this.follow = true; this.autoApplied = true; this.clampView(); this.syncBar();
   }
   toWorld(ev) {
-    const r = this.cv.getBoundingClientRect();
-    return { x: (ev.clientX - r.left) / r.width * this.world.size.w, y: (ev.clientY - r.top) / r.height * this.world.size.h };
+    const r = this.cv.getBoundingClientRect(), { w, h } = this.world.size;
+    return { x: this.ox + (ev.clientX - r.left) / r.width * w / this.zoom, y: this.oy + (ev.clientY - r.top) / r.height * h / this.zoom };
   }
+  // ---- 확대·이동 조작: 휠 = 확대/축소(페이지는 스크롤되지 않음), 오른쪽·가운데 버튼 또는 Space+끌기 = 이동, 두 손가락 = 확대·이동
+  attachView() {
+    const cv = this.cv, pts = new Map(); let pan = null, space = false, pinch = null;
+    const frac = (e) => { const r = cv.getBoundingClientRect(); return [(e.clientX - r.left) / r.width, (e.clientY - r.top) / r.height]; };
+    const userChanged = () => { this.userView = true; this.syncBar(); };
+    cv.addEventListener('wheel', (e) => {
+      e.preventDefault();   // 캔버스 위에서는 사이트 전체가 스크롤되지 않게
+      const [fx, fy] = frac(e);
+      this.setZoom(this.zoom * Math.exp(-Math.sign(e.deltaY) * Math.min(1, Math.abs(e.deltaY) / 100) * 0.25), this.follow ? 0.5 : fx, this.follow ? 0.5 : fy);
+      userChanged();
+    }, { passive: false });
+    addEventListener('keydown', (e) => { if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT|BUTTON/.test((e.target && e.target.tagName) || '') && cv.matches(':hover')) { space = true; e.preventDefault(); cv.style.cursor = 'grab'; } });
+    addEventListener('keyup', (e) => { if (e.code === 'Space') { space = false; cv.style.cursor = ''; } });
+    cv.addEventListener('contextmenu', (e) => e.preventDefault());
+    cv.addEventListener('pointerdown', (e) => {   // 편집기보다 먼저(capture) 받아서 이동·핀치면 편집기에 넘기지 않음
+      pts.set(e.pointerId, { x: e.clientX, y: e.clientY }); this.holding = true;   // 누르고 있는 동안은 따라가기를 멈춤(물체를 끌 때 화면이 도망가지 않게)
+      if (pts.size === 2) { const [a, b] = [...pts.values()]; pinch = { d: Math.hypot(a.x - b.x, a.y - b.y), z: this.zoom, cx: (a.x + b.x) / 2, cy: (a.y + b.y) / 2 }; pan = null; }
+      if (e.button === 1 || e.button === 2 || space || pts.size >= 2) {
+        e.stopImmediatePropagation(); e.preventDefault();
+        if (pts.size < 2) pan = { x: e.clientX, y: e.clientY, ox: this.ox, oy: this.oy };
+        try { cv.setPointerCapture(e.pointerId); } catch (_) { /* 무시 */ }
+        cv.style.cursor = 'grabbing'; this.follow = false; userChanged();
+      }
+    }, true);
+    cv.addEventListener('pointermove', (e) => {
+      if (pts.has(e.pointerId)) pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      const r = cv.getBoundingClientRect(), { w, h } = this.world.size;
+      if (pinch && pts.size >= 2) {
+        e.stopImmediatePropagation();
+        const [a, b] = [...pts.values()], d = Math.hypot(a.x - b.x, a.y - b.y), cx = (a.x + b.x) / 2, cy = (a.y + b.y) / 2;
+        this.setZoom(pinch.z * d / Math.max(10, pinch.d), (cx - r.left) / r.width, (cy - r.top) / r.height);
+        this.ox -= (cx - pinch.cx) / r.width * w / this.zoom; this.oy -= (cy - pinch.cy) / r.height * h / this.zoom; pinch.cx = cx; pinch.cy = cy; this.clampView(); userChanged();
+      } else if (pan) {
+        e.stopImmediatePropagation();
+        this.ox = pan.ox - (e.clientX - pan.x) / r.width * w / this.zoom; this.oy = pan.oy - (e.clientY - pan.y) / r.height * h / this.zoom; this.clampView();
+      }
+    }, true);
+    const up = (e) => { pts.delete(e.pointerId); if (!pts.size) this.holding = false; if (pts.size < 2) pinch = null; if (pan) { e.stopImmediatePropagation(); pan = null; cv.style.cursor = space ? 'grab' : ''; } };
+    cv.addEventListener('pointerup', up, true); cv.addEventListener('pointercancel', up, true);
+    cv.title = '마우스 휠 = 확대·축소 / 오른쪽(또는 가운데) 버튼 끌기·Space+끌기 = 이동 / 두 손가락 = 확대·이동';
+  }
+  // 단추 줄(− ＋ 전체 보기 · 로봇 따라가기)은 화면 위쪽 공용 줄(index.html)에서 부름
+  zoomBy(f) { this.setZoom(this.zoom * f, 0.5, 0.5); this.userView = true; this.syncBar(); }
+  setFollow(on) {
+    this.follow = !!on; if (this.follow && this.zoom < 1.5) this.zoom = Math.min(4, Math.max(1.5, this.world.size.w / 90));
+    this.userView = true; this.clampView(); this.syncBar();
+  }
+  // 코드 실행이 끝나면(자동 확대였을 때만) 전체 보기로 되돌림
+  autoView(running) { if (this.autoApplied && !running && !this.userView) { this.zoom = 1; this.ox = this.oy = 0; this.follow = false; this.autoApplied = false; this.syncBar(); } }
+  syncBar() { if (this.onChange) this.onChange(); }
   draw() {
     this.fit();
     const { cv, world: W, robot: R, k } = this, g = cv.getContext('2d');
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.clearRect(0, 0, cv.width, cv.height);
-    g.scale(k, k);
+    if (this.follow && !this.holding) {   // 로봇을 화면 가운데로(부드럽게)
+      const vw = W.size.w / this.zoom, vh = W.size.h / this.zoom;
+      this.ox += (R.x - vw / 2 - this.ox) * 0.2; this.oy += (R.y - vh / 2 - this.oy) * 0.2;
+    }
+    this.clampView();
+    const kz = k * this.zoom;
+    g.scale(kz, kz); g.translate(-this.ox, -this.oy);
     const { w, h } = W.size;
     // 바닥
     g.fillStyle = rgb(W.floor.bg); g.fillRect(0, 0, w, h);
@@ -60,12 +138,16 @@ export class PonyView {
     }
     this.drawRobot(g);
     if (this.editor) this.editor.drawOverlay(g);   // 선택 표시·선 점
-    // 눈금자 10cm
-    g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(4, h - 5, 10, 1); g.textAlign = 'left'; g.font = '3.6px system-ui, sans-serif'; g.fillText('10cm', 16, h - 4.5);
+    // 눈금자 10cm (화면 고정, 확대해도 실제 10cm 길이)
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    const px = 10 * kz, fs = Math.max(11, cv.width / 60);
+    g.fillStyle = 'rgba(0,0,0,.6)'; g.fillRect(fs * .6, cv.height - fs * 1.4, px, Math.max(2, fs * .2));
+    g.textAlign = 'left'; g.textBaseline = 'middle'; g.font = `${fs}px system-ui, sans-serif`; g.fillText('10cm', fs * .6 + px + fs * .4, cv.height - fs * 1.2);
+    this.syncBar();
   }
   toScreen(x, y) {   // 월드 → 화면(clientX/Y). 시험·편집기용
-    const r = this.cv.getBoundingClientRect();
-    return { x: r.left + x / this.world.size.w * r.width, y: r.top + y / this.world.size.h * r.height };
+    const r = this.cv.getBoundingClientRect(), { w, h } = this.world.size;
+    return { x: r.left + (x - this.ox) * this.zoom / w * r.width, y: r.top + (y - this.oy) * this.zoom / h * r.height };
   }
   drawRobot(g) {
     const R = this.robot, W = this.world;

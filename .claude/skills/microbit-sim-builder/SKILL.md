@@ -46,7 +46,7 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 ### ③ 코드 생성 도우미 — `references/codegen.md`
 두 모드, 같은 UI, 같은 검사:
 - **오프라인 규칙 워크플로(기본, 키·인터넷 불필요)**: 입력 검사(길이·개인정보 안내) → 트리거로 문장 나누기(“A 버튼을 누르면”, “라디오 3을 받으면”, “가까우면”, “계속”) → 조각별 동작 사전(블록 표의 한글 블록명·동의어에서 만든 표) → 코드 템플릿 조립 → 경고·추천 예제. 못 알아들은 조각은 경고로 돌려준다(추측해서 넣지 않음).
-- **Claude API 모드(선택)**: 서버 함수(Netlify 등)에서만 키 사용, 수업 코드가 맞을 때만 켜짐, 실패·미설정이면 규칙 모드로 자동 폴백. 프롬프트의 블록 문법 부분은 **블록 표에서 생성**(손으로 베끼지 않음), 구조화 출력(json_schema: code·explanation·warnings). 모델은 설정값(기본은 기준 구현 값 유지).
+- **Claude API 모드(필수 — 모든 교구 같은 형태)**: 교구마다 서버 함수 `netlify/functions/<slug>-assistant.mjs`(경로 `/api/<slug>-assistant`)를 둔다. 기준 구현은 `robodog-assistant.mjs`·`ponybot-assistant.mjs`. 게이트는 공통(같은 환경 변수 `ANTHROPIC_API_KEY`·`ASSISTANT_CLASS_CODE` 재사용 — 교구가 늘어도 새로 설정하지 않음, 수업 코드 필수, IP당 분당 6회, 600자). 어댑터는 `assistant: { ai: true, checkAi, askAi, rule, sample }`. 키는 서버에서만 쓰고, 미설정·실패·검사 탈락이면 규칙 모드로 자동 폴백. 프롬프트의 블록 문법 부분은 **블록 표에서 생성**(`tools/build-assistant-prompt.mjs`, 손으로 베끼지 않음), 구조화 출력(json_schema: code·explanation·warnings), 모델이 만든 코드는 서버·브라우저 둘 다에서 블록 표·정책으로 재검사. 모델은 설정값(기본은 기준 구현 값 유지).
 - **출력 검사(두 모드 공통)**: `validate-code.mjs` — 표에 없는 함수/enum(환각), 네임스페이스 빠진 enum(`Mecanum.Forward` → `aiPonybot.Mecanum.Forward`), 확장 범위 밖 숫자, 인자 수, 문법 → 오류면 코드 대신 설명과 함께 돌려줌. 서버에서도 돌린다(브라우저 검사는 우회 가능).
 - **규칙 도우미에 필요한 정책 키**(`kits/<slug>/policy.json`): `defaultSpeed`·`defaultSeconds`(문장에 숫자가 없을 때만), `nearCm`, `radioTimeoutMs`, `maxSpeed`·`autoStopMs`(null = 한도 없음), `forbid`, `maxChars`, 교구 설정(예: 컬러센서 버전). 값마다 `_note`로 자리표시자인지 표시. **null이면 숫자를 지어내지 않고 되묻는다.** 검사기에는 `policy.max["ns.fn.param"]` 모양으로 바꿔 넘기고, 도우미 출력은 `strictPolicy:true`(정책 위반 = 거절).
 - **문장 나누기 함정**: 마침표로 나누면 "1.5초"가 깨진다 — 숫자 사이 `.`은 예외.
@@ -71,5 +71,5 @@ python3 -I scripts/extract-blocks.py <owner>/<repo>#<commit> --out kits/<slug>/b
 - [ ] 파일 예(포니봇): 시뮬레이터 `bridge/<slug>/sim/{index.html,<slug>.js}`, 도우미 `bridge/<slug>/sim/assistant.js`, 프롬프트 생성 `tools/build-assistant-prompt.mjs`, 시험 `tests/<slug>-sim.js`·`tests/<slug>-assistant.mjs`
 - [ ] 시뮬레이터: 어댑터·운동학·센서, `EST` 추정 표시, 시험 통과 수치
 - [ ] 예제 전부 `validate-code` 오류 0 + MakeCode 블록 변환 통과(인터넷 필요 — 못 돌리면 못 돌렸다고)
-- [ ] 도우미: 규칙 모드 시험 문장, AI 모드 폴백, 출력 검사 서버·브라우저 둘 다
+- [ ] 도우미: 규칙 모드 시험 문장, AI 모드 서버 함수(`/api/<slug>-assistant`, 가짜 API 서버 시험 `tests/<slug>-assistant-function.mjs`)·폴백, 출력 검사 서버·브라우저 둘 다, 배포 미리보기에서 `configured: true` 확인
 - [ ] 실물 확인 필요 목록
