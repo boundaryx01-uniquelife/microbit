@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="../assets/brand.css"><link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <style>
 main{max-width:960px;margin:0 auto;padding:24px 16px 48px}
+.introbox{margin:14px 0 6px}.introbox video{display:block;width:100%;aspect-ratio:16/9;border-radius:16px;background:#bfe9ff;box-shadow:0 8px 24px rgba(15,27,51,.14)}.introbox figcaption{margin-top:6px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
 .cards a{display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:12px;background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);text-decoration:none;color:inherit}
 .cards a b{color:var(--accent,#2456E5);font-size:18px}
@@ -20,6 +21,16 @@ code{word-break:break-all}
 <main>
 <h1>AI 포니봇 × 마이크로비트 AI 교실</h1>
 <p class="note">카드를 웹캠으로 AI에게 가르치고 → 인식한 번호를 USB 마이크로비트가 라디오로 보내고 → AI 포니봇에 꽂은 마이크로비트가 받아 움직입니다.</p>
+<figure class="introbox">
+<video id="pintro" src="assets/intro.mp4" poster="assets/intro-poster.jpg" muted playsinline preload="metadata" controls
+  aria-label="AI 포니봇 인트로(20초, 소리 없음): 포니봇이 몸은 앞을 본 채 옆으로 주차하고, 대각선으로 움직이고, 구불구불한 검은 선을 따라 도착선까지 가요."></video>
+<figcaption class="note">시뮬레이터와 같은 3D 모형으로 만든 영상이에요(움직임은 추정이라 실물과 다를 수 있어요). <a href="intro/">웹에서 직접 돌려 보기</a></figcaption>
+</figure>
+<script>
+// 인트로 영상: 움직임 줄이기를 켠 기기에서는 자동 재생하지 않음(정지 그림 + 재생 단추)
+(function () { var v = document.getElementById('pintro'), calm = false; try { calm = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
+  if (!calm) { var pr = v.play(); if (pr && pr.catch) pr.catch(function () {}); } })();
+</script>
 <div class="cards">
 <a href="../sim/?kit=ponybot"><b>시뮬레이터 열기 →</b><span>블록 코딩(MakeCode) + 위에서 본 2D·3D 포니봇, 실물 없이 미리 시험</span></a>
 <a href="../ai.html?kit=ponybot"><b>AI 브리지 열기 →</b><span>크롬·엣지에서 웹캠 + USB 마이크로비트 연결</span></a>
