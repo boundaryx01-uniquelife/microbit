@@ -176,8 +176,10 @@
   .brand img { width: 32px; height: 32px; flex: none; border-radius: 9px; object-fit: cover; background: #b3ecff; }
   html[data-kit="ponybot"] #top2d { max-height: none; margin: 0 auto; }
   /* 포니봇: 한 화면에 — 보기 조작 줄 / 움직임 / 라디오 0~9 / [마이크로비트|OLED] / [센서|바퀴 명령] ; 편집 도구·장면 설명은 그 아래 */
-  html[data-kit="ponybot"] body.mc-mode main { grid-template-columns: minmax(0, 1fr) 12px minmax(360px, 470px); }
-  html[data-kit="ponybot"] body.mc-mode main.sized { grid-template-columns: minmax(0, 1fr) 12px var(--rw); }
+  @media (min-width: 981px) {   /* 좁은 화면(휴대폰·태블릿 세로)은 한 줄로 — 위의 980px 규칙이 이기도록 넓을 때만 */
+    html[data-kit="ponybot"] body.mc-mode main { grid-template-columns: minmax(0, 1fr) 12px minmax(360px, 470px); }
+    html[data-kit="ponybot"] body.mc-mode main.sized { grid-template-columns: minmax(0, 1fr) 12px var(--rw); }
+  }
   .tabs { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; }
   .viewctl { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-left: auto; }
   @media (min-width: 421px) { .tabs { flex-wrap: nowrap; } .tabs button, .viewctl, .viewctl .vfollow { white-space: nowrap; } .viewctl { flex-wrap: nowrap; } }
