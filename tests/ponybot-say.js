@@ -59,6 +59,28 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   const end = await p.evaluate(() => { const P = window.__pony, r = P.robot, rgb = r.colorRGB(); return { moving: r.pwm.some((v) => v), red: rgb[0] > 170 && rgb[1] < 90, off: +P.PROPS.distToTrack(P.props.tracks[0], r.x, r.y).toFixed(1) }; });
   check('② 다시 출발해 빨강 칩 위에서 멈추고 더 가지 않음(선에서 4cm 이내)', end.red && !end.moving && end.off <= 4, JSON.stringify(end));
   check('② OLED에 RED', await p.evaluate(() => { const o = window.__pony.oled; let n = 0; for (let y = 0; y < 8; y++) for (let x = 0; x < 24; x++) n += o.lit(x, y) ? 1 : 0; return n > 15; }));
+  // ---- AI 모드(서버 응답은 가짜): 수업 코드를 넣으면 AI가 만든 코드, 검사에 걸리면 규칙 도우미로
+  let aiMode = 'ok', posted = null;
+  const AI_CODE = '// 옆으로\ninput.onButtonPressed(Button.A, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Left, 120)\n    basic.pause(1000)\n    aiPonybot.stopAllMotors()\n})';
+  await p.route('**/api/ponybot-assistant', (r) => {
+    if (r.request().method() === 'GET') return r.fulfill({ json: { ok: true, configured: true, needsCode: true } });
+    posted = JSON.parse(r.request().postData());
+    if (aiMode === '422') return r.fulfill({ status: 422, json: { error: 'invalid_code' } });
+    return r.fulfill({ json: { code: aiMode === 'bad' ? 'aiPonybot.flyToMoon(1)' : AI_CODE, explanation: 'AI 설명', warnings: [] } });
+  });
+  await p.goto(`${BASE}sim/?kit=ponybot&tab=js`); await p.waitForFunction(() => window.__pony, null, { timeout: 60000 });
+  await p.waitForFunction(() => !document.getElementById('askClass').disabled, null, { timeout: 15000 });
+  check('AI: 서버에 켜져 있으면 수업 코드 칸이 열림', await p.evaluate(() => !document.getElementById('askCodeRow').classList.contains('hidden')));
+  const ask = async (text) => { await p.fill('#askText', text); await p.click('#askBtn'); await p.waitForFunction(() => !document.getElementById('askOut').classList.contains('hidden') && !document.getElementById('askBtn').disabled, null, { timeout: 15000 }); return p.evaluate(() => ({ expl: document.getElementById('askExpl').textContent, code: document.getElementById('askCode').textContent, warn: document.getElementById('askWarn').textContent })); };
+  let r0 = await ask('A 버튼을 누르면 왼쪽 옆으로 1초 가');
+  check('AI: 수업 코드가 없으면 서버로 보내지 않고 규칙 도우미가 만듦', posted === null && /규칙 도우미/.test(r0.expl) && /Mecanum\.Left/.test(r0.code), r0.expl);
+  await p.fill('#askClass', '1234');
+  r0 = await ask('A 버튼을 누르면 왼쪽 옆으로 1초 가');
+  check('AI: 수업 코드를 넣으면 /api/ponybot-assistant 로 보내고 AI 코드를 보여 줌', posted && posted.classCode === '1234' && /AI/.test(r0.expl) && /Left, 120/.test(r0.code), r0.expl);
+  aiMode = 'bad'; r0 = await ask('B 버튼을 누르면 앞으로 1초 가');
+  check('AI: 없는 블록이 든 AI 코드는 화면 검사에 걸려 규칙 도우미로 대신 만듦', /규칙 도우미/.test(r0.expl) && !/flyToMoon/.test(r0.code) && /Mecanum\.Forward/.test(r0.code) && /검사/.test(r0.warn), r0.expl + ' / ' + r0.warn);
+  aiMode = '422'; r0 = await ask('B 버튼을 누르면 뒤로 1초 가');
+  check('AI: 서버 검사(422)에 걸려도 규칙 도우미로 대신 만듦', /규칙 도우미/.test(r0.expl) && /Mecanum\.Backward/.test(r0.code), r0.expl);
   check('페이지 오류 없음', errs.length === 0, errs.slice(0, 2).join(' | '));
   await b.close();
   const pass = results.filter(Boolean).length;

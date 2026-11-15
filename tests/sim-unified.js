@@ -32,7 +32,7 @@ async function startServer() {
   const newPage = async (viewport = { width: 1400, height: 950 }) => {
     const ctx = await b.newContext({ viewport });
     const p = await ctx.newPage(); const errs = [];
-    await p.route('**/api/robodog-assistant', r => r.fulfill({ json: { ok: true, configured: false, needsCode: false } }));   // 로컬 정적 서버에는 도우미 서버 함수가 없음
+    await p.route('**/api/*-assistant', r => r.fulfill({ json: { ok: true, configured: false, needsCode: false } }));   // 로컬 정적 서버에는 도우미 서버 함수가 없음
     p.on('pageerror', e => { if (!/makecode\.(com|microbit\.org)/.test(e.stack || '')) errs.push('pageerror: ' + e.message); });
     p.on('console', m => { if (m.type() === 'error' && !/makecode/.test(JSON.stringify(m.location() || {}))) errs.push('console: ' + m.text()); });
     // MakeCode 편집기 자체 요청(확장·CDN·사용 통계 dc.services.visualstudio.com)은 학교망·샌드박스에 따라 막힐 수 있어 제외. 우리 페이지 오류는 그대로 잡음

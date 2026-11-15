@@ -6,7 +6,7 @@ import { validateCode } from '../validate-code.mjs';
 import { EST, MOTOR_WHEEL, SCENES, PonyWorld, PonyRobot, PonyRunner, makePonybotApi, needsFromCode } from './ponybot/pony.js';
 import { PonyView, drawOled } from './ponybot/view.js';
 import { EXAMPLES as RAW_EXAMPLES } from './ponybot/examples.js';
-import { ponyAssistant, configurePony, SAMPLE_REQUESTS } from './ponybot/assistant.js';
+import { ponyAssistant, configurePony, checkPonyCode, SAMPLE_REQUESTS } from './ponybot/assistant.js';
 
 const OFFICIAL = new URL('../../ponybot/assets/official/', import.meta.url).href;
 const EXT_REPO = 'https://github.com/boundary-x/ai_ponybot_basic';
@@ -115,7 +115,26 @@ const kit = {
   buildMapPanel: true,
   detectDevices, DEVICE_INFO, runHint, needsFromCode,
   assistant: {
-    ai: false, sample: SAMPLE_REQUESTS,
+    ai: true, sample: SAMPLE_REQUESTS,   // AI 모드: /api/ponybot-assistant (로보독과 같은 Claude 키·수업 코드). 꺼져 있거나 실패하면 규칙 도우미
+    async checkAi() {
+      try {
+        const r = await fetch('/api/ponybot-assistant', { method: 'GET', cache: 'no-store' });
+        if (!r.ok) return { available: false, reason: 'offline' };
+        const j = await r.json();
+        return { available: !!j.configured, needsCode: !!j.needsCode, reason: j.configured ? '' : 'not_configured' };
+      } catch (e) { return { available: false, reason: 'offline' }; }
+    },
+    async askAi(request, currentCode, classCode) {
+      const r = await fetch('/api/ponybot-assistant', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ request, currentCode, classCode }) });
+      const j = await r.json().catch(() => ({}));
+      if (!r.ok) { const e = new Error(j.error || ('http_' + r.status)); e.code = j.error; e.status = r.status; throw e; }
+      if (j.code) {   // 서버가 검사했어도 화면에서 한 번 더(블록 표·정책) — 걸리면 규칙 도우미로
+        if (assistReady) await assistReady;
+        const chk = checkPonyCode(j.code, POLICY);
+        if (!chk.ok) { const e = new Error('invalid_code'); e.code = 'invalid_code'; throw e; }
+      }
+      return j;
+    },
     ruleNote: '정해진 표현(A·B 버튼·라디오·가까우면·라인·색 / 앞·뒤·옆·돌기·멈춤·OLED 글자)을 알아들어요. 글은 이 컴퓨터 밖으로 나가지 않아요. 이름·학교는 쓰지 마세요.',
     get ready() { return assistReady; },
     rule(text) { return ponyAssistant(text, POLICY); },

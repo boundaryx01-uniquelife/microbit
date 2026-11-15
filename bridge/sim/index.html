@@ -1189,7 +1189,7 @@ function setAskMode(avail, why) {
   aiAvail = avail; aiOn = avail && hasClassCode();
   $('askMode').textContent = aiOn ? 'AI 도우미 (Claude)' : (avail ? '규칙 도우미 · AI는 수업 코드가 있어야 켜져요 🔑' : '규칙 도우미');
   $('askMode').classList.toggle('ai', aiOn);
-  const rule = '정해진 표현(버튼·라디오·가까우면 / 걷기·돌기·앉기·인사·불빛·소리·표정·춤)을 알아들어요. 글은 이 컴퓨터 밖으로 나가지 않아요.';
+  const rule = KIT.assistant.ruleNote || '정해진 표현(버튼·라디오·가까우면 / 걷기·돌기·앉기·인사·불빛·소리·표정·춤)을 알아들어요. 글은 이 컴퓨터 밖으로 나가지 않아요.';
   $('askNote').textContent = aiOn
     ? '🔒 여기 쓴 글은 AI 회사(Anthropic) 서버로 보내져요. 이름·학교·전화번호는 쓰지 마세요. AI 코드도 틀릴 수 있어요.'
     : rule + (avail ? ' 선생님께 받은 수업 코드를 넣으면 AI 도우미를 쓸 수 있어요.' : '') + (why ? ' ' + why : '');
@@ -1253,7 +1253,7 @@ $('askBtn').onclick = async () => {
         return;
       } catch (e) {
         const why = { class_code: '수업 코드가 맞지 않아요.', rate_limited: '요청이 너무 잦아요. 1분 뒤에 다시 해 보세요.', api_rate_limited: 'AI가 바빠요. 잠시 뒤 다시 해 보세요.',
-          too_many_wrong_codes: '수업 코드를 여러 번 틀렸어요. 10분 뒤에 다시 해 보세요.', not_configured: 'AI 도우미가 아직 켜지지 않았어요(선생님 확인).', bad_key: 'AI 키가 올바르지 않아요(선생님 확인).', too_long: '요청이 너무 길어요(600자까지).' }[e.code] || 'AI 연결에 실패했어요.';
+          too_many_wrong_codes: '수업 코드를 여러 번 틀렸어요. 10분 뒤에 다시 해 보세요.', not_configured: 'AI 도우미가 아직 켜지지 않았어요(선생님 확인).', bad_key: 'AI 키가 올바르지 않아요(선생님 확인).', too_long: '요청이 너무 길어요(600자까지).', invalid_code: 'AI가 만든 코드가 블록 표 검사를 통과하지 못했어요.' }[e.code] || 'AI 연결에 실패했어요.';
         log('AI 도우미: ' + why + ' 규칙 도우미로 대신 만들게요.', 'warn');
         if (e.code === 'class_code') { $('askCodeRow').classList.remove('hidden'); $('askClass').focus(); }
         const r = await ruleAssist(text); r.warnings.unshift(why + ' 그래서 규칙 도우미가 만들었어요.');
