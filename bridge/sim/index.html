@@ -1263,6 +1263,14 @@ $('askBtn').onclick = async () => {
     showAnswer(await ruleAssist(text), '📘 규칙 도우미:');
   } finally { btn.disabled = false; btn.textContent = '코드 만들기'; }
 };
+// 주소 ?say=N: 예시 문장 N번(1부터)을 넣고 바로 코드를 만들어 보여 줌(교구 첫 화면의 '말로 만들기 예시'에서 넘어옴). 실행은 사람이 누름
+{ const n = parseInt(new URLSearchParams(location.search).get('say'), 10);
+  if (n >= 1 && n <= SAMPLE_REQUESTS.length && !new URLSearchParams(location.search).get('mission')) {
+    if (KIT.setScene) KIT.setScene('free');
+    $('askText').value = SAMPLE_REQUESTS[n - 1]; growAsk();
+    setTimeout(() => $('askBtn').click(), 600);
+  }
+}
 $('askRun').onclick = async () => {
   if (!askResult || !askResult.code) return;
   stopDemo('도우미가 만든 코드를 실행해요');

@@ -14,6 +14,8 @@
 // 블록 표에 없는 것(기본 블록 basic.*·input.*·radio.*·IconNames)은 아래 ICONS 등 최소 목록만 손으로 둔다.
 
 export const SAMPLE_REQUESTS = [
+  'A 버튼을 누르면 OLED에 "PARK" 라고 쓰고 앞으로 1초 가고 오른쪽 옆으로 2초 가고 멈춰. B 버튼을 누르면 OLED에 "OUT" 라고 쓰고 왼쪽 앞 대각선으로 2초 가고 멈춰',
+  'A 버튼을 누르면 검은 선을 따라가다가 초록색이 보이면 2초 쉬었다가 다시 가고, 빨간색이 보이면 멈추고 OLED에 "RED" 라고 써. 앞이 15cm보다 가까우면 기다려',
   '시작하면 OLED에 "HELLO" 라고 쓰고 앞으로 2초 동안 가고 멈춰',
   'A 버튼을 누르면 속도 100으로 오른쪽 옆으로 1초 동안 가',
   'B 버튼을 누르면 시계 방향으로 2초 동안 돌아',
@@ -293,6 +295,68 @@ export function suggestExamples(text) { return EXAMPLE_HINTS.filter(h => h.re.te
 const PERSONAL = /01[016789][-\s]?\d{3,4}[-\s]?\d{4}|[\w.+-]+@[\w-]+\.[\w.]+|(?:내\s*)?이름\s*(?:은|이|는)|[가-힣]{2,}\s*(?:초등학교|중학교|고등학교|학교)|주소\s*(?:는|가)/;
 
 // ───────────────────────── 도우미 본체 ─────────────────────────
+// ---- 조합 문장: 선 따라가기 ----
+// "A 버튼을 누르면 검은 선을 따라가다가 빨간색이 보이면 멈추고 OLED에 "RED" 라고 써. 초록색이 보이면 2초 쉬었다가 다시 가. 앞이 15cm보다 가까우면 기다려"
+// 한 반복 안의 차례: (거리) 막힘 → (색) 멈춤·쉬기 → 라인 센서로 방향 잡기. 라인 규칙은 예제 S1과 같음(●◌ = ↶, ◌● = ↷, 그 밖 = 앞으로).
+const LINE_FOLLOW = /(?:검은\s*)?(?:선|라인|줄)(?:을|를)?\s*(?:따라|쫓아|트레이)/;
+function lineFollowProgram(src, V, P, warn, note) {
+  const speedM = src.match(/속도\s*(?:를|은|는)?\s*(\d{1,3})/);
+  let speed = speedM ? Number(speedM[1]) : (P.defaultSpeed ?? 70);
+  if (speed > 255) { warn('속도는 0~255예요. 255로 바꿨어요.'); speed = 255; }
+  if (P.maxSpeed !== null && speed > P.maxSpeed) { warn(`속도 ${speed}은(는) 선생님이 정한 한도(${P.maxSpeed})보다 커서 ${P.maxSpeed}(으)로 바꿨어요.`); speed = P.maxSpeed; }
+  if (!speedM) note(`속도 말이 없어서 기본 속도(선생님이 정한 값 ${speed})를 썼어요. 선을 놓치면 속도를 낮춰 보세요.`);
+  const btn = /B\s*버튼(?:을|를)?\s*누르면[^.。]*?(?:선|라인|줄)(?:을|를)?\s*(?:따라|쫓아|트레이)/i.test(src) ? 'B' : /A\s*버튼/i.test(src) ? 'A' : null;
+  const stopBtn = btn === 'B' ? 'A' : 'B';
+  // 문장을 마침표·쉼표 묶음으로 나눠 색·거리 조건을 찾음
+  const parts = src.split(/[.。!\n]+/).map(x => x.trim()).filter(Boolean);
+  const oledOf = (t) => { const m = t.match(/["“”'‘’]([^"“”'‘’]{1,20})["“”'‘’]/); if (!m) return null; if (!/^[\x20-\x7e]+$/.test(m[1])) { warn(`포니봇 화면(OLED)은 영어·숫자만 보여요. "${m[1]}" 은(는) 넣지 않았어요.`); return null; } return m[1]; };
+  const colors = [], seen = new Set();
+  let near = null;
+  for (const part of parts) {
+    // 한 묶음 안에 색 조건이 여러 개면 색 낱말 앞에서 다시 나눔
+    const idxs = [...part.matchAll(new RegExp(`(?:${V.colorWordsRe})\\s*(?:색)?\\s*(?:칩|카드|바닥)?\\s*(?:이|가|을|를)?\\s*(?:보이면|보이는\\s*곳|나오면|만나면|에서|위에서)`, 'g'))];
+    idxs.forEach((m, i) => {
+      const clause = part.slice(m.index, i + 1 < idxs.length ? idxs[i + 1].index : part.length);
+      const c = V.colors.find(x => x.re.test(m[0])); if (!c || seen.has(c.id)) return; seen.add(c.id);
+      const sec = clause.match(/(\d+(?:\.\d+)?)\s*초/);
+      const again = /다시|쉬었다|쉬고|기다렸다|멈췄다가|잠깐/.test(clause);
+      colors.push({ c, wait: sec && again ? Math.min(10, Number(sec[1])) : (again ? 1 : null), oled: oledOf(clause) });
+    });
+    const nm = part.match(/(\d+(?:\.\d+)?)\s*(?:cm|센티미터|센티)[^,]*?(?:가까우면|이내|안에|안쪽)/) || (/(?:가까우면|가까워지면|막히면|장애물)/.test(part) ? [null, null] : null);
+    if (nm && near === null) near = nm[1] !== null ? Number(nm[1]) : (P.nearCm ?? 20);
+  }
+  const L = [];
+  L.push('// 포니봇 도우미가 만든 코드: ' + SKIP_COMMENT(src));
+  L.push(`let 속도 = ${speed}`, `let 달리는중 = ${btn ? 'false' : 'true'}`, 'aiPonybot.stopAllMotors()');
+  if (colors.length) L.push(`aiPonybot.initColorSensor(aiPonybot.SensorVersion.${P.colorSensorVersion === 'V1' ? 'V1' : 'V2'})`);
+  L.push('aiPonybot.clear()', 'aiPonybot.showString("LINE", 0, 0, 1)');
+  if (btn) L.push(`input.onButtonPressed(Button.${btn}, function () {`, '    달리는중 = true', '})');
+  L.push(`input.onButtonPressed(Button.${stopBtn}, function () {`, '    달리는중 = false', '    aiPonybot.stopAllMotors()', '})');
+  const body = [];
+  let first = true; const iff = () => (first ? ((first = false), 'if') : '} else if');
+  if (near !== null) {
+    body.push('let 거리 = aiPonybot.ping(aiPonybot.PingUnit.Centimeters)');
+    body.push(`${iff()} (거리 > 0 && 거리 < ${near}) {`, '    aiPonybot.stopAllMotors()');
+  }
+  for (const k of colors) {
+    body.push(`${iff()} (aiPonybot.isColorAdvanced(aiPonybot.DetectedColor.${k.c.id}, 40)) {`, '    aiPonybot.stopAllMotors()');
+    if (k.oled) body.push('    aiPonybot.clear()', `    aiPonybot.showString("${k.oled}", 0, 0, 1)`);
+    if (k.wait === null) body.push('    달리는중 = false');
+    else body.push(`    basic.pause(${Math.round(k.wait * 1000)})`, '    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)', '    basic.pause(700)');
+  }
+  body.push(`${iff()} (aiPonybot.checkTwoLineState(aiPonybot.TwoLineState.OnOff)) {`, '    aiPonybot.runNormal(aiPonybot.DirectionControl.Clockwise, 속도)',
+    '} else if (aiPonybot.checkTwoLineState(aiPonybot.TwoLineState.OffOn)) {', '    aiPonybot.runNormal(aiPonybot.DirectionControl.CounterClockwise, 속도)',
+    '} else {', '    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)', '}');
+  L.push('basic.forever(function () {', '    if (달리는중) {', ...body.map(x => '        ' + x), '    }', '    basic.pause(20)', '})');
+  const expl = [`· ${btn ? btn + ' 버튼을 누르면' : '시작하면'} 검은 선 따라가기: 왼쪽 센서만 선(● ◌)이면 ↶ 로 왼쪽으로, 오른쪽만 선(◌ ●)이면 ↷ 로 오른쪽으로, 그 밖에는 앞으로. ${stopBtn} 버튼 = 멈춤.`];
+  if (near !== null) expl.push(`· 앞이 ${near}cm보다 가까우면: 비켜 줄 때까지 멈춰서 기다림(달리기는 끝나지 않음).`);
+  for (const k of colors) expl.push(`· ${k.c.label}이 보이면: 멈춤${k.oled ? ` + OLED에 "${k.oled}"` : ''}${k.wait === null ? ' (달리기 끝)' : ` → ${k.wait}초 쉬었다가 다시 출발`}.`);
+  if (colors.length) note(`컬러센서 모듈을 ${P.colorSensorVersion === 'V1' ? 'V1' : 'V2'}(으)로 가정했어요(선생님 설정). 색 판정은 조명에 따라 달라질 수 있어요.`);
+  if (near !== null) note('거리센서는 반사가 안 오면 500을 돌려줘요. 선 위에서는 앞이 비어 있는 것이 보통이라 500은 "막히지 않음"으로 봤어요.');
+  note('돌기: 코드 이름은 화살표와 반대예요(↶ = Clockwise). 선을 따라가는 규칙은 예제 S1과 같고, 실물에서 센서가 선 위에서 1을 읽는지 확인이 필요해요.');
+  return { code: L.join('\n'), expl };
+}
+
 export function ponyAssistant(text, policy = {}, ctx = {}) {
   const C = { ...CFG, ...ctx };
   const P = normalizePolicy(policy);
@@ -312,6 +376,17 @@ export function ponyAssistant(text, policy = {}, ctx = {}) {
     const msg = "카드·카메라로 알아보는 일은 AI 브리지가 필요해요 → 예제 '3. AI 신호등 포니봇'에서 시작하세요.";
     warn(msg);
     return fail(msg, { suggestions: suggestExamples(src) });
+  }
+
+  // 1.5) 조합 문장 "선을 따라가다가 …": 라인 센서 + (색·거리 조건)을 한 반복 안에 엮는다 — 조건마다 따로 반복을 만들면 서로 싸워서
+  if (LINE_FOLLOW.test(src)) {
+    const lf = lineFollowProgram(src, V, P, warn, note);
+    const chk = checkPonyCode(lf.code, policy, C);
+    if (chk.skipped && !chk.ok) return fail('코드 검사를 못 해서 코드를 내보내지 않았어요: ' + chk.errors.map(x => x.msg).join(' / '));
+    if (chk.skipped) warn('코드 검사기(Babel)를 못 불러와서 블록 표 검사를 건너뛰었어요.');
+    if (!chk.ok) return fail('만든 코드가 블록 표 검사를 통과하지 못해서 코드를 내보내지 않았어요: ' + chk.errors.map(x => x.msg).join(' / '), { suggestions: suggestExamples(src) });
+    chk.warnings.forEach(w => warn(w.msg));
+    return { code: lf.code, explanation: lf.expl.join('\n') + (notes.length ? '\n' + notes.map(n => '※ ' + n).join('\n') : ''), warnings, suggestions: suggestExamples(src) };
   }
 
   const { t: prot, q: quotes } = protectQuotes(src);
@@ -497,7 +572,7 @@ export function ponyAssistant(text, policy = {}, ctx = {}) {
   return { code, explanation, warnings, suggestions: suggestExamples(src) };
 }
 
-export const CAN_DO = '앞·뒤·왼쪽 옆·오른쪽 옆·대각선 이동, 시계·반시계 방향 돌기, 멈춤, N초 동안, 속도 N, OLED에 글자·숫자, 마이크로비트 LED 아이콘 / 언제: 시작하면, A·B 버튼을 누르면, 라디오 N을 받으면, 가까우면(N cm), 라인을 만나면, 색이 보이면, 계속';
+export const CAN_DO = '앞·뒤·왼쪽 옆·오른쪽 옆·대각선 이동, 시계·반시계 방향 돌기, 멈춤, N초 동안, 속도 N, OLED에 글자·숫자, 마이크로비트 LED 아이콘 / 언제: 시작하면, A·B 버튼을 누르면, 라디오 N을 받으면, 가까우면(N cm), 라인을 만나면, 색이 보이면, 계속 / 조합: "검은 선을 따라가다가 (색)이 보이면 멈춰·N초 쉬었다가 다시 가, N cm보다 가까우면 기다려"';
 
 function labelOf(g, V, P) {
   switch (g.kind) {
