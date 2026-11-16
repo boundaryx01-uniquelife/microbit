@@ -13,5 +13,10 @@
   "radioTimeoutMs_note": "자리표시자 — 계속 움직이는 라디오 동작에서 신호가 끊기면 멈추는 시간. 예제 03·04의 2000. null이면 끊김 감지 없음.",
   "colorSensorVersion": "V2",
   "colorSensorVersion_note": "자리표시자 — 컬러센서 모듈 V1(검은색)/V2(보라색). 공식 활동 자료가 'V2용'이라 V2.",
-  "maxChars": 300
+  "maxChars": 300,
+  "stopOnNoEcho": false,
+  "stopOnNoEcho_note": "선생님 결정(2026-11-16): 거리센서 500(반사 없음)은 '앞이 비어 있음'으로 보고 멈춤 조건을 만들지 않는다(장애물을 피한 뒤 멈춰 버리는 문제). true면 0·500을 '못 읽음'으로 보고 멈춤. 기존 예제 00~04·4차시 미션의 '500의 함정'은 그대로.",
+  "lineForwardSpeed": 35,
+  "lineTurnSpeed": 75,
+  "lineSpeed_note": "선생님 결정(2026-11-16): 선 따라가기에서 문장에 속도가 없을 때 직진 35, 회전(선 보정) 75 — 라인 이탈 방지. 문장에 '직진 속도 N·회전 속도 M'이 있으면 그 값."
 }

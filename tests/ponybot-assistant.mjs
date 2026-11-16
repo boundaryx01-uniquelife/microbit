@@ -90,7 +90,9 @@ check('가까우면(숫자 없음) → 정책 nearCm 20 + 안내', /거리 < 20/
 r = R('가까우면 멈춰', pol({ nearCm: null }));
 check('nearCm=null → 지어내지 않고 숫자를 물어봄', !r.code && r.warnings.some(w => /몇 cm/.test(w)), JSON.stringify(r));
 r = R('30cm보다 가까우면 멈추고 멀면 앞으로 가');
-check('거리: 못 읽음(0·500) 멈춤 + 가까우면 + 멀면(계속 가기)', /거리 == 0 \|\| 거리 >= 500/.test(r.code) && /거리 < 30/.test(r.code) && /\} else \{\n\s+aiPonybot\.runMecanum/.test(r.code), r.code);
+check('거리(stopOnNoEcho=false): 500은 앞이 빔 → 멈춤 조건 없음 + 가까우면 + 멀면(계속 가기)', !/거리 >= 500|거리 == 500/.test(r.code) && /거리 > 0 && 거리 < 30/.test(r.code) && /\} else \{\n\s+aiPonybot\.runMecanum/.test(r.code), r.code);
+r = R('30cm보다 가까우면 멈추고 멀면 앞으로 가', pol({ stopOnNoEcho: true }));
+check('거리(stopOnNoEcho=true): 못 읽음(0·500) 멈춤 + 가까우면', /거리 == 0 \|\| 거리 >= 500/.test(r.code) && /거리 < 30/.test(r.code) && errs(r.code).length === 0, r.code);
 r = R('A 버튼을 누르면 앞으로 1초 가고 뒤로 1초 가는 걸 3번 반복해');
 check('N번 반복 → for 루프', /for \(let 번 = 0; 번 < 3; 번\+\+\)/.test(r.code), r.code);
 
@@ -137,11 +139,15 @@ check('선 따라가기: 초록 = 2초 쉬고 다시 출발(달리기 유지), �
 check('선 따라가기: 거리 15cm 조건이 맨 앞(막히면 기다림), 500은 막힘으로 보지 않음', /거리 > 0 && 거리 < 15/.test(r.code) && r.code.indexOf('거리 < 15') < r.code.indexOf('DetectedColor'));
 check('선 따라가기: A 출발·B 멈춤, 컬러센서 초기화', /Button\.A[\s\S]*?달리는중 = true/.test(r.code) && /Button\.B[\s\S]*?달리는중 = false/.test(r.code) && /initColorSensor/.test(r.code));
 r = R('시작하면 속도 60으로 선을 따라가');
-check('선 따라가기(조건 없음): 시작하자마자 달림, 속도 60, 색·거리 블록 없음', /let 속도 = 60/.test(r.code) && /let 달리는중 = true/.test(r.code) && !/isColorAdvanced|ping\(/.test(r.code), r.code);
+check('선 따라가기(조건 없음): 시작하자마자 달림, 속도 60, 색·거리 블록 없음', /let 직진속도 = 60/.test(r.code) && /let 회전속도 = 60/.test(r.code) && /let 달리는중 = true/.test(r.code) && !/isColorAdvanced|ping\(/.test(r.code), r.code);
 r = R('A 버튼을 누르면 선을 따라가다가 빨간색이 보이면 멈추고 OLED에 "빨강" 이라고 써');
 check('선 따라가기: OLED에 한글은 넣지 않고 경고', !/showString\("빨강"/.test(r.code) && r.warnings.some(w => /영어·숫자만/.test(w)), JSON.stringify(r.warnings));
 r = R('A 버튼을 누르면 속도 300으로 선을 따라가', pol({ maxSpeed: 120 }));
-check('선 따라가기: 한도(maxSpeed 120)를 넘는 속도는 한도로', /let 속도 = 120/.test(r.code) && r.warnings.some(w => /한도/.test(w)), r.code.slice(0, 120));
+check('선 따라가기: 한도(maxSpeed 120)를 넘는 속도는 한도로', /let 직진속도 = 120/.test(r.code) && r.warnings.some(w => /한도/.test(w)), r.code.slice(0, 120));
+r = R('A 버튼을 누르면 검은 선을 따라가, 직진 속도는 35, 회전 속도는 75로 설정해줘');
+check('선 따라가기: 직진 속도·회전 속도를 따로', /let 직진속도 = 35/.test(r.code) && /let 회전속도 = 75/.test(r.code) && /Clockwise, 회전속도\)/.test(r.code) && /Forward, 직진속도\)/.test(r.code) && errs(r.code).length === 0, r.code);
+r = R('A 버튼을 누르면 검은 선을 따라가');
+check('선 따라가기: 속도 말이 없으면 정책 lineForwardSpeed 35·lineTurnSpeed 75', /let 직진속도 = 35/.test(r.code) && /let 회전속도 = 75/.test(r.code), r.code);
 
 // 10. AI 프롬프트 빌더
 const visible = blocks.namespaces[0].functions.filter(f => !f.hidden);

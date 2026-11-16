@@ -65,6 +65,7 @@ export function buildPolicyText(policy = {}) {
   if (has(policy.defaultSpeed)) lines.push(`- 문장에 속도 숫자가 없으면 속도 ${policy.defaultSpeed}을 쓴다.`);
   if (has(policy.defaultSeconds)) lines.push(`- 문장에 시간이 없고 "계속"도 아니면 ${policy.defaultSeconds}초 움직이고 멈춘다.`);
   if (has(policy.autoStopMs)) lines.push(`- 계속 움직이는 동작은 ${policy.autoStopMs}ms 뒤 자동으로 멈추게 만든다.`);
+  if (has(policy.lineForwardSpeed) || has(policy.lineTurnSpeed)) lines.push(`- 선 따라가기(라인 센서로 선을 따라가는 코드)는 라인 이탈을 막기 위해 속도를 따로 쓴다: 문장에 없으면 직진(앞으로) 속도 ${policy.lineForwardSpeed ?? policy.defaultSpeed}, 회전(선 보정으로 돌기) 속도 ${policy.lineTurnSpeed ?? policy.defaultSpeed}. 변수 직진속도·회전속도로 맨 위에 두어 학생이 고치기 쉽게 한다. 문장에 "직진 속도 N", "회전 속도 M"이 있으면 그 값을 쓴다.`);
   if (has(policy.nearCm)) lines.push(`- "가까우면"에 숫자가 없으면 ${policy.nearCm}cm를 기준으로 한다.`);
   if (has(policy.radioTimeoutMs)) lines.push(`- 계속 움직이는 라디오 동작은 ${policy.radioTimeoutMs}ms 동안 신호가 없으면 멈추게 만든다.`);
   if (Array.isArray(policy.forbid) && policy.forbid.length) lines.push(`- 다음 블록·네임스페이스는 쓰지 않는다: ${policy.forbid.join(', ')}`);
@@ -84,7 +85,9 @@ export function buildSystemPrompt(blocks, policy = {}, kitName = '교구') {
       '- 아래 "블록 문법"에 있는 함수·enum 값만 쓴다. 없는 함수·enum 을 만들지 않는다. 숫자 인자는 표시된 범위 안에서 쓴다.',
       '- 움직이는 동작은 한 번이면 이동 → basic.pause(밀리초) → 모든 모터 정지 순서로 쓴다. 켜자마자 계속 움직이는 코드를 만들면 warnings 에 책상 끝(낭떠러지)·멈춤 방법을 알린다.',
       '- 버튼 핸들러·라디오 핸들러에는 값만 기록하고 움직임은 basic.forever 한 곳에서 처리하는 편이 안전하다. 핸들러 안에서 긴 basic.pause 는 쓰지 않는다.',
-      '- 거리센서(ping)는 반사가 없으면 0 또는 최댓값(기본 500)을 돌려준다. 이 값은 "아주 멀다"가 아니라 "못 읽음"으로 보고 멈춘다.',
+      ...(policy.stopOnNoEcho === true
+        ? ['- 거리센서(ping)는 반사가 없으면 0 또는 최댓값(기본 500)을 돌려준다. 이 값은 "아주 멀다"가 아니라 "못 읽음"으로 보고 멈춘다.']
+        : ['- 거리센서(ping)는 앞에 아무것도 없거나 반사가 안 오면 최댓값(기본 500)을 돌려준다. 500(이상)은 "앞이 비어 있음"으로 본다. 500 이상일 때 멈추는 조건(거리 >= 500, 거리 == 500 등)은 만들지 않는다 — 장애물을 피한 뒤 앞이 트이면 멈춰 버린다. "가까우면" 조건은 0 < 거리 < 기준cm 으로 쓴다.']),
       '- 포니봇 화면(OLED)에는 영어·숫자만 쓴다(한글은 확인 전). 컬러센서 블록은 aiPonybot.initColorSensor 로 초기화한 뒤 쓴다.',
       '- 개인정보(이름·학교·전화번호)는 코드·설명에 넣지 않는다.',
       ...(hasTurnEnum(blocks) ? ['- 돌기(DirectionControl): enum 이름은 블록 화살표와 반대다. 반시계 ↶ = DirectionControl.Clockwise, 시계 ↷ = DirectionControl.CounterClockwise. 학생이 말한 방향(시계·반시계·왼쪽·오른쪽)은 이름이 아니라 화살표 기준으로 고른다. 앞 = 초음파 쪽은 실물 확인됐지만, 회전 방향(화살표 일치)은 사진·블록 화살표 근거이므로 실물 회전 방향 확인을 권장한다고 warnings 에 적는다.'] : []),

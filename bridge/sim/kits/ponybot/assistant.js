@@ -15,7 +15,7 @@
 
 export const SAMPLE_REQUESTS = [
   'A 버튼을 누르면 OLED에 "PARK" 라고 쓰고 앞으로 1초 가고 오른쪽 옆으로 2초 가고 멈춰. B 버튼을 누르면 OLED에 "OUT" 라고 쓰고 왼쪽 앞 대각선으로 2초 가고 멈춰',
-  'A 버튼을 누르면 검은 선을 따라가다가 초록색이 보이면 2초 쉬었다가 다시 가고, 빨간색이 보이면 멈추고 OLED에 "RED" 라고 써. 앞이 15cm보다 가까우면 기다려',
+  'A 버튼을 누르면 검은 선을 따라가다가 초록색이 보이면 2초 쉬었다가 다시 가고, 빨간색이 보이면 멈추고 OLED에 "RED" 라고 써. 앞이 15cm보다 가까우면 기다려, 직진 속도는 35, 회전 속도는 75로 설정해줘',
   '시작하면 OLED에 "HELLO" 라고 쓰고 앞으로 2초 동안 가고 멈춰',
   'A 버튼을 누르면 속도 100으로 오른쪽 옆으로 1초 동안 가',
   'B 버튼을 누르면 시계 방향으로 2초 동안 돌아',
@@ -280,6 +280,7 @@ export function normalizePolicy(p = {}) {
     defaultSeconds: num(p.defaultSeconds), nearCm: num(p.nearCm), radioTimeoutMs: num(p.radioTimeoutMs),
     colorSensorVersion: typeof p.colorSensorVersion === 'string' ? p.colorSensorVersion : null,
     maxChars: num(p.maxChars) ?? 300,
+    stopOnNoEcho: p.stopOnNoEcho === true, lineForwardSpeed: num(p.lineForwardSpeed), lineTurnSpeed: num(p.lineTurnSpeed),
   };
 }
 
@@ -300,11 +301,18 @@ const PERSONAL = /01[016789][-\s]?\d{3,4}[-\s]?\d{4}|[\w.+-]+@[\w-]+\.[\w.]+|(?:
 // 한 반복 안의 차례: (거리) 막힘 → (색) 멈춤·쉬기 → 라인 센서로 방향 잡기. 라인 규칙은 예제 S1과 같음(●◌ = ↶, ◌● = ↷, 그 밖 = 앞으로).
 const LINE_FOLLOW = /(?:검은\s*)?(?:선|라인|줄)(?:을|를)?\s*(?:따라|쫓아|트레이)/;
 function lineFollowProgram(src, V, P, warn, note) {
-  const speedM = src.match(/속도\s*(?:를|은|는)?\s*(\d{1,3})/);
-  let speed = speedM ? Number(speedM[1]) : (P.defaultSpeed ?? 70);
-  if (speed > 255) { warn('속도는 0~255예요. 255로 바꿨어요.'); speed = 255; }
-  if (P.maxSpeed !== null && speed > P.maxSpeed) { warn(`속도 ${speed}은(는) 선생님이 정한 한도(${P.maxSpeed})보다 커서 ${P.maxSpeed}(으)로 바꿨어요.`); speed = P.maxSpeed; }
-  if (!speedM) note(`속도 말이 없어서 기본 속도(선생님이 정한 값 ${speed})를 썼어요. 선을 놓치면 속도를 낮춰 보세요.`);
+  // 속도: '직진 속도 N'·'회전 속도 M'(따로) 또는 '속도 N'(둘 다). 없으면 선생님이 정한 선 따라가기 값 → 기본 속도
+  const fwdM = src.match(/(?:직진|전진|앞으로)\s*속도\s*(?:를|은|는|가|을)?\s*(\d{1,3})/), turnM = src.match(/(?:회전|돌기|보정)\s*속도\s*(?:를|은|는|가|을)?\s*(\d{1,3})/);
+  const bothM = !fwdM && !turnM ? src.match(/속도\s*(?:를|은|는)?\s*(\d{1,3})/) : null;
+  const clamp = (v, what) => {
+    if (v > 255) { warn(`${what} 속도는 0~255예요. 255로 바꿨어요.`); v = 255; }
+    if (P.maxSpeed !== null && v > P.maxSpeed) { warn(`${what} 속도 ${v}은(는) 선생님이 정한 한도(${P.maxSpeed})보다 커서 ${P.maxSpeed}(으)로 바꿨어요.`); v = P.maxSpeed; }
+    return v;
+  };
+  const dflt = P.defaultSpeed ?? 70;
+  const fwd = clamp(fwdM ? Number(fwdM[1]) : bothM ? Number(bothM[1]) : (P.lineForwardSpeed ?? dflt), '직진');
+  const turn = clamp(turnM ? Number(turnM[1]) : bothM ? Number(bothM[1]) : (P.lineTurnSpeed ?? dflt), '회전');
+  if (!fwdM && !turnM && !bothM) note(`속도 말이 없어서 선 따라가기 기본값(선생님이 정한 값: 직진 ${fwd}, 회전 ${turn})을 썼어요. 선을 놓치면 직진 속도를 낮춰 보세요.`);
   const btn = /B\s*버튼(?:을|를)?\s*누르면[^.。]*?(?:선|라인|줄)(?:을|를)?\s*(?:따라|쫓아|트레이)/i.test(src) ? 'B' : /A\s*버튼/i.test(src) ? 'A' : null;
   const stopBtn = btn === 'B' ? 'A' : 'B';
   // 문장을 마침표·쉼표 묶음으로 나눠 색·거리 조건을 찾음
@@ -327,7 +335,7 @@ function lineFollowProgram(src, V, P, warn, note) {
   }
   const L = [];
   L.push('// 포니봇 도우미가 만든 코드: ' + SKIP_COMMENT(src));
-  L.push(`let 속도 = ${speed}`, `let 달리는중 = ${btn ? 'false' : 'true'}`, 'aiPonybot.stopAllMotors()');
+  L.push(`let 직진속도 = ${fwd}`, `let 회전속도 = ${turn}`, `let 달리는중 = ${btn ? 'false' : 'true'}`, 'aiPonybot.stopAllMotors()');
   if (colors.length) L.push(`aiPonybot.initColorSensor(aiPonybot.SensorVersion.${P.colorSensorVersion === 'V1' ? 'V1' : 'V2'})`);
   L.push('aiPonybot.clear()', 'aiPonybot.showString("LINE", 0, 0, 1)');
   if (btn) L.push(`input.onButtonPressed(Button.${btn}, function () {`, '    달리는중 = true', '})');
@@ -342,11 +350,11 @@ function lineFollowProgram(src, V, P, warn, note) {
     body.push(`${iff()} (aiPonybot.isColorAdvanced(aiPonybot.DetectedColor.${k.c.id}, 40)) {`, '    aiPonybot.stopAllMotors()');
     if (k.oled) body.push('    aiPonybot.clear()', `    aiPonybot.showString("${k.oled}", 0, 0, 1)`);
     if (k.wait === null) body.push('    달리는중 = false');
-    else body.push(`    basic.pause(${Math.round(k.wait * 1000)})`, '    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)', '    basic.pause(700)');
+    else body.push(`    basic.pause(${Math.round(k.wait * 1000)})`, '    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 직진속도)', '    basic.pause(700)');
   }
-  body.push(`${iff()} (aiPonybot.checkTwoLineState(aiPonybot.TwoLineState.OnOff)) {`, '    aiPonybot.runNormal(aiPonybot.DirectionControl.Clockwise, 속도)',
-    '} else if (aiPonybot.checkTwoLineState(aiPonybot.TwoLineState.OffOn)) {', '    aiPonybot.runNormal(aiPonybot.DirectionControl.CounterClockwise, 속도)',
-    '} else {', '    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)', '}');
+  body.push(`${iff()} (aiPonybot.checkTwoLineState(aiPonybot.TwoLineState.OnOff)) {`, '    aiPonybot.runNormal(aiPonybot.DirectionControl.Clockwise, 회전속도)',
+    '} else if (aiPonybot.checkTwoLineState(aiPonybot.TwoLineState.OffOn)) {', '    aiPonybot.runNormal(aiPonybot.DirectionControl.CounterClockwise, 회전속도)',
+    '} else {', '    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 직진속도)', '}');
   L.push('basic.forever(function () {', '    if (달리는중) {', ...body.map(x => '        ' + x), '    }', '    basic.pause(20)', '})');
   const expl = [`· ${btn ? btn + ' 버튼을 누르면' : '시작하면'} 검은 선 따라가기: 왼쪽 센서만 선(● ◌)이면 ↶ 로 왼쪽으로, 오른쪽만 선(◌ ●)이면 ↷ 로 오른쪽으로, 그 밖에는 앞으로. ${stopBtn} 버튼 = 멈춤.`];
   if (near !== null) expl.push(`· 앞이 ${near}cm보다 가까우면: 비켜 줄 때까지 멈춰서 기다림(달리기는 끝나지 않음).`);
@@ -514,12 +522,13 @@ export function ponyAssistant(text, policy = {}, ctx = {}) {
         cm = P.nearCm; note(`기준 거리를 말하지 않아 ${cm}cm(선생님이 정한 값)로 했어요.`);
       }
       head = ['let 거리 = aiPonybot.ping(aiPonybot.PingUnit.Centimeters)'];
-      const unread = `거리 == 0 || 거리 >= ${V.pingMax}`;
-      const lines = [...head, `if (${unread}) {`, '    aiPonybot.stopAllMotors()', `} else if (거리 < ${cm}) {`, ...indent(b.lines.length ? b.lines : ['aiPonybot.stopAllMotors()'])];
+      const lines = P.stopOnNoEcho
+        ? [...head, `if (거리 == 0 || 거리 >= ${V.pingMax}) {`, '    aiPonybot.stopAllMotors()', `} else if (거리 < ${cm}) {`, ...indent(b.lines.length ? b.lines : ['aiPonybot.stopAllMotors()'])]
+        : [...head, `if (거리 > 0 && 거리 < ${cm}) {`, ...indent(b.lines.length ? b.lines : ['aiPonybot.stopAllMotors()'])];
       if (e && e.lines.length) lines.push('} else {', ...indent(e.lines));
       lines.push('}');
       tail.push(...forever(lines, 100));
-      note(`거리센서는 반사가 안 오면 ${V.pingMax}(또는 0)을 돌려줘요 → 못 읽으면 안전하게 멈추게 했어요(예제 02와 같은 규칙).`);
+      note(P.stopOnNoEcho ? `거리센서는 반사가 안 오면 ${V.pingMax}(또는 0)을 돌려줘요 → 못 읽으면 안전하게 멈추게 했어요(선생님 설정).` : `거리센서는 앞에 아무것도 없으면 ${V.pingMax}을 돌려줘요 → '앞이 비어 있음'으로 보고 멈추지 않게 했어요(선생님 설정). 책상 끝(낭떠러지)은 못 보니 바닥에서 시험하세요.`);
       continue;
     }
     if (g.kind === 'line') {
