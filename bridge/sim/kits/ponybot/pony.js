@@ -417,6 +417,7 @@ export function makePonybotApi(R, h) {
       const us = Math.floor(Math.max(d, EST.sonarMin) * 58);    // 에코 펄스 길이(µs)
       const timeout = maxCmDistance * 58;
       const noEcho = !isFinite(d) || us === 0 || us > timeout;
+      if (h && h.onPing) h.onPing(noEcho);                       // 코드가 읽은 값 기록(화면 안내용)
       if (noEcho) {
         if (unit === 1) return maxCmDistance;
         if (unit === 2) return Math.floor(maxCmDistance * 100 / 254);
@@ -491,7 +492,7 @@ export class PonyRunner extends Runner {
         return (...a) => { self.warnOnce(ns + '.' + String(p), `시뮬레이터에서 지원하지 않는 블록: ${ns}.${String(p)} (무시됨)`); return 0; };
       },
     });
-    const api = makePonybotApi(this.robot, { oled: this.oled });
+    const api = makePonybotApi(this.robot, { oled: this.oled, onPing: (ne) => { this.robot.codePingNoEcho = ne; this.robot.codePingAt = performance.now(); } });
     // 열거형은 MakeCode 처럼 aiPonybot.Mecanum.Forward 로 씀(네임스페이스 안)
     env.aiPonybot = warnProxy('aiPonybot', Object.assign({}, api, ENUMS));
     // 맨 이름(Mecanum.Forward)은 MakeCode 에서 오류 → 시뮬레이터도 알려 줌
