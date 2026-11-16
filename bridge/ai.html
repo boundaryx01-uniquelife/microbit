@@ -72,6 +72,9 @@
     background: var(--ink, #1c2430); color: #fff; padding: 12px 14px; border-radius: 12px; box-shadow: var(--shadow-lg); font-size: 15px; line-height: 1.5; }
   #notice[hidden] { display: none; } #notice.bad { background: #8f1d1d; } #notice button { flex: none; min-height: 36px; padding: 4px 12px; }
   @media (max-width: 720px) { #notice { bottom: 84px; } }
+  .mbcode { margin: 10px 0; padding: 10px 12px; border: 1px solid var(--line, #e1e6ef); border-radius: 12px; background: var(--surface-2, #eef1f7); }
+  .mbcode summary { cursor: pointer; }
+  .mbcode a.btn { display: inline-block; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--line, #c9d1df); text-decoration: none; }
 </style>
 </head>
 <body>
@@ -129,6 +132,22 @@
     <p class="note">USB로 컴퓨터에 꽂은 마이크로비트(켤 때 <b>B1, B2…</b> 글자가 흘러가는 것)를 연결하세요. PC의 크롬·엣지에서 됩니다.<br>
       연결 창이 영어로 뜨면 <b>"BBC micro:bit"</b> 항목을 고르고 <b>Connect(연결)</b>를 누르세요.<br>
       ⚠ 이 창을 내리거나 다른 탭으로 바꾸면 안전을 위해 0(멈춤)을 보내요. MakeCode는 <b>다른 창</b>으로 띄우세요.</p>
+    <details class="mbcode" id="mbCode" data-kit-hide="ponybot" open>
+      <summary><b>📥 이 AI 브리지와 짝이 되는 마이크로비트 코드 받기</b> (마이크로비트 2개)</summary>
+      <ol class="note">
+        <li><b>① USB 마이크로비트</b>(컴퓨터에 꽂는 것) — AI 브리지가 USB(시리얼)로 보낸 숫자 0~9를 라디오로 로보독에 전달해요.
+          <div class="row" style="margin:6px 0"><button type="button" data-copy="docs/makecode/00_bridge-receiver.ts">코드 복사</button>
+          <a class="btn" href="docs/makecode/00_bridge-receiver.ts" download="00_bridge-receiver.ts">코드 파일(.ts) 받기</a>
+          <a class="btn" href="https://makecode.microbit.org/#editor" target="_blank" rel="noopener">MakeCode 새 프로젝트 열기 ↗</a></div>
+          새 프로젝트 → 위쪽 <b>JavaScript</b> 탭 → 붙여넣기 → <b>다운로드</b>. ⚠ 이 프로젝트에는 로보독 확장을 넣지 마세요(USB 통신이 끊겨요).</li>
+        <li><b>② 로보독 마이크로비트</b>(로보독 등에 꽂는 것) — 라디오로 숫자를 받아 움직여요. 1=빨강 멈춤·2=노랑 기다림·3=초록 출발, 2초 동안 신호가 없으면 멈춤.
+          <div class="row" style="margin:6px 0"><a class="btn primary" href="sim/?ex=03_ai-traffic-dog" target="_blank" rel="noopener">시뮬레이터에서 열고 내려받기 ↗</a>
+          <button type="button" data-copy-ex="03_ai-traffic-dog">코드 복사</button>
+          <a class="btn" href="sim/?ex=04_ai-team-template" target="_blank" rel="noopener">모둠 프로젝트 틀 ↗</a></div>
+          시뮬레이터의 블록 편집기 아래 <b>다운로드</b>로 내려받아요(로보독 확장이 들어 있어요).</li>
+      </ol>
+      <p class="note">두 마이크로비트의 <b>모둠번호</b>(코드 맨 위 <code>let 모둠번호 = 1</code>)를 같게 하고, 같은 교실의 모둠끼리는 서로 다르게 하세요. 로보독 마이크로비트는 USB가 아니라 라디오로 받아요 — 로보독 확장이 시리얼 핀을 로봇 통신에 쓰기 때문이에요.</p>
+    </details>
     <p class="note" style="margin-bottom:4px">AI 없이 시험하기(자동 보내기를 끄면 누른 번호를 계속 보내요):</p>
     <div class="row" id="manual"></div>
     <div id="log" aria-live="polite"></div>
@@ -662,6 +681,21 @@
   listCams();
   loadModel();
 })();
+</script>
+
+<script type="module">
+// '마이크로비트 코드 받기' — 코드 복사(브리지 수신기: .ts 파일, 로보독 코드: 시뮬레이터 예제)
+document.querySelectorAll('#mbCode [data-copy], #mbCode [data-copy-ex]').forEach((b) => b.addEventListener('click', async () => {
+  const old = b.textContent;
+  try {
+    let text;
+    if (b.dataset.copy) text = await (await fetch(b.dataset.copy)).text();
+    else { const { EXAMPLES } = await import('./sim/examples.js'); text = (EXAMPLES.find((e) => e.id === b.dataset.copyEx) || {}).code; }
+    if (!text) throw new Error('없음');
+    await navigator.clipboard.writeText(text); b.textContent = '복사했어요 ✓';
+  } catch (e) { b.textContent = '복사 실패 — 파일 받기를 쓰세요'; }
+  setTimeout(() => { b.textContent = old; }, 2500);
+}));
 </script>
 </body>
 </html>

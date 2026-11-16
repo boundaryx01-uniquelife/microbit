@@ -94,7 +94,7 @@ const kit = {
   nav: [
     { text: '처음', href: '../ponybot/' },
     { text: '시뮬레이터', href: './?kit=ponybot', current: true },
-    { text: 'AI 브리지 ↗', href: '../ai.html?kit=ponybot', ext: true, title: '새 탭에서 열기' },
+    { text: 'AI 웹앱 ↗', href: '../ponybot/#ai', ext: true, title: '포즈·음성 인식 웹앱(블루투스) — 새 탭에서 열기' },
     { text: '공식 확장 ↗', href: EXT_REPO, ext: true, title: '새 탭에서 열기(GitHub)' },
   ],
   badge: { text: '움직임 추정 · 실물과 다를 수 있음', title: '속도·회전·크기·센서 위치는 실물 측정값이 아닌 추정치예요' },
@@ -194,7 +194,7 @@ const kit = {
   // 화면 켜질 때 한 번: 장면 고르기·표·추정값 채우기
   init(ctx) {
     const { world, robot, runner, log } = ctx;
-    M = { world, robot, runner, api: makePonybotApi(robot, { oled: runner.oled }), editor: () => ctx.editor, lastOled: -1, lastSlow: 0 };
+    M = { world, robot, runner, log, api: makePonybotApi(robot, { oled: runner.oled }), editor: () => ctx.editor, lastOled: -1, lastSlow: 0, wasRunning: false, moved: false, stillAt: 0, told500: false };
     Object.entries(SCENES).forEach(([id, s]) => { const o = document.createElement('option'); o.value = id; o.textContent = s.title; $('scene').appendChild(o); });
     $('scene').addEventListener('change', () => { if ($('scene').value !== 'map') kit.setScene($('scene').value); });
     const wh = $('whBody');
@@ -216,6 +216,17 @@ const kit = {
     const { robot, world } = M, api = M.api;
     const d = api.ping(1);
     $('psDist').textContent = d >= 500 ? '500(못 읽음)' : d + ' cm';
+    // 코드가 '거리 500(못 읽음)'을 읽은 채 멈춰 있으면 이유를 알려 줌(코드의 안전 규칙대로 멈춘 것 — 시뮬레이터 오류가 아님)
+    const run = M.runner.running, still = robot.pwm.every(v => !v);
+    if (run && !M.wasRunning) { M.moved = false; M.told500 = false; M.stillAt = now; }
+    M.wasRunning = run;
+    if (run && !still) { M.moved = true; M.stillAt = now; }
+    const stuck500 = run && M.moved && still && now - M.stillAt > 1200 && robot.codePingNoEcho && now - (robot.codePingAt || 0) < 1000;
+    $('psDist').classList.toggle('warn500', !!stuck500);
+    if (stuck500 && !M.told500) {
+      M.told500 = true;
+      M.log('ℹ 포니봇이 멈춘 이유: 앞에 아무것도 없어 거리센서가 500(못 읽음)을 읽었고, 코드의 "0이거나 500이면 멈춤" 안전 규칙대로 멈췄어요. 실제 교실도 앞이 4m 넘게 트이면 500이 나와요. 벽 있는 장면에서 시험하거나, 500일 때 할 일(예: 천천히 앞으로)을 코드에서 정하세요.', 'warn');
+    }
     const l = robot.lineRaw(0), r = robot.lineRaw(1);
     $('psL').classList.toggle('on', !!l); $('psR').classList.toggle('on', !!r); $('psLv').textContent = l; $('psRv').textContent = r;
     const c = robot.colorRGB(); $('psSw').style.background = `rgb(${c})`; $('psRgb').textContent = c.map(Math.round).join(', ');

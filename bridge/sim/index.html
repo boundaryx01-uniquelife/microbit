@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>로보독 시뮬레이터 · 로보독 AI 교실</title>
-<script>try { if (new URLSearchParams(location.search).get("kit") === "ponybot") { document.documentElement.dataset.kit = "ponybot"; document.title = "포니봇 시뮬레이터 · AI 포니봇 교실"; } else document.documentElement.dataset.kit = "robodog"; } catch (e) {}</script>
+<script>try { if (new URLSearchParams(location.search).get("kit") === "ponybot") { document.documentElement.dataset.kit = "ponybot"; document.title = "포니봇 시뮬레이터 · AI 포니봇 교실"; document.addEventListener("DOMContentLoaded", function () { var l = document.querySelector("link[rel=icon]"); if (l) l.href = "../assets/favicon-ponybot.svg"; }); } else document.documentElement.dataset.kit = "robodog"; } catch (e) {}</script>
 <link rel="stylesheet" href="../assets/brand.css">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <style>
@@ -172,6 +172,7 @@
   details.mapset > summary { cursor: pointer; font-weight: 700; }
 
   /* ---- 교구 선택(?kit=): 한쪽 교구에만 있는 부분은 .k-robodog / .k-ponybot 로 표시 ---- */
+  #psDist.warn500 { color: var(--warnc, #9a5b00); font-weight: 700; }
   html:not([data-kit="ponybot"]) .k-ponybot, html[data-kit="ponybot"] .k-robodog { display: none !important; }
   .brand img { width: 32px; height: 32px; flex: none; border-radius: 9px; object-fit: cover; background: #b3ecff; }
   html[data-kit="ponybot"] #top2d { max-height: none; margin: 0 auto; }
@@ -638,6 +639,9 @@ function save() { try { localStorage.setItem(KIT.codeKey, $('code').value); } ca
 const defaultEx = EXAMPLES.find(e => e.id === KIT.defaultExampleId) || EXAMPLES[EXAMPLES.length - 1];
 try { $('code').value = localStorage.getItem(KIT.codeKey) || defaultEx.code; }
 catch (e) { $('code').value = defaultEx.code; }
+// 주소 ?ex=<예제id>: 그 예제로 시작(AI 브리지의 '마이크로비트 코드 받기'에서 넘어옴) — 블록 편집기 아래 [다운로드]로 내려받음
+const urlEx = (() => { try { const id = new URLSearchParams(location.search).get('ex'); return id ? EXAMPLES.find(e => e.id === id) || null : null; } catch (e) { return null; } })();
+if (urlEx) $('code').value = urlEx.code;
 $('code').addEventListener('input', () => { save(); clearGuide(); });
 $('code').addEventListener('keydown', (e) => {
   if (e.key === 'Tab') { e.preventDefault(); const ta = e.target, s = ta.selectionStart; ta.setRangeText('    ', s, ta.selectionEnd, 'end'); save(); }
@@ -1085,7 +1089,7 @@ $('radioBtns').addEventListener('click', (e) => { if (e.isTrusted) stopDemo(); }
 $('code').addEventListener('input', () => stopDemo('코드를 고쳤어요. ▶ 실행으로 직접 확인해 보세요'));
 // 처음 열면 '동작 둘러보기' 시연 자동 시작 (주소 끝에 ?demo=0 이면 끔)
 { const q = new URLSearchParams(location.search);   // 블록 코딩 첫 화면에서는 자동 시연 안 함(헷갈림). ?demo=1 이면 켬, ?demo=0 이면 끔
-  if (KIT.demos && (q.get('demo') === '1' || (q.get('demo') !== '0' && q.get('tab') === 'js'))) setTimeout(() => playDemo(DEMOS[0]), 600); }
+  if (KIT.demos && !q.get('ex') && (q.get('demo') === '1' || (q.get('demo') !== '0' && q.get('tab') === 'js'))) setTimeout(() => playDemo(DEMOS[0]), 600); }
 
 // Babel(2.8MB)은 head에서 막지 않고 바로 비동기로 불러옴(실행·도우미가 먼저 필요하면 같은 요청을 기다림)
 ensureBabel().catch(() => {});
@@ -1265,6 +1269,7 @@ $('askBtn').onclick = async () => {
     showAnswer(await ruleAssist(text), '📘 규칙 도우미:');
   } finally { btn.disabled = false; btn.textContent = '코드 만들기'; }
 };
+if (urlEx && !new URLSearchParams(location.search).get('mission')) { applyExample(urlEx); log(`예제를 열었어요: ${urlEx.title} — 블록을 확인하고 편집기 아래 [다운로드]로 마이크로비트에 내려받으세요`); }
 // 주소 ?say=N: 예시 문장 N번(1부터)을 넣고 바로 코드를 만들어 보여 줌(교구 첫 화면의 '말로 만들기 예시'에서 넘어옴). 실행은 사람이 누름
 { const n = parseInt(new URLSearchParams(location.search).get('say'), 10);
   if (n >= 1 && n <= SAMPLE_REQUESTS.length && !new URLSearchParams(location.search).get('mission')) {

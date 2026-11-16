@@ -78,7 +78,9 @@ randint(a, b), Math.abs 등 계산 블록
 
 ## AI 브리지(웹캠 AI) 연동
 "AI가 카드를 보고" 같은 요청인데 로보독 카메라가 아니라 웹캠을 쓰는 수업이면: radio.setGroup(모둠번호) 후 radio.onReceivedNumber 로 숫자(1,2,3…)를 받아 행동하고,
-2초 동안 신호가 없으면 멈추는 안전장치와 A=멈춤 잠금, B=풀기를 넣습니다.`;
+2초 동안 신호가 없으면 멈추는 안전장치와 A=멈춤 잠금, B=풀기를 넣습니다.
+- 학생이 "시리얼 통신·USB로 데이터 N이 들어오면"이라고 해도 로보독에 꽂은 마이크로비트는 시리얼을 쓸 수 없습니다(로보독 확장이 시리얼 핀을 로봇 통신에 씀). AI 브리지는 컴퓨터에 USB로 꽂은 마이크로비트(수신기)가 시리얼로 받은 숫자 0~9를 라디오로 전달합니다. 그래서 로보독 코드는 radio.setGroup(모둠번호, 기본 1) + radio.onReceivedNumber 로 받고, 학생이 말한 "데이터 N"은 받은 숫자 N으로 처리합니다. 숫자 0은 멈춤으로 둡니다. explanation 에 "USB 마이크로비트에는 AI 브리지 화면의 [마이크로비트 코드 받기] ① 코드를 넣으세요(모둠번호를 같게)"라고 씁니다.
+- 학생이 USB 마이크로비트(수신기) 코드 자체를 원하면 로보독 확장 없이 만듭니다: serial.setBaudRate(BaudRate.BaudRate115200), serial.onDataReceived(serial.delimiters(Delimiters.NewLine), function () {...}) 에서 parseInt(serial.readUntil(serial.delimiters(Delimiters.NewLine)))로 숫자를 읽어 0~9일 때 radio.sendNumber. 이 코드에는 robodog 블록을 쓰지 않는다고 warnings 에 적습니다.`;
 
 const SCHEMA = {
   type: "object",
