@@ -11,7 +11,8 @@
       title: '포니봇 AI 교실',
       brandSub: '피지컬 AI 수업',
       home: '/ponybot/',
-      aiHref: '/ai.html?kit=ponybot',
+      aiLabel: 'AI 웹앱',
+      aiHref: '/ponybot/#ai',   // 포니봇은 제조사 AI 웹앱(블루투스)을 씀 — 웹캠 AI 브리지 대신
       docsHref: '/ponybot/',
       foot: 'AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. · <a href="/ponybot/">포니봇 수업 자료</a> · <a href="/NOTICE.md">오픈소스·출처 고지</a>',
       filePrefix: '포니봇AI',
@@ -29,6 +30,15 @@
   var kit = KITS[slug];
   window.KIT = kit ? kit : { slug: 'robodog', robot: '로보독', filePrefix: '로보독AI' };
   if (!kit) return;
+  // 포니봇으로 웹캠 AI 브리지(ai.html)를 열면: 블루투스 AI 웹앱 안내(브리지는 그대로 쓸 수 있음)
+  try {
+    if (slug === 'ponybot' && /\/ai\.html$/.test(location.pathname)) document.addEventListener('DOMContentLoaded', function () {
+      var d = document.createElement('div'); d.setAttribute('role', 'note');
+      d.style.cssText = 'margin:10px auto;max-width:1100px;padding:10px 14px;border-radius:12px;background:#fff4dc;color:#5a3a00;font-weight:600';
+      d.innerHTML = '포니봇은 이제 바운더리엑스 <b>AI 웹앱(포즈·음성 인식, 블루투스)</b>으로 움직여요 → <a href="/ponybot/#ai">AI 웹앱 열기</a> · 이 웹캠 AI 브리지(USB·라디오)는 예전 4차시 수업용으로 남겨 두었어요.';
+      var h = document.querySelector('header'); if (h && h.parentNode) h.parentNode.insertBefore(d, h.nextSibling); else document.body.insertBefore(d, document.body.firstChild);
+    });
+  } catch (e) { /* 무시 */ }
   // 탭 아이콘(파비콘)도 교구 것으로
   try { if (kit.icon) { var setIcon = function () { var l = document.querySelector('link[rel=icon]'); if (l) l.href = kit.icon; }; setIcon(); document.addEventListener('DOMContentLoaded', setIcon); } } catch (e) { /* 무시 */ }
 

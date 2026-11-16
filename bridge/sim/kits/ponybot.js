@@ -94,7 +94,7 @@ const kit = {
   nav: [
     { text: '처음', href: '../ponybot/' },
     { text: '시뮬레이터', href: './?kit=ponybot', current: true },
-    { text: 'AI 브리지 ↗', href: '../ai.html?kit=ponybot', ext: true, title: '새 탭에서 열기' },
+    { text: 'AI 웹앱 ↗', href: '../ponybot/#ai', ext: true, title: '포즈·음성 인식 웹앱(블루투스) — 새 탭에서 열기' },
     { text: '공식 확장 ↗', href: EXT_REPO, ext: true, title: '새 탭에서 열기(GitHub)' },
   ],
   badge: { text: '움직임 추정 · 실물과 다를 수 있음', title: '속도·회전·크기·센서 위치는 실물 측정값이 아닌 추정치예요' },
