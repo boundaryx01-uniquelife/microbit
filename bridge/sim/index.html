@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>로보독 시뮬레이터 · 로보독 AI 교실</title>
-<script>try { if (new URLSearchParams(location.search).get("kit") === "ponybot") { document.documentElement.dataset.kit = "ponybot"; document.title = "포니봇 시뮬레이터 · AI 포니봇 교실"; } else document.documentElement.dataset.kit = "robodog"; } catch (e) {}</script>
+<script>try { if (new URLSearchParams(location.search).get("kit") === "ponybot") { document.documentElement.dataset.kit = "ponybot"; document.title = "포니봇 시뮬레이터 · AI 포니봇 교실"; document.addEventListener("DOMContentLoaded", function () { var l = document.querySelector("link[rel=icon]"); if (l) l.href = "../assets/favicon-ponybot.svg"; }); } else document.documentElement.dataset.kit = "robodog"; } catch (e) {}</script>
 <link rel="stylesheet" href="../assets/brand.css">
 <link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
 <style>

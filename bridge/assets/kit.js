@@ -14,7 +14,8 @@
       aiHref: '/ai.html?kit=ponybot',
       docsHref: '/ponybot/',
       foot: 'AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. · <a href="/ponybot/">포니봇 수업 자료</a> · <a href="/NOTICE.md">오픈소스·출처 고지</a>',
-      filePrefix: '포니봇AI'
+      filePrefix: '포니봇AI',
+      icon: '/assets/favicon-ponybot.svg'
     }
   };
   var slug = 'robodog';
@@ -28,6 +29,8 @@
   var kit = KITS[slug];
   window.KIT = kit ? kit : { slug: 'robodog', robot: '로보독', filePrefix: '로보독AI' };
   if (!kit) return;
+  // 탭 아이콘(파비콘)도 교구 것으로
+  try { if (kit.icon) { var setIcon = function () { var l = document.querySelector('link[rel=icon]'); if (l) l.href = kit.icon; }; setIcon(); document.addEventListener('DOMContentLoaded', setIcon); } } catch (e) { /* 무시 */ }
 
   function apply() {
     document.documentElement.setAttribute('data-kit-active', kit.slug);
