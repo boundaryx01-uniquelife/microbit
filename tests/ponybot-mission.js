@@ -21,10 +21,6 @@ const SPEC = {
     wrong: 'input.onButtonPressed(Button.A, function () {\n aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 80)\n basic.pause(4000)\n aiPonybot.runMecanum(aiPonybot.Mecanum.Backward, 80)\n basic.pause(2000)\n aiPonybot.stopAllMotors()\n})' },   // 50cm 넘게 가지만 제자리로 못 옴
   'p2-wall': { act: ['A'], w: [10500, 8500, 10500], sol: RULE('달리는중 && 거리 >= 가까움기준'), wrong: 'input.onButtonPressed(Button.A, function () {\n aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 200)\n basic.pause(5000)\n aiPonybot.stopAllMotors()\n})' },   // 시간으로 멈춤 → 책에서 너무 멂
   'p2-far': { act: ['A'], w: [10500, 9500, 10000], sol: RULE('달리는중 && 거리 >= 가까움기준', 40), wrong: RULE('달리는중 && 거리 >= 가까움기준', 70) },   // 기준이 너무 큼
-  'p2-empty': { act: ['A'], w: [4000, 0, 4200], sol: RULE('달리는중 && 거리 >= 가까움기준 && 거리 < 500'), wrong: null },
-  'p3-signal': { act: [3, 1500, 1], w: [2500, 2500, 2500], sol: RADIO(' if (n == 3) {\n  aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 80)\n } else if (n == 1) {\n  aiPonybot.stopAllMotors()\n }'), wrong: RADIO(' if (n == 3) {\n  aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 80)\n } else if (n == 1) {\n  aiPonybot.runMecanum(aiPonybot.Mecanum.Backward, 80)\n }') },   // 1에 멈추지 않고 뒤로
-  'p3-lost': { act: [3], w: [4500, 4500, 4500], sol: RADIO(' if (n == 3) {\n  aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 80)\n }', WATCH(2000)), wrong: RADIO(' if (n == 3) {\n  aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 80)\n }', WATCH(20000)) },   // 감시 시간이 너무 김
-  'p4-team': { act: [1, 3000, 2], w: [3000, 3200, 3200], sol: RADIO(` if (n == 1) {\n${MOVE('Left')}\n } else if (n == 2) {\n${MOVE('Right')}\n }`), wrong: RADIO(` if (n == 1) {\n${MOVE('Left')}\n } else if (n == 2) {\n${MOVE('Left')}\n }`) },   // 두 번호가 같은 방향
 };
 
 (async () => {
@@ -42,7 +38,7 @@ const SPEC = {
     return p.evaluate(() => ({ passed: window.__mission.passed, ok: [...document.querySelectorAll('#mChecks li')].map((li) => li.classList.contains('ok') ? 1 : 0).join('') }));
   };
   const ids = [...(await (await p.request.get(BASE + 'sim/kits/ponybot/missions.js')).text()).matchAll(/^\s*id: '([\w-]+)'/gm)].map((x) => x[1]);
-  check('미션 정의 9개가 시험 목록과 같음(빠진 미션 없음)', !!ids && ids.join() === Object.keys(SPEC).join(), String(ids));
+  check('미션 정의 5개가 시험 목록과 같음(빠진 미션 없음)', !!ids && ids.join() === Object.keys(SPEC).join(), String(ids));
   for (const id of Object.keys(SPEC)) {
     const T = SPEC[id]; ACT = T.act;
     const n = idx((s) => s.mission === id), back = `../lessons/?l=${encodeURIComponent(LESSON)}#${n}`;

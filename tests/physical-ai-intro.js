@@ -69,7 +69,7 @@ const inkStats = (sel) => (s) => {
   check('같은 탭 재방문: 재생 없이 로고 + 카드', await p.evaluate(() => window.__pai.state === 'hero' && !document.documentElement.classList.contains('pai-play') && getComputedStyle(document.querySelector('main')).opacity === '1'));
   // 카드 링크
   const links = await p.$$eval('.kit a', (as) => [...new Set(as.map((a) => a.getAttribute('href')))]);
-  const need = ['robodog/', 'ponybot/', 'sim/?kit=ponybot', 'ai.html', 'docs/', 'sim/', 'ai.html?kit=ponybot', 'lessons/?l=ponybot_4차시'];
+  const need = ['robodog/', 'ponybot/', 'sim/?kit=ponybot', 'ai.html', 'docs/', 'sim/', 'ponybot/#ai', 'lessons/?l=ponybot_4차시'];
   check('카드 링크 갖춤(로보독·포니봇·포니봇 시뮬레이터·AI 브리지·수업)', need.every((h) => links.includes(h)), JSON.stringify(links));
   const broken = [];
   for (const h of [...links, 'lessons/', 'assets/intro/physical-ai.mp4', 'ponybot/assets/official/material-pony-v2.webp']) { const r = await p.request.get(BASE + h); if (!r.ok()) broken.push(h + ' ' + r.status()); }
