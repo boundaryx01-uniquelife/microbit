@@ -88,11 +88,12 @@ const kit = {
   codeKey: 'ponybot-sim-code',
   supports3d: true, default3d: false,   // 3D 모형은 실물 사진 기준 어림 모형(처음 화면은 2D, [3D 보기]로 전환 / ?view=3d)
   async loadMissions() { return (await import('./ponybot/missions.js')).MISSIONS; },
-  async makeView3D(container, world, robot, runner) { const { PonyView3D } = await import('./ponybot/model3d.js'); return new PonyView3D(container, world, robot, runner.oled); },
+  async makeView3D(container, world, robot, runner) { const { PonyView3D } = await import('./ponybot/model3d.js'); return new PonyView3D(container, world, robot, runner.oled, runner); },
   radius: EST.radius,
   mascot: { src: OFFICIAL + 'material-pony-v2.webp', alt: 'AI 포니봇 제품 그림 (제조사 바운더리엑스 공식 자료)' },
   brand: { name: 'AI 포니봇 교실', sub: '바운더리엑스 제품 · 피지컬 AI 수업', home: '../ponybot/' },
   nav: [
+    { text: '⌂ 교구 선택', href: '../', cls: 'hublink', title: '피지컬 AI 교실 — 다른 교구 고르기' },
     { text: '처음', href: '../ponybot/' },
     { text: '시뮬레이터', href: './?kit=ponybot', current: true },
     { text: 'AI 웹앱 ↗', href: '../ponybot/#ai', ext: true, title: '포즈·음성 인식 웹앱(블루투스) — 새 탭에서 열기' },

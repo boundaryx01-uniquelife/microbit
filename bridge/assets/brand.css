@@ -117,3 +117,6 @@ input[type=checkbox], input[type=radio], input[type=range] { accent-color: var(-
 
 @media (prefers-reduced-motion: reduce) { .btn, button, .gnb nav a { transition: none; } }
 @media print { .gnb, .site-foot { display: none !important; } }
+
+/* 머리글 메뉴 맨 앞 '⌂ 교구 선택'(피지컬 AI 교실 첫 화면으로) — 다른 메뉴와 구분 */
+nav a.hublink { color: var(--muted) !important; font-weight: 700; border-right: 1px solid var(--line-strong); border-radius: 0; padding-right: 12px; margin-right: 4px; }

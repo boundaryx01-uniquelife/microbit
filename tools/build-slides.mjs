@@ -492,7 +492,8 @@ function build(data) {
     if (Array.isArray(d.go) && d.go.length) {   // 바로 가기 단추 → PPT 에서는 누를 수 있는 링크(사이트 절대 주소)
       const SITE = 'https://microbit-bridge.netlify.app/lessons/';
       const back = encodeURIComponent(`../lessons/?l=${encodeURIComponent(data.id)}#${idx + 1}`);
-      const runs = d.go.flatMap((g, k) => [...(k ? [{ text: '   ' }] : []), { text: `${g.label} →`, options: { hyperlink: { url: new URL(String(g.href).replace('{back}', back), SITE).href }, bold: true, color: P, underline: { style: 'sng' } } }]);
+      const link = (h) => { let u = String(h).replace('{back}', back); if (/^\.\.\/(sim\/|ai\.html)/.test(u) && !/[?&]back=/.test(u)) u += (u.includes('?') ? '&' : '?') + 'back=' + back; return new URL(u, SITE).href; };
+      const runs = d.go.flatMap((g, k) => [...(k ? [{ text: '   ' }] : []), { text: `${g.label} →`, options: { hyperlink: { url: link(g.href) }, bold: true, color: P, underline: { style: 'sng' } } }]);
       s.addText(runs, { x: X0, y: 6.42, w: W, h: 0.42, fontFace: F, fontSize: 20, align: 'right', valign: 'middle', margin: 0 });
     }
     if (type !== 'cover') { // 머리표: "2교시 · 3/12" (제목 위 오른쪽)
