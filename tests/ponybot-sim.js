@@ -224,8 +224,13 @@ async function startServer() {
     await clickRun(); await p.waitForTimeout(700);
     await p.click('.mbbtn[data-btn="A"]'); await p.waitForTimeout(150);
     await p.click('.mbbtn[data-btn="B"]'); await p.waitForTimeout(150);
-    await p.click('#radioBtns button:nth-child(4)'); await p.waitForTimeout(200);   // 3
-    await p.click('#radioBtns button:nth-child(2)'); await p.waitForTimeout(200);   // 1
+    if (await p.isVisible('#btStrip')) {   // 블루투스 예제: 라디오 줄 대신 🔵 블루투스 줄
+      await p.click('#btBtns button[data-t="ID2"]'); await p.waitForTimeout(200);
+      await p.click('#btBtns button[data-t="stop"]'); await p.waitForTimeout(200);
+    } else {
+      await p.click('#radioBtns button:nth-child(4)'); await p.waitForTimeout(200);   // 3
+      await p.click('#radioBtns button:nth-child(2)'); await p.waitForTimeout(200);   // 1
+    }
     const el = await logs('.error');
     check(`예제 실행 오류 0: ${id}`, el.length === 0, el.slice(0, 1).join(''));
     await p.click('#btnStop');

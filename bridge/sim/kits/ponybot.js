@@ -16,11 +16,12 @@ const $ = (id) => document.getElementById(id);
 export const GROUPS = [
   { id: 'button', title: '🅰 A·B 버튼으로 해 보기', note: '마이크로비트 1개. 실행한 뒤 화면의 A·B 버튼을 눌러 시작해요' },
   { id: 'radio', title: '📡 라디오 숫자로 해 보기 (AI 브리지·리모컨)', note: '마이크로비트 2개 또는 AI 브리지. 숫자를 받아 움직여요. 여기서는 숫자 버튼이 그 역할이에요' },
+  { id: 'bluetooth', title: '🔵 블루투스로 해 보기 (AI 웹앱: 핸드포즈·음성)', note: '실물은 AI 웹앱이 블루투스로 글자(ID1~ID5·stop)를 보내요. 여기서는 🔵 블루투스 줄의 버튼이 그 역할이에요' },
 ];
 const RADIO_IDS = new Set(['03_ai-traffic-ponybot', '04_ai-team-template']);
 export const EXAMPLES = RAW_EXAMPLES.map(e => {
-  const group = RADIO_IDS.has(e.id) ? 'radio' : 'button';
-  const input = group === 'radio' ? '위 [라디오로 숫자 보내기]에서 숫자를 눌러 보세요' : 'A·B 버튼을 눌러 보세요';
+  const group = RADIO_IDS.has(e.id) ? 'radio' : /\bbluetooth\./.test(e.code) ? 'bluetooth' : 'button';
+  const input = group === 'radio' ? '위 [라디오로 숫자 보내기]에서 숫자를 눌러 보세요' : group === 'bluetooth' ? '🔵 블루투스 줄에서 ID1~ID5·stop을 눌러 보세요(실물은 AI 웹앱이 보내요)' : 'A·B 버튼을 눌러 보세요';
   return {
     ...e, group, level: e.simOnly ? '시뮬레이터 전용' : '',
     sim: ['[▶ 실행]을 누르세요 (실행만으로는 움직이지 않는 예제가 많아요)', `${input} — ${e.how}`, '움직임은 오른쪽 위에서 본 바닥, 포니봇 화면(OLED)·바퀴 표에서 확인해요'],

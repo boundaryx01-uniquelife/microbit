@@ -519,13 +519,21 @@ if (KIT.id === 'ponybot') {
   const strip = document.createElement('div'); strip.id = 'radioStrip'; strip.className = 'radiostrip'; strip.setAttribute('aria-label', '라디오 숫자 보내기');
   strip.innerHTML = '<span class="rlab" title="라디오로 숫자 보내기(AI 브리지 대신)">📡</span>'; const repLabel = $('radioRepeat').closest('label'); repLabel.lastChild.textContent = ' 계속'; repLabel.title = '마지막 숫자를 0.5초마다 계속 보내요'; strip.append($('radioBtns'), repLabel);
   $('pane3d').after(strip);
+  // 🔵 블루투스 줄: 코드가 블루투스(UART)를 쓰면 라디오 줄 대신 보임 — AI 웹앱(핸드포즈·음성)이 보내는 글자를 대신 보냄
+  const bt = document.createElement('div'); bt.id = 'btStrip'; bt.className = 'radiostrip'; bt.style.display = 'none'; bt.setAttribute('aria-label', '블루투스 글자 보내기(AI 웹앱 대신)');
+  bt.innerHTML = '<span class="rlab" title="블루투스로 글자 보내기(AI 웹앱 대신)">🔵</span><span id="btBtns" style="display:flex;gap:3px;flex-wrap:wrap">' +
+    ['ID1', 'ID2', 'ID3', 'ID4', 'ID5', 'stop'].map((t) => `<button type="button" data-t="${t}" style="min-height:36px;padding:4px 8px">${t}</button>`).join('') + '</span>';
+  strip.after(bt);
+  bt.addEventListener('click', (e) => { const b = e.target.closest('button[data-t]'); if (!b) return; if (!runner.running) { log('▶ 실행을 먼저 누르세요', 'warn'); return; } runner.uartReceive && runner.uartReceive(b.dataset.t); log('블루투스로 보냄: ' + b.dataset.t); });
+  const syncBt = () => { const on = /\bbluetooth\./.test($('code').value); bt.hidden = !on; bt.style.display = on ? '' : 'none'; strip.style.display = on ? 'none' : ''; };
+  syncBt(); $('code').addEventListener('input', syncBt); setInterval(syncBt, 150);   // 예제·도우미·MakeCode 가 코드를 바꿔도 곧바로 맞춤
   const dock = document.createElement('div'); dock.id = 'liveDock'; dock.className = 'livedock'; dock.setAttribute('aria-label', '마이크로비트 LED·OLED·센서·바퀴 명령');
-  strip.after(dock); dock.append($('pMb'), $('pPOled'), $('pPSensor'), $('pPWheel'));
+  bt.after(dock); dock.append($('pMb'), $('pPOled'), $('pPSensor'), $('pPWheel'));
   // 편집 도구(선택·상자·선 편집…)와 장면 설명은 라디오 줄 바로 아래 접이식으로 — 열어도 2D 화면이 안 가려지고, 내려가 찾을 필요가 없음
   const edit = document.createElement('details'); edit.id = 'editBox'; edit.className = 'fold';
   edit.innerHTML = '<summary><span>✏ 물체 놓기·선 편집·장면 설명</span></summary>';
   edit.append($('peBar'), $('sceneBar').querySelector('.scenebox'), $('no3d'));
-  strip.after(edit);
+  bt.after(edit);
   // 보기 조작: 3D·2D 모두 같은 단추
   const zoom3d = (f) => { const v = view3d; if (!v) return; const t = v.controls.target; v.camera.position.sub(t).multiplyScalar(1 / f).add(t); v.controls.update(); };
   syncViewCtl = () => {
@@ -1115,6 +1123,7 @@ function mcProject(code) {
   const now = Math.round(Date.now() / 1000), deps = { ...MCK.base };
   const pkg = MCK.blockPackage(code);
   if (pkg) { const name = pkg.split('=')[0]; deps[name] = MCK.pins[name]; }
+  if (/\bbluetooth\./.test(code)) { delete deps.radio; deps.bluetooth = '*'; }   // 블루투스와 라디오는 함께 쓸 수 없음(MakeCode)
   return {
     header: { id: MCK.idPrefix + Date.now(), name: MCK.projectName, meta: {}, editor: 'blocksprj', target: 'microbit', targetVersion: '9.0.0',
       pubId: '', pubCurrent: false, recentUse: now, modificationTime: now, isDeleted: false, cloudVersion: null, cloudCurrent: false, cloudLastSyncTime: 0, _rev: null },

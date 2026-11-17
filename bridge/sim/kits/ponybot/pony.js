@@ -467,7 +467,7 @@ export function makePonybotApi(R, h) {
 // ------------------------------------------------------------
 // 실행기: 로보독용 Runner 를 이어받아 aiPonybot 환경만 갈아 끼움
 // ------------------------------------------------------------
-addAsyncNs('aiPonybot', 'neopixel');   // 확장 네임스페이스(없으면 콜백 async 승격이 안 될 수 있음)
+addAsyncNs('aiPonybot', 'neopixel', 'bluetooth');   // 확장 네임스페이스(없으면 콜백 async 승격이 안 될 수 있음)
 
 export class PonyRunner extends Runner {
   constructor(robot, ui) {
@@ -480,7 +480,16 @@ export class PonyRunner extends Runner {
   }
   async start(src) {
     this.oled.reset();
+    this.uartBuf = ''; this.btConnected = false;
     return super.start(src);
+  }
+  // 블루투스 UART 받기 흉내: AI 웹앱(핸드포즈·음성)이 보내는 글자(ID1, stop, forward…)를 대신 넣음
+  uartReceive(text) {
+    if (this.robot.world) this.robot.world.radioLast = { n: String(text), t: performance.now() };
+    if (!this.running) return;
+    if (!this.btConnected) { this.btConnected = true; (this.handlers.btConn || []).forEach((h) => this.spawn(h)); }
+    this.uartBuf = String(text);
+    (this.handlers.uart || []).forEach((h) => this.spawn(h));
   }
   buildEnv() {
     const env = super.buildEnv();
@@ -501,6 +510,19 @@ export class PonyRunner extends Runner {
       env[name] = new Proxy({}, { get(t, p) { if (typeof p === 'symbol') return undefined; throw new Error(`${name} 은(는) aiPonybot.${name}.${String(p)} 처럼 써야 해요`); } });
     }
     env.robodog = warnProxy('robodog', {});     // 로보독 블록은 포니봇에 없음
+    // 블루투스(UART) — 실물은 AI 웹앱이 보내고, 시뮬레이터는 화면의 🔵 블루투스 줄이 대신 보냄. 처음 받을 때 '연결됨'으로 봄
+    const on = (k) => (h) => { (self.handlers[k] = self.handlers[k] || []).push(h); };
+    env.bluetooth = warnProxy('bluetooth', {
+      startUartService: () => {}, setTransmitPower: () => {},
+      onUartDataReceived: (delim, h) => on('uart')(h), uartReadUntil: () => self.uartBuf || '', uartReadString: () => self.uartBuf || '',
+      uartWriteString: () => {}, uartWriteLine: () => {}, uartWriteNumber: () => {}, uartWriteValue: () => {},
+      onBluetoothConnected: on('btConn'), onBluetoothDisconnected: on('btDisc'),
+    });
+    // 음악(효과음): 포니봇 블루투스 예제가 연결·해제 때 소리를 냄 → 시뮬레이터는 소리 없이 넘어감
+    const quiet = new Proxy({}, { get(t, p) { if (typeof p === 'symbol') return undefined; if (p === 'PlaybackMode') return { UntilDone: 0, InBackground: 1, LoopingInBackground: 2 }; return () => 0; } });
+    env.music = quiet;
+    env.soundExpression = new Proxy({}, { get: (t, p) => (typeof p === 'symbol' ? undefined : String(p)) });
+    if (env.control) env.control.deviceName = () => 'sim01';   // 실물은 마이크로비트마다 다른 다섯 글자
     delete env.deflib;
     // 조명(neopixel, ws2812b) 확장: 아직 모양이 없음 → 경고만. strip.메서드() 사슬이 깨지지 않게 속이 빈 객체를 돌려줌
     const ghost = () => new Proxy(function () {}, {
