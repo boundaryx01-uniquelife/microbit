@@ -26,6 +26,8 @@ Playwright(크로미움)가 필요합니다.
 | `lessons-go.js` | 수업 슬라이드 '바로 가기' 단추: 다운로드·앱 열기를 시키는 장마다 단추가 있고, 시뮬레이터 예제·미션·AI 브리지·웹앱이 실제로 열림(4개 수업) | 서버 실행 후 `node tests/lessons-go.js` |
 | `brand-icons.js` | 페이지마다 머리글 로고·탭 아이콘(메인·포니봇·로보독) 10항목 | 서버 실행 후 `node tests/brand-icons.js` |
 | `ponybot-mission-fold.js` | 미션 칸 접기: 펼친 칸은 코드 위를 덮지 않고, 블록 편집기를 누르면 한 줄로 접힘·[펼치기] 6항목 | 서버 실행 후 `node tests/ponybot-mission-fold.js` |
+| `ponybot-3d-microbit.js` | 포니봇 3D: 꽂힌 마이크로비트 5×5 LED가 코드 화면과 같고 거울 반전 없음 6항목 | 서버 실행 후 `node tests/ponybot-3d-microbit.js` |
+| `sim-howto-fold.js` | 따라 하기 칸 접기(로보독·포니봇): 블록 편집기를 누르면 한 줄로·[펼치기] 7항목 | 서버 실행 후 `node tests/sim-howto-fold.js` |
 | `bridge-mbcode.js` | 로보독 AI 브리지 '마이크로비트 코드 받기'(USB 수신기·로보독 코드 복사·파일·시뮬레이터 `?ex=` 열기, 포니봇에서는 숨김) 9항목 | 서버 실행 후 `node tests/bridge-mbcode.js` |
 | `ponybot-mission.js` | 포니봇 미션(행동 판정) 9개·62항목: 처음 코드·'그럴듯하지만 행동이 다른 코드'는 통과 못 함, 고친 코드는 통과, 예상 공개 시점, 도움말 단계, 통과 기록이 슬라이드에 표시, 돌아가기 주소 제한, 이야기·퀴즈 장 | 서버 실행 후 `node tests/ponybot-mission.js` |
 | `ponybot-view.js` | (620·800px 한 줄 구성 포함) 포니봇 시뮬레이터 화면 구성(한 화면: 위쪽 3D·2D − ＋ 전체 로봇 따라가기 한 줄 / 라디오 0~9 / [마이크로비트·OLED] / [센서·바퀴 명령])·2D 휠 확대·오른쪽 버튼 이동(페이지 스크롤 없음)·3D 확대/축소·선 닫기(시작점 누르기·단추)·편집 도구 접이식 위치 25항목 | Range 지원 서버(`node .claude/skills/microbit-kit-site/scripts/rangeserve.js bridge 8765`) 후 `node tests/ponybot-view.js` |

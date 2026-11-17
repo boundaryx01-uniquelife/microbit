@@ -159,6 +159,8 @@
     var back = '../lessons/?l=' + encodeURIComponent(id) + '#' + (i + 1);
     return '<div class="gobar">' + s.go.map(function (g) {
       var href = String(g.href).replace('{back}', encodeURIComponent(back)), ext = /^https?:/.test(href);
+      // 사이트 안 화면(시뮬레이터·AI 브리지)으로 갈 때는 돌아올 주소를 붙임 → 그 화면에 [← 슬라이드로 돌아가기]
+      if (!ext && /^\.\.\/(sim\/|ai\.html)/.test(href) && !/[?&]back=/.test(href)) href += (href.indexOf('?') >= 0 ? '&' : '?') + 'back=' + encodeURIComponent(back);
       return '<a class="gobtn" href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(g.label) + (ext ? ' ↗' : ' →') + '</a>';
     }).join('') + '</div>';
   }

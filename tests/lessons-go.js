@@ -22,7 +22,14 @@ const NEED = /다운로드|내려받|웹앱 열기|시뮬레이터에서 예제|
         if (!h.startsWith(BASE)) { check(`  └ 바깥 주소 새 탭: ${h}`, await p.$eval(`.slide .gobtn[href="${h}"]`, (a) => a.target === '_blank')); continue; }
         const u = new URL(h), ex = u.searchParams.get('ex'), ms = u.searchParams.get('mission');
         const r = await p.request.get(h); check(`  └ 열림: ${u.pathname}${u.search.slice(0, 60)}`, r.ok(), String(r.status()));
-        if (ms) check(`  └ 미션 단추는 이 장으로 돌아오는 주소를 가짐`, decodeURIComponent(u.searchParams.get('back') || '').endsWith('#' + n));
+        if (ms || /\/(sim\/|ai\.html)/.test(u.pathname)) check(`  └ 이 장으로 돌아오는 주소(back)를 가짐`, decodeURIComponent(u.searchParams.get('back') || '').endsWith('#' + n), h);
+        if (!ms && /\/(sim\/|ai\.html)/.test(u.pathname)) {   // 열린 화면에 [← 슬라이드로 돌아가기], 누르면 이 장으로
+          const q = await b.newPage(); await q.route('**/api/*-assistant', (r) => r.fulfill({ json: { configured: false } }));
+          await q.goto(h); await q.waitForSelector('#backToSlide', { timeout: 30000 }).catch(() => {});
+          const bk = await q.$eval('#backToSlide', (a) => a.href).catch(() => '');
+          check(`  └ 열린 화면에 [← 슬라이드로 돌아가기] → ${n}장`, bk.endsWith('#' + n) && bk.includes('/lessons/'), bk);
+          await q.close();
+        }
         if (ex) {   // 예제가 실제로 열리는지
           const q = await b.newPage(); await q.route('**/api/*-assistant', (r) => r.fulfill({ json: { configured: false } }));
           await q.goto(h + '&tab=js'); await q.waitForFunction(() => window.__sim || window.__pony, null, { timeout: 60000 }); await q.waitForTimeout(1500);

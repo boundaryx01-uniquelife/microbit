@@ -104,6 +104,19 @@ export function buildPonyModel() {
   // 마이크로비트 슬롯(가로로 긴 틈) + 슬롯 테두리
   root.add(box(5.2, 0.3, 0.7, mats.dark, 0, YC + 0.1, 4.9));
   root.add(box(4.6, 0.12, 0.3, std(0x6b6b60, { metalness: 0.5 }), 0, YC + 0.27, 4.9));   // 금색 단자 느낌
+  // 꽂힌 마이크로비트(슬롯에 세워 꽂음) + 5×5 LED — 크기·방향은 사진 근거 어림(LED 면을 앞쪽(초음파 쪽)으로 둠)
+  {
+    const mbH = 4.2, mbW = 5.0, by = YC + 0.15 + mbH / 2, bz = 4.9, face = bz - 0.1;
+    root.add(box(mbW, mbH, 0.16, std(0x202326, { roughness: 0.6 }), 0, by, bz));
+    root.add(box(mbW, 0.35, 0.18, mats.gold, 0, YC + 0.32, bz));   // 아래 금색 단자(슬롯 위로 살짝 보임)
+    const btnMat = std(0x9aa1a8, { roughness: 0.4 });
+    for (const u of [-1.95, 1.95]) { const bt = new T.Mesh(new T.CylinderGeometry(0.3, 0.3, 0.12, 12), btnMat); bt.rotation.x = Math.PI / 2; bt.position.set(u, by + 0.15, face); root.add(bt); }
+    P.mbLeds = []; const pitch = 0.52, ledGeo = new T.BoxGeometry(0.26, 0.26, 0.06);
+    for (let r = 0; r < 5; r++) for (let c = 0; c < 5; c++) {
+      const m = new T.Mesh(ledGeo, new T.MeshBasicMaterial({ color: 0x3a1414 }));
+      m.position.set((2 - c) * pitch, by + 0.25 + (2 - r) * pitch, face - 0.02); root.add(m); P.mbLeds.push(m);   // 앞에서 볼 때 왼쪽이 0열(거울 반전 없음)
+    }
+  }
   // OLED (보라빛 회색 작은 화면) — 캔버스 그림을 매 프레임 필요할 때만 갱신
   P.oledCanvas = document.createElement('canvas'); P.oledCanvas.width = 128; P.oledCanvas.height = 64;
   P.oledTex = new T.CanvasTexture(P.oledCanvas); P.oledTex.colorSpace = T.SRGBColorSpace; P.oledTex.magFilter = T.NearestFilter; P.oledTex.minFilter = T.LinearFilter;
@@ -165,7 +178,7 @@ export function buildPonyModel() {
 
 // ---- 공용 3D 화면 위에 포니봇을 올리는 화면 ----
 export class PonyView3D extends View3D {
-  constructor(container, world, robot, oled) { super(container, world, robot); this.oled = oled; this.model = null; this.oledVer = -1; this.t0 = performance.now(); this.pinKey = ''; }
+  constructor(container, world, robot, oled, runner) { super(container, world, robot); this.oled = oled; this.runner = runner; this.ledKey = ''; this.model = null; this.oledVer = -1; this.t0 = performance.now(); this.pinKey = ''; }
   init() {
     super.init();
     this.resetCam();
@@ -239,6 +252,12 @@ export class PonyView3D extends View3D {
     for (const n of WHEELS) {
       const w = P.wheels[n]; w.angle -= R.w[n] / WHEEL_R * dt; w.spin.rotation.x = w.angle;
       const v = R.w[n], L = P.leds[n]; L.color.set(v > 0.05 ? 0x1fa463 : v < -0.05 ? 0xe5484d : 0x555555);
+    }
+    // 마이크로비트 5×5 LED(바뀔 때만)
+    const disp = this.runner && this.runner.display;
+    if (disp && P.mbLeds) {
+      const key = disp.map((row) => row.map((v) => (v ? 1 : 0)).join('')).join('');
+      if (key !== this.ledKey) { this.ledKey = key; P.mbLeds.forEach((m, i) => m.material.color.set(key[i] === '1' ? 0xff3b2f : 0x3a1414)); }
     }
     // OLED 그림(바뀔 때만)
     if (this.oled && this.oled.version !== this.oledVer) { this.oledVer = this.oled.version; drawOled(P.oledCanvas, this.oled); P.oledTex.needsUpdate = true; }

@@ -6,7 +6,7 @@
 <title>로보독 시뮬레이터 · 로보독 AI 교실</title>
 <script>try { if (new URLSearchParams(location.search).get("kit") === "ponybot") { document.documentElement.dataset.kit = "ponybot"; document.title = "포니봇 시뮬레이터 · AI 포니봇 교실"; document.addEventListener("DOMContentLoaded", function () { var l = document.querySelector("link[rel=icon]"); if (l) l.href = "../assets/favicon-ponybot.svg"; }); } else document.documentElement.dataset.kit = "robodog"; } catch (e) {}</script>
 <link rel="stylesheet" href="../assets/brand.css">
-<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="../assets/favicon.svg" type="image/svg+xml"><script src="../assets/backlink.js" defer></script>
 <style>
   :root {
     --table: #e9d3ad; --table-edge: #8a6d45; --floor: #e3e7ee; --wall: #6b7686; --grid: rgba(0,0,0,.07);
@@ -71,6 +71,9 @@
   .howto { margin-top: 8px; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--accent); background: var(--accent-soft); }
   .howto-head { display: flex; align-items: center; gap: 8px; font-size: 16px; }
   .howto-head .close { margin-left: auto; min-height: 32px; padding: 2px 10px; }
+  #howtoFold { margin-left: auto; font-size: 13.5px; } #howtoFold + .close { margin-left: 0; }
+  /* 따라 하기 칸 접기: 블록 편집기를 누르면 제목 한 줄로 — 코드를 가리지 않게(미션 칸과 같은 방식) */
+  .howto.min { padding: 6px 12px; } .howto.min > :not(.howto-head) { display: none !important; }
   .howto .lvl { white-space: nowrap; flex: none; font-size: 12.5px; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-text); font-weight: 700; }
   .howto p.note { margin: 4px 0 6px; }
   .howto-sub { font-size: 14.5px; }
@@ -326,7 +329,7 @@
     </div>
     <section id="howto" class="howto" hidden aria-live="polite">
       <div class="howto-head"><b id="howtoTitle"></b> <span id="howtoLevel" class="lvl"></span>
-        <button id="howtoClose" class="close" aria-label="따라 하기 안내 닫기">✕</button></div>
+        <button id="howtoFold" class="close" type="button" aria-expanded="true">▲ 접기</button><button id="howtoClose" class="close" aria-label="따라 하기 안내 닫기">✕</button></div>
       <p id="howtoGroup" class="note"></p>
       <b class="howto-sub">💻 시뮬레이터에서 따라 하기</b>
       <ol id="howtoSim"></ol>
@@ -632,8 +635,14 @@ function guideDone(e) {   // 안내한 버튼을 누르면 깜빡임을 끄고 "
   $('guide').classList.add('done'); $('guideHead').textContent = '눌렀어요! 움직임을 지켜보세요';
 }
 ['pointerdown', 'click', 'keydown'].forEach(t => document.addEventListener(t, guideDone, true));
+// 따라 하기 칸 접기·펼치기 — 블록 편집기·글자 코드 칸을 누르면 저절로 접힘(모든 교구 공통)
+function setHowtoMin(on) { $('howto').classList.toggle('min', on); $('howtoFold').textContent = on ? '▼ 펼치기' : '▲ 접기'; $('howtoFold').setAttribute('aria-expanded', String(!on)); }
+$('howtoFold').onclick = () => setHowtoMin(!$('howto').classList.contains('min'));
+window.addEventListener('blur', () => setTimeout(() => { const a = document.activeElement; if (a && a.tagName === 'IFRAME' && !$('howto').hidden) setHowtoMin(true); }, 0));
+$('code').addEventListener('focus', () => { if (!$('howto').hidden) setHowtoMin(true); });
 function showHowto(ex) {
   if (!ex) { $('howto').hidden = true; return; }
+  setHowtoMin(false);   // 새 예제를 고르면 펼쳐서 보여 줌
   const g = GROUPS.find(x => x.id === ex.group) || {};
   $('howtoTitle').textContent = `${g.title ? g.title.split(' ')[0] + ' ' : ''}${ex.title}`;
   $('howtoLevel').textContent = ex.level || '';
