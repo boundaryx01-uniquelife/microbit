@@ -20,26 +20,26 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
 
   await p.goto(L + '?l=2차시'); await p.waitForSelector('.slide');
   const total = await p.evaluate(() => window.__lesson.total);
-  check('슬라이드 25장 불러옴', total === 25 && (await p.textContent('#counter')).trim() === '1 / 25', await p.textContent('#counter'));
+  check('슬라이드 26장 불러옴', total === 26 && (await p.textContent('#counter')).trim() === '1 / 26', await p.textContent('#counter'));
   check('첫 장은 표지', await p.evaluate(() => !!document.querySelector('.slide.t-cover')));
   check('머리 메뉴의 현재 위치 = 수업 자료', (await p.textContent('.gnb nav a[aria-current="page"]')).includes('수업 자료'));
   await p.keyboard.press('ArrowRight');
-  check('→ 키로 2장, 주소 #2', (await p.textContent('#counter')).trim() === '2 / 25' && new URL(p.url()).hash === '#2');
+  check('→ 키로 2장, 주소 #2', (await p.textContent('#counter')).trim() === '2 / 26' && new URL(p.url()).hash === '#2');
   await p.keyboard.press('Space'); await p.keyboard.press('PageDown');
   check('Space·PageDown 으로 4장', new URL(p.url()).hash === '#4');
   await p.keyboard.press('ArrowLeft'); await p.keyboard.press('PageUp');
   check('← · PageUp 으로 2장', new URL(p.url()).hash === '#2');
   await p.click('#next');
-  check('[다음] 버튼', (await p.textContent('#counter')).trim() === '3 / 25');
+  check('[다음] 버튼', (await p.textContent('#counter')).trim() === '3 / 26');
   await p.selectOption('#chsel', '2');
-  check('차시 메뉴로 2차시 첫 장(12)', new URL(p.url()).hash === '#12');
+  check('차시 메뉴로 2차시 첫 장(13)', new URL(p.url()).hash === '#13');
   check('바닥글 "2차시 소개형 · 2교시"(패키지 이름 + 교시)', (await p.textContent('.sf')).includes('2차시 소개형 · 2교시'), await p.textContent('.sf'));
   check('머리표 "2교시 · 1/14" (장 처음에서 지금 위치)', await p.evaluate(() => { const c = document.querySelector('.slide .chip'); return !c || /^2교시 · \d+\/14$/.test(c.textContent.trim()); }));
   check('차시 메뉴 글이 "N교시 · …"', (await p.$eval('#chsel', e => e.options[1].textContent)).startsWith('2교시 · '));
 
   const p2 = await ctx.newPage();
-  await p2.goto(L + '?l=2차시#16'); await p2.waitForSelector('.slide');
-  check('#16 주소로 바로 16장', (await p2.textContent('#counter')).trim() === '16 / 25' && (await p2.textContent('.st')).includes('이렇게 연결돼요'));
+  await p2.goto(L + '?l=2차시#17'); await p2.waitForSelector('.slide');
+  check('#17 주소로 바로 17장', (await p2.textContent('#counter')).trim() === '17 / 26' && (await p2.textContent('.st')).includes('이렇게 연결돼요'));
   check('교사 모드는 처음엔 꺼짐(노트 숨김)', await p2.evaluate(() => document.getElementById('notes').hidden));
   await p2.keyboard.press('n');
   check('N 키 → 비밀번호 창(노트는 아직 숨김)', await p2.isVisible('#pindlg') && await p2.evaluate(() => document.getElementById('notes').hidden));
@@ -84,7 +84,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
       });
       if (r.h > 2 || r.w > 2 || r.sw > 2 || r.pw > 2) bad.push(i + ':' + JSON.stringify(r));
     }
-    check(`${label}: 25장 모두 넘침 없음`, bad.length === 0, bad.join(' '));
+    check(`${label}: 26장 모두 넘침 없음`, bad.length === 0, bad.join(' '));
   }
   const pd = await ctx.newPage(); pd.on('pageerror', e => errs.push(e.message));
   await pd.goto(L + '?l=2차시'); await pd.waitForSelector('.slide');
@@ -127,7 +127,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   check('움직임 줄이기: 슬라이드 애니메이션 없음', await dp.evaluate(() => getComputedStyle(document.querySelector('.slide')).animationName === 'none'));
 
   // 모든 수업·모든 장: 본문 글자 20px 이상, 자동 축소 0.85 이상, 바닥글 13px 이상, 그림 불러오기
-  const EXPECT = { '2차시': 25, '4차시': 48, 'ponybot_4차시': 58, '8차시': 91, '예제': 18 };
+  const EXPECT = { '2차시': 26, '4차시': 48, 'ponybot_4차시': 58, '8차시': 91, '예제': 18 };
   for (const id of ['2차시', '4차시', 'ponybot_4차시', '8차시', '예제']) {
     const q = await ctx.newPage(); q.on('pageerror', e => errs.push(id + ': ' + e.message));
     await q.goto(L + '?l=' + encodeURIComponent(id)); await q.waitForSelector('.slide');
