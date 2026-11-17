@@ -41,6 +41,9 @@
 | `core` | `title`, `items`: [문장] | 어두운 바탕 핵심 정리 |
 | `checklist` | `title`, `items`: [문장] | 네모 체크 칸 2×2 또는 목록 |
 
+## 바로 가기 단추 (모든 형식 공통, 선택)
+- `go`: [{`label`, `href`}] — 다운로드·앱 열기를 시키는 장에 단추를 붙인다. `href` 는 수업 화면(`/lessons/`) 기준(`../sim/?kit=ponybot&ex=…`) 또는 `https://` 주소(새 탭). `{back}` 은 이 장으로 돌아오는 주소로 바뀐다(예: `../sim/?kit=ponybot&mission=p1-go-stop&back={back}`). PPT 에서는 같은 글이 누를 수 있는 링크로 들어간다.
+
 ## 예시
 ```json
 { "ch": 2, "type": "table", "title": "2단계: 로보독에게 보내기", "image": "ai_green",
