@@ -361,3 +361,8 @@ body.fluid .story, body.fluid .quiz.has-img, body.fluid .msn.has-img { grid-temp
 body.fluid .story .bub { font-size: .8em; max-width: 78%; }
 body.fluid .story .cap2, body.fluid .quiz .qq, body.fluid .mgoal { font-size: 1.25em; }
 body.fluid .qz, body.fluid .msteps, body.fluid .mstart { font-size: 1.05em; }
+
+/* 바로 가기 단추(go): 다운로드·앱 열기 장에서 그 화면으로 */
+.gobar { display: flex; flex-wrap: wrap; gap: 12px; margin-top: .7em; }
+.gobtn { display: inline-block; font-size: 1.15em; font-weight: 800; padding: .4em 1em; border-radius: 999px; background: var(--accent); color: #fff !important; text-decoration: none; box-shadow: 0 6px 16px rgba(36,86,229,.3); }
+.gobtn:focus-visible { outline: 4px solid #111827; outline-offset: 3px; }

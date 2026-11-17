@@ -176,6 +176,15 @@ const ICONS = {
                  `<circle cx="${x + 46}" cy="${y + 64}" r="24" fill="${c}"/><rect x="${x + 22}" y="${y + 110}" width="48" height="10" rx="5" fill="${c}" opacity=".6"/>`) +
         `</g><circle cx="${x + 46}" cy="${y + 200}" r="21" fill="${empty ? C.grayD : c}"/>` + text(n, x + 46, y + 209, 25, '#fff');
     }).join('') + label('모둠 카드', 340, 448, 40) + label('빈 책상', 584, 448, 40),
+  // 손 모양에 이름표(ID) 붙이기 — 포니봇 핸드포즈 수업(지도 학습)
+  icon_handpose: () => stage('#d2e7fb', { r: 280 }) +
+    [[C.red, C.redL, '✊', 'ID1'], [C.green, C.greenL, '✋', 'ID2'], [C.orange, C.orangeL, '✌️', 'ID3']].map(([c, l, e, n], i) => {
+      const x = 196 + i * 140, y = 140, rot = [-4, 0, 4][i];
+      return `<g transform="rotate(${rot} ${x + 56} ${y + 90})">` + solid(rr(x, y, 112, 180, 18), l) +
+        `<rect x="${x}" y="${y}" width="112" height="180" rx="18" fill="none" stroke="${c}" stroke-width="6"/>` +
+        `<text x="${x + 56}" y="${y + 112}" text-anchor="middle" font-size="76" font-family="Noto Color Emoji, sans-serif">${e}</text></g>` +
+        `<rect x="${x + 14}" y="${y + 196}" width="84" height="40" rx="20" fill="${c}"/>` + text(n, x + 56, y + 225, 26, '#fff');
+    }).join('') + label('손 모양 + 이름표', 406, 448, 40),
   // 안전하게 내려받기 → 꽂기 → 켜기
   icon_flash: () => stage('#d2e7fb', { r: 280 }) +
     solid(rr(150, 196, 140, 98, 14), C.navy) + `<rect x="161" y="207" width="118" height="76" rx="8" fill="${C.blueL}"/>` +

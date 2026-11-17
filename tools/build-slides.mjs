@@ -489,6 +489,12 @@ function build(data) {
     const s = pres.addSlide({ masterName: `${style}${ch}` });
     s.addNotes(d.notes || '');
     r(s, d);
+    if (Array.isArray(d.go) && d.go.length) {   // 바로 가기 단추 → PPT 에서는 누를 수 있는 링크(사이트 절대 주소)
+      const SITE = 'https://microbit-bridge.netlify.app/lessons/';
+      const back = encodeURIComponent(`../lessons/?l=${encodeURIComponent(data.id)}#${idx + 1}`);
+      const runs = d.go.flatMap((g, k) => [...(k ? [{ text: '   ' }] : []), { text: `${g.label} →`, options: { hyperlink: { url: new URL(String(g.href).replace('{back}', back), SITE).href }, bold: true, color: P, underline: { style: 'sng' } } }]);
+      s.addText(runs, { x: X0, y: 6.42, w: W, h: 0.42, fontFace: F, fontSize: 20, align: 'right', valign: 'middle', margin: 0 });
+    }
     if (type !== 'cover') { // 머리표: "2교시 · 3/12" (제목 위 오른쪽)
       s.addText(`${ch}교시 · ${chSeen[idx]}/${chCount[ch]}`, {
         shape: SH.roundRect, rectRadius: 0.16, x: 10.9, y: 0.08, w: 1.8, h: 0.34, fill: { color: type === 'core' ? '3A4560' : TINT }, line: { color: type === 'core' ? '3A4560' : TINT, width: 0 },

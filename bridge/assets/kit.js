@@ -16,6 +16,7 @@
       docsHref: '/ponybot/',
       foot: 'AI 포니봇은 바운더리엑스(boundaryX)의 제품입니다. · <a href="/ponybot/">포니봇 수업 자료</a> · <a href="/NOTICE.md">오픈소스·출처 고지</a>',
       filePrefix: '포니봇AI',
+      logo: '/ponybot/assets/official/material-pony-v2.webp',   // 머리글 왼쪽 위 그림(시뮬레이터와 같은 제품 그림)
       icon: '/assets/favicon-ponybot.svg'
     }
   };
@@ -58,7 +59,15 @@
       if (typeof v === 'string') el.setAttribute('href', v);
     });
     document.querySelectorAll('[data-kit-hide]').forEach(function (el) {
-      if (el.getAttribute('data-kit-hide').split(' ').indexOf(kit.slug) >= 0) el.hidden = true;
+      // SVG 에는 .hidden 이 듣지 않으므로 속성·style 로 숨김(로보독 로고가 포니봇 페이지에 남던 문제)
+      if (el.getAttribute('data-kit-hide').split(' ').indexOf(kit.slug) >= 0) { el.setAttribute('hidden', ''); el.style.display = 'none'; }
+    });
+    // 머리글 로고: 교구 그림으로(로보독 그림을 숨긴 자리에)
+    if (kit.logo) document.querySelectorAll('a.brand').forEach(function (a) {
+      if (a.querySelector('img.kit-logo')) return;
+      a.querySelectorAll('svg').forEach(function (sv) { sv.style.display = 'none'; });
+      var im = document.createElement('img'); im.className = 'kit-logo'; im.src = kit.logo; im.alt = ''; im.width = 32; im.height = 32;
+      a.insertBefore(im, a.firstChild);
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', apply);

@@ -44,7 +44,7 @@ export function attachMission(mission, ctx) {
   const box = document.createElement('section'); box.id = 'missionBox'; box.className = 'mission'; box.setAttribute('aria-label', '미션');
   const p = mission.predict;
   box.innerHTML = `
-    <div class="m-head"><span class="m-tag">${mission.star ? '도전' : '미션'}</span><h2>${esc(mission.title)}</h2>${backUrl ? `<a class="m-back" href="${esc(backUrl)}">← 슬라이드로</a>` : ''}</div>
+    <div class="m-head"><span class="m-tag">${mission.star ? '도전' : '미션'}</span><h2>${esc(mission.title)}</h2><span class="m-min" id="mMin" aria-live="polite"></span><button type="button" class="m-fold" id="mFold" aria-expanded="true">▲ 접기</button>${backUrl ? `<a class="m-back" href="${esc(backUrl)}">← 슬라이드로</a>` : ''}</div>
     ${mission.story ? `<p class="m-story">${esc(mission.story)}</p>` : ''}
     <p class="m-goal"><b>목표</b> ${esc(mission.goal)}</p>
     <fieldset class="m-predict"><legend>① 먼저 예상해요 — ${esc(p.q)}</legend>
@@ -58,6 +58,11 @@ export function attachMission(mission, ctx) {
   host.prepend(box);
   const $ = (id) => box.querySelector('#' + id);
   const lis = [...box.querySelectorAll('#mChecks li')];
+  // 접기·펼치기: 블록 편집기(MakeCode)를 누르면 저절로 접혀 코드를 가리지 않음. 접힌 상태에서는 확인 칸만 한 줄로
+  const setMin = (on) => { box.classList.toggle('min', on); $('mFold').textContent = on ? '▼ 펼치기' : '▲ 접기'; $('mFold').setAttribute('aria-expanded', String(!on)); };
+  $('mFold').onclick = () => setMin(!box.classList.contains('min'));
+  window.addEventListener('blur', () => { setTimeout(() => { const a = document.activeElement; if (a && a.tagName === 'IFRAME' && !passed) setMin(true); }, 0); });
+  document.addEventListener('focusin', (e) => { const t = e.target; if (t && (t.id === 'code' || t.closest && t.closest('.mcwrap')) && !passed) setMin(true); });
   function render() {
     let all = true;
     mission.checks.forEach((c, i) => {
@@ -66,6 +71,8 @@ export function attachMission(mission, ctx) {
       if (li.dataset.ok !== String(ok)) { li.dataset.ok = String(ok); ic.textContent = ok ? '✓' : '○'; li.classList.toggle('ok', ok); }
       const t = c.now ? c.now(m) : ''; const sm = li.lastElementChild; if (sm.textContent !== t) sm.textContent = t;
     });
+    const mini = mission.checks.map((c, i) => `<span class="${lis[i].dataset.ok === 'true' ? 'ok' : ''}">${lis[i].dataset.ok === 'true' ? '✓' : '○'} ${esc(c.label)}</span>`).join('');
+    if ($('mMin').innerHTML !== mini) $('mMin').innerHTML = mini;
     if (all && !passed && runner.running) pass();
   }
   function setResult(html, cls) { const r = $('mResult'); r.hidden = !html; r.className = 'm-result ' + (cls || ''); r.innerHTML = html; }
@@ -74,7 +81,7 @@ export function attachMission(mission, ctx) {
     const right = picked === null ? null : picked === p.answer;
     try { localStorage.setItem(missionKey(mission.id), JSON.stringify({ pass: true, predict: picked, predictRight: right, hints: hintN, t: Date.now() })); } catch (e) { /* 저장 못 해도 진행 */ }
     setResult(`<b>🎉 통과!</b> ${esc(mission.learn)}<br><span class="m-real">🔧 실물로 다시 확인: ${esc(mission.real)}</span>${backUrl ? `<br><a class="m-go" href="${esc(backUrl)}">슬라이드로 돌아가기 →</a>` : ''}`, 'ok');
-    box.classList.add('passed');
+    box.classList.add('passed'); setMin(false);   // 통과하면 펼쳐서 결과를 보여 줌
   }
   box.querySelectorAll('input[name=mpredict]').forEach((r) => r.addEventListener('change', () => {
     picked = +r.value; box.querySelectorAll('input[name=mpredict]').forEach((x) => { x.disabled = true; });

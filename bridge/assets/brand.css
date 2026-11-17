@@ -75,6 +75,7 @@ a { color: var(--accent); text-underline-offset: 3px; }
 .gnb-in { display: flex; align-items: center; gap: 14px; min-height: 58px; padding: 6px 16px; max-width: var(--page-w, 1900px); margin: 0 auto; flex-wrap: wrap; }
 .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-weight: 800; font-size: 16.5px; letter-spacing: -0.02em; white-space: nowrap; }
 .brand svg { width: 32px; height: 32px; flex: none; }
+.brand img { width: 32px; height: 32px; flex: none; border-radius: 9px; object-fit: cover; background: #b3ecff; }   /* 교구 그림 로고(포니봇 등) */
 .brand small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0; margin-top: -2px; }
 .gnb nav { display: flex; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .gnb nav a { text-decoration: none; color: var(--muted); font-weight: 650; font-size: 14.5px; padding: 8px 12px; border-radius: var(--r-pill); white-space: nowrap; transition: background .15s, color .15s; }

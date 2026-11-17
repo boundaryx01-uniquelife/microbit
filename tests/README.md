@@ -21,6 +21,11 @@ Playwright(크로미움)가 필요합니다.
 | `ponybot-say.js` | 포니봇 '말로 코드 만들기' 예시 2가지 + AI 모드 17항목: 문장(`?say=1·2`) → 규칙 도우미 코드 → 시뮬레이터에서 실제 움직임(옆으로 주차·대각선 / 선 따라가다 초록에서 쉬고 빨강에서 멈춤·앞이 막히면 기다림), AI 모드(가짜 서버 응답: 수업 코드·AI 코드 표시·검사 실패 시 규칙 도우미) | 서버 실행 후 `node tests/ponybot-say.js` |
 | `ponybot-stop500.js` | 포니봇 '피하고 계속 가' 코드: 피한 뒤 앞이 트이면 거리 500(못 읽음)으로 코드대로 멈추고, 시뮬레이터가 멈춘 이유를 한 번 알려 줌 5항목 | 서버 실행 후 `node tests/ponybot-stop500.js` |
 | `ponybot-bluetooth.js` | 포니봇 블루투스 예제(05, 제조사 예제의 ID45→ID5 고친 것): `?ex=` 열기, 🔵 블루투스 줄로 ID2·ID5·stop 보내 움직임 확인, OLED data, MakeCode 프로젝트에 bluetooth(라디오 빼고) 8항목 | 서버 실행 후 `node tests/ponybot-bluetooth.js` |
+| `sim-arrow.js` | `basic.showArrow` 8방향(포니봇·로보독) 11항목 | 서버 실행 후 `node tests/sim-arrow.js` |
+| `ponybot-trip.js` | 포니봇 센서 칸 '이동 거리'·'작동 시간'과 멈춘 뒤 요약(평균 cm/초) 6항목 | 서버 실행 후 `node tests/ponybot-trip.js` |
+| `lessons-go.js` | 수업 슬라이드 '바로 가기' 단추: 다운로드·앱 열기를 시키는 장마다 단추가 있고, 시뮬레이터 예제·미션·AI 브리지·웹앱이 실제로 열림(4개 수업) | 서버 실행 후 `node tests/lessons-go.js` |
+| `brand-icons.js` | 페이지마다 머리글 로고·탭 아이콘(메인·포니봇·로보독) 10항목 | 서버 실행 후 `node tests/brand-icons.js` |
+| `ponybot-mission-fold.js` | 미션 칸 접기: 펼친 칸은 코드 위를 덮지 않고, 블록 편집기를 누르면 한 줄로 접힘·[펼치기] 6항목 | 서버 실행 후 `node tests/ponybot-mission-fold.js` |
 | `bridge-mbcode.js` | 로보독 AI 브리지 '마이크로비트 코드 받기'(USB 수신기·로보독 코드 복사·파일·시뮬레이터 `?ex=` 열기, 포니봇에서는 숨김) 9항목 | 서버 실행 후 `node tests/bridge-mbcode.js` |
 | `ponybot-mission.js` | 포니봇 미션(행동 판정) 9개·62항목: 처음 코드·'그럴듯하지만 행동이 다른 코드'는 통과 못 함, 고친 코드는 통과, 예상 공개 시점, 도움말 단계, 통과 기록이 슬라이드에 표시, 돌아가기 주소 제한, 이야기·퀴즈 장 | 서버 실행 후 `node tests/ponybot-mission.js` |
 | `ponybot-view.js` | (620·800px 한 줄 구성 포함) 포니봇 시뮬레이터 화면 구성(한 화면: 위쪽 3D·2D − ＋ 전체 로봇 따라가기 한 줄 / 라디오 0~9 / [마이크로비트·OLED] / [센서·바퀴 명령])·2D 휠 확대·오른쪽 버튼 이동(페이지 스크롤 없음)·3D 확대/축소·선 닫기(시작점 누르기·단추)·편집 도구 접이식 위치 25항목 | Range 지원 서버(`node .claude/skills/microbit-kit-site/scripts/rangeserve.js bridge 8765`) 후 `node tests/ponybot-view.js` |

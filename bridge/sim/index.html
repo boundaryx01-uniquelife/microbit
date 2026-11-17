@@ -218,7 +218,15 @@
   /* ---- 미션 모드 ---- */
   body.mission-mode #assist, body.mission-mode #examples, body.mission-mode label[for=examples] { display: none; }
   .mission { border: 2px solid var(--accent); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; background: var(--card); }
-  @media (min-width: 981px) { .mission { position: sticky; top: 6px; z-index: 5; box-shadow: 0 6px 18px rgba(0,0,0,.12); } }   /* 코드를 내려 보는 동안에도 목표·확인 칸이 보이게 */
+  /* 미션 칸: 펼치면 제자리(코드 위를 덮지 않음), 접으면 한 줄로 위에 붙어 목표·확인만 보임 — 블록 코딩을 가리지 않게 */
+  .mission .m-min { display: none; }
+  .mission .m-fold { font-size: 13.5px; padding: 4px 10px; }
+  .mission.min { padding: 6px 12px; }
+  .mission.min > :not(.m-head) { display: none !important; }
+  .mission.min .m-head h2 { font-size: 16px; flex: 0 1 auto; }
+  .mission.min .m-min { display: flex; flex-wrap: wrap; gap: 4px 10px; flex: 1; font-size: 13.5px; color: var(--muted); }
+  .mission.min .m-min .ok { color: var(--ok); font-weight: 700; }
+  @media (min-width: 981px) { .mission.min { position: sticky; top: 6px; z-index: 5; box-shadow: 0 6px 18px rgba(0,0,0,.12); } }
   .mission.passed { border-color: var(--ok); }
   .m-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .m-head h2 { margin: 0; font-size: 20px; flex: 1; }
@@ -466,6 +474,8 @@
           <span>색(R,G,B)</span><b><span class="sw" id="psSw"></span> <span id="psRgb">-</span></b>
           <span>위치·방향</span><b id="psPose">-</b>
           <span>몸 속도</span><b id="psVel">-</b>
+          <span>이동 거리</span><b id="psTrip" title="이번 실행에서 바퀴로 움직인 길이(괄호: 출발점에서 지금까지 곧은 거리)">-</b>
+          <span>작동 시간</span><b id="psTime" title="▶ 실행 뒤 지난 시간(괄호: 바퀴가 돈 시간)">-</b>
         </div>
       </div>
       <div class="panel k-ponybot" id="pPWheel">

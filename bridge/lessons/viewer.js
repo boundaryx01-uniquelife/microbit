@@ -153,6 +153,15 @@
     slides.forEach(function (s) { cnt[s.ch] = (cnt[s.ch] || 0) + 1; });
     return slides.map(function (s) { seen[s.ch] = (seen[s.ch] || 0) + 1; return { n: seen[s.ch], of: cnt[s.ch] }; });
   }
+  // 바로 가기 단추(go): 다운로드·앱 열기를 시키는 장에서 그 화면으로 바로 이동. href 의 {back} 은 이 장으로 돌아오는 주소
+  function goBar(s, i) {
+    if (!s.go || !s.go.length) return '';
+    var back = '../lessons/?l=' + encodeURIComponent(id) + '#' + (i + 1);
+    return '<div class="gobar">' + s.go.map(function (g) {
+      var href = String(g.href).replace('{back}', encodeURIComponent(back)), ext = /^https?:/.test(href);
+      return '<a class="gobtn" href="' + esc(href) + '"' + (ext ? ' target="_blank" rel="noopener"' : '') + '>' + esc(g.label) + (ext ? ' ↗' : ' →') + '</a>';
+    }).join('') + '</div>';
+  }
   function slideHTML(s, i, total, ctx) {
     var fn = R[s.type] || R.points; s._n = i + 1;
     var plain = (s.type === 'cover');
@@ -160,7 +169,7 @@
     var pos = ctx.pos[i];
     var chip = plain ? '' : '<span class="chip">' + esc(s.ch) + '교시 · ' + pos.n + '/' + pos.of + '</span>';
     return '<div class="slide t-' + esc(s.type) + '" data-type="' + esc(s.type) + '">' + chip + head +
-      '<div class="sbody">' + (R[s.type] ? fn(s) : '') + '</div>' +
+      '<div class="sbody">' + (R[s.type] ? fn(s) : '') + goBar(s, i) + '</div>' +
       '<div class="sf"><span>' + esc(ctx.short) + ' · ' + esc(s.ch) + '교시</span><span>' + (i + 1) + '</span></div></div>';
   }
 
