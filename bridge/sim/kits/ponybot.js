@@ -233,6 +233,17 @@ const kit = {
     const c = robot.colorRGB(); $('psSw').style.background = `rgb(${c})`; $('psRgb').textContent = c.map(Math.round).join(', ');
     $('psPose').textContent = `x ${f1(robot.x)}, y ${f1(robot.y)}, 방향 ${f1(((robot.heading % 360) + 360) % 360)}°`;
     $('psVel').textContent = `옆 ${f1(robot.vx)} · 앞 ${f1(robot.vy)} cm/s · 회전 ${f1(robot.omega / Math.PI * 180)}°/s`;
+    // 이번 실행의 이동 거리·작동 시간(계산 활동용: 속도 = 거리 ÷ 시간). [처음으로]로 순간 이동한 것은 세지 않음
+    const T = M.trip || (M.trip = { on: false });
+    if (M.runner.running && !T.on) Object.assign(T, { on: true, path: 0, t: 0, moveT: 0, x0: robot.x, y0: robot.y, px: robot.x, py: robot.y, last: now });
+    if (T.on) {
+      const dt = Math.min(0.5, (now - T.last) / 1000), step = Math.hypot(robot.x - T.px, robot.y - T.py);
+      T.last = now; T.px = robot.x; T.py = robot.y;
+      if (M.runner.running) { if (step < 30) T.path += step; T.t += dt; if (robot.pwm.some((v) => v)) T.moveT += dt; }
+      else { T.on = false; if (T.t > 0.5) M.log(`📏 이번 실행: 이동 거리 ${f1(T.path)}cm · 작동 시간 ${f1(T.t)}초(바퀴가 돈 시간 ${f1(T.moveT)}초)${T.moveT > 0.2 ? ` → 평균 ${f1(T.path / T.moveT)}cm/초` : ''} — 추정 모델 값이에요`); }
+      $('psTrip').textContent = `${f1(T.path)} cm (곧게 ${f1(Math.hypot(robot.x - T.x0, robot.y - T.y0))} cm)`;
+      $('psTime').textContent = `${f1(T.t)} 초 (바퀴 ${f1(T.moveT)} 초)`;
+    }
     [1, 2, 3, 4].forEach(m => {
       const u = robot.pwm[m - 1] / 16, el = $('wc' + m), v = robot.w[MOTOR_WHEEL[m]];
       el.textContent = (u > 0 ? '▲ ' : u < 0 ? '▼ ' : '■ ') + Math.round(Math.abs(u)); el.className = u > 0 ? 'p' : u < 0 ? 'n' : '';

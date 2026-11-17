@@ -347,6 +347,11 @@ export class World {
 // ------------------------------------------------------------
 // 코드 변환: TypeScript 타입 제거 + 협동 스케줄링(await) 삽입
 // ------------------------------------------------------------
+// 화살표(basic.showArrow): MakeCode ArrowNames 순서 North 0 · NorthEast 1 · East 2 · SouthEast 3 · South 4 · SouthWest 5 · West 6 · NorthWest 7
+const ARROWS = ['00100 01110 10101 00100 00100', '00111 00011 00101 01000 10000', '00100 00010 11111 00010 00100', '10000 01000 00101 00011 00111',
+  '00100 00100 10101 01110 00100', '00001 00010 10100 11000 11100', '00100 01000 11111 01000 00100', '11100 11000 10100 00010 00001'];
+const ARROW_NAMES = { North: 0, NorthEast: 1, East: 2, SouthEast: 3, South: 4, SouthWest: 5, West: 6, NorthWest: 7 };
+const arrowIndex = (d) => { const n = typeof d === 'string' ? ARROW_NAMES[d] : Number(d); return Number.isInteger(n) ? ((n % 8) + 8) % 8 : 0; };
 const ASYNC_NS = new Set(['basic', 'input', 'radio', 'loops', 'control', 'serial', 'robodog', 'pins', 'music', 'led', 'game']);
 // 다른 교구 어댑터가 자기 네임스페이스(콜백을 받는 확장 API)를 등록할 때 씀. 로보독 동작은 그대로.
 export function addAsyncNs(...names) { names.forEach(n => ASYNC_NS.add(n)); }
@@ -626,7 +631,7 @@ export class Runner {
       showIcon: (name, ms) => showMatrix(F(ICONS[name] || ICONS.Confused), ms === undefined ? 600 : ms).then(() => { if (!ICONS[name]) self.warnOnce('icon' + name, `아이콘 ${name}는 시뮬레이터에 모양이 없어 대신 표시해요`); }),
       showLeds: (str, ms) => showMatrix(parseImage(str, 5, 5), ms === undefined ? 400 : ms),
       clearScreen: () => showMatrix(Array.from({ length: 5 }, () => new Array(5).fill(0))),
-      showArrow: (d, ms) => showMatrix(F('00100 01110 10101 00100 00100'), ms === undefined ? 600 : ms),
+      showArrow: (d, ms) => showMatrix(F(ARROWS[arrowIndex(d)]), ms === undefined ? 600 : ms),   // 방향 8개(북쪽부터 시계 방향)
     });
     const input = warnProxy('input', {
       onButtonPressed: (btn, h) => { (self.handlers['btn' + btn] = self.handlers['btn' + btn] || []).push(h); },
@@ -707,7 +712,7 @@ export class Runner {
       Button: { A: 'A', B: 'B', AB: 'AB' },
       IconNames: enumProxy('IconNames', Object.fromEntries(Object.keys(ICONS).map(k => [k, k]))),
       BaudRate: enumProxy('BaudRate'), Delimiters: enumProxy('Delimiters'), SerialPin: enumProxy('SerialPin'),
-      ArrowNames: enumProxy('ArrowNames'), Gesture: enumProxy('Gesture'), Melodies: enumProxy('Melodies'),
+      ArrowNames: enumProxy('ArrowNames', ARROW_NAMES), Gesture: enumProxy('Gesture'), Melodies: enumProxy('Melodies'),
       MelodyOptions: enumProxy('MelodyOptions'), BeatFraction: enumProxy('BeatFraction'), Note: enumProxy('Note'),
       randint: (a, b) => Math.floor(Math.random() * (b - a + 1)) + a,
       __yield: () => self.yieldNow(),
