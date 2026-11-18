@@ -96,7 +96,7 @@
       if (s.points && s.points.length) side += '<ul class="bul">' + s.points.map(function (p) { return '<li>' + hl(p) + '</li>'; }).join('') + '</ul>';
       if (s.callout) side += '<div class="callout">' + hl(s.callout) + '</div>';
       var url = s.url ? '<p class="urlline"><span aria-hidden="true">🌐</span> ' + esc(s.url) + '</p>' : '';
-      return url + '<div class="imgs' + (s.url ? ' has-url' : '') + '">' + img(s.image, s.title) + '<div class="side">' + side + '</div></div>';
+      return url + '<div class="imgs' + (s.url ? ' has-url' : '') + (s.wide ? ' wide' : '') + '">' + img(s.image, s.title) + '<div class="side">' + side + '</div></div>';
     },
     table: function (s) {
       var rows = '<ul class="rows">' + s.rows.map(function (r, i) {
