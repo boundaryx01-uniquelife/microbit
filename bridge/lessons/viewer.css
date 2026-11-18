@@ -270,6 +270,7 @@ body.fluid .flowwrap:not(:has(.low)) .flow .nd { min-height: 0; }
 .split.code.has-img > .pic { max-height: 330px; }
 .sbody > .callout { margin-top: 18px; flex: none; }
 .sbody > .split.code { flex: 0 0 auto; }
+.sbody > .split.tbl { flex: 0 0 auto; }
 .split.code.has-img { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); }
 .split.code.has-img .steps b { font-size: 1.6em; } .split.code.has-img .steps li { padding: .55em .9em; }
 .split.code.has-img .steps small { font-size: 1.3em; }
