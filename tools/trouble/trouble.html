@@ -1,0 +1,110 @@
+<!doctype html>
+<!-- 포니봇 3교시 '안 될 때' 슬라이드 그림 원본. node tools/trouble/render.js 로 bridge/lessons/assets/trouble_*.png 를 만든다.
+     실제 화면을 흉내 낸 설명 그림(예시)이다 — MakeCode·크롬 화면 글자는 실제와 같게 맞췄다. -->
+<html lang="ko"><head><meta charset="utf-8">
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:"Noto Sans CJK KR","Noto Sans KR","Malgun Gothic",sans-serif;background:#fff;color:#111827}
+.fig{width:780px;height:580px;padding:18px;display:flex;flex-direction:column;gap:14px;background:#F4F6FA;position:relative}
+.row{display:flex;gap:14px;align-items:center}
+.box{background:#fff;border:2px solid #D7DCE6;border-radius:14px;padding:14px;position:relative}
+.lab{position:absolute;top:-14px;left:12px;background:#2456E5;color:#fff;font-weight:800;font-size:22px;padding:3px 14px;border-radius:999px}
+.lab.red{background:#E5484D}.lab.green{background:#1FA463}.lab.orange{background:#F08A24}
+.arrow{font-size:40px;color:#566077;font-weight:900}
+.hl{outline:4px solid #E5484D;outline-offset:3px;border-radius:8px}
+/* MakeCode 대화상자 */
+.dlg{width:430px;border-radius:6px;box-shadow:0 2px 10px rgba(0,0,0,.25);background:#fff;font-family:Arial,sans-serif}
+.dlg .t{display:flex;justify-content:space-between;padding:12px 14px;border-bottom:1px solid #ddd;font-size:19px;font-weight:700}
+.dlg .t i{font-style:normal;background:#222;color:#fff;border-radius:50%;width:22px;height:22px;display:inline-flex;align-items:center;justify-content:center;font-size:14px}
+.dlg .b{padding:12px 14px;font-size:16px;line-height:1.6;color:#333}
+.dlg .f{display:flex;justify-content:space-between;padding:10px 14px;border-top:1px solid #ddd;background:#f6f6f6}
+.dlg .f span{font-size:15px;padding:6px 12px;border-radius:4px;background:#ddd}.dlg .f span.p{background:#6633cc;color:#fff}
+/* 포니봇 전원 */
+.sw{display:flex;flex-direction:column;align-items:center;gap:8px;font-weight:800;font-size:24px}
+.sw .k{width:120px;height:52px;border-radius:26px;background:#cfd5df;position:relative;border:3px solid #9aa3b2}
+.sw .k::after{content:"";position:absolute;left:6px;top:5px;width:36px;height:36px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.sw small{font-size:18px;font-weight:600;color:#566077}
+/* 마이크로비트 뒷면 */
+.mb{width:190px;height:150px;background:#1f2a20;border-radius:12px;position:relative;margin:0 auto}
+.mb .usb{position:absolute;top:-10px;left:58px;width:34px;height:14px;background:#b8bec8;border-radius:3px}
+.mb .led{position:absolute;top:14px;width:16px;height:16px;border-radius:50%}
+.mb .r{left:36px;background:#ff3b2f;box-shadow:0 0 14px 5px rgba(255,59,47,.8)}
+.mb .y{left:100px;background:#4a3f12}.mb .y.on{background:#ffd21f;box-shadow:0 0 14px 5px rgba(255,210,31,.85)}
+.cap{text-align:center;font-weight:800;font-size:26px;margin-top:8px}
+.cap small{display:block;font-weight:600;font-size:21px;color:#566077}
+/* MakeCode 톱니 메뉴 */
+.mc{background:#3454D1;border-radius:8px;padding:8px 12px;display:flex;gap:18px;align-items:center;color:#fff;font-size:22px}
+.mc .g{background:#2a46b8;padding:4px 10px;border-radius:6px}
+.menu{background:#fff;border-radius:6px;box-shadow:0 3px 10px rgba(0,0,0,.25);width:240px;font-size:21px}
+.menu div{padding:9px 14px;border-bottom:1px solid #eee}
+.tg{display:flex;align-items:center;gap:10px;font-size:19px;padding:5px 0}
+.tg i{width:44px;height:24px;border-radius:12px;background:#e6e6e6;border:1px solid #ccc;position:relative;flex:none}
+.tg i::after{content:"";position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.tg i.on{background:#6633cc;border-color:#6633cc}.tg i.on::after{left:22px}
+/* 크롬 블루투스 선택 창 */
+.pick{width:390px;background:#fff;border-radius:8px;box-shadow:0 3px 12px rgba(0,0,0,.25);font-family:Arial,"Noto Sans CJK KR",sans-serif}
+.pick .t{padding:10px 14px;font-size:18px;border-bottom:1px solid #eee}
+.pick .it{padding:9px 14px;font-size:21px;border-bottom:1px solid #f2f2f2}
+.pick .it.sel{background:#e8f0fe}
+.pick .f{display:flex;justify-content:flex-end;gap:8px;padding:10px 14px}.pick .f span{font-size:16px;padding:6px 14px;border-radius:4px;border:1px solid #ccc}.pick .f span.p{background:#1a73e8;color:#fff;border-color:#1a73e8}
+.oled{width:230px;height:120px;background:#05070a;border-radius:8px;color:#7fd3ff;font-family:monospace;font-size:30px;padding:14px 16px;line-height:1.5}
+</style></head><body>
+
+<!-- ① 다운로드가 안 될 때 -->
+<div class="fig" id="dl">
+  <div class="row">
+    <div class="box" style="flex:1"><span class="lab red">이 창이 뜨면</span>
+      <div class="dlg" style="margin-top:6px">
+        <div class="t">micro:bit Connection failed... <i>✕</i></div>
+        <div class="b">Your micro:bit appears to have stalled<br>Please disconnect any battery and usb connection, and try again.</div>
+        <div class="f"><span>도움말</span><span class="p">완료</span></div>
+      </div>
+    </div>
+    <div class="arrow">→</div>
+    <div class="box" style="width:230px"><span class="lab green">이렇게</span>
+      <div class="sw" style="margin-top:8px"><div class="k"></div>포니봇 전원 OFF<small>USB 뺐다 다시 꽂고<br>다시 다운로드</small></div>
+    </div>
+  </div>
+  <div class="row" style="flex:1">
+    <div class="box" style="flex:1;height:100%"><span class="lab orange">탐색기에 MICROBIT가 없을 때</span>
+      <div class="row" style="justify-content:space-around;margin-top:22px">
+        <div><div class="mb"><div class="usb"></div><div class="led r"></div><div class="led y"></div></div><div class="cap">빨간불만 ✕<small>충전 전용 케이블</small></div></div>
+        <div class="arrow">→</div>
+        <div><div class="mb"><div class="usb"></div><div class="led r"></div><div class="led y on"></div></div><div class="cap">노란불도 반짝 ✔<small>데이터 케이블로 바꾸기</small></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ② 블루투스 연결이 안 될 때 -->
+<div class="fig" id="bt">
+  <div class="row">
+    <div class="box" style="width:300px"><span class="lab">① 톱니 → 프로젝트 설정</span>
+      <div class="mc" style="margin-top:8px"><span>⌂</span><span>?</span><span class="g hl">⚙</span></div>
+      <div class="menu" style="margin-top:6px"><div class="hl">☰ 프로젝트 설정</div><div>확장 프로그램</div><div>장치 연결</div></div>
+    </div>
+    <div class="box" style="flex:1"><span class="lab">② 맨 위 스위치 켜기</span>
+      <div style="margin-top:8px">
+        <div class="tg hl"><i class="on"></i>페어링이 필요하지 않습니다</div>
+        <div class="tg"><i></i>바로 페어링 (기본)</div>
+        <div class="tg"><i></i>Passkey 페어링</div>
+        <div class="tg"><i></i>블루투스 이벤트 서비스 비활성화</div>
+      </div>
+      <p style="font-size:17px;color:#566077;margin-top:6px">시뮬레이터 [다운로드]는 자동으로 켜져요</p>
+    </div>
+  </div>
+  <div class="box" style="flex:1"><span class="lab green">③ 내 포니봇 이름 고르기</span>
+    <div class="row" style="justify-content:space-around;margin-top:10px">
+      <div class="oled">BT NAME:<br>zupev</div>
+      <div class="arrow">→</div>
+      <div class="pick">
+        <div class="t">페어링 요청 기기 선택</div>
+        <div class="it">BBC micro:bit [tovig]</div>
+        <div class="it sel hl">BBC micro:bit [zupev]</div>
+        <div class="it">BBC micro:bit [pavet]</div>
+        <div class="f"><span>취소</span><span class="p">페어링</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</body></html>
