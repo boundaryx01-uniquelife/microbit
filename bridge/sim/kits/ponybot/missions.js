@@ -13,7 +13,7 @@ export const MISSIONS = [
     scene: 'free',
     predict: { q: '먼저 그대로 실행하고 A 버튼을 누르면 포니봇은 어떻게 될까요?', choices: ['조금 가다가 스스로 멈춘다', '멈추지 않고 계속 간다', '움직이지 않는다'], answer: 1, why: '"앞으로 이동" 뒤에 멈추라는 블록이 없어요. 로봇은 시키지 않은 일은 하지 않아요.' },
     code: HEAD('미션 1 · 멈추지 않는 포니봇', ['A 버튼을 누르면 앞으로 가요. 그런데 멈추지 않아요!', '고칠 것: 얼마 동안 간 뒤(일시중지) 멈추게(모든 모터 정지) 해 보세요.'])
-      + 'let 속도 = 80\naiPonybot.stopAllMotors()\nbasic.showIcon(IconNames.Happy)\ninput.onButtonPressed(Button.A, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)\n})\n',
+      + 'let 속도 = 200\naiPonybot.stopAllMotors()\nbasic.showIcon(IconNames.Happy)\ninput.onButtonPressed(Button.A, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)\n})\n',
     checks: [
       { label: 'A 버튼 누르기', test: (m) => m.pressed.A },
       { label: '앞으로 15cm 넘게 가기', test: (m) => m.maxForward >= 15, now: (m) => `지금 ${Math.max(0, m.maxForward).toFixed(0)}cm` },
@@ -35,7 +35,7 @@ export const MISSIONS = [
     scene: 'free',
     predict: { q: '"메카넘 → 방향" 블록을 쓰면 포니봇의 몸은 어디를 볼까요?', choices: ['오른쪽으로 몸을 돌린 다음 간다', '앞을 본 채로 옆으로 미끄러지듯 간다', '제자리에서 빙글 돈다'], answer: 1, why: '메카넘 바퀴는 비스듬한 롤러 덕분에 몸을 돌리지 않고도 옆으로 갈 수 있어요.' },
     code: HEAD('미션 2 · 게걸음으로 비키기', ['지금은 A 버튼을 누르면 앞으로 가요.', '고칠 것: 방향을 → (오른쪽 옆)으로 바꿔 보세요. 몸은 앞을 본 채로!'])
-      + 'let 속도 = 80\naiPonybot.stopAllMotors()\nbasic.showArrow(ArrowNames.North)\ninput.onButtonPressed(Button.A, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)\n    basic.pause(2000)\n    aiPonybot.stopAllMotors()\n})\n',
+      + 'let 속도 = 200\naiPonybot.stopAllMotors()\nbasic.showArrow(ArrowNames.North)\ninput.onButtonPressed(Button.A, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)\n    basic.pause(2000)\n    aiPonybot.stopAllMotors()\n})\n',
     checks: [
       { label: 'A 버튼 누르기', test: (m) => m.pressed.A },
       { label: '오른쪽 옆으로 15cm 넘게 가기', test: (m) => m.maxSide >= 15, now: (m) => `지금 ${Math.max(0, m.maxSide).toFixed(0)}cm` },
@@ -58,7 +58,7 @@ export const MISSIONS = [
     scene: 'free',
     predict: { q: '앞·오른쪽·뒤·왼쪽을 같은 시간씩 가면 포니봇은 어디에 있을까요?', choices: ['출발한 자리 근처로 돌아온다', '훨씬 먼 곳에 있다', '제자리에서 돌기만 한다'], answer: 0, why: '같은 빠르기로 같은 시간씩 반대 방향으로 가면 간 만큼 되돌아와요.' },
     code: HEAD('도전 · 네모 한 바퀴', ['앞으로 갔다가 오른쪽으로 가는 데까지만 만들어져 있어요.', '이어서 뒤(↓), 왼쪽(←)을 더해 네모를 완성하고 마지막에 멈추세요.'])
-      + 'let 속도 = 80\naiPonybot.stopAllMotors()\ninput.onButtonPressed(Button.A, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)\n    basic.pause(2000)\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Right, 속도)\n    basic.pause(2000)\n    aiPonybot.stopAllMotors()\n})\n',
+      + 'let 속도 = 200\naiPonybot.stopAllMotors()\ninput.onButtonPressed(Button.A, function () {\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Forward, 속도)\n    basic.pause(2000)\n    aiPonybot.runMecanum(aiPonybot.Mecanum.Right, 속도)\n    basic.pause(2000)\n    aiPonybot.stopAllMotors()\n})\n',
     checks: [
       { label: 'A 버튼 누르기', test: (m) => m.pressed.A },
       { label: '네 방향 모두 가기(움직인 거리 50cm 넘게)', test: (m) => m.path >= 50, now: (m) => `지금 ${m.path.toFixed(0)}cm` },
