@@ -10,8 +10,8 @@ main .lead { padding: 0; }
 .lcard b { font-size: 19px; line-height: 1.4; } .lcard span { color: var(--muted); font-size: 14.5px; }
 
 /* 슬라이드 색(신호색은 고정, 글자색은 대비 맞춤) */
-.c-blue { --c: #2456e5; --on: #fff; } .c-red { --c: #e5484d; --on: #fff; } .c-yellow { --c: #f2b300; --on: #111827; }
-.c-green { --c: #1fa463; --on: #fff; } .c-orange { --c: #f08a24; --on: #111827; } .c-gray { --c: #7a8499; --on: #fff; } .c-ink { --c: #111827; --on: #fff; }
+.c-blue { --c: #2456e5; --on: #fff; } .c-red { --c: #d8363b; --on: #fff; } .c-yellow { --c: #f2b300; --on: #111827; }
+.c-green { --c: #16864f; --on: #fff; } .c-orange { --c: #f08a24; --on: #111827; } .c-gray { --c: #66718a; --on: #fff; } .c-ink { --c: #111827; --on: #fff; }
 
 /* ---------- 틀: 화면 전체를 쓰는 한 장면 ---------- */
 body.is-viewer { height: 100vh; height: 100dvh; display: flex; flex-direction: column; overflow: hidden; }
@@ -372,3 +372,19 @@ body.fluid .qz, body.fluid .msteps, body.fluid .mstart { font-size: 1.05em; }
 .gobar { display: flex; flex-wrap: wrap; gap: 12px; margin-top: .7em; }
 .gobtn { display: inline-block; font-size: 1.15em; font-weight: 800; padding: .4em 1em; border-radius: 999px; background: var(--accent); color: #fff !important; text-decoration: none; box-shadow: 0 6px 16px rgba(36,86,229,.3); }
 .gobtn:focus-visible { outline: 4px solid #111827; outline-offset: 3px; }
+
+/* 외톨이 줄 방지: 짧은 글 덩어리는 줄 길이를 고르게 */
+.cd li, .cd h3, .rows .rt, .rows b, .pts b, .pts small, .steps b, .nd b, .nd small, .callout, .strip, .q-text, .qt p, .gobtn, .goals li { text-wrap: balance; }
+/* 4칸 카드: 제목이 두 줄로 꺾이지 않게 작게·좁게 */
+.cds.n4 .cd h3 { font-size: 1.3em; padding: .6em .6em; gap: .4em; }
+.cds.n4 .cd h3 .dot { font-size: .8em; }
+.cds.n4 .cd ul { padding-left: 1.3em; padding-right: .7em; }
+.flow.n4 .nd b { font-size: 1.6em; }
+.flow.n3 .nd b { font-size: 2.5em; }
+.cicon { height: 100px; }
+/* 항목 4개 이상 장: 줄 사이·안쪽 여백을 조금 줄여 자동 축소 없이 한 화면에 */
+.pts:has(li:nth-child(4)), .steps:has(li:nth-child(4)) { gap: .5em; }
+.pts:has(li:nth-child(4)) li, .split.code:not(.has-img) .steps:has(li:nth-child(4)) li { padding: .5em 1em; }
+.steps:has(li:nth-child(4)) small { font-size: 1.15em; margin-top: 0; }
+.gobar { margin-top: .3em; }
+.sbody > .callout { padding: .6em 1em; margin-top: 14px; }
