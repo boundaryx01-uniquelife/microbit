@@ -87,6 +87,12 @@ a { color: var(--accent); text-underline-offset: 3px; }
   .gnb-in { gap: 6px 10px; }
   .gnb nav { order: 3; flex-basis: 100%; }
   .brand small { display: none; }
+  .gnb nav { flex-wrap: wrap; overflow-x: visible; }   /* 줄바꿈: 오른쪽 항목이 잘려 안 보이는 일 없게 */
+}
+/* 터치 화면: 누르는 곳은 높이 44px 이상(PC 모양은 그대로) */
+@media (pointer: coarse) {
+  .gnb nav a { display: inline-flex; align-items: center; min-height: 44px; }
+  .btn, button { min-height: 44px; }
 }
 
 /* ---------- 버튼 ---------- */

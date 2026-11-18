@@ -29,7 +29,8 @@ Playwright(크로미움)가 필요합니다.
 | `ponybot-3d-microbit.js` | 포니봇 3D: 꽂힌 마이크로비트 5×5 LED가 코드 화면과 같고 거울 반전 없음 6항목 | 서버 실행 후 `node tests/ponybot-3d-microbit.js` |
 | `sim-howto-fold.js` | 따라 하기 칸 접기(로보독·포니봇): 블록 편집기를 누르면 한 줄로·[펼치기] 7항목 | 서버 실행 후 `node tests/sim-howto-fold.js` |
 | `bridge-mbcode.js` | 로보독 AI 브리지 '마이크로비트 코드 받기'(USB 수신기·로보독 코드 복사·파일·시뮬레이터 `?ex=` 열기, 포니봇에서는 숨김) 9항목 | 서버 실행 후 `node tests/bridge-mbcode.js` |
-| `ponybot-mission.js` | 포니봇 미션(행동 판정) 9개·62항목: 처음 코드·'그럴듯하지만 행동이 다른 코드'는 통과 못 함, 고친 코드는 통과, 예상 공개 시점, 도움말 단계, 통과 기록이 슬라이드에 표시, 돌아가기 주소 제한, 이야기·퀴즈 장 | 서버 실행 후 `node tests/ponybot-mission.js` |
+| `ponybot-mission.js` | 포니봇 미션(행동 판정) 5개·39항목: 처음 코드·'그럴듯하지만 행동이 다른 코드'는 통과 못 함, 고친 코드는 통과, 예상 공개 시점, 도움말 단계, 통과 기록이 슬라이드에 표시, 돌아가기 주소 제한, 이야기·퀴즈 장 | 서버 실행 후 `node tests/ponybot-mission.js` |
+| `sim-responsive.js` | 시뮬레이터 반응형: 좁은 화면(iPhone·iPad 세로)에서 무대가 편집기와 함께 보임·무대 높이 상한, 넓은 화면(PC·전자칠판·iPad 가로)에서 무대 고정·1600px 이상 확대, 실행·정지·처음으로 한 줄, 가로 넘침 없음, 터치 44px, `?ex=` 예제 선택 표시·모르는 id 안내 | Range 지원 서버 후 `node tests/sim-responsive.js` |
 | `ponybot-view.js` | (620·800px 한 줄 구성 포함) 포니봇 시뮬레이터 화면 구성(한 화면: 위쪽 3D·2D − ＋ 전체 로봇 따라가기 한 줄 / 라디오 0~9 / [마이크로비트·OLED] / [센서·바퀴 명령])·2D 휠 확대·오른쪽 버튼 이동(페이지 스크롤 없음)·3D 확대/축소·선 닫기(시작점 누르기·단추)·편집 도구 접이식 위치 25항목 | Range 지원 서버(`node .claude/skills/microbit-kit-site/scripts/rangeserve.js bridge 8765`) 후 `node tests/ponybot-view.js` |
 | `sim-unified.js` | 교구 고르기 시험: 옛 `/ponybot/sim/` 넘김, 두 교구 화면 요소·오류 0·390px, 실행 뒤 입력 안내(A 버튼·라디오·본체 버튼)와 눌렀을 때 움직임, 진짜 MakeCode 편집기에서 포니봇 예제 7개가 블록으로 보임(인터넷 필요, `--no-makecode` 로 건너뜀) — 서버를 스스로 띄움 | `node tests/sim-unified.js` |
 | `ponybot-assistant.mjs` | 포니봇 말로 코드 만들기 94항목(블록 표 검사·범위 밖 자르기·정책 null=한도 없음·모르는 말 경고·프롬프트 생성·복사본 동기) | `node tests/ponybot-assistant.mjs` |
