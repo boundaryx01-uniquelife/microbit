@@ -241,8 +241,8 @@ const kit = {
       const dt = Math.min(0.5, (now - T.last) / 1000), step = Math.hypot(robot.x - T.px, robot.y - T.py);
       T.last = now; T.px = robot.x; T.py = robot.y;
       if (M.runner.running) { if (step < 30) T.path += step; T.t += dt; if (robot.pwm.some((v) => v)) T.moveT += dt; }
-      else { T.on = false; if (T.t > 0.5) M.log(`📏 이번 실행: 이동 거리 ${f1(T.path)}cm · 작동 시간 ${f1(T.t)}초(바퀴가 돈 시간 ${f1(T.moveT)}초)${T.moveT > 0.2 ? ` → 평균 ${f1(T.path / T.moveT)}cm/초` : ''} — 추정 모델 값이에요`); }
-      $('psTrip').textContent = `${f1(T.path)} cm (곧게 ${f1(Math.hypot(robot.x - T.x0, robot.y - T.y0))} cm)`;
+      else { if (step < 30) T.path += step; T.on = false; if (T.t > 0.5) M.log(`📏 이번 실행: 이동 거리 ${f1(T.path)}cm · 작동 시간 ${f1(T.t)}초(바퀴가 돈 시간 ${f1(T.moveT)}초)${T.moveT > 0.2 ? ` → 평균 ${f1(T.path / T.moveT)}cm/초` : ''} — 추정 모델 값이에요`); }
+      $('psTrip').textContent = `${f1(T.path)} cm (곧게 ${f1(Math.min(T.path, Math.hypot(robot.x - T.x0, robot.y - T.y0)))} cm)`;
       $('psTime').textContent = `${f1(T.t)} 초 (바퀴 ${f1(T.moveT)} 초)`;
     }
     [1, 2, 3, 4].forEach(m => {

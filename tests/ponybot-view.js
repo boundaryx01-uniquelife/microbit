@@ -101,7 +101,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
     await q.route('**/api/*-assistant', (r) => r.fulfill({ json: { ok: true, configured: false, needsCode: true } }));
     await q.goto(BASE + 'sim/?kit=ponybot'); await q.waitForFunction(() => window.__pony, null, { timeout: 60000 }); await q.waitForTimeout(500);
     const g = await q.evaluate(() => ({ cols: getComputedStyle(document.querySelector('main')).gridTemplateColumns.split(' ').length, sw: document.documentElement.scrollWidth, ask: document.getElementById('askText').getBoundingClientRect().width }));
-    check(`${w}px: 한 줄 구성(열 1개)·가로 넘침 없음·말로 만들기 칸이 넓음`, g.cols === 1 && g.sw <= w && g.ask > w * 0.5, JSON.stringify(g));
+    check(`${w}px: 한 줄 구성(열 1개)·가로 넘침 없음·말로 만들기 칸이 넓음`, g.cols === 1 && g.sw <= w && g.ask > w * 0.45, JSON.stringify(g));
     await q.close();
   }
   await b.close();

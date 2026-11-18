@@ -34,7 +34,7 @@
   button.stop { background: var(--stop); color: var(--stop-text); border-color: var(--stop); }
   button.on { outline: 3px solid var(--accent); }
   button:focus-visible, select:focus-visible, textarea:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
-  textarea { width: 100%; height: 52vh; min-height: 280px; font: 13px/1.5 ui-monospace, Consolas, "D2Coding", monospace; padding: 10px;
+  textarea { width: 100%; height: 52vh; min-height: 280px; font: 14px/1.5 ui-monospace, Consolas, "D2Coding", monospace; padding: 10px;
     border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); resize: vertical; tab-size: 4; white-space: pre; }
   .note { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 6px 0; }
   .stepno { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-size: 14px; font-weight: 800; margin-right: 6px; vertical-align: 1px; }
@@ -47,7 +47,7 @@
   summary { min-height: 40px; display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
   details > summary { list-style: none; } details > summary::before { content: '▸'; display: inline-block; width: 16px; transition: transform .15s; } details[open] > summary::before { transform: rotate(90deg); }
   details > summary::-webkit-details-marker { display: none; }
-  #log { font: 12px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; max-height: 150px; overflow: auto; background: var(--bg);
+  #log { font: 14px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; max-height: 150px; overflow: auto; background: var(--bg);
     border-radius: 8px; padding: 8px; margin-top: 8px; }
   #log .warn { color: var(--warnc); } #log .error { color: #d43c3c; font-weight: 700; }
   .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
@@ -59,11 +59,11 @@
   .quick { display: flex; flex-wrap: wrap; gap: 6px 14px; align-items: center; margin: 0 0 8px; padding: 8px 10px; border-radius: 12px; border: 2px solid var(--accent); background: var(--accent-soft); }
   .quick[hidden], .quick .qgrp[hidden] { display: none; }
   .quick .qgrp { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
-  .quick .qlab { font-weight: 700; font-size: 13.5px; white-space: nowrap; }
+  .quick .qlab { font-weight: 700; font-size: 14px; white-space: nowrap; }
   .quick button { min-width: 44px; min-height: 44px; padding: 6px 10px; font-weight: 700; }
   .quick #qNums { display: inline-flex; gap: 6px; flex-wrap: wrap; }
   .quick #qNums button.last { outline: 3px solid var(--accent); }
-  .quick .qrep { display: inline-flex; gap: 4px; align-items: center; font-size: 13px; white-space: nowrap; min-height: 32px; }
+  .quick .qrep { display: inline-flex; gap: 4px; align-items: center; font-size: 14px; white-space: nowrap; min-height: 32px; }
   #view3d { width: 100%; aspect-ratio: 3 / 2; max-height: 52vh; border-radius: 10px; overflow: hidden; background: #dfe6f0; }
   .panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-top: 10px; }
   .panel { border: 1px solid var(--line); border-radius: 12px; padding: 10px; }
@@ -71,10 +71,10 @@
   .howto { margin-top: 8px; padding: 10px 14px; border-radius: 12px; border: 2px solid var(--accent); background: var(--accent-soft); }
   .howto-head { display: flex; align-items: center; gap: 8px; font-size: 16px; }
   .howto-head .close { margin-left: auto; min-height: 32px; padding: 2px 10px; }
-  #howtoFold { margin-left: auto; font-size: 13.5px; } #howtoFold + .close { margin-left: 0; }
+  #howtoFold { margin-left: auto; font-size: 14px; } #howtoFold + .close { margin-left: 0; }
   /* 따라 하기 칸 접기: 블록 편집기를 누르면 제목 한 줄로 — 코드를 가리지 않게(미션 칸과 같은 방식) */
   .howto.min { padding: 6px 12px; } .howto.min > :not(.howto-head) { display: none !important; }
-  .howto .lvl { white-space: nowrap; flex: none; font-size: 12.5px; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-text); font-weight: 700; }
+  .howto .lvl { white-space: nowrap; flex: none; font-size: 14px; padding: 1px 8px; border-radius: 999px; background: var(--accent); color: var(--accent-text); font-weight: 700; }
   .howto p.note { margin: 4px 0 6px; }
   .howto-sub { font-size: 14.5px; }
   .howto ol { margin: 4px 0 6px; padding-left: 24px; font-size: 14.5px; line-height: 1.6; }
@@ -82,18 +82,18 @@
   .needs { display: flex; flex-wrap: wrap; gap: 8px; align-items: stretch; margin-top: 10px; padding: 10px; border-radius: 12px; background: var(--accent-soft); }
   .needs > b { width: 100%; font-size: 14px; }
   .needs .need { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; text-align: left; max-width: 300px; font-weight: 700; }
-  .needs .need small { font-weight: 400; color: var(--muted); font-size: 12.5px; line-height: 1.4; }
+  .needs .need small { font-weight: 400; color: var(--muted); font-size: 14px; line-height: 1.4; }
   .needs .need.warn { border-color: var(--warn); }
   .panel.need-on { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
   .panel.need-off { opacity: .6; } .panel.need-off:hover, .panel.need-off:focus-within { opacity: 1; }
   .mb { display: grid; grid-template-columns: auto auto auto; gap: 8px; align-items: center; justify-content: start; }
   #mbled { width: 110px; height: 110px; background: #111; border-radius: 8px; }
   .mbbtn { width: 44px; height: 44px; border-radius: 50%; font-weight: 800; padding: 0; user-select: none; touch-action: none; }
-  .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 13px; }
+  .kv { display: grid; grid-template-columns: auto 1fr; gap: 2px 10px; font-size: 14px; }
   .kv b { font-variant-numeric: tabular-nums; }
   .radio button { min-width: 44px; min-height: 44px; padding: 6px 8px; }
   header a { display: inline-block; padding: 10px 4px; font-size: 15px; }
-  label { font-size: 13px; }
+  label { font-size: 14px; }
   label:has(> input[type=checkbox]) { display: inline-flex; align-items: center; gap: 8px; min-height: 36px; padding: 2px 6px 2px 0; cursor: pointer; }
   .site-foot a { display: inline-block; padding: 10px 6px; }
   #battery { height: 28px; }
@@ -138,30 +138,30 @@
   .asklabel { font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
   .assist textarea#askText { flex: 1 1 260px; height: auto; min-height: 44px; max-height: 120px; white-space: pre-wrap; font-size: 15px; line-height: 1.5; font-family: inherit; resize: none; padding: 9px 10px; border-color: var(--field); }
   .askmore { gap: 4px 12px; margin-top: 4px; font-size: 14px; }
-  #askNote { font-size: 13px; }
+  #askNote { font-size: 14px; }
   body:not(.mc-mode) .mcopt { display: none; }
   .askmore details summary { min-height: 32px; font-size: 14px; color: var(--accent); font-weight: 700; }
   .askmore details[open] { flex-basis: 100%; }
   .ans { position: relative; }
   .ans .close { position: absolute; top: 4px; right: 0; min-width: 40px; min-height: 40px; padding: 0; }
   .ans .expl { padding-right: 44px; }
-  .badge { font-size: 12px; border-radius: 999px; padding: 2px 9px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-weight: 600; }
+  .badge { font-size: 14px; border-radius: 999px; padding: 2px 9px; background: var(--bg); border: 1px solid var(--line); color: var(--muted); font-weight: 600; }
   .badge.ai { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
   .chips { display: flex; flex-wrap: wrap; align-items: flex-start; gap: 6px; margin: 4px 0 6px; }
   .chips button { flex: none; max-width: 100%; text-align: left; white-space: normal; min-height: 36px; }
-  .chipshead { font-size: 13.5px; color: var(--muted); margin: 6px 0 0; }
-  .chips button { font-size: 12.5px; padding: 4px 10px; border-radius: 999px; }
+  .chipshead { font-size: 14px; color: var(--muted); margin: 6px 0 0; }
+  .chips button { font-size: 14px; padding: 4px 10px; border-radius: 999px; }
   .ans { margin-top: 8px; border-top: 1px dashed var(--line); padding-top: 8px; }
-  .ans pre { max-height: 170px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 8px; font: 12.5px/1.45 ui-monospace, Consolas, monospace; margin: 6px 0; }
+  .ans pre { max-height: 170px; overflow: auto; background: var(--bg); border-radius: 8px; padding: 8px; font: 14px/1.45 ui-monospace, Consolas, monospace; margin: 6px 0; }
   .ans .expl { white-space: pre-wrap; font-size: 14px; line-height: 1.55; }
   .ans ul { margin: 4px 0; padding-left: 20px; font-size: 14px; color: var(--warnc); }
   .demo-head #btnDemoStop { margin-left: auto; padding: 6px 10px; }
   .cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 8px; }
   .cards button { text-align: left; padding: 8px 10px; line-height: 1.35; }
-  .cards button small { display: block; color: var(--muted); font-size: 12px; }
+  .cards button small { display: block; color: var(--muted); font-size: 14px; }
   .cards button.playing { border-color: var(--accent); outline: 3px solid var(--accent); }
   .caption { margin-top: 8px; padding: 8px 12px; border-radius: 10px; background: var(--bg); font-size: 15px; font-weight: 700; min-height: 40px; }
-  .caption .step { display: inline-block; background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; font-size: 12px; margin-right: 8px; vertical-align: 2px; }
+  .caption .step { display: inline-block; background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 1px 9px; font-size: 14px; margin-right: 8px; vertical-align: 2px; }
   .panel.auto { outline: 3px solid var(--accent); outline-offset: 2px; }
   .mbbtn.auto, .radio button.auto { background: var(--accent); color: var(--accent-text); }
   html:not([data-kit="ponybot"]) .pe-bar [data-tool="track"] { display: none; }   /* 로보독에는 라인 센서가 없어 '선 편집'은 숨김(포니봇용) */
@@ -188,15 +188,15 @@
   .viewctl { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-left: auto; }
   @media (min-width: 421px) { .tabs { flex-wrap: nowrap; } .tabs button, .viewctl, .viewctl .vfollow { white-space: nowrap; } .viewctl { flex-wrap: nowrap; } }
   .viewctl button { min-width: 38px; padding: 6px 10px; font-size: 15px; }
-  .viewctl .vfollow { display: inline-flex; align-items: center; gap: 4px; font-size: 13.5px; }
+  .viewctl .vfollow { display: inline-flex; align-items: center; gap: 4px; font-size: 14px; }
   html[data-kit="ponybot"] #quick { display: none !important; }       /* 라디오·A/B 는 아래 줄에 항상 보이므로 빠른 조작 줄은 숨김 */
   html[data-kit="ponybot"] #followRow { display: none; }              /* 3D 카메라 따라가기는 위쪽 '로봇 따라가기'로 */
   .radiostrip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 8px; margin: 8px 0 0; }
-  .radiostrip .rlab { font-weight: 700; font-size: 13.5px; }
+  .radiostrip .rlab { font-weight: 700; font-size: 14px; }
   .radiostrip { flex-wrap: nowrap; }
   @media (max-width: 480px) { .radiostrip, .radiostrip #radioBtns { flex-wrap: wrap; } } .radiostrip #radioBtns { display: flex; flex-wrap: nowrap; gap: 3px; margin: 0; }
   .radiostrip #radioBtns button { min-width: 0; width: 28px; min-height: 36px; padding: 4px 0; flex: 0 0 auto; }
-  .radiostrip label { font-size: 13px; }
+  .radiostrip label { font-size: 14px; }
   .livedock { display: grid; grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr); gap: 8px; margin: 8px 0 10px; align-items: stretch; }
   .livedock .panel { margin: 0; min-width: 0; padding: 8px; }
   .livedock #pMb { grid-column: 1; grid-row: 1; }
@@ -211,11 +211,11 @@
   .livedock .note { display: none; }
   .livedock details { display: none; }
   .livedock .ph { margin-bottom: 4px; }
-  .livedock .kv { font-size: 12px; gap: 3px 6px; grid-template-columns: auto minmax(0, 1fr); }
+  .livedock .kv { font-size: 14px; gap: 3px 6px; grid-template-columns: auto minmax(0, 1fr); }
   .livedock .kv > span { white-space: nowrap; }
   #pPSensor .kv > :nth-last-child(-n+4) { display: none; }   /* 위치·몸 속도는 바퀴 명령 표에서 알 수 있어 숨김 */
   .livedock #pPWheel { overflow-x: auto; }
-  .livedock table.wh { font-size: 11.5px; } .livedock table.wh th, .livedock table.wh td { padding: 2px 3px; white-space: nowrap; }
+  .livedock table.wh { font-size: 14px; } .livedock table.wh th, .livedock table.wh td { padding: 2px 3px; white-space: nowrap; }
   @media (max-width: 420px) { .livedock { grid-template-columns: minmax(0, 1fr); } .livedock #pMb, .livedock #pPOled, .livedock #pPSensor, .livedock #pPWheel { grid-column: 1; grid-row: auto; } }
   html[data-kit="ponybot"] body:has(#pane2d.hidden) #peBar { display: none; }   /* 3D 보기에서는 물체 놓기 도구 숨김(2D에서만 편집) */
   /* ---- 미션 모드 ---- */
@@ -223,17 +223,17 @@
   .mission { border: 2px solid var(--accent); border-radius: 14px; padding: 12px 14px; margin-bottom: 10px; background: var(--card); }
   /* 미션 칸: 펼치면 제자리(코드 위를 덮지 않음), 접으면 한 줄로 위에 붙어 목표·확인만 보임 — 블록 코딩을 가리지 않게 */
   .mission .m-min { display: none; }
-  .mission .m-fold { font-size: 13.5px; padding: 4px 10px; }
+  .mission .m-fold { font-size: 14px; padding: 4px 10px; }
   .mission.min { padding: 6px 12px; }
   .mission.min > :not(.m-head) { display: none !important; }
   .mission.min .m-head h2 { font-size: 16px; flex: 0 1 auto; }
-  .mission.min .m-min { display: flex; flex-wrap: wrap; gap: 4px 10px; flex: 1; font-size: 13.5px; color: var(--muted); }
+  .mission.min .m-min { display: flex; flex-wrap: wrap; gap: 4px 10px; flex: 1; font-size: 14px; color: var(--muted); }
   .mission.min .m-min .ok { color: var(--ok); font-weight: 700; }
   @media (min-width: 981px) { .mission.min { position: sticky; top: 6px; z-index: 5; box-shadow: 0 6px 18px rgba(0,0,0,.12); } }
   .mission.passed { border-color: var(--ok); }
   .m-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .m-head h2 { margin: 0; font-size: 20px; flex: 1; }
-  .m-tag { background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 2px 12px; font-weight: 800; font-size: 13px; }
+  .m-tag { background: var(--accent); color: var(--accent-text); border-radius: 999px; padding: 2px 12px; font-weight: 800; font-size: 14px; }
   .m-back, .m-go { font-weight: 700; }
   .m-story { margin: 8px 0 0; color: var(--muted); font-size: 15px; }
   .m-goal { margin: 6px 0 8px; font-size: 16.5px; line-height: 1.5; }
@@ -248,7 +248,7 @@
   .m-checks li .m-ic { font-weight: 900; color: var(--muted); width: 1.1em; }
   .m-checks li.ok { color: var(--ok); font-weight: 700; } .m-checks li.ok .m-ic { color: var(--ok); }
   .m-foot { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 4px; }
-  .m-foot .est { margin-left: auto; font-size: 12.5px; }
+  .m-foot .est { margin-left: auto; font-size: 14px; }
   .m-hints { margin: 6px 0 0; padding-left: 22px; font-size: 15px; line-height: 1.5; }
   .m-hints:empty { display: none; }
   .m-result { margin-top: 8px; padding: 10px 12px; border-radius: 10px; font-size: 15.5px; line-height: 1.55; }
@@ -263,12 +263,12 @@
   .dot { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--ink); vertical-align: -2px; background: #555; }
   .dot.on { background: #ffd23f; }
   .sw { display: inline-block; width: 26px; height: 14px; border-radius: 4px; border: 1px solid var(--ink); vertical-align: -2px; }
-  table.wh { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+  table.wh { width: 100%; border-collapse: collapse; font-size: 14px; font-variant-numeric: tabular-nums; }
   table.wh th, table.wh td { text-align: left; padding: 2px 4px; border-bottom: 1px solid var(--line); }
   table.wh td.p { color: var(--ok); } table.wh td.n { color: var(--bad); }
   #oled { width: 100%; max-width: 384px; aspect-ratio: 2 / 1; image-rendering: pixelated; border-radius: 8px; display: block; background: #05080e; }
-  pre.est-list { font: 12px/1.5 ui-monospace, Consolas, monospace; background: var(--bg); padding: 8px; border-radius: 8px; overflow: auto; max-width: 100%; margin: 6px 0 0; }
-  .no3d { font-size: 13.5px; }
+  pre.est-list { font: 14px/1.5 ui-monospace, Consolas, monospace; background: var(--bg); padding: 8px; border-radius: 8px; overflow: auto; max-width: 100%; margin: 6px 0 0; }
+  .no3d { font-size: 14px; }
   #howtoLevel:empty { display: none; }
   .pe-map .pe-row { min-width: 0; max-width: 100%; }   /* 좁은 화면에서 긴 지도 이름 목록이 화면 밖으로 밀지 않게 */
   /* ---- 실행 뒤 안내: 무엇을 눌러야 하는지 ---- */
@@ -280,6 +280,54 @@
   .panel.guide-on { animation: none; }
   @keyframes guidePulse { 0%, 100% { box-shadow: 0 0 0 0 var(--warn); } 50% { box-shadow: 0 0 0 9px transparent; } }
   @media (prefers-reduced-motion: reduce) { .guide-on { animation: none; } }
+
+  /* ---- 화면 배치(반응형): 무대(3D·2D 보기)를 코드 편집기와 한 화면에 ---- */
+  .runbtns { display: inline-flex; gap: 8px; flex: none; }
+  .runbtns button { white-space: nowrap; }
+  #askMode { white-space: normal; }
+  .asklabel { flex-wrap: wrap; }
+  @media (max-width: 600px) { .asklabel { white-space: normal; } #askMode { text-align: left; } }
+  #stage { background: var(--surface); }
+  html, body.mc-mode main > section:last-child { scroll-padding-top: calc(var(--stageH, 0px) + 12px); }   /* 고정된 무대에 가려지지 않게 */
+  #stageDock { display: none; }
+  /* 넓은 화면(두 열): 오른쪽 열의 무대는 스크롤해도 따라옴 · 1600px 이상은 오른쪽 열을 넓혀 무대를 크게 */
+  @media (min-width: 981px) {
+    #stage { position: sticky; top: 0; z-index: 6; padding-bottom: 6px; box-shadow: 0 8px 10px -8px rgba(0,0,0,.18); }
+    body:not(.mc-mode) #stage { top: 8px; }
+    #view3d { max-height: min(52vh, 560px); }
+  }
+  @media (min-width: 1600px) {
+    body.mc-mode main { grid-template-columns: minmax(0, 1fr) 12px minmax(440px, 620px); }
+    html[data-kit="ponybot"] body.mc-mode main { grid-template-columns: minmax(0, 1fr) 12px minmax(480px, 640px); }
+    #view3d { max-height: min(60vh, 640px); }
+  }
+  /* 좁은 화면(한 열): 무대를 맨 위에 화면 높이 약 1/3 이내로 고정해, 블록을 고치면서 로봇을 같이 봄 */
+  @media (max-width: 980px) {
+    main, body.mc-mode main, main.sized, body.mc-mode main.sized, html[data-kit] body.mc-mode main, html[data-kit] body.mc-mode main.sized { display: flex; flex-direction: column; grid-template-columns: none; }
+    main > section { width: 100%; }
+    #stageDock { display: block; position: sticky; top: 0; z-index: 30; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg);
+      padding: 6px 8px; box-shadow: var(--shadow-md); }
+    #stageDock:empty { display: none; }
+    #stageDock .tabs { margin-bottom: 4px; }
+    #stageDock .tabs button { min-height: 40px; padding: 4px 10px; }
+    #stageDock #view3d, #stageDock #top2d { width: min(100%, calc(24vh * 1.5)); max-height: 24vh; margin: 0 auto; }
+    #stageDock #followRow, #stageDock #quick, #stageDock .sub, #stageDock #pane3d > :not(#view3d) { display: none !important; }
+    #stageDock #peBar { display: none; }
+    .mcwrap iframe { height: calc(100dvh - 34vh); min-height: 380px; }
+    body.mc-mode .mcwrap iframe { height: calc(100dvh - 34vh); }
+  }
+  @media (max-width: 980px) and (orientation: landscape) { #stageDock #view3d, #stageDock #top2d { width: min(100%, calc(30vh * 1.5)); max-height: 30vh; } }
+  /* 터치 화면: 눌러야 하는 것은 높이 44px 이상(PC 모양은 그대로) */
+  @media (pointer: coarse) {
+    button, select, .btn { min-height: 44px; }
+    .tabs button, #stageDock .tabs button { min-height: 44px; }
+    #examples { min-height: 44px; }
+    label:has(> input[type=checkbox]) { min-height: 44px; }
+    input[type=checkbox] { width: 28px; height: 28px; }
+    summary { min-height: 44px; }
+    .chips button, .viewctl button, .howto-head .close, .mission .m-fold { min-height: 44px; }
+    .radiostrip #radioBtns button { min-height: 44px; }
+  }
 </style>
 <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
 </head>
@@ -292,6 +340,7 @@
 </div></header>
 
 <main>
+  <div id="stageDock" aria-label="로봇 화면(위에 고정)"></div>
   <section>
     <div class="assist" id="assist">
       <div class="askbar">
@@ -322,9 +371,9 @@
     <div class="row" style="margin-top:4px">
       <b class="row" style="gap:0;font-size:15px"><span class="stepno">2</span>코드</b>
       <select id="examples" aria-label="예제 고르기"></select>
-      <button id="btnRun" class="primary">▶ 실행</button>
+      <span class="runbtns"><button id="btnRun" class="primary">▶ 실행</button>
       <button id="btnStop" class="stop">■ 정지</button>
-      <button id="btnReset">↺ 처음으로</button>
+      <button id="btnReset">↺ 처음으로</button></span>
       <span id="runMsg" role="status"></span>
     </div>
     <section id="howto" class="howto" hidden aria-live="polite">
@@ -376,6 +425,7 @@
       <div class="scenebox"><img id="sceneImg" class="scene-img" alt="" hidden><div class="t"><p class="note" id="sceneHint" style="margin:0"></p><p class="note score" id="score" style="margin:4px 0 0"></p></div></div>
     </div>
     <p class="note no3d k-ponybot" id="no3d"></p>
+    <div id="stage">
     <div class="tabs" role="tablist" aria-label="보기 고르기">
       <button id="tab3d" role="tab" aria-selected="true">3D 보기</button>
       <button id="tab2d" role="tab" aria-selected="false">2D 보기 (가벼움)</button>
@@ -402,6 +452,7 @@
       <canvas id="eyes3" class="k-robodog" style="width:100%;height:110px;display:block;border-radius:10px;margin-top:6px" aria-label="로보독 눈 LED"></canvas>
     </div>
 
+    </div>
     <details class="fold" id="ctrlBox" open>
     <summary><span><span class="stepno">3</span>버튼 눌러 시험하기 · 라디오 · 센서 · 환경</span></summary>
     <div id="needs" class="needs" hidden aria-live="polite"></div>
@@ -531,7 +582,7 @@ if (KIT.id === 'ponybot') {
   tabs.append(ctl);
   const strip = document.createElement('div'); strip.id = 'radioStrip'; strip.className = 'radiostrip'; strip.setAttribute('aria-label', '라디오 숫자 보내기');
   strip.innerHTML = '<span class="rlab" title="라디오로 숫자 보내기(AI 브리지 대신)">📡</span>'; const repLabel = $('radioRepeat').closest('label'); repLabel.lastChild.textContent = ' 계속'; repLabel.title = '마지막 숫자를 0.5초마다 계속 보내요'; strip.append($('radioBtns'), repLabel);
-  $('pane3d').after(strip);
+  $('stage').after(strip);
   // 🔵 블루투스 줄: 코드가 블루투스(UART)를 쓰면 라디오 줄 대신 보임 — AI 웹앱(핸드포즈·음성)이 보내는 글자를 대신 보냄
   const bt = document.createElement('div'); bt.id = 'btStrip'; bt.className = 'radiostrip'; bt.style.display = 'none'; bt.setAttribute('aria-label', '블루투스 글자 보내기(AI 웹앱 대신)');
   bt.innerHTML = '<span class="rlab" title="블루투스로 글자 보내기(AI 웹앱 대신)">🔵</span><span id="btBtns" style="display:flex;gap:3px;flex-wrap:wrap">' +
@@ -570,7 +621,13 @@ if (!world.aiClass) world.aiClass = { ...EST.aiClassDefault };   // (숨은) AI 
 const logEl = $('log');
 function runMsg(text, kind) { const el = $('runMsg'); el.textContent = text; el.className = kind || ''; }
 const narrow = () => window.matchMedia('(max-width: 980px)').matches;
-function showRobot() { if (narrow()) (!$('guide').hidden ? $('guide') : mode3d ? $('pane3d') : $('pane2d')).scrollIntoView({ behavior: 'smooth', block: 'start' }); }
+// 좁은 화면(한 열)에서는 무대를 맨 위 고정 칸으로 옮기고, 넓어지면 오른쪽 열 제자리로 되돌림
+{ const stage = $('stage'), dock = $('stageDock'), mark = document.createComment('stage-home'), mq = window.matchMedia('(max-width: 980px)');
+  stage.before(mark);
+  const place = () => { if (mq.matches) dock.append(stage); else mark.after(stage); };
+  if (window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty('--stageH', Math.round(stage.getBoundingClientRect().height) + 'px')).observe(stage);
+  place(); (mq.addEventListener ? mq.addEventListener('change', place) : mq.addListener(place)); }
+function showRobot() { if (narrow() && !$('guide').hidden) $('guide').scrollIntoView({ behavior: 'smooth', block: 'center' }); }   // 좁은 화면은 무대가 위에 고정돼 있어 따로 스크롤하지 않음
 function log(msg, kind) {
   if (kind === 'error') runMsg('⚠ ' + msg.slice(0, 90), 'err');
   const t = new Date().toLocaleTimeString('ko-KR', { hour12: false });
@@ -667,7 +724,8 @@ const defaultEx = EXAMPLES.find(e => e.id === KIT.defaultExampleId) || EXAMPLES[
 try { $('code').value = localStorage.getItem(KIT.codeKey) || defaultEx.code; }
 catch (e) { $('code').value = defaultEx.code; }
 // 주소 ?ex=<예제id>: 그 예제로 시작(AI 브리지의 '마이크로비트 코드 받기'에서 넘어옴) — 블록 편집기 아래 [다운로드]로 내려받음
-const urlEx = (() => { try { const id = new URLSearchParams(location.search).get('ex'); return id ? EXAMPLES.find(e => e.id === id) || null : null; } catch (e) { return null; } })();
+const urlExId = (() => { try { return new URLSearchParams(location.search).get('ex') || ''; } catch (e) { return ''; } })();
+const urlEx = urlExId ? EXAMPLES.find(e => e.id === urlExId) || null : null;
 if (urlEx) $('code').value = urlEx.code;
 $('code').addEventListener('input', () => { save(); clearGuide(); });
 $('code').addEventListener('keydown', (e) => {
@@ -1297,7 +1355,8 @@ $('askBtn').onclick = async () => {
     showAnswer(await ruleAssist(text), '📘 규칙 도우미:');
   } finally { btn.disabled = false; btn.textContent = '코드 만들기'; }
 };
-if (urlEx && !new URLSearchParams(location.search).get('mission')) { applyExample(urlEx); log(`예제를 열었어요: ${urlEx.title} — 블록을 확인하고 편집기 아래 [다운로드]로 마이크로비트에 내려받으세요`); }
+if (urlExId && !urlEx) { const m = `주소의 예제 '${urlExId}'를 찾지 못했어요. 위 예제 목록에서 골라 주세요.`; log(m, 'warn'); runMsg(m, 'err'); }
+if (urlEx && !new URLSearchParams(location.search).get('mission')) { applyExample(urlEx); sel.value = urlEx.id; log(`예제를 열었어요: ${urlEx.title} — 블록을 확인하고 편집기 아래 [다운로드]로 마이크로비트에 내려받으세요`); }
 // 주소 ?say=N: 예시 문장 N번(1부터)을 넣고 바로 코드를 만들어 보여 줌(교구 첫 화면의 '말로 만들기 예시'에서 넘어옴). 실행은 사람이 누름
 { const n = parseInt(new URLSearchParams(location.search).get('say'), 10);
   if (n >= 1 && n <= SAMPLE_REQUESTS.length && !new URLSearchParams(location.search).get('mission')) {
