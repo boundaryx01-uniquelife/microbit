@@ -26,6 +26,7 @@ const results = []; const check = (n, ok, d = '') => { results.push(ok); console
   check('OLED 둘째 줄에 data 값이 보임', oled > 10, String(oled));
   // MakeCode 프로젝트 구성(블루투스 확장, 라디오 없음)
   const src = await (await p.request.get(BASE + 'sim/index.html')).text();
+  check('MakeCode 프로젝트: 블루투스 코드면 "페어링 필요 없음"(open:1) 설정', /bluetooth: \{ open: 1, whitelist: 0, security_level: null \}/.test(src) && /\.\.\.yotta/.test(src));
   check('MakeCode 프로젝트: 블루투스 코드면 radio 빼고 bluetooth 추가', /bluetooth\\\.\/\.test\(code\)\) \{ delete deps\.radio; deps\.bluetooth = '\*'; \}/.test(src) || /delete deps\.radio; deps\.bluetooth = '\*'/.test(src));
   check('페이지 오류 없음', errs.length === 0, errs.join(' | '));
   await b.close(); const f = results.filter((x) => !x).length;

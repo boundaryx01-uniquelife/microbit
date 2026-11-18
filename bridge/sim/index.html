@@ -1200,12 +1200,15 @@ function mcProject(code) {
   const now = Math.round(Date.now() / 1000), deps = { ...MCK.base };
   const pkg = MCK.blockPackage(code);
   if (pkg) { const name = pkg.split('=')[0]; deps[name] = MCK.pins[name]; }
-  if (/\bbluetooth\./.test(code)) { delete deps.radio; deps.bluetooth = '*'; }   // 블루투스와 라디오는 함께 쓸 수 없음(MakeCode)
+  const bt = /\bbluetooth\./.test(code);
+  if (bt) { delete deps.radio; deps.bluetooth = '*'; }   // 블루투스와 라디오는 함께 쓸 수 없음(MakeCode)
+  // 블루투스: 프로젝트 설정 '페어링이 필요하지 않습니다'(open) — 이게 없으면 AI 웹앱이 연결하지 못함(실물 확인)
+  const yotta = bt ? { yotta: { config: { 'microbit-dal': { bluetooth: { open: 1, whitelist: 0, security_level: null } } } } } : {};
   return {
     header: { id: MCK.idPrefix + Date.now(), name: MCK.projectName, meta: {}, editor: 'blocksprj', target: 'microbit', targetVersion: '9.0.0',
       pubId: '', pubCurrent: false, recentUse: now, modificationTime: now, isDeleted: false, cloudVersion: null, cloudCurrent: false, cloudLastSyncTime: 0, _rev: null },
     text: {
-      'pxt.json': JSON.stringify({ name: MCK.projectName, dependencies: deps, files: ['main.blocks', 'main.ts', 'README.md'], preferredEditor: 'blocksprj' }),
+      'pxt.json': JSON.stringify({ name: MCK.projectName, dependencies: deps, files: ['main.blocks', 'main.ts', 'README.md'], preferredEditor: 'blocksprj', ...yotta }),
       'main.ts': code, 'main.blocks': '', 'README.md': ' ',
     },
   };
