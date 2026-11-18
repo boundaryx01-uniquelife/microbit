@@ -11,7 +11,7 @@
 // ※ 점검 속도(점검속도)는 실물에서 바퀴가 확실히 도는 값으로 선생님이 정하세요.
 // =============================================================
 
-let 점검속도 = 80
+let 점검속도 = 200
 let 점검중 = false
 basic.showIcon(IconNames.Heart)
 aiPonybot.stopAllMotors()
