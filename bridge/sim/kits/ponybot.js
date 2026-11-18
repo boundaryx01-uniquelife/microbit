@@ -21,7 +21,7 @@ export const GROUPS = [
 const RADIO_IDS = new Set(['03_ai-traffic-ponybot', '04_ai-team-template']);
 export const EXAMPLES = RAW_EXAMPLES.map(e => {
   const group = RADIO_IDS.has(e.id) ? 'radio' : /\bbluetooth\./.test(e.code) ? 'bluetooth' : 'button';
-  const input = group === 'radio' ? '위 [라디오로 숫자 보내기]에서 숫자를 눌러 보세요' : group === 'bluetooth' ? '🔵 블루투스 줄에서 ID1~ID5·stop을 눌러 보세요(실물은 AI 웹앱이 보내요)' : 'A·B 버튼을 눌러 보세요';
+  const input = group === 'radio' ? '위 [라디오로 숫자 보내기]에서 숫자를 눌러 보세요' : group === 'bluetooth' ? (/onUartDataReceived/.test(e.code) ? '🔵 블루투스 줄에서 ID1~ID5·stop을 눌러 보세요(실물은 AI 웹앱이 보내요)' : '포니봇 화면(OLED)을 보세요. A 버튼 = 이름 다시 보기') : 'A·B 버튼을 눌러 보세요';
   return {
     ...e, group, level: e.simOnly ? '시뮬레이터 전용' : '',
     sim: ['[▶ 실행]을 누르세요 (실행만으로는 움직이지 않는 예제가 많아요)', `${input} — ${e.how}`, '움직임은 오른쪽 위에서 본 바닥, 포니봇 화면(OLED)·바퀴 표에서 확인해요'],
