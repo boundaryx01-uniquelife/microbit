@@ -47,10 +47,10 @@ export function attachMission(mission, ctx) {
     <div class="m-head"><span class="m-tag">${mission.star ? '도전' : '미션'}</span><h2>${esc(mission.title)}</h2><span class="m-min" id="mMin" aria-live="polite"></span><button type="button" class="m-fold" id="mFold" aria-expanded="true">▲ 접기</button>${backUrl ? `<a class="m-back" href="${esc(backUrl)}">← 슬라이드로</a>` : ''}</div>
     ${mission.story ? `<p class="m-story">${esc(mission.story)}</p>` : ''}
     <p class="m-goal"><b>목표</b> ${esc(mission.goal)}</p>
-    <fieldset class="m-predict"><legend>① 먼저 예상해요 — ${esc(p.q)}</legend>
+    <fieldset class="m-predict"><legend>먼저 예상해요 — ${esc(p.q)}</legend>
       ${p.choices.map((c, i) => `<label><input type="radio" name="mpredict" value="${i}"> ${esc(c)}</label>`).join('')}
       <p class="m-pmsg" id="mPredictMsg" aria-live="polite"></p></fieldset>
-    <div class="m-checks"><b>② 실행하고 확인해요</b> <span class="note" style="margin:0">${esc(mission.how || '▶ 실행을 누른 뒤 오른쪽 A 버튼')} · 로봇이 한 일로 자동 확인</span>
+    <div class="m-checks"><b>실행하고 확인해요</b> <span class="note" style="margin:0">${esc(mission.how || '▶ 실행을 누른 뒤 오른쪽 A 버튼')} · 로봇이 한 일로 자동 확인</span>
       <ul id="mChecks">${mission.checks.map((c, i) => `<li data-i="${i}"><span class="m-ic" aria-hidden="true">○</span> <span>${esc(c.label)}</span> <small></small></li>`).join('')}</ul></div>
     <div class="m-foot"><button type="button" id="mHint">💡 도움말 (0/3)</button><button type="button" id="mReset">미션 코드로 되돌리기</button><span class="est" id="mSim">시뮬레이터 판정 · 실물 확인은 따로</span></div>
     <ol class="m-hints" id="mHints" aria-live="polite"></ol>

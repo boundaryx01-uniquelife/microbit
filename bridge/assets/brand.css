@@ -76,7 +76,7 @@ a { color: var(--accent); text-underline-offset: 3px; }
 .brand { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: var(--ink); font-weight: 800; font-size: 16.5px; letter-spacing: -0.02em; white-space: nowrap; }
 .brand svg { width: 32px; height: 32px; flex: none; }
 .brand img { width: 32px; height: 32px; flex: none; border-radius: 9px; object-fit: cover; background: #b3ecff; }   /* 교구 그림 로고(포니봇 등) */
-.brand small { display: block; font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0; margin-top: -2px; }
+.brand small { display: block; font-size: 12px; font-weight: 600; color: var(--muted); letter-spacing: 0; margin-top: -2px; }
 .gnb nav { display: flex; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; }
 .gnb nav a { text-decoration: none; color: var(--muted); font-weight: 650; font-size: 14.5px; padding: 8px 12px; border-radius: var(--r-pill); white-space: nowrap; transition: background .15s, color .15s; }
 .gnb nav a:hover { color: var(--ink); background: var(--surface-2); }
@@ -118,7 +118,7 @@ input[type=checkbox], input[type=radio], input[type=range] { accent-color: var(-
 
 /* ---------- 바닥글 ---------- */
 .site-foot { border-top: 1px solid var(--line); margin-top: 28px; padding: 18px 16px 26px; color: var(--muted); font-size: 13px; line-height: 1.7; text-align: center; }
-.site-foot a { color: inherit; }
+.site-foot a { color: inherit; display: inline-block; padding: 8px 4px; }   /* 바닥글 링크도 누르기 쉽게 */
 .site-foot .partner { display: inline-flex; align-items: center; gap: 6px; font-weight: 700; color: var(--ink); }
 
 @media (prefers-reduced-motion: reduce) { .btn, button, .gnb nav a { transition: none; } }

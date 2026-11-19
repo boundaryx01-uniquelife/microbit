@@ -59,6 +59,7 @@
     border: 1px solid var(--line); border-radius: var(--r-pill); padding: 4px 12px; pointer-events: none; }
   .ctl { position: absolute; right: 14px; top: 12px; display: flex; gap: 8px; }
   .ctl button { font-size: 14px; min-height: 36px; padding: 6px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(6px); }
+  @media (pointer: coarse) { .ctl button { min-height: 44px; } }
   .ctl button:focus-visible, .cta a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
   /* 자막 + 장면 진행 막대 */
@@ -86,7 +87,7 @@
     box-shadow: var(--shadow-sm); transition: border-color .15s, transform .2s var(--ease), box-shadow .2s; }
   .cta a:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
   .cta a.main { background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #6a3df0)); color: var(--accent-ink); border-color: transparent; }
-  .cta .step { font-size: 12px; font-weight: 800; opacity: .8; }
+  .cta .step { font-size: 13px; font-weight: 800; opacity: .8; }
   .cta b { display: block; font-size: 17px; margin: 2px 0 2px; letter-spacing: -0.02em; }
   .cta span { font-size: 13.5px; line-height: 1.5; color: var(--muted); }
   .cta a.main span { color: inherit; opacity: .92; }
@@ -94,9 +95,9 @@
   .cta a.main .go { color: inherit; }
   .cta .go::after { content: "→"; margin-left: 5px; }
   .end-in > p.joinl { margin: 6px auto 0; font-size: 14.5px; }
-  .joinl a { color: var(--accent); font-weight: 700; text-decoration: none; display: inline-block; padding: 4px 0; }
+  .joinl a { color: var(--accent); font-weight: 700; text-decoration: none; display: inline-block; padding: 10px 0; }
   .joinl a:hover { text-decoration: underline; }
-  .foot { margin: 6px 0 0; font-size: 12px; color: var(--muted); line-height: 1.55; }
+  .foot { margin: 6px 0 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
   .foot .partner { display: inline-block; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: var(--r-pill); padding: 0 8px; }
 
   @media (max-width: 720px) {

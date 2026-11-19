@@ -14,7 +14,7 @@
 <link rel="stylesheet" href="../assets/brand.css"><link rel="icon" href="../assets/favicon-ponybot.svg" type="image/svg+xml">
 <style>
 main{max-width:960px;margin:0 auto;padding:24px 16px 48px}
-.sayex{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:10px 0}.sayex article{background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}.sayex h3{margin:0;font-size:18px}.sayex h3 small{display:inline-block;margin-left:6px;font-size:12px;font-weight:700;color:#1b3fb0;background:#e6edfd;border-radius:999px;padding:2px 10px;vertical-align:2px}.sayex blockquote{margin:0;padding:10px 12px;border-left:4px solid var(--accent,#2456E5);background:#f4f6fa;border-radius:8px;font-size:15px;line-height:1.55;color:#111827}.sayex ul{margin:0;padding-left:20px;font-size:14.5px;line-height:1.6}.sayex .btn{margin-top:auto;align-self:flex-start;padding:9px 16px;border-radius:999px;background:var(--accent,#2456E5);color:#fff!important;font-weight:700;text-decoration:none}
+.sayex{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:12px;margin:10px 0}.sayex article{background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);border-radius:14px;padding:14px 16px;display:flex;flex-direction:column;gap:8px}.sayex h3{margin:0;font-size:18px}.sayex h3 small{display:inline-block;margin-left:6px;font-size:13px;font-weight:700;color:#1b3fb0;background:#e6edfd;border-radius:999px;padding:2px 10px;vertical-align:2px}.sayex blockquote{margin:0;padding:10px 12px;border-left:4px solid var(--accent,#2456E5);background:#f4f6fa;border-radius:8px;font-size:15px;line-height:1.55;color:#111827}.sayex ul{margin:0;padding-left:20px;font-size:14.5px;line-height:1.6}.sayex .btn{margin-top:auto;align-self:flex-start;padding:9px 16px;border-radius:999px;background:var(--accent,#2456E5);color:#fff!important;font-weight:700;text-decoration:none}
 .introbox{margin:14px 0 6px}.introbox video{display:block;width:100%;aspect-ratio:16/9;border-radius:16px;background:#bfe9ff;box-shadow:0 8px 24px rgba(15,27,51,.14)}.introbox figcaption{margin-top:6px}
 .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px;margin:12px 0}
 .cards a{display:flex;flex-direction:column;gap:4px;padding:16px;border-radius:12px;background:var(--surface,#fff);border:1px solid var(--line,#e3e7ef);text-decoration:none;color:inherit}
@@ -43,29 +43,31 @@ code{word-break:break-all}
 </script>
 <div class="cards">
 <a href="../sim/?kit=ponybot"><b>시뮬레이터 열기 →</b><span>블록 코딩(MakeCode) + 위에서 본 2D·3D 포니봇, 실물 없이 미리 시험</span></a>
-<a href="#ai"><b>AI 웹앱(블루투스) →</b><span>포즈 인식 · 음성 인식 — 크롬·엣지에서 포니봇에 블루투스로 바로 연결</span></a>
+<a href="#ai"><b>AI 웹앱(블루투스) 쓰는 법 →</b><span>포즈 인식 · 음성 인식 — 크롬·엣지에서 포니봇에 블루투스로 바로 연결</span></a>
 <a href="../lessons/?l=ponybot_4차시"><b>4차시 기본형 수업 슬라이드</b><span>웹 슬라이드 (교사 모드: 대본 표시)</span></a>
 </div>
 
 <h2 id="ai">AI 웹앱 — 블루투스로 포니봇 움직이기</h2>
 <p class="note">바운더리엑스가 만든 공식 웹앱이에요(새 탭에서 열려요). 웹앱 안의 <b>사용 가이드 → 마이크로비트 예제 코드</b> 링크를 눌러 MakeCode에서 연 뒤 포니봇의 마이크로비트에 내려받고, 웹앱에서 블루투스로 연결하면 됩니다.</p>
 <div class="cards">
-<a href="https://boundary-x.github.io/ai_handpose_recognition/" target="_blank" rel="noopener"><b>✋ KNN 핸드포즈 분류 ↗</b><span>손 모양(주먹·보·브이·가리키기)을 ID1~ID5로 가르치고, 알아본 ID를 블루투스로 보내요(손이 사라지면 stop) — 3교시</span></a>
+<a href="https://boundary-x.github.io/ai_handpose_recognition/" target="_blank" rel="noopener"><b>✋ 손 모양 인식(KNN 핸드포즈) ↗</b><span>손 모양(주먹·보·브이·가리키기)을 ID1~ID5로 가르치고, 알아본 ID를 블루투스로 보내요(손이 사라지면 stop) — 3교시</span></a>
 <a href="https://boundary-x.github.io/voice_recognition_v2/" target="_blank" rel="noopener"><b>🎤 AI 음성 인식 ↗</b><span>말을 글자로 바꿔 블루투스로 보내요. 명령어에 ID1~ID5를 등록하면 3교시 코드 그대로 움직여요 — 4교시</span></a>
 </div>
 <ol class="note">
 <li>웹앱의 <b>블루투스 이름 확인 코드</b>를 먼저 마이크로비트에 내려받아 LED에 나오는 이름(소문자 5자리)을 확인해요.</li>
-<li>포니봇 블루투스 예제 코드를 <a href="../sim/?kit=ponybot&amp;ex=05_bt-handpose">시뮬레이터에서 열고</a>(🔵 블루투스 줄로 먼저 시험), 블록 편집기 아래 [다운로드]로 포니봇의 마이크로비트에 내려받아요. 블루투스 코드는 라디오와 함께 쓸 수 없어요. 웹앱 연결 목록에서 내 포니봇 이름(다섯 글자)이 헷갈리면 <a href="../sim/?kit=ponybot&amp;ex=06_bt-name">이름 확인 예제(6번)</a>를 먼저 넣어 보세요. MakeCode에서 직접 만들 때는 톱니바퀴 → 프로젝트 설정 → <b>페어링이 필요하지 않습니다</b>를 켜야 연결돼요(시뮬레이터 [다운로드]는 자동).</li>
+<li>포니봇 블루투스 예제 코드를 <a href="../sim/?kit=ponybot&amp;ex=05_bt-handpose">시뮬레이터에서 열고</a>(🔵 블루투스 줄로 먼저 시험), 블록 편집기 아래 [다운로드]로 포니봇의 마이크로비트에 내려받아요. 블루투스 코드는 라디오와 함께 쓸 수 없어요.</li>
+<li>웹앱 연결 목록에서 내 포니봇 이름(다섯 글자)이 헷갈리면 <a href="../sim/?kit=ponybot&amp;ex=06_bt-name">이름 확인 예제(6번)</a>를 먼저 넣어 보세요.</li>
+<li>MakeCode에서 직접 만들 때는 톱니바퀴 → 프로젝트 설정 → <b>페어링이 필요하지 않습니다</b>를 켜야 연결돼요(시뮬레이터 [다운로드]는 자동).</li>
 <li>웹앱에서 [연결]을 눌러 그 이름의 마이크로비트를 고르고, 인식을 시작해요.</li>
 </ol>
-<p class="note">⚠ 블루투스 연결(Web Bluetooth)은 <b>크롬·엣지(PC·안드로이드)</b>에서 돼요. 아이폰·아이패드의 사파리는 지원하지 않아요. 웹앱은 카메라·마이크 권한이 필요하고 인터넷에 연결돼 있어야 해요. 연결이 끊겨도 포니봇이 멈추도록 마이크로비트 쪽 코드에 멈춤 처리를 넣으세요.</p>
+<p class="warnbox">⚠ 블루투스 연결(Web Bluetooth)은 <b>크롬·엣지(PC·안드로이드)</b>에서 돼요. 아이폰·아이패드의 사파리는 지원하지 않아요. 웹앱은 카메라·마이크 권한이 필요하고 인터넷에 연결돼 있어야 해요. 연결이 끊겨도 포니봇이 멈추도록 마이크로비트 쪽 코드에 멈춤 처리를 넣으세요.</p>
 <p class="note"><b>연결·다운로드가 안 될 때</b></p>
 <div class="trouble-imgs" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin:8px 0"><img src="../lessons/assets/trouble_download.png" alt="다운로드가 안 될 때: Connection failed 창이 뜨면 포니봇 전원 끄기, 빨간불만 켜지면 데이터 케이블로 바꾸기" style="width:100%;height:auto;border-radius:12px;border:1px solid #D7DCE6"><img src="../lessons/assets/trouble_bluetooth.png" alt="블루투스 연결이 안 될 때: 톱니 → 프로젝트 설정 → 페어링이 필요하지 않습니다 켜기, 목록에서 OLED와 같은 이름 고르기" style="width:100%;height:auto;border-radius:12px;border:1px solid #D7DCE6"></div>
 <ul class="note">
 <li><b>다운로드 때 "micro:bit Connection failed… stalled" 창</b> → 포니봇 전원이 켜진 채라서예요(배터리가 연결되면 다운로드가 막힘). 포니봇 전원을 끄고 USB를 다시 꽂은 뒤 다시 다운로드하세요.</li>
 <li><b>탐색기에 MICROBIT가 안 보이고 뒷면 빨간불만 켜짐</b> → 충전 전용 케이블이에요. 데이터 케이블로 바꾸세요.</li>
 <li><b>웹앱 연결 목록에 포니봇이 없음</b> → 블루투스 예제(5·6번)를 넣었는지, MakeCode에서 직접 만들었다면 톱니바퀴 → 프로젝트 설정 → <b>페어링이 필요하지 않습니다</b>를 켰는지 확인하세요(시뮬레이터 [다운로드]는 자동). 휴대폰 등 다른 기기와 이미 연결돼 있어도 안 보여요.</li>
-<li><b>목록에 이름이 여러 개</b> → 포니봇 화면(OLED)의 다섯 글자와 같은 이름을 고르세요(<a href="../sim/?kit=ponybot&amp;ex=06_bt-name">6번 이름 확인 예제</a>).</li>
+<li><b>목록에 이름이 여러 개</b> → 포니봇 화면(OLED, 글자가 나오는 작은 화면)의 다섯 글자와 같은 이름을 고르세요(<a href="../sim/?kit=ponybot&amp;ex=06_bt-name">6번 이름 확인 예제</a>).</li>
 <li>블루투스 코드와 라디오는 함께 쓸 수 없어요. 다운로드가 끝나면 USB를 빼고 포니봇 전원을 켜세요.</li>
 </ul>
 <p class="note">4차시 수업 슬라이드의 3·4교시가 이 웹앱 실습(핸드포즈 → 음성 → 로봇 리믹스 <a href="https://boundary-x.github.io/random_draw_ponybot/" target="_blank" rel="noopener">카드 뽑기 ↗</a>)이에요. 시뮬레이터는 블루투스 받기를 흉내 내지 않아요(라디오 숫자 칸은 예전 방식).</p>
