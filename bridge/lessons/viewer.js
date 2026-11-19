@@ -41,7 +41,11 @@
     }).then(function (rows) {
       rows = rows.filter(Boolean);
       $('cards').innerHTML = rows.map(function (r) {
-        return '<a class="lcard" href="?l=' + encodeURIComponent(r.it.id) + '"><b>' + esc(r.it.title) + '</b><span>' + esc(r.it.target || '') + '</span><span class="badge">슬라이드 ' + r.n + '장</span></a>';
+        var parts = String(r.it.title).split(' — '), short = parts[0], sub = parts.slice(1).join(' — ');
+        var pony = String(r.it.id).indexOf('ponybot') === 0, kit = pony ? 'AI 포니봇' : (/^\d+차시/.test(r.it.id) ? '빅아이 로보독' : '예제');
+        return '<a class="lcard pcard" href="?l=' + encodeURIComponent(r.it.id) + '"><span class="pcard-band' + (pony ? ' pony' : '') + '" aria-hidden="true"></span>' +
+          '<span class="pcard-eyebrow">' + kit + '</span><b>' + esc(short) + '</b>' + (sub ? '<span class="sub">' + esc(sub) + '</span>' : '') +
+          '<span class="pcard-foot"><span class="pcard-meta">' + esc(r.it.target || '') + '</span><span class="badge">슬라이드 ' + r.n + '장</span><span class="open">열기 →</span></span></a>';
       }).join('');
       if (!rows.length) $('listmsg').textContent = '아직 열 수 있는 수업이 없어요.';
     }).catch(function () { $('listmsg').textContent = '수업 목록을 불러오지 못했어요.'; });
