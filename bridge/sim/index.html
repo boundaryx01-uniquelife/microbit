@@ -333,6 +333,9 @@
     label.row:has(> input[type=checkbox]), label.qrep, .quick label { min-height: 44px; }
     .chips button, .viewctl button, .howto-head .close, .mission .m-fold { min-height: 44px; }
     .radiostrip #radioBtns button { min-height: 44px; }
+    html body button, html body summary, html body select, html body input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]) { min-height: 44px; }
+    #aiMapReset, #tile-det > summary { min-height: 44px !important; }
+    html body .pe-bar button, html body .pe-map button, html body .mapset button, html body .demo button, html body .fold button { min-height: 44px; min-width: 44px; }
   }
 </style>
 <script type="importmap">{ "imports": { "three": "./lib/three.module.min.js" } }</script>
