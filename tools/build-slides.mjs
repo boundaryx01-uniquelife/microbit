@@ -15,15 +15,15 @@ const ASSETS = path.join(ROOT, 'bridge/lessons/assets');
 
 // ---------- 디자인 상수 (2차시 승인본과 동일) ----------
 const F = '맑은 고딕';
-const P = '2456E5', INK = '111827', SUB = '566077', BG = 'F4F6FA', RED = 'E5484D', YEL = 'F2B300',
-  GRN = '1FA463', ORG = 'F08A24', GRAY = '7A8499', TINT = 'E6EDFD', WH = 'FFFFFF', DARKCARD = '1F2937';
+const P = '2456E5', INK = '111827', SUB = '566077', BG = 'F4F6FA', RED = 'D8363B', YEL = 'F2B300',
+  GRN = '16864F', ORG = 'F08A24', GRAY = '66718A', TINT = 'E6EDFD', WH = 'FFFFFF', DARKCARD = '1F2937';
 const COLORS = { blue: P, red: RED, yellow: YEL, green: GRN, orange: ORG, gray: GRAY, ink: INK };
 const CYCLE = [P, ORG, GRN, RED, GRAY, YEL];
 const X0 = 0.6, W = 12.1, TOP = 1.7, BOT = 6.8; // 본문 영역
 const MIN_BODY = 20, MIN_TITLE = 32;
 
 const col = (c, i = 0) => (c && COLORS[c]) || (c && /^[0-9A-Fa-f]{6}$/.test(c) ? c : CYCLE[i % CYCLE.length]);
-const onCol = (c) => (c === YEL ? INK : WH);
+const onCol = (c) => (c === YEL || c === ORG ? INK : WH);
 
 // ---------- 글자 크기 맞춤 (한글 전각 기준 추정) ----------
 function charW(ch, size, bold) {

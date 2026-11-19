@@ -126,3 +126,10 @@ input[type=checkbox], input[type=radio], input[type=range] { accent-color: var(-
 
 /* 머리글 메뉴 맨 앞 '⌂ 교구 선택'(피지컬 AI 교실 첫 화면으로) — 다른 메뉴와 구분 */
 nav a.hublink { color: var(--muted) !important; font-weight: 700; border-right: 1px solid var(--line-strong); border-radius: 0; padding-right: 12px; margin-right: 4px; }
+
+/* 터치 기기: 작은 링크·로고의 누르는 영역을 44px 가까이로(글줄 배치는 그대로 — 인라인 링크의 세로 padding은 줄 높이를 바꾸지 않음) */
+@media (pointer: coarse) {
+  .brand { min-height: 44px; }
+  main a:not([class]), footer a, h2 > a, figcaption a, .subnav a, .site-foot a { padding-block: 12px; }
+  .subnav button { min-height: 44px !important; }
+}
