@@ -1,18 +1,20 @@
 /* 수업 슬라이드 뷰어 — 색·글꼴은 ../assets/brand.css 토큰 사용 */
 main { max-width: 960px; margin: 0 auto; padding: 28px 16px 60px; }
 main h1 { font-size: 30px; margin: 8px 0 6px; }
+#list .lcards { margin-bottom: 22px; }
 .lead { color: var(--muted); font-size: 16px; padding: 0 16px; }
 main .lead { padding: 0; }
 .lcards { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; margin: 18px 0; }
 .lcard { display: flex; flex-direction: column; gap: 8px; align-items: stretch; text-decoration: none; color: var(--ink); background: var(--surface);
-  border: 1px solid var(--line-strong); border-radius: var(--r-lg); padding: 20px; box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .2s; }
+  border: 1px solid var(--card-edge); border-radius: var(--r-lg); padding: 20px; box-shadow: var(--shadow-sm); transition: border-color .15s, box-shadow .2s; }
 .lcard:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
 .lcard b { font-size: 20px; line-height: 1.35; font-weight: 800; } .lcard .sub { color: var(--muted); font-size: 15px; line-height: 1.6; }
 .lcard .pcard-band { display: block; margin: -20px -20px 4px; --pcard-tint: #0f2a50; }
 .lcard .pcard-band.pony { --pcard-tint: #b3ecff; }
 .lcard .pcard-eyebrow { font-size: 14px; }
 .lcard .pcard-foot { margin-top: auto; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; }
-.lcard .pcard-meta { flex: 1 1 100%; color: var(--ink); font-size: 14px; font-weight: 700; }
+.lcard .pcard-meta { flex: 1 1 100%; color: var(--ink); font-size: 14px; font-weight: 700; line-height: 1.5; }
+@media (min-width: 721px) { .lcard .pcard-meta { min-height: 3em; } .lcard .sub { min-height: 3.2em; } }
 .lcard .badge { font-size: 14px; }
 .lcard .open { margin-left: auto; color: var(--accent); font-size: 15px; font-weight: 700; }
 
@@ -199,10 +201,13 @@ body.fluid .progress { position: sticky; top: 0; z-index: 6; }
 .split.tbl .rows b { min-width: 2.2em; }
 
 /* 함께 보기(교사 화면 따라가기) */
-.join { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 20px; margin: 18px 0 0; box-shadow: var(--shadow-sm); }
+.join { display: grid; gap: 8px; background: var(--surface); border: 1px solid var(--card-edge); border-radius: var(--r-lg); padding: 20px; margin: 18px 0 0; box-shadow: var(--shadow-sm); }
+.join > :last-child { margin-bottom: 0; }
 .join label { display: flex; flex-wrap: wrap; gap: 4px 12px; align-items: baseline; } .join label b { font-size: 18px; } .join label span { color: var(--muted); font-size: 16px; }
-.joinrow { display: flex; gap: 8px; } .joinrow input { width: 8em; min-height: 48px; font-size: 22px; font-weight: 800; letter-spacing: .15em; text-align: center; border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--surface); color: var(--ink); }
+.joinrow { display: flex; gap: 8px; align-items: stretch; } .joinrow input { flex: 1 1 11em; min-width: 0; max-width: 260px; min-height: 48px; font-size: 22px; font-weight: 800; letter-spacing: .15em; text-align: center; border: 1px solid var(--line-strong); border-radius: var(--r-md); background: var(--surface); color: var(--ink); }
 .joinmsg { margin: 0; min-height: 1.2em; color: var(--bad); font-size: 15px; }
+.join .joinmsg:empty { min-height: 0; margin-top: -8px; }
+.join .joinrow button { min-height: 48px; }
 body:not(.teacher):not(.hosting) .syncbtn { display: none; }
 .syncpill { border-radius: 999px; font-weight: 700; background: var(--accent-soft); color: var(--accent); border: 1px solid transparent; }
 .syncpill.paused { background: var(--warn-soft); color: var(--ink); border-color: var(--warn); }
@@ -397,3 +402,5 @@ body.fluid .qz, body.fluid .msteps, body.fluid .mstart { font-size: 1.05em; }
 .sbody > .callout { padding: .6em 1em; margin-top: 14px; }
 
 @media print { .lcard { box-shadow: none; break-inside: avoid; } }
+body.is-viewer .skip-link { display: none; }
+@media print { .lcard, .join { box-shadow: none; } }

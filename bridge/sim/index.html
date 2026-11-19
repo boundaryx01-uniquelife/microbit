@@ -37,6 +37,7 @@
   textarea { width: 100%; height: 52vh; min-height: 280px; font: 14px/1.5 ui-monospace, Consolas, "D2Coding", monospace; padding: 10px;
     border: 1px solid var(--line); border-radius: 10px; background: var(--bg); color: var(--text); resize: vertical; tab-size: 4; white-space: pre; }
   .note { font-size: 14px; color: var(--muted); line-height: 1.6; margin: 6px 0; }
+  p.note, p.note[style*="font-size"] { font-size: 14px !important; }
   .stepno { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-size: 14px; font-weight: 800; margin-right: 6px; vertical-align: 1px; }
   #runMsg { font-weight: 700; font-size: 15px; }
   #runMsg.err { color: var(--stop); }
@@ -137,7 +138,7 @@
   .demo-head { margin-bottom: 8px; }
   .fold { margin-top: 10px; }
   .fold > summary { padding: 4px 0; }
-  .assist { border: 2px solid var(--accent); border-radius: 12px; padding: 8px 10px; margin: 0 0 8px; }
+  .assist { border: 1px solid var(--card-edge); border-radius: var(--r-lg); padding: 9px 12px; margin: 0 0 8px; background: var(--surface); box-shadow: var(--shadow-sm); }
   .askbar { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
   .asklabel { font-weight: 800; font-size: 15px; display: flex; align-items: center; gap: 4px; white-space: nowrap; }
   .assist textarea#askText { flex: 1 1 260px; height: auto; min-height: 44px; max-height: 120px; white-space: pre-wrap; font-size: 15px; line-height: 1.5; font-family: inherit; resize: none; padding: 9px 10px; border-color: var(--field); }
@@ -328,7 +329,8 @@
     #examples { min-height: 44px; }
     label:has(> input[type=checkbox]) { min-height: 44px; }
     input[type=checkbox] { width: 28px; height: 28px; }
-    summary { min-height: 44px; }
+    summary, .howto summary, .askmore details summary, .fold > summary, .demo > summary, details.mapset > summary { min-height: 44px; }
+    label.row:has(> input[type=checkbox]), label.qrep, .quick label { min-height: 44px; }
     .chips button, .viewctl button, .howto-head .close, .mission .m-fold { min-height: 44px; }
     .radiostrip #radioBtns button { min-height: 44px; }
   }

@@ -28,6 +28,7 @@
   --fs-xs: 12.5px; --fs-sm: 14px; --fs-md: 16px; --fs-lg: 19px; --fs-xl: 24px;
   /* 3차 회의: 읽기 하한 토큰(14px 이상) + 간격 스케일 */
   --fs-meta: 14px; --fs-body: 15px; --fs-lead: 16px; --fs-title: 19px;
+  --card-edge: color-mix(in srgb, var(--field) 55%, var(--line-strong));   /* 카드 경계: 비텍스트 대비 약 2.3:1 이상 */
   --sp-1: 4px; --sp-2: 8px; --sp-3: 12px; --sp-4: 16px; --sp-5: 24px; --sp-6: 40px;
 
   /* 모양 */
@@ -105,8 +106,8 @@ a { color: var(--accent); text-underline-offset: 3px; }
 .btn:hover, button:hover:not(:disabled) { border-color: var(--accent); }
 .btn:active, button:active:not(:disabled) { transform: translateY(1px); }
 button:disabled { opacity: .45; cursor: not-allowed; }
-.btn-primary, button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: var(--shadow-sm); }
-.btn-primary:hover, button.primary:hover:not(:disabled) { filter: brightness(1.06); }
+.btn-primary, .btn.primary, button.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); box-shadow: var(--shadow-sm); }
+.btn-primary:hover, .btn.primary:hover, button.primary:hover:not(:disabled) { filter: brightness(1.06); }
 .btn-danger, button.danger { background: var(--bad); color: var(--stop-text); border-color: var(--bad); }
 .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; }
 .btn-ghost { background: transparent; border-color: transparent; }
@@ -138,7 +139,7 @@ nav a.hublink { color: var(--muted) !important; font-weight: 700; border-right: 
 }
 
 /* ---------- 카드·칩·단추 (3차 회의: 새 클래스는 추가만, 기존 전역 규칙은 건드리지 않음) ---------- */
-.pcard { position: relative; display: flex; flex-direction: column; gap: var(--sp-3); background: var(--surface); border: 1px solid var(--line-strong);
+.pcard { position: relative; display: flex; flex-direction: column; gap: var(--sp-3); background: var(--surface); border: 1px solid var(--card-edge);
   border-radius: var(--r-lg); box-shadow: var(--shadow-sm); padding: 20px; color: var(--ink); text-decoration: none; overflow: hidden;
   transition: border-color .15s, box-shadow .2s; }
 .pcard:hover { border-color: var(--accent); box-shadow: var(--shadow-md); }
@@ -178,3 +179,9 @@ nav a.hublink { color: var(--muted) !important; font-weight: 700; border-right: 
 }
 @media (pointer: coarse) { .pchip, .pbtn { min-height: 44px; } .pbtn.go { min-height: 48px; } }
 @media print { .pcard { box-shadow: none; break-inside: avoid; } }
+
+/* ---------- 본문으로 건너뛰기(4차 회의): 키보드로 Tab 을 처음 누르면 맨 앞에서 나타남 ---------- */
+.skip-link, .skip-link:visited { position: absolute; left: 12px; top: -120px; z-index: 100; display: inline-flex; align-items: center; min-height: 44px; padding: 8px 16px;
+  border-radius: var(--r-md); background: var(--accent); color: var(--accent-ink); font-size: 15px; font-weight: 700; text-decoration: none; box-shadow: var(--shadow-lg); }
+.skip-link:focus, .skip-link:focus-visible { top: 12px; }
+@media print { .skip-link { display: none !important; } }

@@ -30,13 +30,15 @@
 <style>
 body{background:var(--bg,#F4F6FA)}
 main{max-width:1100px;margin:0 auto;padding:28px 16px 56px}
-.hero h2{font-size:clamp(24px,3.6vw,34px);line-height:1.25;margin:4px 0 10px}
+.hero h2{font-size:clamp(22px,2.6vw,28px);line-height:1.3;margin:2px 0 8px}
 .hero h2 em{font-style:normal;color:var(--accent,#2456E5)}
 .hero p{color:var(--muted,#566077);max-width:720px;margin:0 0 6px}
-.flow{display:flex;flex-wrap:wrap;gap:8px 20px;margin:14px 0 26px;padding:0;list-style:none}
+.flow{display:flex;flex-wrap:wrap;gap:6px 0;margin:16px 0 28px;padding:0;list-style:none}
 .flow li{border:0;background:transparent;padding:4px 0;font-size:16px;font-weight:600}
+.flow li::first-letter{color:var(--accent);font-weight:800}
+.flow li+li::before{content:"\203A";display:inline-block;margin:0 12px;color:var(--muted);font-weight:700}
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:20px}
-.kit{display:flex;flex-direction:column;background:var(--surface,#fff);border:1px solid var(--line-strong,#c9d1df);box-shadow:var(--shadow-sm);border-radius:18px;overflow:hidden}
+.kit{display:flex;flex-direction:column;background:var(--surface,#fff);border:1px solid var(--card-edge,#9da6ba);box-shadow:var(--shadow-sm);border-radius:18px;overflow:hidden}
 .kit .pic{position:relative;aspect-ratio:16/9;background:#0a2342;overflow:hidden}
 .kit .pic img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
 .kit .pic img[src*="icon_"]{object-fit:contain;padding:14px;box-sizing:border-box;background:#eef3ff}
@@ -48,9 +50,12 @@ main{max-width:1100px;margin:0 auto;padding:28px 16px 56px}
 .links{display:flex;flex-wrap:wrap;gap:8px;margin-top:auto;padding-top:10px}
 .links a{padding:10px 12px;min-height:44px;display:inline-flex;align-items:center;border-radius:12px;border:1px solid var(--field,#7a839b);background:var(--surface,#fff);text-decoration:none;color:var(--ink,#111827);font-size:15px;font-weight:650}
 .links a.go{background:var(--accent,#2456E5);border-color:transparent;color:var(--accent-ink,#fff);font-weight:700;font-size:16px;min-height:48px;flex-basis:100%;justify-content:center}
+.links a:not(.go){flex:1 1 calc(50% - 4px)}
+.links a:not(.go):last-child:nth-child(even){flex-basis:100%}
+.links a:not(.go){justify-content:center;text-align:center}
 .links a:hover{border-color:var(--accent,#2456E5)}
 .kit.coming{opacity:.85}.kit.coming .pic{filter:grayscale(.6)}
-.kit p.note{color:var(--muted,#566077);font-size:14px;margin-top:auto!important;padding-top:10px}
+.kit p.note{color:var(--muted,#566077);font-size:14px;margin-top:auto!important;padding-top:12px;border-top:1px solid var(--line,#e1e6ef)}
 .links a:focus-visible,.kit h2 a:focus-visible{outline:3px solid var(--accent,#2456E5);outline-offset:2px}
 .kit .pic img.contain{object-fit:contain;background:#b9f0fd}
 .kit .pic:has(img.contain){background:#b9f0fd}
@@ -67,7 +72,7 @@ html.pai-play .pai-stage{position:fixed;inset:0;z-index:100;background:#f4f6fa}
 html.pai-play.pai-reveal .pai-stage{background:transparent}
 html.pai-play .pai-ui{display:block}
 html.pai-play .pai-replay{visibility:hidden}
-.pai-skip{position:absolute;right:20px;bottom:20px;font:inherit;font-size:15px;font-weight:700;padding:9px 18px;border-radius:999px;border:1px solid var(--line-strong,#c9d1df);background:rgba(255,255,255,.85);color:var(--ink,#111827);cursor:pointer;transition:opacity .3s}
+.pai-skip{position:absolute;right:20px;bottom:20px;font:inherit;font-size:15px;font-weight:700;padding:9px 18px;border-radius:999px;border:1px solid var(--line-strong,#c9d1df);background:rgba(255,255,255,.85);color:#111827;cursor:pointer;transition:opacity .3s}
 .pai-skip:hover{border-color:var(--accent,#2456E5);color:var(--accent,#2456E5)}
 .pai-bar{position:absolute;left:0;right:0;top:0;height:3px;background:transparent}
 .pai-bar i{display:block;height:100%;width:0;background:var(--accent,#2456E5)}
@@ -79,7 +84,7 @@ html.pai-play:not(.pai-reveal) .gnb{transform:none}
 @media (max-width:640px){.pai{height:290px}.pai-replay{right:10px;top:10px;padding:6px 12px;font-size:14px}}
 @media (prefers-reduced-motion:reduce){main,.site-foot,.gnb{transition:none}}
 </style></head>
-<body><header class="gnb"><div class="gnb-in">
+<body><a class="skip-link" href="#main">본문으로 건너뛰기</a><header class="gnb"><div class="gnb-in">
 <a class="brand" href="./"><img src="assets/favicon-hub.svg" alt="" width="32" height="32"><span>피지컬 AI 교실<small>마이크로비트 × 로봇 교구</small></span></a>
 <nav aria-label="주 메뉴"><a href="./" aria-current="page">교구 선택</a><a href="ai.html">AI 브리지</a><a href="lessons/">수업 슬라이드</a></nav>
 </div></header>
@@ -91,7 +96,7 @@ html.pai-play:not(.pai-reveal) .gnb{transform:none}
   </div>
   <button class="pai-replay" id="paiReplay" type="button" aria-label="인트로 애니메이션 다시 보기">다시 보기</button>
 </section>
-<main>
+<main id="main">
 <section class="hero"><h2>내가 가르친 <em>AI</em>로 로봇을 움직여요</h2>
 <p>웹캠으로 카드·물건을 AI에게 가르치고, 인식한 번호를 마이크로비트가 라디오로 전해 로봇이 움직입니다. 수업에 쓰는 교구를 골라 시작하세요.</p>
 <ol class="flow" aria-label="수업 흐름"><li>① 문제 찾기</li><li>② AI 가르치기</li><li>③ 마이크로비트로 전달</li><li>④ 로봇 움직이기</li><li>⑤ 안전 점검</li></ol></section>
