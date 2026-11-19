@@ -253,7 +253,7 @@
       const row = document.createElement('div');
       row.className = 'cls';
       row.innerHTML = `
-        <div class="num${LIGHT.includes(COLORS[i]) ? ' light' : ''}" style="background:${COLORS[i]}">${i + 1}</div>
+        <div class="num${LIGHT.includes(COLORS[i]) ? ' light' : ''}" style="background:${LIGHT.includes(COLORS[i]) ? COLORS[i] : 'color-mix(in srgb, ' + COLORS[i] + ' 78%, #000)'}">${i + 1}</div>
         <div><input type="text" value="${esc(c.name)}" aria-label="${i + 1}번 이름" maxlength="20">
           <div class="count">사진 <b>${c.count}</b>장</div></div>
         <button class="hold" aria-label="${i + 1}번 사진 모으기">사진 모으기</button>

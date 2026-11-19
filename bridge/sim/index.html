@@ -40,7 +40,11 @@
   .stepno { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; background: var(--accent); color: var(--accent-text); font-size: 14px; font-weight: 800; margin-right: 6px; vertical-align: 1px; }
   #runMsg { font-weight: 700; font-size: 15px; }
   #runMsg.err { color: var(--stop); }
-  #runMsg.ok { color: #17783f; }
+  #runMsg.ok { color: var(--ok); background: var(--ok-soft); border-radius: 999px; padding: 3px 12px; }
+  #runMsg.stopped { color: var(--text); background: var(--surface-2, rgba(128,128,128,.14)); border-radius: 999px; padding: 3px 12px; }
+  small, .mission small, .codetabs small, .m-checks small { font-size: 14px; }
+  .pe-bar button, .pe-map button, .pe-map label, .pe-bar label, .pe-row span, .pe-row label, .pe-msg, .pe-map .note, .pe-bar .note { font-size: 14px !important; }
+  body.mission-mode .stepno { display: none; }
   .mcload { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; font-size: 17px; font-weight: 700; color: var(--muted); background: var(--card); border-radius: 10px; pointer-events: none; }
   .mcload small { display: block; font-size: 14px; font-weight: 500; margin-top: 6px; }
   .mcwrap .frame { position: relative; }
@@ -49,7 +53,7 @@
   details > summary::-webkit-details-marker { display: none; }
   #log { font: 14px/1.5 ui-monospace, Consolas, monospace; white-space: pre-wrap; max-height: 150px; overflow: auto; background: var(--bg);
     border-radius: 8px; padding: 8px; margin-top: 8px; }
-  #log .warn { color: var(--warnc); } #log .error { color: #d43c3c; font-weight: 700; }
+  #log .warn { color: var(--warnc); } #log .error { color: var(--bad); font-weight: 700; }
   .tabs { display: flex; gap: 6px; margin-bottom: 8px; }
   .tabs button[aria-selected="true"] { background: var(--accent); color: var(--accent-text); border-color: var(--accent); }
   #top2d { width: 100%; aspect-ratio: 3 / 2; max-height: 42vh; display: block; border-radius: 10px; background: var(--bg); }
@@ -351,7 +355,7 @@
       </div>
       <div class="askmore row">
         <details id="askEx"><summary>예시 문장</summary><div class="chips" id="askChips" aria-label="예시 문장(누르면 입력돼요)"></div></details>
-        <label class="row" style="gap:4px"><input id="askFix" type="checkbox"> 지금 코드 고치기</label>
+        <label class="row" style="gap:4px"><input id="askFix" type="checkbox"> 지금 코드를 고쳐 달라고 하기 <span class="note" style="margin:0">(AI 도우미만)</span></label>
         <span id="askCodeRow" class="row" style="gap:6px"><label for="askClass">수업 코드 <span class="note" style="margin:0">(AI 도우미용)</span></label>
           <input id="askClass" type="password" autocomplete="off" style="width:110px;font:inherit;padding:4px 8px;border:1px solid var(--field);border-radius:8px;background:var(--bg);color:var(--text)"></span>
         <span class="note" id="askNote" style="margin:0"></span>
@@ -373,8 +377,8 @@
       <select id="examples" aria-label="예제 고르기"></select>
       <span class="runbtns"><button id="btnRun" class="primary">▶ 실행</button>
       <button id="btnStop" class="stop">■ 정지</button>
-      <button id="btnReset">↺ 처음으로</button></span>
-      <span id="runMsg" role="status"></span>
+      <button id="btnReset" title="로봇을 시작 자리로 되돌리고 멈춰요 (코드는 그대로)">↺ 처음 자리로</button></span>
+      <span id="runMsg" role="status" class="stopped">■ 멈춤 — 예제를 고르고 ▶ 실행</span>
     </div>
     <section id="howto" class="howto" hidden aria-live="polite">
       <div class="howto-head"><b id="howtoTitle"></b> <span id="howtoLevel" class="lvl"></span>
@@ -384,7 +388,7 @@
       <ol id="howtoSim"></ol>
       <details><summary id="realSummary">🐕 실물 로보독으로 해 보기</summary><ol id="howtoReal"></ol></details>
     </section>
-    <p class="note codehint" id="codeHint">블록 코딩 화면에서 블록을 고치면 로보독이 바로 움직여요. MakeCode가 안 열리면 <b>글자 코드</b> 탭에 코드를 붙여넣고 <b>▶ 실행</b>.</p>
+    <p class="note codehint" id="codeHint">블록 코딩 화면에서 블록을 고치면 로보독이 바로 움직여요. MakeCode가 안 열리면 <b>글자 코드</b> 탭에 코드를 붙여넣고 <b>▶ 실행</b>. 순서: 예제 고르기 → ▶ 실행 → 버튼 눌러 보기 → 편집기 아래 [다운로드].</p>
     <div class="row" style="justify-content:space-between;gap:6px">
     <div class="tabs codetabs" role="tablist" aria-label="코드 보기">
       <button id="tabEditor" role="tab" aria-selected="true">🧩 블록 코딩 (MakeCode)</button>
@@ -581,15 +585,17 @@ if (KIT.id === 'ponybot') {
     '<label class="vfollow"><input type="checkbox" id="vfollow"> 로봇 따라가기</label>';
   tabs.append(ctl);
   const strip = document.createElement('div'); strip.id = 'radioStrip'; strip.className = 'radiostrip'; strip.setAttribute('aria-label', '라디오 숫자 보내기');
-  strip.innerHTML = '<span class="rlab" title="라디오로 숫자 보내기(AI 브리지 대신)">📡</span>'; const repLabel = $('radioRepeat').closest('label'); repLabel.lastChild.textContent = ' 계속'; repLabel.title = '마지막 숫자를 0.5초마다 계속 보내요'; strip.append($('radioBtns'), repLabel);
+  strip.innerHTML = '<span class="rlab" title="라디오로 숫자 보내기(AI 브리지 대신)">📡 라디오</span>'; const repLabel = $('radioRepeat').closest('label'); repLabel.lastChild.textContent = ' 계속'; repLabel.title = '마지막 숫자를 0.5초마다 계속 보내요'; strip.append($('radioBtns'), repLabel);
   $('stage').after(strip);
   // 🔵 블루투스 줄: 코드가 블루투스(UART)를 쓰면 라디오 줄 대신 보임 — AI 웹앱(핸드포즈·음성)이 보내는 글자를 대신 보냄
+  const BT_TIP = { ID1: '주먹 = 멈춤', ID2: '보 = 앞으로', ID3: '브이 = 뒤로', ID4: '왼쪽 가리키기 = 왼쪽 옆', ID5: '오른쪽 가리키기 = 오른쪽 옆', stop: '손이 화면에서 사라짐 = 멈춤' };
   const bt = document.createElement('div'); bt.id = 'btStrip'; bt.className = 'radiostrip'; bt.style.display = 'none'; bt.setAttribute('aria-label', '블루투스 글자 보내기(AI 웹앱 대신)');
-  bt.innerHTML = '<span class="rlab" title="블루투스로 글자 보내기(AI 웹앱 대신)">🔵</span><span id="btBtns" style="display:flex;gap:3px;flex-wrap:wrap">' +
-    ['ID1', 'ID2', 'ID3', 'ID4', 'ID5', 'stop'].map((t) => `<button type="button" data-t="${t}" style="min-height:36px;padding:4px 8px">${t}</button>`).join('') + '</span>';
+  bt.innerHTML = '<span class="rlab" title="블루투스로 글자 보내기(AI 웹앱 대신)">🔵 블루투스</span><span id="btBtns" style="display:flex;gap:3px;flex-wrap:wrap">' +
+    ['ID1', 'ID2', 'ID3', 'ID4', 'ID5', 'stop'].map((t) => `<button type="button" data-t="${t}" title="${BT_TIP[t]}" style="min-height:36px;padding:4px 8px">${t}</button>`).join('') + '</span>';
   strip.after(bt);
   bt.addEventListener('click', (e) => { const b = e.target.closest('button[data-t]'); if (!b) return; if (!runner.running) { log('▶ 실행을 먼저 누르세요', 'warn'); return; } runner.uartReceive && runner.uartReceive(b.dataset.t); log('블루투스로 보냄: ' + b.dataset.t); });
-  const syncBt = () => { const on = /\bbluetooth\./.test($('code').value); bt.hidden = !on; bt.style.display = on ? '' : 'none'; strip.style.display = on ? 'none' : ''; };
+  const syncBt = () => { const on = /\bbluetooth\.onUartDataReceived\b/.test($('code').value);   // 글자를 받는 예제만 ID 버튼 줄(06 이름 확인 예제는 OLED 보기)
+     bt.hidden = !on; bt.style.display = on ? '' : 'none'; strip.style.display = on ? 'none' : ''; };
   syncBt(); $('code').addEventListener('input', syncBt); setInterval(syncBt, 150);   // 예제·도우미·MakeCode 가 코드를 바꿔도 곧바로 맞춤
   const dock = document.createElement('div'); dock.id = 'liveDock'; dock.className = 'livedock'; dock.setAttribute('aria-label', '마이크로비트 LED·OLED·센서·바퀴 명령');
   bt.after(dock); dock.append($('pMb'), $('pPOled'), $('pPSensor'), $('pPWheel'));
@@ -678,12 +684,15 @@ function showGuide(code) {
   clearGuide();
   const ex = curExample && curExample.code === code ? curExample.ex : null;
   const g = inputGuide(code, { how: (ex && ex.how) || '', kit: KIT.id });
+  const btIn = KIT.id === 'ponybot' && /bluetooth\.onUartDataReceived/.test(code);   // 블루투스 글자를 받는 코드: 🔵 줄 버튼을 누르라고 안내
+  if (btIn) g.text = '<b>🔵 블루투스 줄의 ID2 · ID3 · ID4 · ID5 · stop</b>을 눌러 보세요 — 실물은 AI 웹앱이 손 모양을 보고 이 글자를 보내요';
   if (!g.text) return;
   $('guideHead').textContent = '이제 직접 눌러 보세요'; $('guideText').innerHTML = g.text; $('guide').hidden = false;
   const mark = (q) => document.querySelectorAll(q).forEach(e => e.classList.add('guide-on'));
   for (const b of g.buttons) mark(b === 'AB' ? '#btnAB, #qMb [data-q="AB"]' : `.mbbtn[data-btn="${b}"], #qMb [data-q="${b}"]`);
   if (g.radio) { if (g.nums.length) g.nums.forEach(n => mark(`#radioBtns button:nth-child(${n + 1}), #qNums button[data-n="${n}"]`)); else mark('#pRadio, #qRadio'); }
   if (g.robot) mark('#qRobot, #btnRobot');
+  if (btIn) mark('#btBtns button');
 }
 function guideDone(e) {   // 안내한 버튼을 누르면 깜빡임을 끄고 "지켜보세요"로 바꿈
   if (e.type === 'keydown' && e.key !== 'Enter' && e.key !== ' ') return;
@@ -770,12 +779,14 @@ async function runCode(code, msg) {
   const devs = applyDevices(code, { keepScene: !!demoActive });
   autoSetup(code);
   const ok = await runner.start(code);
-  if (ok) { runMsg('▶ 실행 중 — ' + runHint(devs), 'ok'); log(msg || '실행 시작 — ' + runHint(devs)); showGuide(code); showRobot(); if (view2d.autoZoom) view2d.autoZoom(); }
+  const hint = (KIT.id === 'ponybot' && /bluetooth\.onUartDataReceived/.test(code)) ? '🔵 블루투스 줄의 ID 버튼(으)로 시험해 보세요' : runHint(devs);
+  if (ok) { runMsg('▶ 실행 중 — ' + hint, 'ok'); log(msg || '실행 시작 — ' + hint); showGuide(code); showRobot(); if (view2d.autoZoom) view2d.autoZoom(); }
   return ok;
 }
 $('btnRun').onclick = () => runCode($('code').value);
-$('btnStop').onclick = () => { runner.stop(); clearGuide(); log('정지'); runMsg('■ 멈췄어요'); };
-$('btnReset').onclick = () => { stopDemo(); endDance(); runner.stop(); clearGuide(); robot.reset(); runner.setDisplay(Array.from({ length: 5 }, () => [0, 0, 0, 0, 0])); log('처음 자리로'); };
+$('btnStop').onclick = () => { runner.stop(); clearGuide(); log('정지'); runMsg('■ 멈췄어요 — 다시 ▶ 실행', 'stopped'); };
+$('btnReset').onclick = () => { stopDemo(); endDance(); runner.stop(); clearGuide(); robot.reset(); runner.setDisplay(Array.from({ length: 5 }, () => [0, 0, 0, 0, 0])); log('처음 자리로'); runMsg('■ 멈춤 — 로봇을 처음 자리로 돌렸어요', 'stopped'); };
+setInterval(() => { if ($('runMsg').classList.contains('ok') && !runner.running) runMsg('■ 멈췄어요 — 다시 ▶ 실행', 'stopped'); }, 300);   // 저절로 멈춘 경우에도 '실행 중' 표시가 남지 않게
 
 // ---------- 마이크로비트 버튼 ----------
 document.querySelectorAll('.mbbtn').forEach(b => {
@@ -1298,10 +1309,10 @@ if (ASSIST.ai) {
   // 수업 코드 칸은 늘 보임. AI가 서버에 켜져 있지 않으면 칸을 잠그고 이유를 알려 줌(어디에 넣는지 몰라 헤매지 않게)
   ASSIST.checkAi().then(r => {
     setAskMode(r.available, r.available ? '' : (r.reason === 'not_configured'
-      ? '🔑 AI 도우미는 관리자 설정 뒤 켜져요. 지금은 규칙 도우미로 써요.'
+      ? '🔑 AI 도우미는 선생님이 설정해야 켜져요. 지금은 규칙 도우미로 써요.'
       : 'AI 서버에 연결되지 않아 규칙 도우미로 써요.'));
     $('askClass').disabled = !r.available;
-    $('askClass').placeholder = r.available ? '코드 입력' : '관리자 설정 필요';
+    $('askClass').placeholder = r.available ? '코드 입력' : '아직 쓸 수 없어요';
   });
 } else {   // (표준 아님) AI 모드는 모든 교구 필수 — 서버 함수를 아직 못 붙인 교구만 임시로 규칙 도우미만
   $('askCodeRow').classList.add('hidden'); $('askFix').closest('label').classList.add('hidden');
