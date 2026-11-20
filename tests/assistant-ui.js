@@ -20,7 +20,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   // 1) 키 없음 → 규칙 도우미 (실제 사이트에서도 AI를 부르지 않도록 응답을 대신함)
   let p = await open(r => r.request().method() === 'GET' ? r.fulfill({ json: { ok: true, configured: false, needsCode: false } }) : r.fulfill({ status: 503, json: { error: 'not_configured' } }));
   check('키 없으면 규칙 도우미 표시', (await p.textContent('#askMode')).includes('규칙'));
-  check('AI가 꺼져 있어도 수업 코드 칸은 보임(잠김) + 이유 안내', await p.isVisible('#askClass') && await p.isDisabled('#askClass') && (await p.textContent('#askNote')).includes('관리자'));
+  check('AI가 꺼져 있어도 AI 도우미 코드 칸은 보임(잠김) + 이유 안내', await p.isVisible('#askClass') && await p.isDisabled('#askClass') && (await p.textContent('#askNote')).includes("선생님"));
   await p.fill('#askText', 'A 버튼을 누르면 빨간 불을 켜고 멍멍 짖어, B 버튼을 누르면 앉아');
   await p.click('#askBtn');
   const code = await p.textContent('#askCode');
@@ -59,10 +59,10 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
     posted = JSON.parse(req.postData());
     return route.fulfill({ json: { code: '// AI 코드\nrobodog.gesture(deflib.Posture.Ready)\nrobodog.gesture(deflib.Posture.Stretch)', explanation: '기지개를 켜요.', warnings: ['테스트 경고'] } });
   });
-  check('키 있어도 코드 전에는 규칙 도우미 + 코드 안내', (await p.textContent('#askMode')).includes('수업 코드') && !(await p.textContent('#askMode')).startsWith('AI'));
-  check('수업 코드 칸 보임', await p.isVisible('#askClass'));
+  check('키 있어도 코드 전에는 규칙 도우미 + 코드 안내', (await p.textContent('#askMode')).includes('AI 도우미 코드') && !(await p.textContent('#askMode')).startsWith('AI'));
+  check('AI 도우미 코드 칸 보임', await p.isVisible('#askClass'));
   await p.fill('#askText', '앞으로 2초 걸어'); await p.click('#askBtn'); await p.waitForSelector('#askOut:not(.hidden)');
-  check('코드 없이 만들기 → AI에 요청을 보내지 않고 규칙 도우미', posted === null && (await p.textContent('#askCode')).includes('MoveDirection.Forward') && (await p.textContent('#askWarn')).includes('수업 코드를 넣어야'));
+  check('코드 없이 만들기 → AI에 요청을 보내지 않고 규칙 도우미', posted === null && (await p.textContent('#askCode')).includes('MoveDirection.Forward') && (await p.textContent('#askWarn')).includes('AI 도우미 코드를 넣어야'));
   await p.fill('#askClass', '1234');
   check('코드를 넣으면 AI 도우미로 바뀜', (await p.textContent('#askMode')).includes('AI 도우미 (Claude)'));
   await p.fill('#askText', '기지개 켜'); await p.check('#askFix');
@@ -79,7 +79,7 @@ const check = (name, ok, detail = '') => { results.push(ok); console.log(`${ok ?
   await p.fill('#askClass', '9999');
   await p.fill('#askText', '앞으로 2초 걸어');
   await p.click('#askBtn'); await p.waitForSelector('#askOut:not(.hidden)');
-  check('AI 실패 → 규칙 도우미 코드 + 이유 안내', (await p.textContent('#askCode')).includes('MoveDirection.Forward') && (await p.textContent('#askWarn')).includes('수업 코드'));
+  check('AI 실패 → 규칙 도우미 코드 + 이유 안내', (await p.textContent('#askCode')).includes('MoveDirection.Forward') && (await p.textContent('#askWarn')).includes('AI 도우미 코드'));
   await p.close();
 
   // 4) 편집기 모드: 시연 접힘, 오른쪽 좁음
