@@ -154,7 +154,8 @@
           <div class="row" style="margin:6px 0"><a class="btn primary" href="sim/?ex=03_ai-traffic-dog" target="_blank" rel="noopener">시뮬레이터에서 열고 내려받기 ↗</a>
           <button type="button" data-copy-ex="03_ai-traffic-dog">코드 복사</button>
           <a class="btn" href="sim/?ex=04_ai-team-template" target="_blank" rel="noopener">모둠 프로젝트 틀 ↗</a></div>
-          시뮬레이터의 블록 편집기 아래 <b>다운로드</b>로 내려받아요(로보독 확장이 들어 있어요).</li>
+          시뮬레이터의 블록 편집기 아래 <b>다운로드</b>로 내려받아요(로보독 확장이 들어 있어요).<br>
+          <b>시뮬레이터로 시험할 때:</b> AI 브리지와 시뮬레이터를 <b>두 창으로 나란히</b> 띄우세요. AI 브리지 탭이 가려지면(다른 탭을 보면) 안전을 위해 멈춤(0)을 보내요.</li>
       </ol>
       <p class="note">두 마이크로비트의 <b>모둠번호</b>(코드 맨 위 <code>let 모둠번호 = 1</code>)를 같게 하고, 같은 교실의 모둠끼리는 서로 다르게 하세요. 로보독 마이크로비트는 USB가 아니라 라디오로 받아요 — 로보독 확장이 시리얼 핀을 로봇 통신에 쓰기 때문이에요.</p>
     </details>
@@ -488,7 +489,21 @@
   // 같은 컴퓨터에서 열린 로보독 시뮬레이터(sim/)에도 같은 번호를 알려 줌
   let simChannel = null;
   try { simChannel = new BroadcastChannel('robodog-ai-bridge'); } catch (e) { /* 지원 안 함 */ }
-  setInterval(() => { if (simChannel && lastSent >= 0) simChannel.postMessage({ n: lastSent }); }, 300);
+  // 왜 이 번호인지(시뮬레이터가 안내하는 데 씀). 아직 인식을 시작하지 않은 상태(idle)에서는 보내지 않음 —
+  // AI 브리지 탭만 열어 둔 채 시뮬레이터의 숫자 버튼·카메라 흉내를 계속 0으로 덮어쓰지 않게.
+  function sendWhy() {
+    if (estop) return 'estop';
+    if (document.hidden) return 'hidden';
+    if (!$('autoSend').checked) return 'manual';
+    if (!modelReady || !stream) return 'idle';
+    if (holding >= 0) return 'hold';
+    return 'ai';
+  }
+  setInterval(() => {
+    if (!simChannel || lastSent < 0) return;
+    const why = sendWhy();
+    if (why !== 'idle') simChannel.postMessage({ n: lastSent, why });
+  }, 300);
   document.addEventListener('visibilitychange', () => tick(true));
 
   // ---------------- AI ----------------
