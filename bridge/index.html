@@ -19,6 +19,7 @@
 (function () {
   var q = new URLSearchParams(location.search).get('intro'), seen = false, calm = false;
   try { seen = sessionStorage.getItem('pai-intro-seen') === '1'; } catch (e) {}
+  try { if (localStorage.getItem('pai-intro-seen') === '1') seen = true; } catch (e) {}   // 한 번 본 뒤에는 다음 방문부터 생략(다시 보기 단추·?intro=1 은 그대로)
   try { calm = matchMedia('(prefers-reduced-motion: reduce)').matches; } catch (e) {}
   var play = q === '1' || (q !== '0' && !seen && !calm);
   if (play) {
@@ -73,8 +74,8 @@ html.pai-play .pai-stage{position:fixed;inset:0;z-index:100;background:#f4f6fa}
 html.pai-play.pai-reveal .pai-stage{background:transparent}
 html.pai-play .pai-ui{display:block}
 html.pai-play .pai-replay{visibility:hidden}
-.pai-skip{position:absolute;right:20px;bottom:20px;font:inherit;font-size:15px;font-weight:700;padding:9px 18px;border-radius:999px;border:1px solid var(--line-strong,#c9d1df);background:rgba(255,255,255,.85);color:#111827;cursor:pointer;transition:opacity .3s}
-.pai-skip:hover{border-color:var(--accent,#2456E5);color:var(--accent,#2456E5)}
+.pai-skip{position:absolute;right:20px;bottom:20px;font:inherit;font-size:17px;font-weight:800;min-height:48px;min-width:112px;padding:0 24px;border-radius:999px;border:2px solid #fff;background:#0f2a50;color:#fff;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35);transition:opacity .3s}
+.pai-skip:hover,.pai-skip:focus-visible{background:#2456E5;outline:3px solid #fff;outline-offset:2px}
 .pai-bar{position:absolute;left:0;right:0;top:0;height:3px;background:transparent}
 .pai-bar i{display:block;height:100%;width:0;background:var(--accent,#2456E5)}
 html.pai-reveal .pai-ui{opacity:0;pointer-events:none;transition:opacity .25s}
@@ -131,7 +132,7 @@ import { createIntro, DUR, OUT } from './intro/physical-ai.js';
 const root = document.documentElement, box = document.getElementById('pai'), cv = document.getElementById('paiCanvas'), bar = document.getElementById('paiBar');
 const intro = createIntro(cv, { target: () => { const r = box.getBoundingClientRect(); return { x: r.left, y: r.top, w: r.width, h: r.height }; } });
 let state = 'hero';
-const remember = () => { try { sessionStorage.setItem('pai-intro-seen', '1'); } catch (e) {} };
+const remember = () => { try { sessionStorage.setItem('pai-intro-seen', '1'); } catch (e) {} try { localStorage.setItem('pai-intro-seen', '1'); } catch (e) {} };
 function toHero() { root.classList.remove('pai-play', 'pai-reveal'); state = 'hero'; intro.hero(); }
 function tick() {
   if (state !== 'play') return;
@@ -152,6 +153,7 @@ if (root.classList.contains('pai-play')) play(0); else toHero();
 document.getElementById('paiSkip').addEventListener('click', skip);
 document.getElementById('paiReplay').addEventListener('click', () => play(0));
 addEventListener('keydown', (e) => { if (e.key === 'Escape') skip(); });
+cv.addEventListener('click', skip);
 addEventListener('resize', () => intro.resize());
 // 시험·렌더용
 window.__pai = { intro, get state() { return state; }, skip, play, DUR, OUT };

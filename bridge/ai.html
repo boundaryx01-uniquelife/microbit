@@ -51,6 +51,7 @@
   .bar { height: 10px; border-radius: 6px; background: var(--line); overflow: hidden; grid-column: 2 / 4; }
   .bar > i { display: block; height: 100%; width: 0%; transition: width .15s; }
   .count { font-size: 14px; color: var(--muted); }
+  .resultmini { position: sticky; top: 0; z-index: 5; padding: 8px 12px; margin: 6px 0; border-radius: 10px; background: var(--card, #f3f6fb); border: 1px solid #c9d1df; font-size: 15px; }
   .big { font-size: 26px; font-weight: 800; text-align: center; padding: 14px; border-radius: 12px;
     background: var(--bg); border: 1px dashed var(--line); margin: 10px 0; min-height: 70px; overflow-wrap: anywhere; }
   .sending { text-align: center; font-size: 15px; color: var(--muted); }
@@ -110,8 +111,9 @@
 
   <section>
     <h2><span class="step">2</span>AI 가르치기</h2>
+    <div id="resultMini" class="resultmini" role="status" aria-label="지금 인식 결과 요약">지금 인식: <b id="resultMiniTx">-</b></div>
     <p class="note" style="margin-top:0">카드를 카메라에 보여 주며 버튼을 <b>한 번 누르면 1장</b>, <b>꾹 누르고 있으면 1초에 4장</b>씩 모여요.
-      카드를 조금씩 움직이고 기울여 가며 종류마다 <b>20장 이상</b> 비슷한 수로 모으세요.
+      카드를 조금씩 움직이고 기울여 가며 종류마다 <b>10장 이상</b> 비슷한 수로 모으세요.
       마지막 칸은 <b>아무것도 없는 배경</b>으로 두면 오작동이 줄어요.</p>
     <div id="classes"></div>
     <div id="balanceWarn" class="warn"></div>
@@ -124,6 +126,7 @@
   <section>
     <h2><span class="step">3</span>AI가 보고 있는 것</h2>
     <div id="result" class="big">AI를 준비하고 있어요…</div>
+    <p id="unsureTip" class="note" hidden role="status"><b>팁:</b> 각 카드 사진을 각도·거리를 바꿔 더 모아 보세요. 배경 카드도 학습해 두면 좋아요.</p>
     <label class="slider">확신 기준 <input id="thr" type="range" min="50" max="100" step="10" value="70"> <b id="thrVal">70%</b></label>
     <p class="note">AI는 지금 화면과 <b>가장 비슷한 사진 <span id="kShow">10</span>장</b>을 찾아, 그중 몇 장이 같은 종류인지로 답해요(이것이 확신 %).
       확신이 기준보다 낮으면 <span data-kit="robot">로보독</span>에게 <b>0(멈춤)</b>을 보내요.</p>
@@ -687,6 +690,14 @@
   renderClasses();
   listCams();
   loadModel();
+  // 인식 결과 요약을 학습 칸에도 보여 줌(결과 칸 #result 를 그대로 따라감) + 확신이 낮을 때 해결 팁
+  (function () {
+    const r = $('result'), tx = $('resultMiniTx'), tip = $('unsureTip');
+    if (!r || !tx) return;
+    const sync = () => { tx.textContent = r.textContent.trim() || '-'; if (tip) tip.hidden = !/^잘 모르겠어요/.test(r.textContent.trim()); };
+    new MutationObserver(sync).observe(r, { childList: true, characterData: true, subtree: true });
+    sync();
+  })();
 })();
 </script>
 
