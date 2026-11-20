@@ -860,13 +860,20 @@ for (let n = 0; n <= 9; n++) {
   b.onclick = () => { markManual(); runner.radioReceive(n); lastRadio = n; log(`라디오 받음: ${n}`); };
   $('radioBtns').appendChild(b);
 }
-let lastBridge = null;
+let lastBridge = null, lastBridgeWhy = '';
 try {
   const bc = new BroadcastChannel('robodog-ai-bridge');
   bc.onmessage = (e) => {
     if (!$('bridgeLink').checked || !e.data || typeof e.data.n !== 'number') return;
     markManual(); runner.radioReceive(e.data.n);
-    if (e.data.n !== lastBridge) { lastBridge = e.data.n; log(`AI 브리지에서 받음: ${e.data.n}`); }
+    const why = e.data.why || 'ai';
+    if (e.data.n !== lastBridge || why !== lastBridgeWhy) {
+      lastBridge = e.data.n;
+      if (why === 'hidden') log('AI 브리지 탭이 가려져 있어서 멈춤(0)을 보내고 있어요 — AI 브리지와 시뮬레이터를 두 창으로 나란히 띄우세요', 'warn');
+      else if (why === 'estop' && why !== lastBridgeWhy) log('AI 브리지에서 멈춤 잠금을 켰어요(0)', 'warn');
+      else log(`AI 브리지에서 받음: ${e.data.n}`);
+      lastBridgeWhy = why;
+    }
   };
 } catch (e) { $('bridgeLink').disabled = true; }
 

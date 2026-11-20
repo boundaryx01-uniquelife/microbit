@@ -5,6 +5,7 @@ Playwright(크로미움)가 필요합니다.
 | 스크립트 | 내용 | 실행 |
 |---|---|---|
 | `bridge-e2e.js` | 가짜 카메라·가짜 Web Serial로 AI 브리지 전 과정(27항목) | `cd bridge && python3 -m http.server 8765` 후 `node tests/bridge-e2e.js` |
+| `ai-sim-link.js` | AI 브리지 ↔ 로보독 시뮬레이터 같은 컴퓨터 연결: 인식 전엔 0을 안 보냄, 탭 가림(0) 안내(5항목) | `cd bridge && python3 -m http.server 8765` 후 `node tests/ai-sim-link.js` |
 | `model-compat.js` | 동봉 모델과 TF Hub 대체 모델의 특징값 일치 | 위 서버 실행 후 `node tests/model-compat.js` |
 | `sim-e2e.js` | 시뮬레이터 51항목(예제·시연, 걷기·회전 수치, 자세, 공식 다리 표본, 라디오 감시·잠금, 장애물, 추락, 무한 반복, 경고, 3D, AI 브리지 연동, 좁은 화면, MakeCode 편집기 연동) | 위 서버 실행 후 `node tests/sim-e2e.js` |
 | `assistant-ui.js` | 로보독 도우미 화면 25항목(규칙 도우미, AI 응답·실패 시 전환, 빈 입력·오류 안내, 편집기 화면 배치) — AI 서버 응답은 가짜로 대신 | 위 서버 실행 후 `node tests/assistant-ui.js` |
