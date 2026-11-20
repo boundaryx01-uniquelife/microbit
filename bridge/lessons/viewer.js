@@ -385,12 +385,12 @@
       if (sync.host) { showDlg(); return; }
       $('syncmsg').textContent = '코드를 만드는 중…'; showDlg();
       api('POST', { op: 'create', lesson: id }).then(function (j) {
-        if (j._status !== 200 || !j.room) { $('syncmsg').textContent = j._status === 429 ? '너무 자주 눌렀어요. 1분 뒤 다시 해 보세요.' : '지금 연결을 만들 수 없어요. 잠시 뒤 다시 해 보세요.'; return; }
+        if (j._status !== 200 || !j.room) { $('syncmsg').textContent = j._status === 429 ? '너무 자주 눌렀어요. 1분 뒤 다시 해 보세요.' : '지금 연결을 만들 수 없어요. 잠시 뒤 다시 해 보세요. 수업 코드 없이 각자 슬라이드를 넘겨도 돼요.'; return; }
         sync.host = { room: j.room, key: j.key }; store.set(HKEY, JSON.stringify(sync.host));
         document.body.classList.add('hosting');
         $('synccode').textContent = j.room; $('syncmsg').textContent = '학생 화면은 선생님이 넘기는 장으로 2~3초 안에 따라와요.';
         hostPill(); push();
-      }, function () { $('syncmsg').textContent = '인터넷 연결을 확인해 주세요.'; });
+      }, function () { $('syncmsg').textContent = '인터넷 연결을 확인해 주세요. 수업 코드 없이 각자 슬라이드를 넘겨도 돼요.'; });
     }
     function endHost() { clearTimeout(sync.pushT); sync.host = null; try { localStorage.removeItem(HKEY); } catch (e) {} document.body.classList.remove('hosting'); setPill(''); }
     $('syncbtn').onclick = startHost;

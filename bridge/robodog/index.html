@@ -55,10 +55,10 @@
   .loading { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; color: #dbe5f5; padding: 24px; font-weight: 650; pointer-events: none; }
   .stage.ready .loading { display: none; }
 
-  .title { position: absolute; left: 16px; top: 14px; font-size: 13px; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px);
+  .title { position: absolute; left: 16px; top: 14px; font-size: 14px; font-weight: 800; color: var(--accent); background: color-mix(in srgb, var(--surface) 88%, transparent); backdrop-filter: blur(6px);
     border: 1px solid var(--line); border-radius: var(--r-pill); padding: 4px 12px; pointer-events: none; }
   .ctl { position: absolute; right: 14px; top: 12px; display: flex; gap: 8px; }
-  .ctl button { font-size: 14px; min-height: 36px; padding: 6px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(6px); }
+  .ctl button { font-size: 14px; min-height: 44px; padding: 6px 14px; border-radius: var(--r-pill); background: color-mix(in srgb, var(--surface) 90%, transparent); backdrop-filter: blur(6px); }
   @media (pointer: coarse) { .ctl button { min-height: 44px; } }
   .ctl button:focus-visible, .cta a:focus-visible { outline: 3px solid var(--accent); outline-offset: 3px; }
 
@@ -87,17 +87,17 @@
     box-shadow: var(--shadow-sm); transition: border-color .15s, transform .2s var(--ease), box-shadow .2s; }
   .cta a:hover { border-color: var(--accent); box-shadow: var(--shadow-lg); transform: translateY(-2px); }
   .cta a.main { background: linear-gradient(150deg, var(--accent), color-mix(in srgb, var(--accent) 70%, #6a3df0)); color: var(--accent-ink); border-color: transparent; }
-  .cta .step { font-size: 13px; font-weight: 800; opacity: .8; }
+  .cta .step { font-size: 14px; font-weight: 800; opacity: .9; }
   .cta b { display: block; font-size: 17px; margin: 2px 0 2px; letter-spacing: -0.02em; }
-  .cta span { font-size: 13.5px; line-height: 1.5; color: var(--muted); }
+  .cta span { font-size: 14px; line-height: 1.5; color: var(--muted); }
   .cta a.main span { color: inherit; opacity: .92; }
-  .cta .go { margin-top: auto; padding-top: 6px; font-size: 13.5px; font-weight: 700; color: var(--accent); font-style: normal; }
+  .cta .go { margin-top: auto; padding-top: 6px; font-size: 14px; font-weight: 700; color: var(--accent); font-style: normal; }
   .cta a.main .go { color: inherit; }
   .cta .go::after { content: "→"; margin-left: 5px; }
   .end-in > p.joinl { margin: 6px auto 0; font-size: 14.5px; }
   .joinl a { color: var(--accent); font-weight: 700; text-decoration: none; display: inline-block; padding: 10px 0; }
   .joinl a:hover { text-decoration: underline; }
-  .foot { margin: 6px 0 0; font-size: 13px; color: var(--muted); line-height: 1.55; }
+  .foot { margin: 6px 0 0; font-size: 14px; color: var(--muted); line-height: 1.55; }
   .foot .partner { display: inline-block; font-weight: 800; color: var(--accent); background: var(--accent-soft); border-radius: var(--r-pill); padding: 0 8px; }
 
   @media (max-width: 720px) {
@@ -118,6 +118,7 @@
 </style>
 </head>
 <body>
+<a class="skip-link" href="#stage">본문으로 건너뛰기</a>
 <header class="gnb"><div class="gnb-in">
   <a class="brand" href="./"><svg aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0f2a50"/><circle cx="16" cy="16.4" r="12.6" fill="#fff1c2"/><rect x="4.6" y="10.2" width="22.8" height="12.4" rx="6.2" fill="#0b0e14"/><rect x="6.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><rect x="17.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><g fill="#fff4c8"><circle cx="7.92" cy="17.68" r=".56"/><circle cx="8.78" cy="16.82" r=".56"/><circle cx="9.64" cy="15.96" r=".56"/><circle cx="10.50" cy="15.10" r=".56"/><circle cx="11.36" cy="15.96" r=".56"/><circle cx="12.22" cy="16.82" r=".56"/><circle cx="13.08" cy="17.68" r=".56"/><circle cx="18.92" cy="17.68" r=".56"/><circle cx="19.78" cy="16.82" r=".56"/><circle cx="20.64" cy="15.96" r=".56"/><circle cx="21.50" cy="15.10" r=".56"/><circle cx="22.36" cy="15.96" r=".56"/><circle cx="23.22" cy="16.82" r=".56"/><circle cx="24.08" cy="17.68" r=".56"/></g><circle cx="16" cy="14.4" r=".95" fill="#2e3850"/></svg>
 <span>로보독 AI 교실<small>코코아팹 협력 · 피지컬 AI 수업</small></span></a>

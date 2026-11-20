@@ -209,7 +209,7 @@ async function startServer() {
   await p.waitForTimeout(300);
   check('맨 이름 enum(Mecanum.Forward)은 오류로 안내', (await logs('.error')).some(t => /aiPonybot\.Mecanum/.test(t)), (await logs('.error')).join('|').slice(0, 100));
   await runSrc('let x = (');
-  check('문법 오류 → "읽을 수 없어요"', (await logs('.error')).some(t => /읽을 수 없어요/.test(t)));
+  check('문법 오류 → "틀린 곳이 있어요"', (await logs('.error')).some(t => /틀린 곳이 있어요/.test(t)));
 
   // while(true){} 에도 응답
   await runSrc('let n = 0\nwhile (true) { n += 1 }');

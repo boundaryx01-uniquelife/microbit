@@ -2,7 +2,7 @@
 // 로봇 모델·API·실행기·그리기·예제·도우미 코드는 ./ponybot/ 아래(옛 bridge/ponybot/sim/ 에서 옮김). 이 파일은 그것을 공용 화면에 꽂는 부분.
 import { ensureBabel } from '../runtime.js';
 import * as PROPS from '../props.js';
-import { validateCode } from '../validate-code.mjs';
+import { validateCode, indexBlocks } from '../validate-code.mjs';
 import { EST, MOTOR_WHEEL, SCENES, PonyWorld, PonyRobot, PonyRunner, makePonybotApi, needsFromCode } from './ponybot/pony.js';
 import { PonyView, drawOled } from './ponybot/view.js';
 import { EXAMPLES as RAW_EXAMPLES } from './ponybot/examples.js';
@@ -75,12 +75,30 @@ export function runHint(devs) {
 }
 
 // ---- 말로 코드 만들기 ----
-let POLICY = {};
+let POLICY = {}, BLOCKS = null;
+// 철자 점검: 블록 표에 없는 함수·열거값을 찾아 가장 가까운 이름을 제안(경고만, 실행은 막지 않음)
+const editDist = (a, b) => { const d = Array.from({ length: a.length + 1 }, (_, i) => [i]); for (let j = 1; j <= b.length; j++) d[0][j] = j;
+  for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++) d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1].toLowerCase() === b[j - 1].toLowerCase() ? 0 : 1));
+  return d[a.length][b.length]; };
+const nearest = (word, list) => { let best = null, bd = 1e9; for (const c of list) { const x = editDist(word, c); if (x < bd) { bd = x; best = c; } } return best && bd <= Math.max(3, Math.ceil(word.length / 2)) ? best : null; };
+async function checkNames(code) {
+  if (assistReady) await assistReady;
+  if (!BLOCKS || !window.Babel || !/\baiPonybot\b/.test(code)) return [];
+  const { fns, enums } = indexBlocks(BLOCKS), seen = new Set(), out = [];
+  for (const e of validateCode(code, BLOCKS, { Babel: window.Babel }).errors) {
+    if (e.code !== 'E1' && e.code !== 'E2') continue;
+    const name = e.msg.split(':')[0], cut = name.lastIndexOf('.'), owner = name.slice(0, cut), word = name.slice(cut + 1);
+    const pool = e.code === 'E2' ? [...(enums.get(owner) || [])] : [...fns.keys()].filter((k) => k.startsWith(owner + '.')).map((k) => k.slice(owner.length + 1));
+    const hit = nearest(word, pool); if (seen.has(name)) continue; seen.add(name);
+    out.push(`${word} 는 없는 이름이에요.${hit ? ` ${hit} 일까요?` : ''} (${e.line}번째 줄 · ${name})`);
+  }
+  return out;
+}
 let assistReady = null;
 function loadAssistant(log) {
   const get = (p) => fetch(new URL(p, import.meta.url)).then(r => { if (!r.ok) throw new Error(p + ' ' + r.status); return r.json(); });
   assistReady = Promise.all([get('./ponybot/data/blocks.json'), get('./ponybot/data/policy.json'), ensureBabel()])
-    .then(([blocks, policy]) => { POLICY = policy; configurePony({ blocks, validateCode, Babel: window.Babel }); })
+    .then(([blocks, policy]) => { POLICY = policy; BLOCKS = blocks; configurePony({ blocks, validateCode, Babel: window.Babel }); })
     .catch(e => log('도우미 준비 실패: ' + e.message, 'warn'));
   return assistReady;
 }
@@ -124,7 +142,7 @@ const kit = {
   defaultExampleId: '01_hello-ponybot',
   mapOpts: { tiles: true, mapLabel: (m) => `포니봇용(라인 센서) · ${m.title}` },
   buildMapPanel: true,
-  detectDevices, DEVICE_INFO, runHint, needsFromCode,
+  detectDevices, DEVICE_INFO, runHint, needsFromCode, checkNames,
   assistant: {
     ai: true, sample: SAMPLE_REQUESTS,   // AI 모드: /api/ponybot-assistant (로보독과 같은 Claude 키·수업 코드). 꺼져 있거나 실패하면 규칙 도우미
     async checkAi() {

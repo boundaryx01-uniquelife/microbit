@@ -8,7 +8,7 @@ export const missionKey = (id) => 'pai:mission:' + id;
 export function attachMission(mission, ctx) {
   const { robot, runner, host, applyCode, backUrl } = ctx;
   // ---- 측정
-  let m = null, prevRun = false, lastT = performance.now(), passed = false, hintN = 0, picked = null;
+  let m = null, ran = false, prevRun = false, lastT = performance.now(), passed = false, hintN = 0, picked = null;
   const fresh = () => ({ pressed: { A: false, B: false }, x0: robot.x, y0: robot.y, h0: robot.heading, forward: 0, side: 0, maxForward: 0, maxSide: 0, minSide: 0, path: 0, headDev: 0, moved: false, still: 0, home: 0, bumped: false, px: robot.x, py: robot.y,
     t: 0, tA: -1, dist: 500, minDist: 500,                       // 실행 뒤 지난 초, A 버튼 뒤 지난 초, 앞 물체까지 참 거리(cm, 없으면 500)
     radio: {}, lastRadio: null, sinceRadio: -1, seg: {}, cur: null });   // 받은 라디오 숫자별 횟수, 마지막 숫자, 그 뒤 지난 초, 숫자별 '받은 뒤 움직인 만큼'
@@ -22,7 +22,7 @@ export function attachMission(mission, ctx) {
   };
   function sample(now) {
     const dt = Math.min(0.1, (now - lastT) / 1000); lastT = now;
-    if (runner.running && !prevRun) { m = fresh(); if (!passed) setResult(''); }
+    if (runner.running && !prevRun) { ran = true; m = fresh(); if (!passed) setResult(''); }
     prevRun = runner.running;
     const dx = robot.x - m.x0, dy = robot.y - m.y0, h = m.h0 * RAD;
     m.forward = dx * Math.sin(h) - dy * Math.cos(h); m.side = dx * Math.cos(h) + dy * Math.sin(h);
@@ -50,7 +50,7 @@ export function attachMission(mission, ctx) {
     <fieldset class="m-predict"><legend>먼저 예상해요 — ${esc(p.q)}</legend>
       ${p.choices.map((c, i) => `<label><input type="radio" name="mpredict" value="${i}"> ${esc(c)}</label>`).join('')}
       <p class="m-pmsg" id="mPredictMsg" aria-live="polite"></p></fieldset>
-    <div class="m-checks"><b>실행하고 확인해요</b> <span class="note" style="margin:0">${esc(mission.how || '▶ 실행을 누른 뒤 오른쪽 A 버튼')} · 로봇이 한 일로 자동 확인</span>
+    <div class="m-checks"><b>실행하고 확인해요</b> <span class="note m-where" style="margin:0;display:block">코드는 아래 블록 편집기 또는 [글자 코드] 탭에서 고쳐요.</span> <span class="note" style="margin:0">${esc(mission.how || '▶ 실행을 누른 뒤 오른쪽 A 버튼')} · 로봇이 한 일로 자동 확인</span>
       <ul id="mChecks">${mission.checks.map((c, i) => `<li data-i="${i}"><span class="m-ic" aria-hidden="true">○</span> <span>${esc(c.label)}</span> <small></small></li>`).join('')}</ul></div>
     <div class="m-foot"><button type="button" id="mHint">💡 도움말 (0/3)</button><button type="button" id="mReset">미션 코드로 되돌리기</button><span class="est" id="mSim">시뮬레이터 판정 · 실물 확인은 따로</span></div>
     <ol class="m-hints" id="mHints" aria-live="polite"></ol>
@@ -66,10 +66,10 @@ export function attachMission(mission, ctx) {
   function render() {
     let all = true;
     mission.checks.forEach((c, i) => {
-      const ok = !!c.test(m); all = all && ok;
+      const ok = ran && !!c.test(m); all = all && ok;
       const li = lis[i], ic = li.firstElementChild;
       if (li.dataset.ok !== String(ok)) { li.dataset.ok = String(ok); ic.textContent = ok ? '✓' : '○'; li.classList.toggle('ok', ok); }
-      const t = c.now ? c.now(m) : ''; const sm = li.lastElementChild; if (sm.textContent !== t) sm.textContent = t;
+      const t = ran && c.now ? c.now(m) : (ran ? '' : '실행하면 확인해요'); const sm = li.lastElementChild; if (sm.textContent !== t) sm.textContent = t;
     });
     const mini = mission.checks.map((c, i) => `<span class="${lis[i].dataset.ok === 'true' ? 'ok' : ''}">${lis[i].dataset.ok === 'true' ? '✓' : '○'} ${esc(c.label)}</span>`).join('');
     if ($('mMin').innerHTML !== mini) $('mMin').innerHTML = mini;

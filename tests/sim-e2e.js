@@ -145,7 +145,7 @@ const check = (name, ok, detail = '') => { results.push({ name, ok }); console.l
   // 9. 문법 오류 안내
   await p.fill('#code', 'basic.showNumber(');
   await run(); await p.waitForTimeout(300);
-  check('문법 오류를 알려 줌', (await errorLogs()).some(t => t.includes('읽을 수 없어요')));
+  check('문법 오류를 알려 줌', (await errorLogs()).some(t => t.includes('틀린 곳이 있어요')));
 
   // 10. 3D 보기
   await p.click('#btnReset'); await loadExample('05_motion-tour'); await run();

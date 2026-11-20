@@ -8,6 +8,7 @@
 <script src="../assets/kit.js"></script>
 </head>
 <body>
+<a class="skip-link" href="#list">본문으로 건너뛰기</a>
 <header class="gnb"><div class="gnb-in">
 <a class="brand" href="../robodog/" data-kit-href="home"><svg data-kit-hide="ponybot" aria-hidden="true" viewBox="0 0 32 32"><rect width="32" height="32" rx="9" fill="#0f2a50"/><circle cx="16" cy="16.4" r="12.6" fill="#fff1c2"/><rect x="4.6" y="10.2" width="22.8" height="12.4" rx="6.2" fill="#0b0e14"/><rect x="6.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><rect x="17.4" y="11.6" width="8.2" height="9.6" rx="2.4" fill="#1b2231"/><g fill="#fff4c8"><circle cx="7.92" cy="17.68" r=".56"/><circle cx="8.78" cy="16.82" r=".56"/><circle cx="9.64" cy="15.96" r=".56"/><circle cx="10.50" cy="15.10" r=".56"/><circle cx="11.36" cy="15.96" r=".56"/><circle cx="12.22" cy="16.82" r=".56"/><circle cx="13.08" cy="17.68" r=".56"/><circle cx="18.92" cy="17.68" r=".56"/><circle cx="19.78" cy="16.82" r=".56"/><circle cx="20.64" cy="15.96" r=".56"/><circle cx="21.50" cy="15.10" r=".56"/><circle cx="22.36" cy="15.96" r=".56"/><circle cx="23.22" cy="16.82" r=".56"/><circle cx="24.08" cy="17.68" r=".56"/></g><circle cx="16" cy="14.4" r=".95" fill="#2e3850"/></svg>
 <span><span data-kit="title">로보독 AI 교실</span><small data-kit="brandSub">코코아팹 협력 · 피지컬 AI 수업</small></span></a>
@@ -22,6 +23,7 @@
     <div class="joinrow"><input id="joincode" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" placeholder="1234" aria-describedby="joinmsg"><button class="btn primary" type="submit">들어가기</button></div>
     <p id="joinmsg" class="joinmsg" role="status"></p>
   </form>
+  <p class="lead teachhint" id="teachhint"><b>선생님이라면</b> 슬라이드를 열고 아래쪽 <b>교사 모드</b>를 켠 뒤 <b>[학생 따라오게 하기 · 수업 코드]</b>를 누르면 4자리 수업 코드가 나와요. 진행 순서·시간은 슬라이드의 교사 모드(노트)에 있고, 공통 준비·운영은 <a href="../docs/05.html">운영 가이드</a>를 보세요.</p>
   <div id="cards" class="lcards"></div>
   <p id="listmsg" class="lead" role="status"></p>
   <p class="lead"><a href="../docs/" data-kit-href="docsHref">← 수업 자료로 돌아가기</a></p>
@@ -43,7 +45,7 @@
     <span class="grow"></span>
     <button id="more" type="button" class="morebtn" aria-label="더 보기 (차시 이동·교사 모드·전체 화면)" aria-expanded="false" aria-controls="bar">⋯</button>
     <button id="syncpill" type="button" class="syncpill" hidden></button>
-    <button id="syncbtn" type="button" class="syncbtn" aria-haspopup="dialog">학생 연결</button>
+    <button id="syncbtn" type="button" class="syncbtn" aria-haspopup="dialog">학생 따라오게 하기 · 수업 코드</button>
     <button id="teacher" type="button" aria-pressed="false" aria-label="교사 모드 (N)">교사 모드</button>
     <button id="fs" type="button" aria-label="전체 화면 (F)">전체 화면</button>
   </div>
@@ -53,7 +55,7 @@
 </dialog>
 </div>
 <dialog id="syncdlg" class="syncdlg" aria-labelledby="syncttl">
-  <h2 id="syncttl">학생 화면 연결</h2>
+  <h2 id="syncttl">학생 따라오게 하기 · 수업 코드</h2>
   <p>학생 기기에서 아래 주소를 열고 <b>수업 코드</b>를 넣게 하세요. 선생님이 넘기는 장을 학생 화면이 따라와요.</p>
   <div class="bigcode" id="synccode" aria-label="수업 코드">----</div>
   <p class="syncurl" id="syncurl"></p>
@@ -64,6 +66,7 @@
   <form id="pinform" autocomplete="off" novalidate>
     <h2 id="pinttl">교사 모드</h2>
     <p>교사 노트를 보려면 비밀번호를 넣으세요.</p>
+    <p class="muted">비밀번호는 <a href="../docs/05.html#teacher-pin" target="_blank" rel="noopener">운영 가이드 ↗</a>에 있어요.</p>
     <input id="pin" type="password" inputmode="numeric" aria-label="교사 모드 비밀번호" aria-describedby="pinmsg">
     <p id="pinmsg" class="joinmsg" role="status"></p>
     <div class="dlgbtns"><button type="button" class="btn" id="pincancel">취소</button><button type="submit" class="btn primary">확인</button></div>
